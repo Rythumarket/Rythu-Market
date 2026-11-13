@@ -210,6 +210,7 @@ const INITIAL_ORDERS = [
 const INITIAL_WHOLESALE_ORDERS = [
   { id: 'WS-401', shopName: 'Sri Venkateswara Fresh Mart', farmerName: 'Ramaiah Garu (Kovur)', item: 'Natu Tomatoes (Grade A) - 50 kg', amount: 1100, status: 'Accepted' },
   { id: 'WS-402', shopName: 'Penna Organic & Groceries', farmerName: 'Ramaiah Garu (Kovur)', item: 'Fresh Okra (Bendakaya) - 30 kg', amount: 960, status: 'Pending' },
+  ];
   export default function RythuBasketApp() {
   const [lang, setLang] = useState('en');
   const [activeRole, setActiveRole] = useState('customer');
