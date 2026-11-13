@@ -1118,6 +1118,464 @@ const INITIAL_WHOLESALE_ORDERS = [
                   </div>
                 )}
               </div>
+                        {activeRole === 'farmer' && (
+              <div className="space-y-5">
+                <form
+                  onSubmit={handleFarmerUpload}
+                  className="bg-white border border-gray-200 rounded-2xl p-4 space-y-3"
+                >
+                  <h3 className="font-bold text-gray-900">{t.addProduce}</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <input
+                      type="text"
+                      required
+                      placeholder="Produce Name (English)"
+                      value={newProduce.nameEn}
+                      onChange={(e) =>
+                        setNewProduce({ ...newProduce, nameEn: e.target.value })
+                      }
+                      className="px-3 py-2 border border-gray-200 rounded-xl text-sm"
+                    />
+                    <input
+                      type="text"
+                      placeholder="తెలుగు పేరు"
+                      value={newProduce.nameTe}
+                      onChange={(e) =>
+                        setNewProduce({ ...newProduce, nameTe: e.target.value })
+                      }
+                      className="px-3 py-2 border border-gray-200 rounded-xl text-sm"
+                    />
+                    <input
+                      type="number"
+                      required
+                      placeholder="Wholesale Price (₹)"
+                      value={newProduce.wholesalePrice}
+                      onChange={(e) =>
+                        setNewProduce({
+                          ...newProduce,
+                          wholesalePrice: e.target.value,
+                        })
+                      }
+                      className="px-3 py-2 border border-gray-200 rounded-xl text-sm"
+                    />
+                    <input
+                      type="number"
+                      required
+                      placeholder="Stock Quantity"
+                      value={newProduce.stock}
+                      onChange={(e) =>
+                        setNewProduce({ ...newProduce, stock: e.target.value })
+                      }
+                      className="px-3 py-2 border border-gray-200 rounded-xl text-sm"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="bg-emerald-600 text-white font-bold px-4 py-2 rounded-xl text-sm"
+                  >
+                    Publish Produce
+                  </button>
+                </form>
+
+                <div className="bg-white border border-gray-200 rounded-2xl p-4 space-y-2">
+                  <h3 className="font-bold text-gray-900">
+                    {t.incomingShopOrders}
+                  </h3>
+                  {wholesaleOrders.map((wo) => (
+                    <div
+                      key={wo.id}
+                      className="p-3 bg-emerald-50 rounded-xl flex justify-between items-center text-xs"
+                    >
+                      <span>
+                        <strong>{wo.shopName}</strong>: {wo.item} (₹{wo.amount})
+                      </span>
+                      <span className="font-bold text-emerald-800">
+                        {wo.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeRole === 'shopkeeper' && (
+              <div className="space-y-5">
+                <div className="bg-white border border-gray-200 rounded-2xl p-4">
+                  <h3 className="font-bold text-gray-900 mb-3">
+                    {t.wholesaleMarket}
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {products.map((p) => (
+                      <div
+                        key={p.id}
+                        className="border border-gray-100 rounded-xl p-3 text-xs space-y-2"
+                      >
+                        <p className="font-bold text-sm">{p.nameEn}</p>
+                        <p>
+                          Wholesale: <strong>₹{p.wholesalePrice}</strong> |
+                          Retail:{' '}
+                          <input
+                            type="number"
+                            value={p.retailPrice}
+                            onChange={(e) =>
+                              updateShopRetailPrice(p.id, e.target.value)
+                            }
+                            className="w-16 border rounded px-1 font-bold"
+                          />
+                        </p>
+                        <button
+                          onClick={() => handleWholesaleBuy(p)}
+                          className="w-full bg-emerald-600 text-white py-1.5 rounded-lg font-bold"
+                        >
+                          Buy 25 Units
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeRole === 'delivery' && (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center bg-emerald-900 text-white p-4 rounded-2xl">
+                  <h2 className="font-extrabold">{t.deliveryHub}</h2>
+                  <button
+                    onClick={() => setRiderOnline(!riderOnline)}
+                    className="bg-emerald-400 text-emerald-950 px-3 py-1 rounded-full text-xs font-extrabold"
+                  >
+                    {riderOnline ? '● Online' : '○ Offline'}
+                  </button>
+                </div>
+                {orders.map((order) => (
+                  <div
+                    key={order.id}
+                    className="bg-white border border-gray-200 rounded-2xl p-4 flex justify-between items-center text-xs"
+                  >
+                    <div>
+                      <p className="font-bold text-sm">
+                        {order.id} • {order.customerName}
+                      </p>
+                      <p className="text-gray-600">{order.customerAddress}</p>
+                    </div>
+                    <button
+                      onClick={() => advanceDeliveryStatus(order.id)}
+                      className="bg-emerald-600 text-white px-3 py-2 rounded-xl font-bold"
+                    >
+                      {order.status} →
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {activeRole === 'admin' && (
+              <div className="space-y-5">
+                <div className="bg-white border border-gray-200 rounded-2xl p-4 space-y-3">
+                  <h3 className="font-bold text-gray-900">{t.chargeConfig}</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    <div>
+                      <label>0-5 KM (₹)</label>
+                      <input
+                        type="number"
+                        value={config.slab0to5}
+                        onChange={(e) =>
+                          setConfig({
+                            ...config,
+                            slab0to5: Number(e.target.value),
+                          })
+                        }
+                        className="w-full border rounded-lg p-1.5 font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label>5-10 KM (₹)</label>
+                      <input
+                        type="number"
+                        value={config.slab5to10}
+                        onChange={(e) =>
+                          setConfig({
+                            ...config,
+                            slab5to10: Number(e.target.value),
+                          })
+                        }
+                        className="w-full border rounded-lg p-1.5 font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label>10-15 KM (₹)</label>
+                      <input
+                        type="number"
+                        value={config.slab10to15}
+                        onChange={(e) =>
+                          setConfig({
+                            ...config,
+                            slab10to15: Number(e.target.value),
+                          })
+                        }
+                        className="w-full border rounded-lg p-1.5 font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label>Free Above (₹)</label>
+                      <input
+                        type="number"
+                        value={config.freeDeliveryAbove}
+                        onChange={(e) =>
+                          setConfig({
+                            ...config,
+                            freeDeliveryAbove: Number(e.target.value),
+                          })
+                        }
+                        className="w-full border rounded-lg p-1.5 font-bold"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white border border-gray-200 rounded-2xl p-4 space-y-2 text-xs">
+                  <h3 className="font-bold text-sm text-gray-900">
+                    {t.userApprovals}
+                  </h3>
+                  {users.map((u) => (
+                    <div
+                      key={u.id}
+                      className="flex justify-between items-center py-1.5 border-b border-gray-100"
+                    >
+                      <span>
+                        <strong>{u.name}</strong> ({u.role})
+                      </span>
+                      <button
+                        onClick={() =>
+                          setUsers((prev) =>
+                            prev.map((x) =>
+                              x.id === u.id
+                                ? {
+                                    ...x,
+                                    status:
+                                      x.status === 'approved'
+                                        ? 'pending'
+                                        : 'approved',
+                                  }
+                                : x
+                            )
+                          )
+                        }
+                        className="px-2.5 py-1 rounded bg-emerald-100 text-emerald-900 font-bold"
+                      >
+                        {u.status}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </main>
+
+      {activeRole === 'customer' && (
+        <nav className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-gray-200">
+          <div className="max-w-5xl mx-auto grid grid-cols-4 py-1.5">
+            {[
+              { key: 'home', icon: Home, label: t.nav.home },
+              { key: 'categories', icon: LayoutGrid, label: t.nav.categories },
+              { key: 'orders', icon: ClipboardList, label: t.nav.orders },
+              { key: 'profile', icon: User, label: t.nav.profile },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setCustomerTab(tab.key)}
+                  className={`flex flex-col items-center py-1 text-[11px] font-bold ${
+                    customerTab === tab.key
+                      ? 'text-emerald-700'
+                      : 'text-gray-500'
+                  }`}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+      )}
+
+      {isCartOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex justify-end">
+          <div className="bg-white w-full max-w-md h-full flex flex-col justify-between p-4 overflow-y-auto">
+            <div className="space-y-4">
+              <div className="flex justify-between items-center border-b pb-3">
+                <h3 className="font-extrabold text-base">
+                  {t.cart} ({cartDetails.totalCount})
+                </h3>
+                <button onClick={() => setIsCartOpen(false)}>
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              {cartDetails.lines.map((line) => (
+                <div
+                  key={line.productId}
+                  className="flex justify-between items-center text-xs bg-gray-50 p-2.5 rounded-xl"
+                >
+                  <div>
+                    <p className="font-bold">{line.product.nameEn}</p>
+                    <p>
+                      ₹{line.unitPrice} × {line.qty} = ₹{line.lineTotal}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => updateCartQty(line.productId, -1)}
+                      className="px-2 py-1 bg-white border rounded"
+                    >
+                      -
+                    </button>
+                    <span className="font-bold">{line.qty}</span>
+                    <button
+                      onClick={() => updateCartQty(line.productId, 1)}
+                      className="px-2 py-1 bg-emerald-600 text-white rounded"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              ))}
+              <div className="space-y-2 text-xs">
+                <input
+                  type="text"
+                  value={customerAddress}
+                  onChange={(e) => setCustomerAddress(e.target.value)}
+                  className="w-full border rounded-xl p-2"
+                />
+                <div className="grid grid-cols-3 gap-1">
+                  {['0-5', '5-10', '10-15'].map((band) => (
+                    <button
+                      key={band}
+                      type="button"
+                      onClick={() => setDistanceBand(band)}
+                      className={`py-1.5 rounded-lg border font-bold ${
+                        distanceBand === band
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-white'
+                      }`}
+                    >
+                      {band} KM
+                    </button>
+                  ))}
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('COD')}
+                    className={`py-2 rounded-lg border font-bold ${
+                      paymentMethod === 'COD'
+                        ? 'bg-emerald-50 border-emerald-600'
+                        : ''
+                    }`}
+                  >
+                    {t.cod}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('ONLINE')}
+                    className={`py-2 rounded-lg border font-bold ${
+                      paymentMethod === 'ONLINE'
+                        ? 'bg-amber-50 border-amber-600'
+                        : ''
+                    }`}
+                  >
+                    {t.onlinePay}
+                  </button>
+                </div>
+                {paymentMethod === 'ONLINE' && (
+                  <p className="text-[11px] text-amber-800 bg-amber-50 p-2 rounded-lg">
+                    {t.onlineNotice}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {cartDetails.lines.length > 0 && (
+              <div className="border-t pt-3 space-y-2 text-xs">
+                <div className="flex justify-between">
+                  <span>Delivery Charge</span>
+                  <span>
+                    {cartDetails.deliveryCharge === 0
+                      ? 'FREE'
+                      : `₹${cartDetails.deliveryCharge}`}
+                  </span>
+                </div>
+                <div className="flex justify-between font-extrabold text-base">
+                  <span>Total</span>
+                  <span>₹{cartDetails.grandTotal}</span>
+                </div>
+                <button
+                  onClick={handlePlaceOrder}
+                  className="w-full bg-emerald-600 text-white font-extrabold py-3 rounded-xl text-sm"
+                >
+                  {t.placeOrder} • ₹{cartDetails.grandTotal}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {showFirebaseModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-5 space-y-3">
+            <h3 className="font-extrabold text-base">Firebase Configuration</h3>
+            <textarea
+              rows={5}
+              value={firebaseJsonInput}
+              onChange={(e) => setFirebaseJsonInput(e.target.value)}
+              placeholder='{"apiKey": "...", "projectId": "..."}'
+              className="w-full p-2.5 border rounded-xl text-xs font-mono"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowFirebaseModal(false)}
+                className="px-3 py-1.5 text-xs font-bold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveFirebase}
+                className="bg-emerald-600 text-white px-4 py-1.5 rounded-xl text-xs font-bold"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showInstallModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-5 space-y-3">
+            <h3 className="font-extrabold text-base">
+              Install Rythu Basket on Android
+            </h3>
+            <p className="text-xs text-gray-700">
+              Open this URL in Android Chrome → Tap <strong>⋮</strong> →{' '}
+              <strong>Add to Home screen</strong>.
+            </p>
+            <button
+              onClick={() => setShowInstallModal(false)}
+              className="w-full bg-emerald-600 text-white py-2 rounded-xl text-xs font-bold"
+            >
+              Got It
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
             )}
             
           
