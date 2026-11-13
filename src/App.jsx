@@ -1575,9 +1575,4 @@ const INITIAL_WHOLESALE_ORDERS = [
     </div>
   );
 }
-
-            )}
-            
-          
-];
    
