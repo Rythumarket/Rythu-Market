@@ -207,9 +207,23 @@ const INITIAL_ORDERS = [
   { id: 'RB-8902', customerName: 'Praveen Kumar', customerAddress: 'Dargamitta, Near RTC Bus Stand, Nellore', shopName: 'Simhapuri Rythu Bazar Store', itemsSummary: 'Nellore Sona Masoori Rice (5 kg)', subtotal: 295, deliveryCharge: 20, total: 315, paymentMethod: 'COD', paymentStatus: 'Confirmed (COD)', status: 'Packed at Shop', riderEarnings: 25, createdAt: 'Today, 10:05 AM' },
 ];
 const INITIAL_WHOLESALE_ORDERS = [
-  { id: 'WS-401', shopName: 'Sri Venkateswara Fresh Mart', farmerName: 'Ramaiah Garu (Kovur)', item: 'Natu Tomatoes (Grade A) - 50 kg', amount: 1100, status: 'Accepted' },
-  { id: 'WS-402', shopName: 'Penna Organic & Groceries', farmerName: 'Ramaiah Garu (Kovur)', item: 'Fresh Okra (Bendakaya) - 30 kg', amount: 960, status: 'Pending' },
-  ];
+  {
+    id: 'WS-401',
+    shopName: 'Sri Venkateswara Fresh Mart',
+    farmerName: 'Ramaiah Garu (Kovur)',
+    item: 'Natu Tomatoes (Grade A) - 50 kg',
+    amount: 1100,
+    status: 'Accepted'
+  },
+  {
+    id: 'WS-402',
+    shopName: 'Penna Organic & Groceries',
+    farmerName: 'Ramaiah Garu (Kovur)',
+    item: 'Fresh Okra (Bendakaya) - 30 kg',
+    amount: 960,
+    status: 'Pending'
+  }
+];
   export default function RythuBasketApp() {
   const [lang, setLang] = useState('en');
   const [activeRole, setActiveRole] = useState('customer');
