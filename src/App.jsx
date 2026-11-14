@@ -4,7 +4,9 @@ import {
   ClipboardList, User, MapPin, Phone, Sprout,
   Store, Truck, ShieldCheck, ChevronRight, ArrowLeft,
   CheckCircle2, Lock, KeyRound, PackagePlus, LogOut,
-  Trash2, Edit3, Check, Navigation, QrCode, Wallet, LocateFixed
+  Trash2, Edit3, Check, Navigation, QrCode, Wallet,
+  LocateFixed, Bell, MessageCircle, FileText, ArrowLeftRight,
+  Warehouse, AlertTriangle, Handshake
 } from 'lucide-react';
 
 const CAT_IMG = {
@@ -19,15 +21,13 @@ const CAT_IMG = {
 };
 
 const INITIAL_PRODUCTS = [
-  // 1. VEGETABLES - Daily Staples
+  // 1. VEGETABLES
   { id: 'v1', nameEn: 'Tomato', nameTe: 'టమాటా', sub: 'Daily Staples', unit: '1 kg', price: 28, oldPrice: 36, cat: 'vegetables', inStock: true, img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=300&q=80' },
   { id: 'v2', nameEn: 'Onion', nameTe: 'ఉల్లిపాయ', sub: 'Daily Staples', unit: '1 kg', price: 32, oldPrice: 40, cat: 'vegetables', inStock: true, img: 'https://images.unsplash.com/photo-1508747705729-e0613307ab6e?auto=format&fit=crop&w=300&q=80' },
   { id: 'v3', nameEn: 'Potato', nameTe: 'బంగాళాదుంప', sub: 'Daily Staples', unit: '1 kg', price: 30, oldPrice: 38, cat: 'vegetables', inStock: true, img: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=300&q=80' },
   { id: 'v4', nameEn: 'Green Chillies', nameTe: 'పచ్చిమిర్చి', sub: 'Daily Staples', unit: '250 g', price: 15, oldPrice: 20, cat: 'vegetables', inStock: true, img: 'https://images.unsplash.com/photo-1588252303782-cb80119abd6d?auto=format&fit=crop&w=300&q=80' },
   { id: 'v5', nameEn: 'Ginger', nameTe: 'అల్లం', sub: 'Daily Staples', unit: '250 g', price: 25, oldPrice: 32, cat: 'vegetables', inStock: true, img: 'https://images.unsplash.com/photo-1615485500704-8e990f9900f7?auto=format&fit=crop&w=300&q=80' },
   { id: 'v6', nameEn: 'Garlic', nameTe: 'వెల్లుల్లి', sub: 'Daily Staples', unit: '250 g', price: 45, oldPrice: 55, cat: 'vegetables', inStock: true, img: 'https://images.unsplash.com/photo-1540148426945-6cf22a6b2383?auto=format&fit=crop&w=300&q=80' },
-
-  // 1. VEGETABLES - Gourds & Beans
   { id: 'v7', nameEn: 'Bottle Gourd', nameTe: 'సొరకాయ', sub: 'Gourds & Beans', unit: '1 pc', price: 24, oldPrice: 30, cat: 'vegetables', inStock: true, img: CAT_IMG.vegetables },
   { id: 'v8', nameEn: 'Ridge Gourd', nameTe: 'బీరకాయ', sub: 'Gourds & Beans', unit: '500 g', price: 28, oldPrice: 35, cat: 'vegetables', inStock: true, img: CAT_IMG.vegetables },
   { id: 'v9', nameEn: 'Bitter Gourd', nameTe: 'కాకరకాయ', sub: 'Gourds & Beans', unit: '500 g', price: 26, oldPrice: 34, cat: 'vegetables', inStock: true, img: CAT_IMG.vegetables },
@@ -35,8 +35,6 @@ const INITIAL_PRODUCTS = [
   { id: 'v11', nameEn: 'Cluster Beans', nameTe: 'గోరుచిక్కుడు', sub: 'Gourds & Beans', unit: '500 g', price: 25, oldPrice: 32, cat: 'vegetables', inStock: true, img: CAT_IMG.vegetables },
   { id: 'v12', nameEn: 'French Beans', nameTe: 'బీన్స్', sub: 'Gourds & Beans', unit: '500 g', price: 32, oldPrice: 40, cat: 'vegetables', inStock: true, img: CAT_IMG.vegetables },
   { id: 'v13', nameEn: 'Broad Beans', nameTe: 'చిక్కుడుకాయ', sub: 'Gourds & Beans', unit: '500 g', price: 30, oldPrice: 38, cat: 'vegetables', inStock: true, img: CAT_IMG.vegetables },
-
-  // 1. VEGETABLES - Common Veggies
   { id: 'v14', nameEn: 'Brinjal / Eggplant', nameTe: 'వంకాయ', sub: 'Common Veggies', unit: '500 g', price: 24, oldPrice: 32, cat: 'vegetables', inStock: true, img: 'https://images.unsplash.com/photo-1615484477778-ca3b77940c25?auto=format&fit=crop&w=300&q=80' },
   { id: 'v15', nameEn: 'Okra / Ladies Finger', nameTe: 'బెండకాయ', sub: 'Common Veggies', unit: '500 g', price: 22, oldPrice: 30, cat: 'vegetables', inStock: true, img: 'https://images.unsplash.com/photo-1425543103986-22abb7d7e8d2?auto=format&fit=crop&w=300&q=80' },
   { id: 'v16', nameEn: 'Carrot', nameTe: 'క్యారెట్', sub: 'Common Veggies', unit: '500 g', price: 28, oldPrice: 36, cat: 'vegetables', inStock: true, img: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?auto=format&fit=crop&w=300&q=80' },
@@ -47,8 +45,6 @@ const INITIAL_PRODUCTS = [
   { id: 'v21', nameEn: 'Drumstick', nameTe: 'మునగకాయ', sub: 'Common Veggies', unit: '4 pcs', price: 20, oldPrice: 28, cat: 'vegetables', inStock: true, img: CAT_IMG.vegetables },
   { id: 'v22', nameEn: 'Radish', nameTe: 'ముల్లంగి', sub: 'Common Veggies', unit: '500 g', price: 18, oldPrice: 24, cat: 'vegetables', inStock: true, img: CAT_IMG.vegetables },
   { id: 'v23', nameEn: 'Cucumber', nameTe: 'దోసకాయ', sub: 'Common Veggies', unit: '500 g', price: 20, oldPrice: 26, cat: 'vegetables', inStock: true, img: 'https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?auto=format&fit=crop&w=300&q=80' },
-
-  // 1. VEGETABLES - Leafy Greens
   { id: 'v24', nameEn: 'Spinach', nameTe: 'పాలకూర', sub: 'Leafy Greens', unit: '2 bunches', price: 20, oldPrice: 28, cat: 'vegetables', inStock: true, img: CAT_IMG.leafy },
   { id: 'v25', nameEn: 'Coriander', nameTe: 'కొత్తిమీర', sub: 'Leafy Greens', unit: '2 bunches', price: 15, oldPrice: 20, cat: 'vegetables', inStock: true, img: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=300&q=80' },
   { id: 'v26', nameEn: 'Mint', nameTe: 'పుదీనా', sub: 'Leafy Greens', unit: '2 bunches', price: 14, oldPrice: 20, cat: 'vegetables', inStock: true, img: CAT_IMG.leafy },
@@ -101,7 +97,7 @@ const INITIAL_PRODUCTS = [
   { id: 'b9', nameEn: 'Flavored Milk (Badam/Rose)', nameTe: 'బాదం పాలు / రోజ్ మిల్క్', sub: 'Cold & Packaged', unit: '200 ml', price: 32, oldPrice: 40, cat: 'beverages', inStock: true, img: CAT_IMG.beverages },
   { id: 'b10', nameEn: 'Mineral Water', nameTe: 'మినరల్ వాటర్', sub: 'Cold & Packaged', unit: '1 L', price: 20, oldPrice: 20, cat: 'beverages', inStock: true, img: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?auto=format&fit=crop&w=300&q=80' },
 
-  // 5. EGGS, LIVE POULTRY & LIVESTOCK
+  // 5. EGGS, POULTRY & LIVESTOCK
   { id: 'e1', nameEn: 'White Eggs', nameTe: 'తెల్ల గుడ్లు', sub: 'Eggs', unit: '12 pcs', price: 72, oldPrice: 84, cat: 'livestock', inStock: true, img: CAT_IMG.eggs },
   { id: 'e2', nameEn: 'Brown / Country Eggs', nameTe: 'నాటు కోడి గుడ్లు', sub: 'Eggs', unit: '6 pcs', price: 54, oldPrice: 66, cat: 'livestock', inStock: true, img: CAT_IMG.eggs },
   { id: 'e3', nameEn: 'Quail Eggs', nameTe: 'కౌజు పిట్ట గుడ్లు', sub: 'Eggs', unit: '12 pcs', price: 60, oldPrice: 75, cat: 'livestock', inStock: true, img: CAT_IMG.eggs },
@@ -120,70 +116,74 @@ const INITIAL_PRODUCTS = [
 ];
 export default function App() {
   const [lang, setLang] = useState('te');
-  const [screen, setScreen] = useState('home'); // 'home' | 'categories' | 'cart' | 'roles' | 'otp' | 'farmerPanel' | 'adminPanel' | 'roleDashboard'
+  // STARTS AT 'roles' SO USER MUST PICK USER TYPE & VERIFY OTP FIRST
+  const [screen, setScreen] = useState('roles');
   const [products, setProducts] = useState(INITIAL_PRODUCTS);
   const [selectedCat, setSelectedCat] = useState('all');
   const [selectedSub, setSelectedSub] = useState('All');
   const [search, setSearch] = useState('');
   const [cart, setCart] = useState({ v1: 1, f10: 1 });
-  const [orderPlaced, setOrderPlaced] = useState(false);
+  const [latestInvoice, setLatestInvoice] = useState(null);
 
-  // Free Maps & Address Checkout States
+  // Free Maps & Address States
   const [deliveryAddress, setDeliveryAddress] = useState('Vedayapalem, Nellore');
-  const [gpsCoords, setGpsCoords] = useState({ lat: 14.4426, lng: 79.9865, pinned: false });
+  const [gpsCoords, setGpsCoords] = useState({ lat: 14.4426, lng: 79.9865 });
   const [gpsStatus, setGpsStatus] = useState('');
 
   // Free UPI & COD Payment States
-  const [paymentMethod, setPaymentMethod] = useState('upi'); // 'upi' | 'cod'
+  const [paymentMethod, setPaymentMethod] = useState('upi');
   const [upiRefInput, setUpiRefInput] = useState('');
 
-  // Admin Controlled Global Settings
+  // Admin Settings
   const [merchantUpiId, setMerchantUpiId] = useState('8328261103@ybl');
   const [freeDeliveryMin, setFreeDeliveryMin] = useState(499);
   const [baseDeliveryFee, setBaseDeliveryFee] = useState(25);
   const [bannerDiscount, setBannerDiscount] = useState(30);
 
-  // Live Orders State (Includes GPS Coords & Payment Info for Delivery & Admin)
+  // 1. LIVE FARMER BULK HARVEST & ALERTS
+  const [farmerLots, setFarmerLots] = useState([
+    { id: 'fl1', farmer: 'Ramaiah (Kovur)', mobile: '9440112233', item: 'Tomato (టమాటా)', qtyKg: 500, pricePerKg: 21, minOrderKg: 25, pickupReady: true, status: 'Live Alert Sent to Shops' },
+    { id: 'fl2', farmer: 'Subba Rao (Buchireddypalem)', mobile: '9848556677', item: 'Onion (ఉల్లిపాయ)', qtyKg: 400, pricePerKg: 22, minOrderKg: 50, pickupReady: true, status: 'Live Alert Sent to Shops' },
+    { id: 'fl3', farmer: 'Narayana (Rapur)', mobile: '9701223344', item: 'Country Chicken (నాటు కోడి)', qtyKg: 60, pricePerKg: 340, minOrderKg: 10, pickupReady: false, status: 'Available' },
+  ]);
+
+  // 2. WHOLESALE INVENTORY + EXCESS STOCK CLEARANCE
+  const [wholesaleStock, setWholesaleStock] = useState([
+    { id: 'ws1', shop: 'Sri Balaji Wholesale (Nellore Mandi)', mobile: '9849223344', distance: '1.8 km', item: 'Onion (ఉల్లిపాయ)', totalKg: 800, soldKg: 500, excessKg: 300, regularPrice: 24, excessPrice: 21, minKg: 25, delivery: true },
+    { id: 'ws2', shop: 'Kaligiri Agro Traders', mobile: '9989334455', distance: '4.2 km', item: 'Onion (ఉల్లిపాయ)', totalKg: 600, soldKg: 450, excessKg: 150, regularPrice: 23, excessPrice: 20, minKg: 20, delivery: true },
+    { id: 'ws3', shop: 'Nellore Potato Depot', mobile: '9440778899', distance: '2.5 km', item: 'Potato (బంగాళాదుంప)', totalKg: 1000, soldKg: 700, excessKg: 300, regularPrice: 25, excessPrice: 19, minKg: 30, delivery: true },
+  ]);
+
+  // 3. SHOP-TO-SHOP NEARBY TRADING LISTINGS
+  const [nearbyShops, setNearbyShops] = useState([
+    { id: 'ns1', shopName: 'Lakshmi Fresh Mart (Magunta Layout)', type: 'Retail Shop', distance: '0.9 km', item: 'Carrot (క్యారెట్)', availKg: 50, pricePerKg: 24, delivery: 'Available (₹20)', mobile: '9121334455' },
+    { id: 'ns2', shopName: 'Venkateswara Kirana & Veg (Vedayapalem)', type: 'Retail Shop', distance: '1.4 km', item: 'Green Chillies (పచ్చిమిర్చి)', availKg: 35, pricePerKg: 38, delivery: 'Self Pickup / Delivery', mobile: '9391445566' },
+    { id: 'ns3', shopName: 'Sri Balaji Wholesale (Nellore)', type: 'Wholesale Shop', distance: '1.8 km', item: 'Potato Excess Deal (బంగాళాదుంప)', availKg: 300, pricePerKg: 19, delivery: 'Free Shop-to-Shop', mobile: '9849223344' },
+  ]);
+
+  // 4. B2B / B2C ORDERS & NEGOTIATIONS
   const [orders, setOrders] = useState([
-    {
-      id: 'RB-101',
-      customer: '9848012345 (Vedayapalem, Nellore)',
-      lat: 14.4285,
-      lng: 79.9692,
-      itemsCount: 4,
-      total: 245,
-      payment: 'UPI Paid (UTR: 431982019283)',
-      status: 'Confirmed',
-      driver: 'Ravi (Kovur)',
-    },
-    {
-      id: 'RB-102',
-      customer: '9989123456 (Magunta Layout, Nellore)',
-      lat: 14.4426,
-      lng: 79.9865,
-      itemsCount: 2,
-      total: 560,
-      payment: 'Cash on Delivery',
-      status: 'Pending',
-      driver: 'Unassigned',
-    },
+    { id: 'RB-101', type: 'Retail → Farmer', customer: '9849223344 (Balaji Mart, Nellore)', lat: 14.4285, lng: 79.9692, itemsCount: 1, summary: '100 kg Onion @ ₹22/kg', total: 2200, payment: 'UPI Paid (UTR: 43198201)', status: 'Confirmed', driver: 'Ravi (Kovur)' },
+    { id: 'RB-102', type: 'Customer Order', customer: '9989123456 (Magunta Layout)', lat: 14.4426, lng: 79.9865, itemsCount: 2, summary: 'Tomato + Mango', total: 138, payment: 'Cash on Delivery', status: 'Pending', driver: 'Unassigned' },
   ]);
 
-  // Registered Platform Users (Managed by Admin)
-  const [platformUsers, setPlatformUsers] = useState([
-    { id: 'u1', name: 'Ramaiah (Kovur)', role: 'Farmer', mobile: '9440112233', verified: true },
-    { id: 'u2', name: 'Sri Balaji Kirana (Nellore)', role: 'Shopkeeper', mobile: '9849223344', verified: true },
-    { id: 'u3', name: 'Ravi Kumar (Delivery)', role: 'Delivery', mobile: '9000334455', verified: true },
-    { id: 'u4', name: 'Venkateswarlu (Rapur)', role: 'Farmer', mobile: '9701445566', verified: false },
+  const [negotiations, setNegotiations] = useState([
+    { id: 'neg1', buyer: 'Balaji Retail Shop', item: 'Tomato (200 kg)', farmerAsk: 21, buyerOffer: 19, status: 'Pending Farmer Reply' },
   ]);
 
-  // Admin Panel Sub-Tab & Edit States
+  // Sub-Tabs
+  const [farmerTab, setFarmerTab] = useState('sell');
+  const [retailTab, setRetailTab] = useState('compare');
+  const [wholesaleTab, setWholesaleTab] = useState('excess');
   const [adminTab, setAdminTab] = useState('overview');
+
+  // Search / Filter states
+  const [retailCompareItem, setRetailCompareItem] = useState('Onion');
   const [adminSearch, setAdminSearch] = useState('');
   const [editingPriceId, setEditingPriceId] = useState(null);
   const [tempPrice, setTempPrice] = useState('');
 
-  // OTP & Role Authentication States
+  // OTP Auth States
   const [selectedRoleForLogin, setSelectedRoleForLogin] = useState(null);
   const [loggedInUser, setLoggedInUser] = useState(null);
   const [mobileInput, setMobileInput] = useState('');
@@ -192,15 +192,21 @@ export default function App() {
   const [otpStep, setOtpStep] = useState('phone');
   const [authError, setAuthError] = useState('');
 
-  // Farmer Add Item Form States
-  const [fNameTe, setFNameTe] = useState('');
+  // Farmer Form States
   const [fNameEn, setFNameEn] = useState('');
+  const [fNameTe, setFNameTe] = useState('');
   const [fCat, setFCat] = useState('vegetables');
-  const [fSub, setFSub] = useState('Daily Staples');
-  const [fQty, setFQty] = useState('1');
-  const [fUnit, setFUnit] = useState('kg');
+  const [fQtyKg, setFQtyKg] = useState('500');
   const [fPrice, setFPrice] = useState('');
-  const [fSuccessMsg, setFSuccessMsg] = useState('');
+  const [fPickup, setFPickup] = useState(true);
+  const [alertBanner, setAlertBanner] = useState('');
+
+  // Wholesale Form States
+  const [wItem, setWItem] = useState('');
+  const [wTotalKg, setWTotalKg] = useState('1000');
+  const [wSoldKg, setWSoldKg] = useState('700');
+  const [wRegPrice, setWRegPrice] = useState('25');
+  const [wExcessPrice, setWExcessPrice] = useState('19');
 
   const categories = [
     { id: 'all', nameEn: 'All Items', nameTe: 'అన్నీ', emoji: '🧺', bg: 'bg-emerald-50' },
@@ -221,13 +227,14 @@ export default function App() {
   };
 
   const roles = [
-    { id: 'customer', titleTe: 'వినియోగదారుడు', titleEn: 'Customer', subTe: 'తాజా సరుకులు కొనండి', subEn: 'Buy fresh produce & livestock', icon: ShoppingCart, color: 'bg-emerald-50 text-emerald-600' },
-    { id: 'farmer', titleTe: 'రైతు', titleEn: 'Farmer', subTe: 'పంట / కోళ్లు / మేకల ధర & పరిమాణం పెట్టి అమ్మండి', subEn: 'Set price & qty to sell harvest/livestock', icon: Sprout, color: 'bg-green-50 text-green-600' },
-    { id: 'shopkeeper', titleTe: 'దుకాణదారు', titleEn: 'Shopkeeper', subTe: 'హోల్‌సేల్ సరుకు కొనండి', subEn: 'Wholesale bulk orders', icon: Store, color: 'bg-amber-50 text-amber-600' },
-    { id: 'delivery', titleTe: 'డెలివరీ పార్టనర్', titleEn: 'Delivery Partner', subTe: 'గూగుల్ మ్యాప్స్ రూట్ & డెలివరీ ఆర్డర్లు', subEn: 'Google Maps route & Nellore deliveries', icon: Truck, color: 'bg-blue-50 text-blue-600' },
-    { id: 'admin', titleTe: 'అడ్మిన్ (Admin Control)', titleEn: 'Admin', subTe: 'ధరలు, ఆర్డర్లు, UPI, యూజర్లు కంట్రోల్', subEn: 'Full platform, price, UPI & order control', icon: ShieldCheck, color: 'bg-purple-50 text-purple-600' },
+    { id: 'customer', titleTe: 'వినియోగదారుడు', titleEn: 'Customer', subTe: 'ఇంటికి తాజా సరుకులు కొనండి', subEn: 'Buy fresh produce & livestock', icon: ShoppingCart, color: 'bg-emerald-50 text-emerald-600' },
+    { id: 'farmer', titleTe: 'రైతు', titleEn: 'Farmer', subTe: 'పంట అమ్మకం, మండి ధరలు, పికప్ & ఆదాయం', subEn: 'Sell harvest, Mandi rates, Pickup & Earnings', icon: Sprout, color: 'bg-green-50 text-green-600' },
+    { id: 'retail', titleTe: 'రిటైల్ దుకాణదారు', titleEn: 'Retail Shopkeeper', subTe: 'రైతు vs హోల్‌సేల్ ధరల పోలిక & Shop-to-Shop', subEn: 'Compare Farmer vs Wholesale & Nearby Shops', icon: Store, color: 'bg-amber-50 text-amber-600' },
+    { id: 'wholesale', titleTe: 'హోల్‌సేల్ వ్యాపారి', titleEn: 'Wholesale Shopkeeper', subTe: 'Bulk స్టాక్ & Sell Excess Stock క్లియరెన్స్', subEn: 'Bulk inventory & Sell Excess Stock', icon: Warehouse, color: 'bg-indigo-50 text-indigo-600' },
+    { id: 'delivery', titleTe: 'డెలివరీ పార్టనర్', titleEn: 'Delivery Partner', subTe: 'Google Maps రూట్ & డెలివరీ ఆర్డర్లు', subEn: 'Google Maps route & Nellore deliveries', icon: Truck, color: 'bg-blue-50 text-blue-600' },
+    { id: 'admin', titleTe: 'అడ్మిన్ (Admin)', titleEn: 'Admin', subTe: 'ధరలు, ఆర్డర్లు, UPI, యూజర్లు కంట్రోల్', subEn: 'Full platform, price, UPI & order control', icon: ShieldCheck, color: 'bg-purple-50 text-purple-600' },
   ];
-
+// Cart & Calculations
   const addItem = (id) => setCart((c) => ({ ...c, [id]: (c[id] || 0) + 1 }));
   const removeItem = (id) =>
     setCart((c) => {
@@ -236,7 +243,8 @@ export default function App() {
       else next[id] -= 1;
       return next;
     });
-const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
+
+  const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
   const subtotal = Object.entries(cart).reduce((sum, [id, qty]) => {
     const p = products.find((item) => item.id === id);
     return sum + (p ? p.price * qty : 0);
@@ -244,55 +252,112 @@ const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
   const deliveryFee = subtotal === 0 ? 0 : subtotal >= freeDeliveryMin ? 0 : baseDeliveryFee;
   const grandTotal = subtotal + deliveryFee;
 
-  // Free Browser GPS Capture (Zero Cost)
+  // Free GPS Pin
   const handleCaptureGps = () => {
     if (!navigator.geolocation) {
-      setGpsStatus('GPS not supported on this browser');
+      setGpsStatus('GPS not supported');
       return;
     }
-    setGpsStatus(lang === 'te' ? 'లొకేషన్ తీసుకుంటోంది...' : 'Fetching GPS location...');
+    setGpsStatus(lang === 'te' ? 'లొకేషన్ తీసుకుంటోంది...' : 'Fetching GPS...');
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const lat = Number(pos.coords.latitude.toFixed(5));
         const lng = Number(pos.coords.longitude.toFixed(5));
-        setGpsCoords({ lat, lng, pinned: true });
+        setGpsCoords({ lat, lng });
         setGpsStatus(`📍 GPS Pinned (${lat}, ${lng})`);
       },
       () => {
-        setGpsCoords({ lat: 14.4426, lng: 79.9865, pinned: true });
-        setGpsStatus('📍 Nellore Center Pinned (14.4426, 79.9865)');
+        setGpsCoords({ lat: 14.4426, lng: 79.9865 });
+        setGpsStatus('📍 Nellore Pinned (14.4426, 79.9865)');
       }
     );
   };
 
-  // Free UPI Deep Link & Dynamic QR URL (0% Commission)
+  // UPI Deep Link & Dynamic QR
   const upiDeepLink = `upi://pay?pa=${encodeURIComponent(merchantUpiId)}&pn=${encodeURIComponent(
     'Rythu Basket Nellore'
   )}&am=${grandTotal}&cu=INR&tn=${encodeURIComponent('Rythu Basket Order')}`;
+  const freeQrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=170x170&data=${encodeURIComponent(upiDeepLink)}`;
 
-  const freeQrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
-    upiDeepLink
-  )}`;
+  // Generate Invoice & WhatsApp Share Link Helper
+  const createInvoiceAndOrder = ({ type, buyerLabel, summary, amount, paymentStr, sellerMobile }) => {
+    const invNo = 'INV-' + Math.floor(1000 + Math.random() * 9000);
+    const ordId = 'RB-' + Math.floor(105 + Math.random() * 890);
+    const now = new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
 
-  const handlePlaceOrder = () => {
-    const paymentSummary =
-      paymentMethod === 'upi'
-        ? `UPI (${upiRefInput.trim() ? 'Ref: ' + upiRefInput.trim() : 'Paid via App'})`
-        : 'Cash on Delivery';
+    const invoiceObj = {
+      invNo,
+      ordId,
+      date: now,
+      type,
+      buyer: buyerLabel,
+      summary,
+      amount,
+      payment: paymentStr,
+      mapsLink: `https://www.google.com/maps/search/?api=1&query=${gpsCoords.lat},${gpsCoords.lng}`,
+      targetMobile: sellerMobile || '8328261103',
+    };
 
     const newOrder = {
-      id: 'RB-' + Math.floor(103 + Math.random() * 890),
-      customer: `${loggedInUser?.mobile || '9876543210'} (${deliveryAddress})`,
+      id: ordId,
+      type,
+      customer: buyerLabel,
       lat: gpsCoords.lat,
       lng: gpsCoords.lng,
-      itemsCount: totalItems,
-      total: grandTotal,
-      payment: paymentSummary,
-      status: 'Pending',
+      itemsCount: 1,
+      summary,
+      total: amount,
+      payment: paymentStr,
+      status: 'Confirmed',
       driver: 'Unassigned',
     };
+
     setOrders([newOrder, ...orders]);
-    setOrderPlaced(true);
+    setLatestInvoice(invoiceObj);
+  };
+
+  const buildWhatsAppUrl = (inv) => {
+    const text =
+      `*🌾 RYTHU BASKET - NELLORE (DIGITAL INVOICE)*\n` +
+      `----------------------------------\n` +
+      `*Invoice No:* ${inv.invNo}\n` +
+      `*Order ID:* ${inv.ordId}\n` +
+      `*Date:* ${inv.date}\n` +
+      `*Order Type:* ${inv.type}\n` +
+      `*Buyer:* ${inv.buyer}\n` +
+      `*Items:* ${inv.summary}\n` +
+      `*Total Amount:* ₹${inv.amount}\n` +
+      `*Payment:* ${inv.payment}\n` +
+      `*GPS Location:* ${inv.mapsLink}\n` +
+      `----------------------------------\n` +
+      `Thank you for trading on Rythu Basket!`;
+    const phone = inv.targetMobile ? `91${inv.targetMobile.replace(/\D/g, '').slice(-10)}` : '';
+    return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+  };
+
+  const handleCustomerCheckout = () => {
+    const itemLines = Object.entries(cart)
+      .map(([id, qty]) => {
+        const p = products.find((x) => x.id === id);
+        return p ? `${p.nameEn} (${qty} × ₹${p.price})` : '';
+      })
+      .filter(Boolean)
+      .join(', ');
+
+    const paymentStr =
+      paymentMethod === 'upi'
+        ? `UPI (${upiRefInput.trim() ? 'UTR: ' + upiRefInput.trim() : 'Paid via UPI App'})`
+        : 'Cash on Delivery';
+
+    createInvoiceAndOrder({
+      type: 'Customer Order',
+      buyerLabel: `${loggedInUser?.mobile || '9876543210'} (${deliveryAddress})`,
+      summary: itemLines,
+      amount: grandTotal,
+      paymentStr,
+      sellerMobile: '8328261103',
+    });
+    setCart({});
     setUpiRefInput('');
   };
 
@@ -327,119 +392,350 @@ const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
     const userObj = { role: selectedRoleForLogin, mobile: mobileInput };
     setLoggedInUser(userObj);
     setAuthError('');
-    if (selectedRoleForLogin.id === 'farmer') {
-      setScreen('farmerPanel');
-    } else if (selectedRoleForLogin.id === 'admin') {
-      setScreen('adminPanel');
-    } else if (selectedRoleForLogin.id === 'customer') {
-      setScreen('home');
-    } else {
-      setScreen('roleDashboard');
-    }
+    if (selectedRoleForLogin.id === 'farmer') setScreen('farmerPanel');
+    else if (selectedRoleForLogin.id === 'retail') setScreen('retailPanel');
+    else if (selectedRoleForLogin.id === 'wholesale') setScreen('wholesalePanel');
+    else if (selectedRoleForLogin.id === 'admin') setScreen('adminPanel');
+    else if (selectedRoleForLogin.id === 'delivery') setScreen('roleDashboard');
+    else setScreen('home');
+  };
+const handleLogout = () => {
+    setLoggedInUser(null);
+    setSelectedRoleForLogin(null);
+    setLatestInvoice(null);
+    setScreen('roles');
   };
 
-  // Farmer Add Product
-  const handleFarmerAddProduct = (e) => {
+  // Farmer Post Harvest
+  const handleFarmerPublishLot = (e) => {
     e.preventDefault();
-    if (!fNameEn.trim() || !fPrice || Number(fPrice) <= 0) return;
-
-    const newItem = {
-      id: 'f_' + Date.now(),
-      nameEn: fNameEn.trim(),
-      nameTe: fNameTe.trim() || fNameEn.trim(),
-      sub: fSub,
-      unit: `${fQty} ${fUnit}`,
-      price: Number(fPrice),
-      oldPrice: Math.round(Number(fPrice) * 1.15),
-      cat: fCat,
-      inStock: true,
-      img: CAT_IMG[fCat] || CAT_IMG.vegetables,
+    if (!fNameEn.trim() || !fPrice) return;
+    const itemLabel = `${fNameEn.trim()} (${fNameTe.trim() || fNameEn.trim()})`;
+    const newLot = {
+      id: 'fl_' + Date.now(),
+      farmer: `Farmer (${loggedInUser?.mobile || 'Nellore'})`,
+      mobile: loggedInUser?.mobile || '9440112233',
+      item: itemLabel,
+      qtyKg: Number(fQtyKg),
+      pricePerKg: Number(fPrice),
+      minOrderKg: 20,
+      pickupReady: fPickup,
+      status: 'Live Alert Sent to Shops',
     };
+    setFarmerLots([newLot, ...farmerLots]);
 
-    setProducts([newItem, ...products]);
+    setProducts([
+      {
+        id: 'p_' + Date.now(),
+        nameEn: fNameEn.trim(),
+        nameTe: fNameTe.trim() || fNameEn.trim(),
+        sub: 'Farm Direct Bulk',
+        unit: '1 kg',
+        price: Number(fPrice) + 4,
+        oldPrice: Number(fPrice) + 10,
+        cat: fCat,
+        inStock: true,
+        img: CAT_IMG[fCat] || CAT_IMG.vegetables,
+      },
+      ...products,
+    ]);
+
+    setAlertBanner(
+      `🔔 Alert Sent: ${newLot.farmer} posted ${fQtyKg} KG ${itemLabel} @ ₹${fPrice}/kg to all Nellore Retail & Wholesale Shops!`
+    );
     setFNameEn('');
     setFNameTe('');
-    setFQty('1');
     setFPrice('');
-    setFSuccessMsg(
-      lang === 'te' ? 'మీ సరుకు మార్కెట్‌లో విజయవంతంగా జతచేయబడింది!' : 'Your item is now live on Rythu Basket!'
-    );
-    setTimeout(() => setFSuccessMsg(''), 3500);
   };
 
-  // Admin Product Actions
-  const saveEditedPrice = (id) => {
-    if (!tempPrice || Number(tempPrice) <= 0) return;
-    setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, price: Number(tempPrice) } : p)));
-    setEditingPriceId(null);
-    setTempPrice('');
-  };
-
-  const toggleProductStock = (id) => {
-    setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, inStock: !p.inStock } : p)));
-  };
-
-  const deleteProduct = (id) => {
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+  // Wholesale Add / Excess Stock
+  const handleAddWholesaleExcess = (e) => {
+    e.preventDefault();
+    if (!wItem.trim()) return;
+    const total = Number(wTotalKg);
+    const sold = Number(wSoldKg);
+    const excess = Math.max(0, total - sold);
+    const entry = {
+      id: 'ws_' + Date.now(),
+      shop: `Wholesale (${loggedInUser?.mobile || 'Nellore'})`,
+      mobile: loggedInUser?.mobile || '9849223344',
+      distance: '1.5 km',
+      item: wItem.trim(),
+      totalKg: total,
+      soldKg: sold,
+      excessKg: excess,
+      regularPrice: Number(wRegPrice),
+      excessPrice: Number(wExcessPrice),
+      minKg: 25,
+      delivery: true,
+    };
+    setWholesaleStock([entry, ...wholesaleStock]);
+    setNearbyShops([
+      {
+        id: 'ns_' + Date.now(),
+        shopName: entry.shop,
+        type: 'Wholesale Excess',
+        distance: '1.5 km',
+        item: `${entry.item} (Excess Clearance)`,
+        availKg: excess,
+        pricePerKg: Number(wExcessPrice),
+        delivery: 'Free Shop-to-Shop',
+        mobile: entry.mobile,
+      },
+      ...nearbyShops,
+    ]);
+    setAlertBanner(`📢 Excess Stock Alert: ${excess} KG ${wItem} listed @ ₹${wExcessPrice}/kg for Nearby Shops!`);
+    setWItem('');
   };
 
   const filteredProducts = products.filter((p) => {
     const catOk = selectedCat === 'all' || p.cat === selectedCat;
     const subOk = selectedSub === 'All' || p.sub === selectedSub;
     const q = search.toLowerCase();
-    const searchOk =
-      p.nameEn.toLowerCase().includes(q) || p.nameTe.includes(q) || p.sub.toLowerCase().includes(q);
-    return catOk && subOk && searchOk;
+    return catOk && subOk && (p.nameEn.toLowerCase().includes(q) || p.nameTe.includes(q));
   });
 
   const adminFilteredProducts = products.filter((p) => {
     const q = adminSearch.toLowerCase();
     return p.nameEn.toLowerCase().includes(q) || p.nameTe.includes(q);
   });
-const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
 
+  const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
+
+  // =========================================================================
+  // GATE 1: INITIAL FULL-SCREEN USER TYPE SELECTION & OTP LOGIN (BEFORE MENU)
+  // =========================================================================
+  if (!loggedInUser || screen === 'roles' || screen === 'otp') {
+    return (
+      <div className="min-h-screen bg-[#F6FBF8] max-w-md mx-auto font-sans text-gray-800 shadow-xl flex flex-col justify-between">
+        <div>
+          {/* Branded Green Welcome Header */}
+          <div className="bg-[#0B5D34] text-white rounded-b-[32px] px-5 pt-6 pb-7 shadow-lg relative overflow-hidden">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <div className="h-12 w-12 rounded-full bg-white p-0.5 shadow-md border-2 border-yellow-300 overflow-hidden">
+                  <img src="/icon-512.png" alt="Rythu Basket" className="h-full w-full object-cover rounded-full" />
+                </div>
+                <div>
+                  <h1 className="text-lg font-black tracking-tight">రైతు బాస్కెట్</h1>
+                  <p className="text-[11px] text-emerald-200 font-semibold">Rythu Basket • నెల్లూరు</p>
+                </div>
+              </div>
+
+              {/* Language Toggle */}
+              <div className="bg-white/15 p-0.5 rounded-full flex text-[11px] font-bold">
+                <button
+                  onClick={() => setLang('te')}
+                  className={`px-3 py-1 rounded-full transition ${
+                    lang === 'te' ? 'bg-white text-[#0B5D34] shadow-sm' : 'text-white'
+                  }`}
+                >
+                  తెలుగు
+                </button>
+                <button
+                  onClick={() => setLang('en')}
+                  className={`px-3 py-1 rounded-full transition ${
+                    lang === 'en' ? 'bg-white text-[#0B5D34] shadow-sm' : 'text-white'
+                  }`}
+                >
+                  EN
+                </button>
+              </div>
+            </div>
+
+            <h2 className="text-2xl font-black mt-1">
+              {lang === 'te' ? 'నమస్కారం!' : 'Welcome!'}
+            </h2>
+            <p className="text-xs text-emerald-100 mt-1">
+              {lang === 'te'
+                ? 'మీరు ఎవరు? ఒక్కటి నొక్కి మొబైల్ OTP తో లాగిన్ అవ్వండి'
+                : 'Who are you? Tap your role to login with Mobile OTP'}
+            </p>
+          </div>
+
+{/* STEP A: SELECT USER ROLE */}
+          {screen !== 'otp' ? (
+            <div className="px-4 pt-5 pb-6 space-y-2.5">
+              {roles.map((r) => {
+                const Icon = r.icon;
+                return (
+                  <button
+                    key={r.id}
+                    onClick={() => openRoleLogin(r)}
+                    className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between shadow-sm border border-gray-100 hover:border-[#00B251] active:scale-[0.99] transition"
+                  >
+                    <div className="flex items-center space-x-3.5">
+                      <div className={`h-11 w-11 rounded-xl flex items-center justify-center ${r.color}`}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div className="text-left">
+                        <h3 className="text-sm font-extrabold text-gray-900">
+                          {lang === 'te' ? r.titleTe : r.titleEn}
+                        </h3>
+                        <p className="text-[11px] font-bold text-[#00B251]">
+                          {lang === 'te' ? r.subTe : r.subEn}
+                        </p>
+                        <p className="text-[10px] text-gray-400">
+                          {r.titleEn} • Mobile OTP Login
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-gray-400" />
+                  </button>
+                );
+              })}
+
+              <a
+                href="tel:8328261103"
+                className="w-full mt-3 bg-[#0B5D34] text-white text-xs font-extrabold py-3.5 rounded-2xl flex items-center justify-center space-x-2 shadow-md"
+              >
+                <Phone className="h-4 w-4" />
+                <span>{lang === 'te' ? 'సహాయం కావాలా? ఫోన్ చేయండి' : 'Need Help? Call Support'}</span>
+              </a>
+            </div>
+          ) : (
+            /* STEP B: MOBILE NUMBER & OTP VERIFICATION */
+            <div className="px-4 pt-6 pb-8">
+              <div className="bg-white rounded-3xl p-5 shadow-md border border-gray-100 space-y-4">
+                <div className="flex items-center space-x-2.5">
+                  <button
+                    onClick={() => setScreen('roles')}
+                    className="p-2 bg-gray-100 rounded-full hover:bg-gray-200"
+                  >
+                    <ArrowLeft className="h-4 w-4 text-gray-700" />
+                  </button>
+                  <div>
+                    <h3 className="text-base font-black text-gray-900">
+                      {lang === 'te' ? selectedRoleForLogin?.titleTe : selectedRoleForLogin?.titleEn} Login
+                    </h3>
+                    <p className="text-[11px] text-gray-500">
+                      {lang === 'te' ? 'మొబైల్ నంబర్ & OTP ధృవీకరణ' : 'Mobile Number & OTP Verification'}
+                    </p>
+                  </div>
+                </div>
+
+                {otpStep === 'phone' ? (
+                  <div className="space-y-3">
+                    <label className="block text-xs font-bold text-gray-700">
+                      {lang === 'te' ? '10 అంకెల మొబైల్ నంబర్ నమోదు చేయండి' : 'Enter 10-Digit Mobile Number'}
+                    </label>
+                    <div className="flex items-center border border-gray-200 rounded-xl px-3.5 py-3 bg-gray-50 focus-within:border-[#00B251]">
+                      <span className="text-xs font-extrabold text-gray-600 pr-2.5 border-r">+91</span>
+                      <input
+                        type="tel"
+                        maxLength={10}
+                        value={mobileInput}
+                        onChange={(e) => setMobileInput(e.target.value.replace(/\D/g, ''))}
+                        placeholder="8328261103"
+                        className="w-full bg-transparent pl-3 text-sm font-bold tracking-wider focus:outline-none"
+                      />
+                    </div>
+                    {authError && <p className="text-xs font-bold text-red-500">{authError}</p>}
+                    <button
+                      onClick={handleSendOtp}
+                      className="w-full bg-[#00B251] text-white font-extrabold text-xs py-3.5 rounded-xl shadow-md flex items-center justify-center space-x-1.5"
+                    >
+                      <Lock className="h-4 w-4" />
+                      <span>{lang === 'te' ? 'OTP పంపండి' : 'Send OTP'}</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-center">
+                      <p className="text-[11px] text-emerald-800 font-semibold">
+                        {lang === 'te' ? `+91 ${mobileInput} కి OTP పంపబడింది` : `OTP sent to +91 ${mobileInput}`}
+                      </p>
+                      <p className="text-sm font-black text-[#00B251] mt-0.5">Demo OTP: {generatedOtp}</p>
+                    </div>
+
+                    <label className="block text-xs font-bold text-gray-700">
+                      {lang === 'te' ? '4 అంకెల OTP నమోదు చేయండి' : 'Enter 4-Digit OTP'}
+                    </label>
+                    <div className="flex items-center border border-gray-200 rounded-xl px-3.5 py-2.5 bg-gray-50">
+                      <KeyRound className="h-4 w-4 text-[#00B251] mr-2" />
+                      <input
+                        type="tel"
+                        maxLength={4}
+                        value={otpInput}
+                        onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, ''))}
+                        placeholder="• • • •"
+                        className="w-full bg-transparent text-center text-base font-black tracking-[0.5em] focus:outline-none"
+                      />
+                    </div>
+                    {authError && <p className="text-xs font-bold text-red-500">{authError}</p>}
+
+                    <button
+                      onClick={handleVerifyOtp}
+                      className="w-full bg-[#00B251] text-white font-extrabold text-xs py-3.5 rounded-xl shadow-md"
+                    >
+                      {lang === 'te' ? 'OTP నిర్ధారించి లోపలికి వెళ్ళండి' : 'Verify OTP & Enter App'}
+                    </button>
+                    <button
+                      onClick={() => setOtpStep('phone')}
+                      className="w-full text-[11px] font-bold text-gray-500 underline"
+                    >
+                      {lang === 'te' ? 'మొబైల్ నంబర్ మార్చండి' : 'Change Mobile Number'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // GATE 2: LOGGED-IN MAIN APPLICATION (MENU + ROLE PORTALS)
+  // =========================================================================
   return (
     <div className="min-h-screen bg-[#F6FBF8] max-w-md mx-auto relative pb-28 font-sans text-gray-800 shadow-xl">
-      {/* BRIGHT GREEN CURVED HEADER + CUSTOM LOGO */}
+      {/* TOP BRIGHT GREEN HEADER WITH LOGO & LOGOUT */}
       <header className="bg-[#00B251] text-white rounded-b-[28px] px-4 pt-4 pb-5 shadow-md sticky top-0 z-30">
-        <div className="flex items-center justify-between mb-3.5">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2.5">
             <div className="h-11 w-11 rounded-full bg-white p-0.5 shadow-md overflow-hidden flex-shrink-0 border-2 border-yellow-300">
               <img src="/icon-512.png" alt="Rythu Basket Logo" className="h-full w-full object-cover rounded-full" />
             </div>
             <div>
-              <h1 className="text-base font-extrabold leading-tight tracking-tight">
+              <h1 className="text-base font-extrabold leading-tight">
                 {lang === 'te' ? 'రైతు బాస్కెట్' : 'Rythu Basket'}
               </h1>
               <div className="flex items-center text-[11px] text-emerald-100 font-medium">
                 <MapPin className="h-3 w-3 mr-0.5 text-yellow-300" />
                 <span>
-                  {loggedInUser
-                    ? `${lang === 'te' ? loggedInUser.role.titleTe : loggedInUser.role.titleEn} • ${loggedInUser.mobile}`
-                    : lang === 'te'
-                    ? 'నెల్లూరు • పొలం నుండి నేరుగా'
-                    : 'Nellore • Farm to Home'}
+                  {lang === 'te' ? loggedInUser.role.titleTe : loggedInUser.role.titleEn} • {loggedInUser.mobile}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="bg-[#008F41] p-0.5 rounded-full flex text-[11px] font-bold">
+          <div className="flex items-center space-x-1.5">
+            <div className="bg-[#008F41] p-0.5 rounded-full flex text-[11px] font-bold">
+              <button
+                onClick={() => setLang('te')}
+                className={`px-2 py-1 rounded-full transition ${
+                  lang === 'te' ? 'bg-white text-[#00B251] shadow-sm' : 'text-white'
+                }`}
+              >
+                తెలుగు
+              </button>
+              <button
+                onClick={() => setLang('en')}
+                className={`px-2 py-1 rounded-full transition ${
+                  lang === 'en' ? 'bg-white text-[#00B251] shadow-sm' : 'text-white'
+                }`}
+              >
+                EN
+              </button>
+            </div>
             <button
-              onClick={() => setLang('te')}
-              className={`px-2.5 py-1 rounded-full transition ${
-                lang === 'te' ? 'bg-white text-[#00B251] shadow-sm' : 'text-white'
-              }`}
+              onClick={handleLogout}
+              className="bg-white/20 p-2 rounded-full text-white hover:bg-white/30"
+              title="Switch Role / Logout"
             >
-              తెలుగు
-            </button>
-            <button
-              onClick={() => setLang('en')}
-              className={`px-2.5 py-1 rounded-full transition ${
-                lang === 'en' ? 'bg-white text-[#00B251] shadow-sm' : 'text-white'
-              }`}
-            >
-              EN
+              <LogOut className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
@@ -463,7 +759,62 @@ const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
         </div>
       </header>
 
-      {/* SCREEN 1: HOME */}
+{/* LIVE SHOP NOTIFICATION BANNER */}
+      {alertBanner && (
+        <div className="mx-4 mt-3 bg-amber-50 border border-amber-300 rounded-2xl p-3 flex items-start justify-between shadow-sm">
+          <div className="flex items-start space-x-2">
+            <Bell className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+            <p className="text-[11px] font-extrabold text-amber-900 leading-snug">{alertBanner}</p>
+          </div>
+          <button onClick={() => setAlertBanner('')} className="text-xs font-bold text-amber-700 ml-2">
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* DIGITAL INVOICE + WHATSAPP SHARE MODAL */}
+      {latestInvoice && (
+        <div className="mx-4 mt-3 bg-white border-2 border-[#00B251] rounded-2xl p-4 shadow-lg space-y-2.5">
+          <div className="flex items-center justify-between border-b pb-2">
+            <div className="flex items-center space-x-1.5 text-[#00B251]">
+              <FileText className="h-4 w-4" />
+              <span className="text-xs font-black">DIGITAL INVOICE ({latestInvoice.invNo})</span>
+            </div>
+            <button onClick={() => setLatestInvoice(null)} className="text-xs font-bold text-gray-400">
+              Close ✕
+            </button>
+          </div>
+
+          <div className="text-[11px] space-y-1 text-gray-700">
+            <p><strong>Order ID:</strong> {latestInvoice.ordId} • {latestInvoice.date}</p>
+            <p><strong>Type:</strong> {latestInvoice.type}</p>
+            <p><strong>Buyer:</strong> {latestInvoice.buyer}</p>
+            <p><strong>Items:</strong> {latestInvoice.summary}</p>
+            <p><strong>Payment:</strong> <span className="text-[#00B251] font-bold">{latestInvoice.payment}</span></p>
+            <p className="text-sm font-black text-gray-900 pt-1">Grand Total: ₹{latestInvoice.amount}</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <a
+              href={buildWhatsAppUrl(latestInvoice)}
+              target="_blank"
+              rel="noreferrer"
+              className="bg-[#25D366] text-white text-xs font-extrabold py-2.5 px-3 rounded-xl flex items-center justify-center space-x-1.5 shadow-sm"
+            >
+              <MessageCircle className="h-4 w-4" />
+              <span>Send on WhatsApp</span>
+            </a>
+            <button
+              onClick={() => window.print()}
+              className="bg-gray-100 text-gray-800 text-xs font-extrabold py-2.5 px-3 rounded-xl"
+            >
+              🖨️ Print / Save PDF
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* SCREEN 1: HOME (CUSTOMER STOREFRONT) */}
       {screen === 'home' && (
         <main className="px-4 pt-4 space-y-4">
           <section>
@@ -515,25 +866,25 @@ const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
             )}
           </section>
 
-          {/* DYNAMIC OFFER BANNER */}
+          {/* OFFER BANNER */}
           <section className="bg-[#DCF7E6] rounded-2xl p-4 flex items-center justify-between border border-[#B8ECCC]">
-            <div className="max-w-[62%]">
+            <div className="max-w-[63%]">
               <span className="inline-block bg-[#00B251] text-white text-[10px] font-extrabold px-2 py-0.5 rounded-md mb-1">
-                {lang === 'te' ? 'రైతు నేరుగా ఆఫర్' : 'FARM DIRECT'}
+                FARM DIRECT • NELLORE
               </span>
-              <h3 className="text-lg font-black text-[#008F41] leading-tight">
-                {lang === 'te' ? `${bannerDiscount}% తగ్గింపు!` : `${bannerDiscount}% Discount`}
+              <h3 className="text-base font-black text-[#008F41] leading-tight">
+                {lang === 'te' ? `${bannerDiscount}% తగ్గింపు!` : `${bannerDiscount}% Off Today`}
               </h3>
               <p className="text-[11px] text-gray-600 mt-1">
                 {lang === 'te'
-                  ? `₹${freeDeliveryMin} పైన ఆర్డర్లకు ఉచిత డెలివరీ (నెల్లూరు)`
-                  : `Free delivery above ₹${freeDeliveryMin} in Nellore`}
+                  ? `₹${freeDeliveryMin} పైన ఆర్డర్లకు ఉచిత డెలివరీ`
+                  : `Free delivery on orders above ₹${freeDeliveryMin}`}
               </p>
               <button
-                onClick={() => setScreen('roles')}
+                onClick={handleLogout}
                 className="mt-2.5 bg-[#00B251] text-white text-[11px] font-bold px-3.5 py-1.5 rounded-lg shadow-sm"
               >
-                {lang === 'te' ? 'అన్ని రోల్స్ / OTP లాగిన్' : 'Roles / OTP Login'}
+                {lang === 'te' ? 'రోల్ మార్చండి (Switch Role)' : 'Switch Role'}
               </button>
             </div>
 
@@ -550,17 +901,6 @@ const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
                   ? `అందుబాటులో ఉన్న సరుకులు (${filteredProducts.length})`
                   : `Available Items (${filteredProducts.length})`}
               </h2>
-              {selectedCat !== 'all' && (
-                <button
-                  onClick={() => {
-                    setSelectedCat('all');
-                    setSelectedSub('All');
-                  }}
-                  className="text-[11px] font-bold text-[#00B251]"
-                >
-                  {lang === 'te' ? 'అన్నీ చూపు' : 'Show all'}
-                </button>
-              )}
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -579,11 +919,6 @@ const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
                         <span className="absolute bottom-1 left-1 bg-white/95 text-[9px] font-bold text-gray-800 px-1.5 py-0.5 rounded shadow-sm">
                           {item.unit}
                         </span>
-                        {!item.inStock && (
-                          <span className="absolute inset-0 bg-black/50 text-white text-[10px] font-black flex items-center justify-center">
-                            OUT OF STOCK
-                          </span>
-                        )}
                       </div>
                       <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
                         {item.sub}
@@ -630,6 +965,7 @@ const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
           </section>
         </main>
       )}
+
 {/* SCREEN 2: ALL CATEGORIES */}
       {screen === 'categories' && (
         <main className="px-4 pt-4">
@@ -663,7 +999,7 @@ const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
         </main>
       )}
 
-      {/* SCREEN 3: CART, FREE GPS LOCATION PIN & FREE UPI PAYMENT / QR */}
+      {/* SCREEN 3: CART, GPS PIN, UPI QR & DIGITAL INVOICE */}
       {screen === 'cart' && (
         <main className="px-4 pt-4 space-y-3.5">
           <div className="flex items-center space-x-2">
@@ -671,44 +1007,11 @@ const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
               <ArrowLeft className="h-4 w-4 text-gray-700" />
             </button>
             <h2 className="text-base font-extrabold text-gray-900">
-              {lang === 'te' ? 'మీ బాస్కెట్ & పేమెంట్' : 'My Basket & Checkout'}
+              {lang === 'te' ? 'మీ బాస్కెట్ & బిల్లింగ్' : 'My Basket & Billing'}
             </h2>
           </div>
 
-          {orderPlaced ? (
-            <div className="bg-white rounded-2xl p-6 text-center shadow-sm space-y-3">
-              <CheckCircle2 className="h-12 w-12 text-[#00B251] mx-auto" />
-              <h3 className="text-base font-extrabold text-gray-900">
-                {lang === 'te' ? 'ఆర్డర్ విజయవంతమైంది!' : 'Order Confirmed!'}
-              </h3>
-              <p className="text-xs text-gray-500">
-                {lang === 'te'
-                  ? 'మీ GPS లొకేషన్ & ఆర్డర్ వివరాలు Admin & Delivery Boy కి పంపబడ్డాయి.'
-                  : 'Your GPS location & order details are sent to Admin & Delivery Partner.'}
-              </p>
-              <a
-                href={`https://www.google.com/maps/search/?api=1&query=${gpsCoords.lat},${gpsCoords.lng}`}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center space-x-1.5 bg-blue-50 text-blue-700 text-xs font-bold px-4 py-2 rounded-xl"
-              >
-                <MapPin className="h-4 w-4" />
-                <span>{lang === 'te' ? 'గూగుల్ మ్యాప్స్ లో పిన్ చూడండి' : 'View Pinned Location on Maps'}</span>
-              </a>
-              <div>
-                <button
-                  onClick={() => {
-                    setOrderPlaced(false);
-                    setCart({});
-                    setScreen('home');
-                  }}
-                  className="bg-[#00B251] text-white text-xs font-bold px-5 py-2.5 rounded-xl mt-2"
-                >
-                  {lang === 'te' ? 'మరిన్ని కొనండి' : 'Continue Shopping'}
-                </button>
-              </div>
-            </div>
-          ) : totalItems === 0 ? (
+          {totalItems === 0 ? (
             <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
               <p className="text-sm font-bold text-gray-500">
                 {lang === 'te' ? 'మీ బాస్కెట్ ఖాళీగా ఉంది' : 'Your basket is empty'}
@@ -722,7 +1025,6 @@ const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
             </div>
           ) : (
             <>
-              {/* Cart Items */}
               <div className="space-y-2">
                 {Object.entries(cart).map(([id, qty]) => {
                   const item = products.find((p) => p.id === id);
@@ -754,12 +1056,12 @@ const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
                 })}
               </div>
 
-              {/* FREE MAPS & GPS LOCATION PINNING CARD */}
-              <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-gray-100 space-y-2.5">
+              {/* GPS Address */}
+              <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-gray-100 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-extrabold text-gray-900 flex items-center space-x-1">
                     <MapPin className="h-4 w-4 text-[#00B251]" />
-                    <span>{lang === 'te' ? 'డెలివరీ చిరునామా & GPS పిన్' : 'Delivery Address & GPS Pin'}</span>
+                    <span>Delivery Location & GPS Pin</span>
                   </span>
                   <button
                     type="button"
@@ -767,127 +1069,76 @@ const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
                     className="bg-emerald-50 text-[#00B251] border border-emerald-200 text-[10px] font-extrabold px-2.5 py-1 rounded-lg flex items-center space-x-1"
                   >
                     <LocateFixed className="h-3 w-3" />
-                    <span>{lang === 'te' ? 'Live GPS పిన్' : 'Pin GPS'}</span>
+                    <span>Pin GPS</span>
                   </button>
                 </div>
-
                 <input
                   type="text"
                   value={deliveryAddress}
                   onChange={(e) => setDeliveryAddress(e.target.value)}
-                  placeholder="House No, Street, Area in Nellore..."
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold"
                 />
-
-                <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-emerald-700 font-bold">
-                    {gpsStatus || `Nellore Coords: ${gpsCoords.lat}, ${gpsCoords.lng}`}
-                  </span>
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${gpsCoords.lat},${gpsCoords.lng}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-blue-600 font-extrabold underline"
-                  >
-                    Open Google Maps ↗
-                  </a>
-                </div>
+                <p className="text-[10px] font-bold text-emerald-700">
+                  {gpsStatus || `Coords: ${gpsCoords.lat}, ${gpsCoords.lng}`}
+                </p>
               </div>
 
-{/* FREE UPI PAYMENT (PHONEPE / GPAY / QR) & COD CARD */}
-              <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-gray-100 space-y-3">
-                <span className="text-xs font-extrabold text-gray-900 flex items-center space-x-1">
-                  <Wallet className="h-4 w-4 text-[#00B251]" />
-                  <span>{lang === 'te' ? 'చెల్లింపు విధానం (0% Fee)' : 'Select Payment Method'}</span>
-                </span>
-
+              {/* UPI QR + COD */}
+              <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-gray-100 space-y-2.5">
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setPaymentMethod('upi')}
-                    className={`py-2 px-3 rounded-xl text-xs font-extrabold border flex items-center justify-center space-x-1.5 ${
+                    className={`py-2 px-3 rounded-xl text-xs font-extrabold border ${
                       paymentMethod === 'upi'
                         ? 'bg-emerald-50 border-[#00B251] text-[#00B251]'
                         : 'bg-gray-50 border-gray-200 text-gray-600'
                     }`}
                   >
-                    <QrCode className="h-4 w-4" />
-                    <span>UPI / QR Pay</span>
+                    UPI / QR Pay
                   </button>
-
                   <button
                     type="button"
                     onClick={() => setPaymentMethod('cod')}
-                    className={`py-2 px-3 rounded-xl text-xs font-extrabold border flex items-center justify-center space-x-1.5 ${
+                    className={`py-2 px-3 rounded-xl text-xs font-extrabold border ${
                       paymentMethod === 'cod'
                         ? 'bg-emerald-50 border-[#00B251] text-[#00B251]'
                         : 'bg-gray-50 border-gray-200 text-gray-600'
                     }`}
                   >
-                    <span>💵 Cash on Delivery</span>
+                    Cash on Delivery
                   </button>
                 </div>
 
                 {paymentMethod === 'upi' && (
                   <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-3 text-center space-y-2">
-                    <p className="text-[11px] font-bold text-gray-700">
-                      Scan QR or Tap Below to Pay <span className="text-[#00B251] font-black">₹{grandTotal}</span>
-                    </p>
-                    <img
-                      src={freeQrImageUrl}
-                      alt="UPI Payment QR"
-                      className="w-32 h-32 mx-auto rounded-xl bg-white p-1.5 shadow-sm border"
-                    />
-                    <p className="text-[10px] font-bold text-gray-500">UPI ID: {merchantUpiId}</p>
-
+                    <img src={freeQrImageUrl} alt="UPI QR" className="w-28 h-28 mx-auto rounded-xl bg-white p-1 border" />
                     <a
                       href={upiDeepLink}
-                      className="block w-full bg-[#5F259F] text-white text-xs font-extrabold py-2.5 rounded-xl shadow-sm"
+                      className="block w-full bg-[#5F259F] text-white text-xs font-extrabold py-2 rounded-xl"
                     >
-                      Pay ₹{grandTotal} via PhonePe / GPay / Paytm ↗
+                      Pay ₹{grandTotal} via PhonePe / GPay ↗
                     </a>
-
                     <input
                       type="text"
                       value={upiRefInput}
                       onChange={(e) => setUpiRefInput(e.target.value)}
-                      placeholder={
-                        lang === 'te'
-                          ? 'పేమెంట్ తర్వాత 12-అంకెల UPI Ref / UTR నంబర్ ఇవ్వండి'
-                          : 'Enter 12-digit UPI UTR / Ref ID after payment'
-                      }
-                      className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-[11px] font-bold text-center"
+                      placeholder="Enter 12-digit UPI UTR / Ref ID"
+                      className="w-full bg-white border border-gray-200 rounded-xl px-3 py-1.5 text-[11px] font-bold text-center"
                     />
                   </div>
                 )}
-              </div>
 
-              {/* BILL SUMMARY */}
-              <div className="bg-white rounded-2xl p-4 shadow-sm space-y-2 text-xs">
-                <div className="flex justify-between text-gray-600">
-                  <span>{lang === 'te' ? 'వస్తువుల ధర' : 'Item Total'}</span>
-                  <span className="font-bold">₹{subtotal}</span>
-                </div>
-                <div className="flex justify-between text-gray-600">
-                  <span>
-                    {lang === 'te'
-                      ? `డెలివరీ ఛార్జీ (₹${freeDeliveryMin} పైన ఉచితం)`
-                      : `Delivery Fee (Free above ₹${freeDeliveryMin})`}
-                  </span>
-                  <span className="font-bold text-[#00B251]">
-                    {deliveryFee === 0 ? 'FREE' : `₹${deliveryFee}`}
-                  </span>
-                </div>
                 <div className="border-t pt-2 flex justify-between text-sm font-black text-gray-900">
-                  <span>{lang === 'te' ? 'మొత్తం చెల్లింపు' : 'Grand Total'}</span>
+                  <span>Grand Total (incl. Delivery ₹{deliveryFee})</span>
                   <span>₹{grandTotal}</span>
                 </div>
 
                 <button
-                  onClick={handlePlaceOrder}
-                  className="w-full mt-2 bg-[#00B251] text-white font-extrabold py-3 rounded-xl shadow-md active:scale-95 transition"
+                  onClick={handleCustomerCheckout}
+                  className="w-full bg-[#00B251] text-white font-extrabold py-3 rounded-xl shadow-md"
                 >
-                  {lang === 'te' ? `ఆర్డర్ కన్ఫర్మ్ చేయండి • ₹${grandTotal}` : `Confirm Order • ₹${grandTotal}`}
+                  Confirm Order & Generate Invoice • ₹{grandTotal}
                 </button>
               </div>
             </>
@@ -895,318 +1146,494 @@ const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
         </main>
       )}
 
-      {/* SCREEN 4: ROLE SELECTION (EVERY ROLE REQUIRES MOBILE + OTP LOGIN) */}
-      {screen === 'roles' && (
-        <main className="px-4 pt-4 space-y-3">
-          <div className="bg-[#0B5D34] text-white rounded-2xl p-4 shadow-sm flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-black">నమస్కారం!</h2>
-              <p className="text-xs text-emerald-100 mt-0.5">
-                {lang === 'te'
-                  ? 'మీ రోల్ ఎంచుకుని మొబైల్ OTP తో లాగిన్ అవ్వండి'
-                  : 'Select your role to login via Mobile OTP'}
-              </p>
-            </div>
-            {loggedInUser && (
-              <button onClick={() => setLoggedInUser(null)} className="bg-white/20 p-2 rounded-xl text-white">
-                <LogOut className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-
-          <div className="space-y-2.5">
-            {roles.map((r) => {
-              const Icon = r.icon;
-              return (
-                <button
-                  key={r.id}
-                  onClick={() => openRoleLogin(r)}
-                  className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between shadow-sm border border-gray-100"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className={`h-11 w-11 rounded-xl flex items-center justify-center ${r.color}`}>
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div className="text-left">
-                      <h3 className="text-sm font-extrabold text-gray-900">
-                        {lang === 'te' ? r.titleTe : r.titleEn}
-                      </h3>
-                      <p className="text-[11px] font-semibold text-[#00B251]">
-                        {lang === 'te' ? r.subTe : r.subEn}
-                      </p>
-                      <p className="text-[10px] text-gray-400">Mobile Number + OTP Login</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-gray-400" />
-                </button>
-              );
-            })}
-          </div>
-
-          <a
-            href="tel:8328261103"
-            className="w-full bg-[#0B5D34] text-white text-xs font-bold py-3.5 rounded-2xl flex items-center justify-center space-x-2 shadow-md"
-          >
-            <Phone className="h-4 w-4" />
-            <span>సహాయం కావాలా? ఫోన్ చేయండి</span>
-          </a>
-        </main>
-      )}
-{/* SCREEN 5: MOBILE NUMBER + OTP LOGIN GATE */}
-      {screen === 'otp' && selectedRoleForLogin && (
-        <main className="px-4 pt-5">
-          <div className="bg-white rounded-3xl p-5 shadow-md border border-gray-100 space-y-4">
-            <div className="flex items-center space-x-2">
-              <button onClick={() => setScreen('roles')} className="p-1.5 bg-gray-100 rounded-full">
-                <ArrowLeft className="h-4 w-4 text-gray-700" />
-              </button>
-              <div>
-                <h2 className="text-base font-black text-gray-900">
-                  {lang === 'te' ? selectedRoleForLogin.titleTe : selectedRoleForLogin.titleEn} Login
-                </h2>
-                <p className="text-[11px] text-gray-500">
-                  {lang === 'te' ? 'మొబైల్ నంబర్ & OTP ధృవీకరణ' : 'Mobile Number & OTP Verification'}
-                </p>
-              </div>
-            </div>
-
-            {otpStep === 'phone' ? (
-              <div className="space-y-3">
-                <label className="block text-xs font-bold text-gray-700">
-                  {lang === 'te' ? '10 అంకెల మొబైల్ నంబర్' : '10-Digit Mobile Number'}
-                </label>
-                <div className="flex items-center border border-gray-200 rounded-xl px-3 py-2.5 bg-gray-50">
-                  <span className="text-xs font-extrabold text-gray-600 pr-2 border-r">+91</span>
-                  <input
-                    type="tel"
-                    maxLength={10}
-                    value={mobileInput}
-                    onChange={(e) => setMobileInput(e.target.value.replace(/\D/g, ''))}
-                    placeholder="8328261103"
-                    className="w-full bg-transparent pl-2.5 text-sm font-bold tracking-wider focus:outline-none"
-                  />
-                </div>
-                {authError && <p className="text-xs font-bold text-red-500">{authError}</p>}
-                <button
-                  onClick={handleSendOtp}
-                  className="w-full bg-[#00B251] text-white font-extrabold text-xs py-3 rounded-xl shadow-md flex items-center justify-center space-x-1.5"
-                >
-                  <Lock className="h-4 w-4" />
-                  <span>{lang === 'te' ? 'OTP పంపండి' : 'Send OTP'}</span>
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 text-center">
-                  <p className="text-[11px] text-emerald-800 font-semibold">
-                    {lang === 'te' ? `+91 ${mobileInput} కి OTP పంపబడింది` : `OTP sent to +91 ${mobileInput}`}
-                  </p>
-                  <p className="text-xs font-black text-[#00B251] mt-0.5">Demo OTP: {generatedOtp}</p>
-                </div>
-
-                <label className="block text-xs font-bold text-gray-700">
-                  {lang === 'te' ? '4 అంకెల OTP నమోదు చేయండి' : 'Enter 4-Digit OTP'}
-                </label>
-                <div className="flex items-center border border-gray-200 rounded-xl px-3 py-2.5 bg-gray-50">
-                  <KeyRound className="h-4 w-4 text-[#00B251] mr-2" />
-                  <input
-                    type="tel"
-                    maxLength={4}
-                    value={otpInput}
-                    onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, ''))}
-                    placeholder="• • • •"
-                    className="w-full bg-transparent text-base font-black tracking-[0.5em] focus:outline-none"
-                  />
-                </div>
-                {authError && <p className="text-xs font-bold text-red-500">{authError}</p>}
-
-                <button
-                  onClick={handleVerifyOtp}
-                  className="w-full bg-[#00B251] text-white font-extrabold text-xs py-3 rounded-xl shadow-md"
-                >
-                  {lang === 'te' ? 'OTP నిర్ధారించి లోపలికి వెళ్ళండి' : 'Verify OTP & Continue'}
-                </button>
-                <button onClick={() => setOtpStep('phone')} className="w-full text-[11px] font-bold text-gray-500 underline">
-                  {lang === 'te' ? 'నంబర్ మార్చండి' : 'Change Mobile Number'}
-                </button>
-              </div>
-            )}
-          </div>
-        </main>
-      )}
-
-      {/* SCREEN 6: FARMER HARVEST & LIVESTOCK LISTING PANEL */}
+      {/* =========================================================
+          1. FARMER MODULE
+         ========================================================= */}
       {screen === 'farmerPanel' && (
-        <main className="px-4 pt-4 space-y-4">
-          <div className="bg-[#0B5D34] text-white rounded-2xl p-4 flex items-center justify-between shadow-sm">
-            <div>
-              <h2 className="text-base font-black">
-                {lang === 'te' ? 'రైతు విక్రయ కేంద్రం' : 'Farmer Listing Panel'}
-              </h2>
-              <p className="text-[11px] text-emerald-100">
-                {lang === 'te'
-                  ? 'పంట / పాలు / కోళ్లు / మేకల పరిమాణం & ధర ఎంచుకుని అమ్మండి'
-                  : 'Select item quantity & your price to sell'}
-              </p>
-            </div>
-            <button onClick={() => setScreen('home')} className="bg-white/20 text-xs font-bold px-3 py-1.5 rounded-xl">
-              {lang === 'te' ? 'మార్కెట్ చూడు' : 'View Store'}
-            </button>
+        <main className="px-4 pt-4 space-y-3.5">
+          <div className="bg-[#0B5D34] text-white rounded-2xl p-4 shadow-sm">
+            <span className="bg-emerald-700 text-[10px] font-extrabold px-2 py-0.5 rounded">FARMER PORTAL</span>
+            <h2 className="text-base font-black mt-1">రైతు విక్రయ & మండి కేంద్రం</h2>
+            <p className="text-[11px] text-emerald-100">+91 {loggedInUser.mobile} • Nellore</p>
           </div>
 
-          <form onSubmit={handleFarmerAddProduct} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 space-y-3">
-            <div className="flex items-center space-x-1.5 text-[#00B251] font-extrabold text-xs">
-              <PackagePlus className="h-4 w-4" />
-              <span>{lang === 'te' ? 'కొత్త సరుకు వివరాలు నమోదు చేయండి' : 'Add Produce / Livestock'}</span>
-            </div>
+          <div className="flex space-x-1.5 overflow-x-auto pb-1">
+            {[
+              { id: 'sell', label: '🌾 Sell & Alert Shops' },
+              { id: 'mandi', label: '📈 Today Mandi Rates' },
+              { id: 'orders', label: '🤝 Shop Orders & Bargain' },
+              { id: 'earnings', label: '💰 My Earnings' },
+            ].map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setFarmerTab(t.id)}
+                className={`flex-shrink-0 px-3 py-1.5 rounded-xl text-[11px] font-extrabold border ${
+                  farmerTab === t.id ? 'bg-[#00B251] text-white border-[#00B251]' : 'bg-white text-gray-700 border-gray-200'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
 
-            {fSuccessMsg && (
-              <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold p-2.5 rounded-xl">
-                {fSuccessMsg}
-              </div>
-            )}
-
-            <div className="grid grid-cols-2 gap-2.5">
-              <div>
-                <label className="block text-[11px] font-bold text-gray-600 mb-1">Category (విభాగం)</label>
-                <select
-                  value={fCat}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setFCat(val);
-                    setFSub(subCategoriesMap[val]?.[1] || 'General');
-                  }}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-2.5 py-2 text-xs font-bold"
-                >
-                  <option value="vegetables">Vegetables (కూరగాయలు)</option>
-                  <option value="fruits">Fruits (పండ్లు)</option>
-                  <option value="dairy">Milk & Dairy (పాలు & డైరీ)</option>
-                  <option value="beverages">Beverages (పానీయాలు)</option>
-                  <option value="livestock">Eggs, Poultry & Goats/Sheep</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-gray-600 mb-1">Sub-Type (రకం)</label>
-                <select
-                  value={fSub}
-                  onChange={(e) => setFSub(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-2.5 py-2 text-xs font-bold"
-                >
-                  {(subCategoriesMap[fCat] || ['General'])
-                    .filter((s) => s !== 'All')
-                    .map((s) => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2.5">
-              <div>
-                <label className="block text-[11px] font-bold text-gray-600 mb-1">Item Name (English)*</label>
+          {farmerTab === 'sell' && (
+            <form onSubmit={handleFarmerPublishLot} className="bg-white rounded-2xl p-4 shadow-sm space-y-3 border border-gray-100">
+              <h3 className="text-xs font-extrabold text-gray-900">
+                Post Harvest Lot (పోస్ట్ చేయగానే సమీప షాపులకు నోటిఫికేషన్ వెళ్తుంది)
+              </h3>
+              <div className="grid grid-cols-2 gap-2">
                 <input
                   type="text"
                   required
                   value={fNameEn}
                   onChange={(e) => setFNameEn(e.target.value)}
-                  placeholder="e.g., Nellore Jodipi Sheep"
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold"
+                  placeholder="Crop Name (e.g., Tomato)"
+                  className="bg-gray-50 border rounded-xl px-3 py-2 text-xs font-semibold"
                 />
-              </div>
-              <div>
-                <label className="block text-[11px] font-bold text-gray-600 mb-1">పేరు (తెలుగులో)</label>
                 <input
                   type="text"
                   value={fNameTe}
                   onChange={(e) => setFNameTe(e.target.value)}
-                  placeholder="ఉదా: నెల్లూరు జోడిపి"
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold"
+                  placeholder="పేరు (ఉదా: టమాటా)"
+                  className="bg-gray-50 border rounded-xl px-3 py-2 text-xs font-semibold"
                 />
               </div>
-            </div>
 
-            <div className="grid grid-cols-3 gap-2">
-              <div>
-                <label className="block text-[11px] font-bold text-gray-600 mb-1">
-                  {lang === 'te' ? 'పరిమాణం (Qty)' : 'Quantity'}
-                </label>
-                <select
-                  value={fQty}
-                  onChange={(e) => setFQty(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-2 py-2 text-xs font-bold"
-                >
-                  <option value="250">250</option>
-                  <option value="500">500</option>
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="5">5</option>
-                  <option value="10">10</option>
-                  <option value="25">25</option>
-                  <option value="50">50</option>
+              <div className="grid grid-cols-3 gap-2">
+                <select value={fCat} onChange={(e) => setFCat(e.target.value)} className="bg-gray-50 border rounded-xl px-2 py-2 text-xs font-bold">
+                  <option value="vegetables">Vegetables</option>
+                  <option value="fruits">Fruits</option>
+                  <option value="dairy">Milk & Dairy</option>
+                  <option value="livestock">Poultry/Goats</option>
                 </select>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-gray-600 mb-1">
-                  {lang === 'te' ? 'కొలత (Unit)' : 'Unit'}
-                </label>
-                <select
-                  value={fUnit}
-                  onChange={(e) => setFUnit(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-2 py-2 text-xs font-bold"
-                >
-<option value="kg">kg</option>
-                  <option value="g">grams</option>
-                  <option value="bunches">bunches</option>
-                  <option value="L">Liters</option>
-                  <option value="pcs">pcs</option>
-                  <option value="bird">bird (కోడి)</option>
-                  <option value="animal">goat/sheep</option>
-                  <option value="quintal">quintal</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-gray-600 mb-1">
-                  {lang === 'te' ? 'మీ ధర (₹)*' : 'Your Price (₹)*'}
-                </label>
                 <input
                   type="number"
                   required
-                  min="1"
+                  value={fQtyKg}
+                  onChange={(e) => setFQtyKg(e.target.value)}
+                  placeholder="Qty (KG)"
+                  className="bg-gray-50 border rounded-xl px-2.5 py-2 text-xs font-bold"
+                />
+                <input
+                  type="number"
+                  required
                   value={fPrice}
                   onChange={(e) => setFPrice(e.target.value)}
-                  placeholder="₹"
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-black text-[#00B251]"
+                  placeholder="₹ / KG"
+                  className="bg-gray-50 border rounded-xl px-2.5 py-2 text-xs font-black text-[#00B251]"
                 />
               </div>
-            </div>
 
-            <button
-              type="submit"
-              className="w-full bg-[#00B251] text-white font-extrabold text-xs py-3 rounded-xl shadow-md active:scale-95 transition"
-            >
-              {lang === 'te' ? '+ మార్కెట్‌లో అమ్మకానికి పెట్టండి' : '+ Publish to Rythu Basket'}
-            </button>
-          </form>
+              <label className="flex items-center space-x-2 text-xs font-bold text-gray-700">
+                <input type="checkbox" checked={fPickup} onChange={(e) => setFPickup(e.target.checked)} className="accent-[#00B251]" />
+                <span>🚜 Request Farm Gate Pickup (పొలం దగ్గర నుండి పికప్ కావాలి)</span>
+              </label>
+
+              <button type="submit" className="w-full bg-[#00B251] text-white font-extrabold text-xs py-3 rounded-xl shadow-md">
+                🔔 Post Stock & Notify Nearby Shops
+              </button>
+            </form>
+          )}
+
+          {farmerTab === 'mandi' && (
+            <div className="bg-white rounded-2xl p-4 shadow-sm space-y-2 text-xs">
+              <h3 className="font-extrabold text-gray-900">Today's Nellore Mandi Wholesale Rates (Per KG)</h3>
+              {[
+                { crop: 'Tomato (టమాటా)', min: 20, max: 24 },
+                { crop: 'Onion (ఉల్లిపాయ)', min: 21, max: 25 },
+                { crop: 'Potato (బంగాళాదుంప)', min: 22, max: 26 },
+                { crop: 'Banganapalli Mango (మామిడి)', min: 85, max: 105 },
+                { crop: 'Country Chicken (నాటు కోడి)', min: 340, max: 380 },
+              ].map((m, idx) => (
+                <div key={idx} className="flex justify-between py-2 border-b last:border-0">
+                  <span className="font-bold text-gray-800">{m.crop}</span>
+                  <span className="font-black text-[#00B251]">₹{m.min} – ₹{m.max} / kg</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {farmerTab === 'orders' && (
+            <div className="space-y-2.5">
+              {negotiations.map((neg) => (
+                <div key={neg.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-amber-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-amber-800 flex items-center space-x-1">
+                      <Handshake className="h-4 w-4" />
+                      <span>Price Negotiation • {neg.buyer}</span>
+                    </span>
+                    <span className="text-[10px] font-bold bg-amber-50 px-2 py-0.5 rounded">{neg.status}</span>
+                  </div>
+                  <p className="text-xs font-bold">{neg.item}: Your Price ₹{neg.farmerAsk}/kg → Shop Offer ₹{neg.buyerOffer}/kg</p>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() =>
+                        setNegotiations((prev) =>
+                          prev.map((n) => (n.id === neg.id ? { ...n, status: 'Accepted @ ₹' + n.buyerOffer } : n))
+                        )
+                      }
+                      className="flex-1 bg-[#00B251] text-white text-xs font-bold py-2 rounded-xl"
+                    >
+                      Accept ₹{neg.buyerOffer}/kg
+                    </button>
+                    <button
+                      onClick={() =>
+                        setNegotiations((prev) =>
+                          prev.map((n) => (n.id === neg.id ? { ...n, status: 'Countered @ ₹' + (n.buyerOffer + 1) } : n))
+                        )
+                      }
+                      className="flex-1 bg-gray-100 text-gray-800 text-xs font-bold py-2 rounded-xl"
+                    >
+                      Counter ₹{neg.buyerOffer + 1}/kg
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {farmerTab === 'earnings' && (
+            <div className="bg-white rounded-2xl p-4 shadow-sm space-y-2.5 text-xs">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500 font-bold">Total Harvest Earnings</span>
+                <span className="text-lg font-black text-[#00B251]">₹24,850</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500 font-bold">UPI Settled</span>
+                <span className="font-extrabold text-gray-900">₹22,650 (Completed)</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500 font-bold">Pending Payout</span>
+                <span className="font-extrabold text-amber-600">₹2,200 (Processing)</span>
+              </div>
+            </div>
+          )}
         </main>
       )}
 
-      {/* SCREEN 7: FULL ADMIN CONTROL DASHBOARD */}
+{/* =========================================================
+          2. RETAIL SHOPKEEPER MODULE
+         ========================================================= */}
+      {screen === 'retailPanel' && (
+        <main className="px-4 pt-4 space-y-3.5">
+          <div className="bg-amber-700 text-white rounded-2xl p-4 shadow-sm">
+            <span className="bg-amber-900/50 text-[10px] font-extrabold px-2 py-0.5 rounded">RETAIL SHOPKEEPER</span>
+            <h2 className="text-base font-black mt-1">కిరాణా & కూరగాయల షాపు కొనుగోలు</h2>
+            <p className="text-[11px] text-amber-100">Compare Farmers vs Wholesale & Nearby Shop-to-Shop</p>
+          </div>
+
+          <div className="flex space-x-1.5 overflow-x-auto pb-1">
+            {[
+              { id: 'compare', label: '⚖️ Farmer vs Wholesale' },
+              { id: 'nearby', label: '🏪 Nearby Shops (Shop-to-Shop)' },
+              { id: 'orders', label: '🧾 My Invoices' },
+            ].map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setRetailTab(t.id)}
+                className={`flex-shrink-0 px-3 py-1.5 rounded-xl text-[11px] font-extrabold border ${
+                  retailTab === t.id ? 'bg-amber-700 text-white border-amber-700' : 'bg-white text-gray-700 border-gray-200'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {retailTab === 'compare' && (
+            <div className="space-y-3">
+              <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-gray-100 space-y-2">
+                <label className="block text-xs font-extrabold text-gray-800">
+                  Select Commodity to Compare Suppliers (ఉదా: 100 KG Onion):
+                </label>
+                <div className="flex space-x-2">
+                  {['Onion', 'Tomato', 'Potato'].map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => setRetailCompareItem(c)}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold ${
+                        retailCompareItem === c ? 'bg-[#00B251] text-white' : 'bg-gray-100 text-gray-700'
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {farmerLots
+                .filter((f) => f.item.toLowerCase().includes(retailCompareItem.toLowerCase()))
+                .map((f) => (
+                  <div key={f.id} className="bg-white rounded-2xl p-3.5 shadow-sm border-l-4 border-[#00B251] space-y-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="text-[10px] font-extrabold bg-emerald-50 text-[#00B251] px-2 py-0.5 rounded">
+                          A. Direct Farmer
+                        </span>
+                        <h4 className="text-xs font-black text-gray-900 mt-1">{f.farmer}</h4>
+                        <p className="text-[11px] text-gray-500">
+                          {f.item} • Available: {f.qtyKg} KG (Min: {f.minOrderKg} KG)
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-base font-black text-[#00B251]">₹{f.pricePerKg}/kg</span>
+                        <p className="text-[10px] text-gray-400">100 KG = ₹{f.pricePerKg * 100}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() =>
+                          createInvoiceAndOrder({
+                            type: 'Retail → Farmer Direct',
+                            buyerLabel: `Retail Shop (${loggedInUser.mobile})`,
+                            summary: `100 KG ${f.item} from ${f.farmer}`,
+                            amount: f.pricePerKg * 100,
+                            paymentStr: 'UPI / Bank Settlement',
+                            sellerMobile: f.mobile,
+                          })
+                        }
+                        className="flex-1 bg-[#00B251] text-white text-xs font-extrabold py-2 rounded-xl"
+                      >
+                        Order 100 KG + Invoice
+                      </button>
+                      <a
+                        href="https://www.google.com/maps/search/?api=1&query=Kovur+Nellore"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-2 rounded-xl flex items-center"
+                      >
+                        <MapPin className="h-3.5 w-3.5" />
+                      </a>
+                    </div>
+                  </div>
+                ))}
+
+              {wholesaleStock
+                .filter((w) => w.item.toLowerCase().includes(retailCompareItem.toLowerCase()))
+                .map((w) => (
+                  <div key={w.id} className="bg-white rounded-2xl p-3.5 shadow-sm border-l-4 border-indigo-600 space-y-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="text-[10px] font-extrabold bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded">
+                          B. Wholesale Shop • {w.distance}
+                        </span>
+                        <h4 className="text-xs font-black text-gray-900 mt-1">{w.shop}</h4>
+                        <p className="text-[11px] text-gray-500">
+                          {w.item} • Stock: {w.excessKg} KG (Min: {w.minKg} KG)
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-base font-black text-indigo-700">₹{w.regularPrice}/kg</span>
+                        <p className="text-[10px] text-emerald-700 font-bold">Excess Deal: ₹{w.excessPrice}/kg</p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() =>
+                        createInvoiceAndOrder({
+                          type: 'Retail → Wholesale Bulk',
+                          buyerLabel: `Retail Shop (${loggedInUser.mobile})`,
+                          summary: `100 KG ${w.item} from ${w.shop}`,
+                          amount: w.regularPrice * 100,
+                          paymentStr: 'UPI / Shop-to-Shop Delivery',
+                          sellerMobile: w.mobile,
+                        })
+                      }
+                      className="w-full bg-indigo-700 text-white text-xs font-extrabold py-2 rounded-xl"
+                    >
+                      Buy 100 KG from Wholesale + WhatsApp Bill
+                    </button>
+                  </div>
+                ))}
+            </div>
+          )}
+
+          {retailTab === 'nearby' && (
+            <div className="space-y-2.5">
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 text-xs font-bold text-amber-900 flex items-center space-x-2">
+                <ArrowLeftRight className="h-4 w-4 text-amber-700 flex-shrink-0" />
+                <span>Nearby Shops Trading: మీ షాపులో స్టాక్ అయిపోతే పక్క షాపు నుండి వెంటనే కొనండి!</span>
+              </div>
+
+              {nearbyShops.map((ns) => (
+                <div key={ns.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-gray-100 space-y-2">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="text-[10px] font-extrabold bg-purple-50 text-purple-700 px-2 py-0.5 rounded">
+                        {ns.type} • {ns.distance}
+                      </span>
+                      <h4 className="text-xs font-black text-gray-900 mt-1">{ns.shopName}</h4>
+                      <p className="text-[11px] font-bold text-[#00B251]">{ns.item} • {ns.availKg} KG Available</p>
+                      <p className="text-[10px] text-gray-400">Delivery: {ns.delivery}</p>
+                    </div>
+                    <span className="text-sm font-black text-gray-900">₹{ns.pricePerKg}/kg</span>
+                  </div>
+
+                  <button
+                    onClick={() =>
+                      createInvoiceAndOrder({
+                        type: 'Shop-to-Shop Trade',
+                        buyerLabel: `Retail Shop (${loggedInUser.mobile})`,
+                        summary: `25 KG ${ns.item} from ${ns.shopName}`,
+                        amount: ns.pricePerKg * 25,
+                        paymentStr: 'UPI Instant Transfer',
+                        sellerMobile: ns.mobile,
+                      })
+                    }
+                    className="w-full bg-[#00B251] text-white text-xs font-extrabold py-2 rounded-xl"
+                  >
+                    Buy 25 KG Now + Send WhatsApp Invoice
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {retailTab === 'orders' && (
+            <div className="space-y-2">
+              {orders.map((o) => (
+                <div key={o.id} className="bg-white rounded-2xl p-3 shadow-sm text-xs flex justify-between items-center">
+                  <div>
+                    <p className="font-black text-gray-900">{o.id} • {o.summary}</p>
+                    <p className="text-[10px] text-gray-500">{o.type} • {o.payment}</p>
+                  </div>
+                  <span className="font-black text-[#00B251]">₹{o.total}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </main>
+      )}
+{/* =========================================================
+          3. WHOLESALE SHOPKEEPER MODULE
+         ========================================================= */}
+      {screen === 'wholesalePanel' && (
+        <main className="px-4 pt-4 space-y-3.5">
+          <div className="bg-indigo-900 text-white rounded-2xl p-4 shadow-sm">
+            <span className="bg-indigo-700 text-[10px] font-extrabold px-2 py-0.5 rounded">WHOLESALE MANDI PORTAL</span>
+            <h2 className="text-base font-black mt-1">హోల్‌సేల్ వ్యాపారి & Excess Stock</h2>
+            <p className="text-[11px] text-indigo-200">Manage Bulk Stock & Clear Unsold Inventory</p>
+          </div>
+
+          <div className="flex space-x-1.5 overflow-x-auto pb-1">
+            {[
+              { id: 'excess', label: '🔥 Sell Excess Stock' },
+              { id: 'inventory', label: '📦 Wholesale Inventory' },
+              { id: 'orders', label: '📋 Retail Orders' },
+            ].map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setWholesaleTab(t.id)}
+                className={`flex-shrink-0 px-3 py-1.5 rounded-xl text-[11px] font-extrabold border ${
+                  wholesaleTab === t.id ? 'bg-indigo-800 text-white border-indigo-800' : 'bg-white text-gray-700 border-gray-200'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {wholesaleTab === 'excess' && (
+            <form onSubmit={handleAddWholesaleExcess} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 space-y-3">
+              <div className="flex items-center space-x-1.5 text-amber-700 text-xs font-black">
+                <AlertTriangle className="h-4 w-4" />
+                <span>Sell Excess Stock (మిగిలిన స్టాక్ తక్కువ ధరకు ఇతర షాపులకు అమ్మండి)</span>
+              </div>
+
+              <input
+                type="text"
+                required
+                value={wItem}
+                onChange={(e) => setWItem(e.target.value)}
+                placeholder="Item Name (e.g., Potato / బంగాళాదుంప)"
+                className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs font-bold"
+              />
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500">Total Stock (KG)</label>
+                  <input type="number" value={wTotalKg} onChange={(e) => setWTotalKg(e.target.value)} className="w-full bg-gray-50 border rounded-xl px-3 py-1.5 text-xs font-bold" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500">Already Sold (KG)</label>
+                  <input type="number" value={wSoldKg} onChange={(e) => setWSoldKg(e.target.value)} className="w-full bg-gray-50 border rounded-xl px-3 py-1.5 text-xs font-bold" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500">Regular Price (₹/kg)</label>
+                  <input type="number" value={wRegPrice} onChange={(e) => setWRegPrice(e.target.value)} className="w-full bg-gray-50 border rounded-xl px-3 py-1.5 text-xs font-bold" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-emerald-700">Excess Clearance Price (₹/kg)</label>
+                  <input type="number" value={wExcessPrice} onChange={(e) => setWExcessPrice(e.target.value)} className="w-full bg-emerald-50 border border-emerald-300 rounded-xl px-3 py-1.5 text-xs font-black text-[#00B251]" />
+                </div>
+              </div>
+
+              <button type="submit" className="w-full bg-indigo-800 text-white font-extrabold text-xs py-3 rounded-xl shadow-md">
+                Publish {Math.max(0, Number(wTotalKg) - Number(wSoldKg))} KG Excess Deal to Nearby Shops
+              </button>
+            </form>
+          )}
+
+          {wholesaleTab === 'inventory' && (
+            <div className="space-y-2.5">
+              {wholesaleStock.map((ws) => (
+                <div key={ws.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-gray-100 text-xs space-y-1">
+                  <div className="flex justify-between font-black">
+                    <span>{ws.item}</span>
+                    <span className="text-[#00B251]">Excess: {ws.excessKg} KG @ ₹{ws.excessPrice}/kg</span>
+                  </div>
+                  <p className="text-[11px] text-gray-500">
+                    Total: {ws.totalKg} KG • Sold: {ws.soldKg} KG • Regular: ₹{ws.regularPrice}/kg
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {wholesaleTab === 'orders' && (
+            <div className="space-y-2">
+              {orders.map((ord) => (
+                <div key={ord.id} className="bg-white rounded-2xl p-3 shadow-sm text-xs space-y-1.5">
+                  <div className="flex justify-between font-black">
+                    <span>{ord.id} • {ord.type}</span>
+                    <span className="text-[#00B251]">₹{ord.total}</span>
+                  </div>
+                  <p className="text-[11px] text-gray-600">{ord.summary}</p>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => setOrders((p) => p.map((x) => (x.id === ord.id ? { ...x, status: 'Accepted' } : x)))}
+                      className="bg-[#00B251] text-white px-3 py-1 rounded-lg font-bold"
+                    >
+                      Accept
+                    </button>
+                    <button
+                      onClick={() => setOrders((p) => p.map((x) => (x.id === ord.id ? { ...x, status: 'Rejected' } : x)))}
+                      className="bg-red-50 text-red-600 px-3 py-1 rounded-lg font-bold"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </main>
+      )}
+
+      {/* =========================================================
+          4. MASTER ADMIN PANEL
+         ========================================================= */}
       {screen === 'adminPanel' && (
         <main className="px-4 pt-4 space-y-3.5">
           <div className="bg-purple-900 text-white rounded-2xl p-4 shadow-md flex items-center justify-between">
             <div>
-              <span className="bg-purple-700 text-[10px] font-extrabold px-2 py-0.5 rounded uppercase">
-                Master Admin Control
-              </span>
-              <h2 className="text-base font-black mt-1">
-                {lang === 'te' ? 'రైతు బాస్కెట్ అడ్మిన్ ప్యానెల్' : 'Rythu Basket Admin'}
-              </h2>
-              <p className="text-[11px] text-purple-200">
-                +91 {loggedInUser?.mobile || '8328261103'} • UPI: {merchantUpiId}
-              </p>
+              <span className="bg-purple-700 text-[10px] font-extrabold px-2 py-0.5 rounded">MASTER ADMIN</span>
+              <h2 className="text-base font-black mt-1">రైతు బాస్కెట్ అడ్మిన్</h2>
+              <p className="text-[11px] text-purple-200">UPI: {merchantUpiId}</p>
             </div>
             <button onClick={() => setScreen('home')} className="bg-white/15 text-xs font-bold px-3 py-1.5 rounded-xl">
               Store
@@ -1218,16 +1645,13 @@ const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
               { id: 'overview', label: '📊 Overview' },
               { id: 'products', label: `📦 Items (${products.length})` },
               { id: 'orders', label: `🚚 Orders (${orders.length})` },
-              { id: 'users', label: `👥 Users (${platformUsers.length})` },
               { id: 'settings', label: '⚙️ UPI & Rules' },
             ].map((t) => (
               <button
                 key={t.id}
                 onClick={() => setAdminTab(t.id)}
-                className={`flex-shrink-0 px-3 py-1.5 rounded-xl text-[11px] font-extrabold border transition ${
-                  adminTab === t.id
-                    ? 'bg-purple-800 text-white border-purple-800 shadow-sm'
-                    : 'bg-white text-gray-700 border-gray-200'
+                className={`flex-shrink-0 px-3 py-1.5 rounded-xl text-[11px] font-extrabold border ${
+                  adminTab === t.id ? 'bg-purple-800 text-white border-purple-800' : 'bg-white text-gray-700 border-gray-200'
                 }`}
               >
                 {t.label}
@@ -1236,357 +1660,154 @@ const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
           </div>
 
           {adminTab === 'overview' && (
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-2.5">
-                <div className="bg-white p-3.5 rounded-2xl shadow-sm border border-gray-100">
-                  <p className="text-[11px] text-gray-400 font-bold">Total Sales Revenue</p>
-                  <p className="text-xl font-black text-[#00B251] mt-1">₹{totalRevenue}</p>
-                </div>
-                <div className="bg-white p-3.5 rounded-2xl shadow-sm border border-gray-100">
-                  <p className="text-[11px] text-gray-400 font-bold">Total Live Orders</p>
-                  <p className="text-xl font-black text-purple-700 mt-1">{orders.length}</p>
-                </div>
-                <div className="bg-white p-3.5 rounded-2xl shadow-sm border border-gray-100">
-                  <p className="text-[11px] text-gray-400 font-bold">Active Products</p>
-                  <p className="text-xl font-black text-gray-900 mt-1">
-                    {products.filter((p) => p.inStock).length} / {products.length}
-                  </p>
-                </div>
-                <div className="bg-white p-3.5 rounded-2xl shadow-sm border border-gray-100">
-                  <p className="text-[11px] text-gray-400 font-bold">Verified Partners</p>
-                  <p className="text-xl font-black text-amber-600 mt-1">
-                    {platformUsers.filter((u) => u.verified).length}
-                  </p>
-                </div>
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="bg-white p-3.5 rounded-2xl shadow-sm">
+                <p className="text-[11px] text-gray-400 font-bold">Total GMV / Sales</p>
+                <p className="text-xl font-black text-[#00B251] mt-1">₹{totalRevenue}</p>
               </div>
-
-              <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 space-y-2">
-                <h3 className="text-xs font-extrabold text-gray-900">Quick Admin Actions</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => setAdminTab('products')}
-                    className="bg-emerald-50 text-emerald-800 text-xs font-bold py-2.5 px-3 rounded-xl text-left"
-                  >
-                    + Edit Item Prices
-                  </button>
-                  <button
-                    onClick={() => setScreen('farmerPanel')}
-                    className="bg-amber-50 text-amber-800 text-xs font-bold py-2.5 px-3 rounded-xl text-left"
-                  >
-                    + Add New Item
-                  </button>
-                  <button
-                    onClick={() => setAdminTab('orders')}
-                    className="bg-blue-50 text-blue-800 text-xs font-bold py-2.5 px-3 rounded-xl text-left"
-                  >
-                    Maps & Delivery
-                  </button>
-                  <button
-                    onClick={() => setAdminTab('settings')}
-                    className="bg-purple-50 text-purple-800 text-xs font-bold py-2.5 px-3 rounded-xl text-left"
-                  >
-                    Edit UPI ID & Rules
-                  </button>
-                </div>
+              <div className="bg-white p-3.5 rounded-2xl shadow-sm">
+                <p className="text-[11px] text-gray-400 font-bold">Total Orders</p>
+                <p className="text-xl font-black text-purple-700 mt-1">{orders.length}</p>
               </div>
             </div>
           )}
-{adminTab === 'products' && (
-            <div className="space-y-2.5">
+
+          {adminTab === 'products' && (
+            <div className="space-y-2">
               <input
                 type="text"
                 value={adminSearch}
                 onChange={(e) => setAdminSearch(e.target.value)}
-                placeholder="Search item to edit price / stock..."
-                className="w-full bg-white border border-gray-200 rounded-xl px-3.5 py-2 text-xs font-medium"
+                placeholder="Search item to edit price..."
+                className="w-full bg-white border rounded-xl px-3 py-2 text-xs"
               />
-
-              <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-0.5">
-                {adminFilteredProducts.map((item) => (
-                  <div
-                    key={item.id}
-                    className="bg-white rounded-2xl p-3 shadow-sm border border-gray-100 flex items-center justify-between"
+              {adminFilteredProducts.slice(0, 20).map((item) => (
+                <div key={item.id} className="bg-white rounded-2xl p-3 shadow-sm flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-extrabold">{item.nameTe} ({item.nameEn})</h4>
+                    {editingPriceId === item.id ? (
+                      <div className="flex items-center space-x-1 mt-1">
+                        <input
+                          type="number"
+                          value={tempPrice}
+                          onChange={(e) => setTempPrice(e.target.value)}
+                          className="w-20 border rounded px-2 py-0.5 text-xs font-black"
+                        />
+                        <button
+                          onClick={() => {
+                            setProducts((p) => p.map((x) => (x.id === item.id ? { ...x, price: Number(tempPrice) } : x)));
+                            setEditingPriceId(null);
+                          }}
+                          className="bg-[#00B251] text-white p-1 rounded"
+                        >
+                          <Check className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-1.5 mt-1">
+                        <span className="text-xs font-black text-[#00B251]">₹{item.price}</span>
+                        <button
+                          onClick={() => {
+                            setEditingPriceId(item.id);
+                            setTempPrice(String(item.price));
+                          }}
+                          className="text-purple-700 bg-purple-50 p-1 rounded"
+                        >
+                          <Edit3 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setProducts((p) => p.filter((x) => x.id !== item.id))}
+                    className="p-1.5 bg-red-50 text-red-600 rounded-lg"
                   >
-                    <div className="max-w-[55%]">
-                      <h4 className="text-xs font-extrabold text-gray-900 truncate">
-                        {item.nameTe} ({item.nameEn})
-                      </h4>
-                      <p className="text-[10px] text-gray-400">
-                        {item.sub} • {item.unit}
-                      </p>
-
-                      {editingPriceId === item.id ? (
-                        <div className="flex items-center space-x-1 mt-1.5">
-                          <input
-                            type="number"
-                            value={tempPrice}
-                            onChange={(e) => setTempPrice(e.target.value)}
-                            className="w-20 border border-purple-400 rounded-lg px-2 py-0.5 text-xs font-black"
-                          />
-                          <button onClick={() => saveEditedPrice(item.id)} className="bg-[#00B251] text-white p-1 rounded-lg">
-                            <Check className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center space-x-1.5 mt-1">
-                          <span className="text-xs font-black text-[#00B251]">₹{item.price}</span>
-                          <button
-                            onClick={() => {
-                              setEditingPriceId(item.id);
-                              setTempPrice(String(item.price));
-                            }}
-                            className="text-purple-700 bg-purple-50 p-1 rounded"
-                          >
-                            <Edit3 className="h-3 w-3" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex items-center space-x-1.5">
-                      <button
-                        onClick={() => toggleProductStock(item.id)}
-                        className={`px-2 py-1 rounded-lg text-[10px] font-extrabold ${
-                          item.inStock
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            : 'bg-red-50 text-red-600 border border-red-200'
-                        }`}
-                      >
-                        {item.inStock ? 'In Stock' : 'Out'}
-                      </button>
-                      <button onClick={() => deleteProduct(item.id)} className="p-1.5 bg-red-50 text-red-600 rounded-lg">
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {adminTab === 'orders' && (
-            <div className="space-y-2.5">
-              {orders.map((ord) => (
-                <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-gray-100 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-purple-800">{ord.id}</span>
-                    <span className="text-xs font-black text-[#00B251]">₹{ord.total} ({ord.itemsCount} items)</span>
-                  </div>
-                  <p className="text-[11px] font-semibold text-gray-700">Customer: {ord.customer}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded">
-                      {ord.payment}
-                    </span>
-                    <a
-                      href={`https://www.google.com/maps/dir/?api=1&destination=${ord.lat},${ord.lng}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-[10px] font-extrabold text-blue-600 flex items-center space-x-1 underline"
-                    >
-                      <Navigation className="h-3 w-3" />
-                      <span>Maps Route</span>
-                    </a>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 pt-1">
-                    <div>
-                      <label className="block text-[9px] font-bold text-gray-400">Order Status</label>
-                      <select
-                        value={ord.status}
-                        onChange={(e) =>
-                          setOrders((prev) =>
-                            prev.map((o) => (o.id === ord.id ? { ...o, status: e.target.value } : o))
-                          )
-                        }
-                        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 text-[11px] font-bold"
-                      >
-                        <option value="Pending">Pending</option>
-                        <option value="Confirmed">Confirmed</option>
-                        <option value="Out for Delivery">Out for Delivery</option>
-                        <option value="Delivered">Delivered</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-[9px] font-bold text-gray-400">Assign Delivery Boy</label>
-                      <select
-                        value={ord.driver}
-                        onChange={(e) =>
-                          setOrders((prev) =>
-                            prev.map((o) => (o.id === ord.id ? { ...o, driver: e.target.value } : o))
-                          )
-                        }
-                        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 text-[11px] font-bold"
-                      >
-                        <option value="Unassigned">Unassigned</option>
-                        <option value="Ravi (Kovur)">Ravi (Kovur)</option>
-                        <option value="Suresh (Nellore Town)">Suresh (Nellore Town)</option>
-                        <option value="Kiran (Buchireddypalem)">Kiran (Buchi)</option>
-                      </select>
-                    </div>
-                  </div>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
                 </div>
               ))}
             </div>
           )}
 
-          {adminTab === 'users' && (
+{adminTab === 'orders' && (
             <div className="space-y-2.5">
-              {platformUsers.map((u) => (
-                <div
-                  key={u.id}
-                  className="bg-white rounded-2xl p-3.5 shadow-sm border border-gray-100 flex items-center justify-between"
-                >
-                  <div>
-                    <h4 className="text-xs font-extrabold text-gray-900">{u.name}</h4>
-                    <p className="text-[11px] text-gray-500">
-                      {u.role} • +91 {u.mobile}
-                    </p>
+              {orders.map((ord) => (
+                <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm space-y-1.5 text-xs">
+                  <div className="flex justify-between font-black">
+                    <span>{ord.id} ({ord.type})</span>
+                    <span className="text-[#00B251]">₹{ord.total}</span>
                   </div>
-                  <button
-                    onClick={() =>
-                      setPlatformUsers((prev) =>
-                        prev.map((usr) => (usr.id === u.id ? { ...usr, verified: !usr.verified } : usr))
-                      )
-                    }
-                    className={`px-3 py-1 rounded-xl text-[11px] font-extrabold ${
-                      u.verified
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : 'bg-amber-50 text-amber-700 border border-amber-200'
-                    }`}
+                  <p className="text-[11px] text-gray-600">{ord.summary}</p>
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${ord.lat},${ord.lng}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center space-x-1 text-blue-600 font-bold underline"
                   >
-                    {u.verified ? '✓ Verified' : 'Approve Now'}
-                  </button>
+                    <Navigation className="h-3 w-3" />
+                    <span>Open Google Maps Route</span>
+                  </a>
                 </div>
               ))}
             </div>
           )}
 
           {adminTab === 'settings' && (
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 space-y-3 text-xs">
+            <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3 text-xs">
               <div>
-                <label className="block font-bold text-gray-700 mb-1">
-                  Merchant UPI ID (PhonePe / GPay / Paytm)
-                </label>
+                <label className="block font-bold mb-1">Merchant UPI ID</label>
                 <input
                   type="text"
                   value={merchantUpiId}
                   onChange={(e) => setMerchantUpiId(e.target.value)}
-                  placeholder="8328261103@ybl"
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 font-black text-purple-800"
+                  className="w-full bg-gray-50 border rounded-xl px-3 py-2 font-black text-purple-800"
                 />
               </div>
-
               <div>
-                <label className="block font-bold text-gray-700 mb-1">
-                  Free Delivery Minimum Order (₹)
-                </label>
+                <label className="block font-bold mb-1">Free Delivery Above (₹)</label>
                 <input
                   type="number"
                   value={freeDeliveryMin}
                   onChange={(e) => setFreeDeliveryMin(Number(e.target.value))}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 font-black text-[#00B251]"
+                  className="w-full bg-gray-50 border rounded-xl px-3 py-2 font-black"
                 />
               </div>
-
-              <div>
-                <label className="block font-bold text-gray-700 mb-1">
-                  Standard Nellore Delivery Fee (₹)
-                </label>
-                <input
-                  type="number"
-                  value={baseDeliveryFee}
-                  onChange={(e) => setBaseDeliveryFee(Number(e.target.value))}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 font-black text-gray-900"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-gray-700 mb-1">
-                  Home Banner Discount Percentage (%)
-                </label>
-                <input
-                  type="number"
-                  value={bannerDiscount}
-                  onChange={(e) => setBannerDiscount(Number(e.target.value))}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 font-black text-purple-800"
-                />
-              </div>
-
-              <button
-                onClick={() => setScreen('home')}
-                className="w-full bg-purple-800 text-white font-extrabold py-3 rounded-xl shadow-md"
-              >
-                Save & Preview Live App
-              </button>
             </div>
           )}
         </main>
       )}
-{/* SCREEN 8: DELIVERY PARTNER (WITH FREE GOOGLE MAPS NAVIGATION) & SHOPKEEPER DASHBOARD */}
-      {screen === 'roleDashboard' && loggedInUser && (
+
+      {/* =========================================================
+          5. DELIVERY PARTNER DASHBOARD
+         ========================================================= */}
+      {screen === 'roleDashboard' && (
         <main className="px-4 pt-4 space-y-3">
-          <div className="bg-[#0B5D34] text-white rounded-2xl p-4 shadow-sm">
-            <h2 className="text-base font-black">
-              {lang === 'te' ? loggedInUser.role.titleTe : loggedInUser.role.titleEn} Dashboard
-            </h2>
-            <p className="text-xs text-emerald-100">Verified Mobile: +91 {loggedInUser.mobile}</p>
+          <div className="bg-blue-900 text-white rounded-2xl p-4 shadow-sm">
+            <h2 className="text-base font-black">Delivery Partner Dashboard</h2>
+            <p className="text-xs text-blue-200">+91 {loggedInUser.mobile} • Nellore Fleet</p>
           </div>
-
-          {loggedInUser.role.id === 'delivery' ? (
-            <div className="space-y-2.5">
-              {orders.map((ord) => (
-                <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-gray-100 space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-black text-gray-900">{ord.id} • {ord.status}</span>
-                    <span className="text-xs font-black text-[#00B251]">₹{ord.total}</span>
-                  </div>
-                  <p className="text-[11px] text-gray-600">{ord.customer}</p>
-                  <p className="text-[10px] font-bold text-gray-500">{ord.payment}</p>
-
-                  <div className="flex space-x-2 pt-1">
-                    <a
-                      href={`https://www.google.com/maps/dir/?api=1&destination=${ord.lat},${ord.lng}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex-1 bg-blue-600 text-white text-xs font-extrabold py-2 rounded-xl flex items-center justify-center space-x-1.5 shadow-sm"
-                    >
-                      <Navigation className="h-3.5 w-3.5" />
-                      <span>{lang === 'te' ? 'Google Maps లో రూట్ చూడు' : 'Navigate in Google Maps'}</span>
-                    </a>
-
-                    {ord.status !== 'Delivered' && (
-                      <button
-                        onClick={() =>
-                          setOrders((prev) =>
-                            prev.map((o) => (o.id === ord.id ? { ...o, status: 'Delivered' } : o))
-                          )
-                        }
-                        className="bg-[#00B251] text-white text-xs font-extrabold px-3 py-2 rounded-xl"
-                      >
-                        ✓ Delivered
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
+          {orders.map((ord) => (
+            <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm space-y-2 text-xs">
+              <div className="flex justify-between font-black">
+                <span>{ord.id} • {ord.status}</span>
+                <span className="text-[#00B251]">₹{ord.total}</span>
+              </div>
+              <p className="text-[11px] text-gray-600">{ord.customer} — {ord.summary}</p>
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${ord.lat},${ord.lng}`}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full bg-blue-600 text-white font-extrabold py-2 rounded-xl flex items-center justify-center space-x-1.5"
+              >
+                <Navigation className="h-3.5 w-3.5" />
+                <span>Navigate in Google Maps</span>
+              </a>
             </div>
-          ) : (
-            <div className="bg-white rounded-2xl p-4 shadow-sm space-y-2.5 text-xs">
-              <p className="font-bold text-gray-800">
-                {lang === 'te'
-                  ? 'నెల్లూరు రైతుల నుండి నేరుగా హోల్‌సేల్ ధరలకు సరుకు ఆర్డర్ చేయండి.'
-                  : 'Order bulk wholesale produce & livestock directly from Nellore farmers.'}
-              </p>
-              <button onClick={() => setScreen('home')} className="bg-[#00B251] text-white font-bold px-4 py-2 rounded-xl">
-                {lang === 'te' ? 'లైవ్ మార్కెట్ కి వెళ్ళండి' : 'Go to Live Marketplace'}
-              </button>
-            </div>
-          )}
+          ))}
         </main>
       )}
 
-      {/* GREEN BOTTOM NAVIGATION WITH FLOATING WHITE CIRCULAR CART */}
+      {/* BOTTOM GREEN NAVIGATION BAR WITH FLOATING WHITE CART */}
       <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#00B251] text-white rounded-t-[26px] px-6 py-2.5 flex items-center justify-between shadow-2xl z-40">
         <button
           onClick={() => setScreen('home')}
@@ -1621,41 +1842,27 @@ const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
         </button>
 
         <button
-          onClick={() =>
-            loggedInUser?.role?.id === 'admin'
-              ? setScreen('adminPanel')
-              : loggedInUser?.role?.id === 'farmer'
-              ? setScreen('farmerPanel')
-              : loggedInUser?.role?.id === 'delivery'
-              ? setScreen('roleDashboard')
-              : setScreen('cart')
-          }
+          onClick={() => {
+            const r = loggedInUser?.role?.id;
+            if (r === 'farmer') setScreen('farmerPanel');
+            else if (r === 'retail') setScreen('retailPanel');
+            else if (r === 'wholesale') setScreen('wholesalePanel');
+            else if (r === 'admin') setScreen('adminPanel');
+            else if (r === 'delivery') setScreen('roleDashboard');
+            else setScreen('cart');
+          }}
           className="flex flex-col items-center space-y-0.5 text-emerald-100/80"
         >
           <ClipboardList className="h-5 w-5" />
-          <span className="text-[10px]">
-            {loggedInUser?.role?.id === 'admin'
-              ? 'Admin'
-              : loggedInUser?.role?.id === 'farmer'
-              ? lang === 'te'
-                ? 'పంట చేర్చు'
-                : 'Sell'
-              : loggedInUser?.role?.id === 'delivery'
-              ? 'Maps'
-              : lang === 'te'
-              ? 'ఆర్డర్లు'
-              : 'Orders'}
-          </span>
+          <span className="text-[10px]">{loggedInUser.role.titleEn.split(' ')[0]}</span>
         </button>
 
         <button
-          onClick={() => setScreen('roles')}
-          className={`flex flex-col items-center space-y-0.5 ${
-            screen === 'roles' || screen === 'otp' ? 'text-white font-extrabold' : 'text-emerald-100/80'
-          }`}
+          onClick={handleLogout}
+          className="flex flex-col items-center space-y-0.5 text-emerald-100/80"
         >
           <User className="h-5 w-5" />
-          <span className="text-[10px]">{lang === 'te' ? 'లాగిన్' : 'Roles'}</span>
+          <span className="text-[10px]">{lang === 'te' ? 'రోల్ మార్చు' : 'Switch'}</span>
         </button>
       </nav>
     </div>
