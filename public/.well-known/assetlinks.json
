@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.vercel.rythu_market_rythu_market.twa",
+        "sha256_cert_fingerprints": ["1A:9D:2B:CC:98:CE:6A:6B:BA:71:59:8D:28:63:E5:9C:7A:D2:7B:57:52:35:B7:C9:1B:6E:B5:9B:3D:75:A4:D6"]
+      }
+    }]
