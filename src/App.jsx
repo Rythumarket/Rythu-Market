@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+React, { useState } from 'react';
 import {
   Search, ShoppingCart, Plus, Minus, Home, Grid,
   ClipboardList, User, MapPin, Phone, Sprout,
@@ -6,7 +6,8 @@ import {
   CheckCircle2, Lock, KeyRound, LogOut,
   Edit3, Check, Bell, MessageCircle,
   Warehouse, Camera, MessageSquare, Leaf, Handshake,
-  Percent, TrendingUp, Zap, Heart, Tag, LocateFixed
+  Percent, TrendingUp, Zap, Heart, Tag, QrCode,
+  Trash2, Ticket, Smartphone, Wallet, Navigation
 } from 'lucide-react';
 
 const CAT_IMG = {
@@ -64,6 +65,7 @@ const INITIAL_SHOPS = [
     approved: true,
   },
 ];
+
 const INITIAL_PRODUCTS = [
   // FARMER ITEMS
   { id: 'v1', sellerId: 'shop_farmer_1', sellerType: 'farmer', sellerName: 'Ramaiah Farm (Kovur)', nameEn: 'Tomato', nameTe: 'టమాటా', unit: 'kg', minQty: 1, price: 24, oldPrice: 32, cat: 'vegetables', inStock: true, img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=300&q=80' },
@@ -87,7 +89,7 @@ const INITIAL_PRODUCTS = [
 
 export default function App() {
   const [lang, setLang] = useState('te');
-  // 'portalHome' (1st Image Theme) -> 'roleWelcome' (2nd Image Theme) -> 'auth' -> 'market' | 'shopDashboard' | 'deliveryDashboard' | 'adminPanel' | 'cart'
+  // 'portalHome' -> 'roleWelcome' -> 'auth' -> 'market' | 'cart' | 'checkout' | 'payment' | 'myOrders' | 'shopDashboard' | 'deliveryDashboard' | 'adminPanel'
   const [screen, setScreen] = useState('portalHome');
   const [shops, setShops] = useState(INITIAL_SHOPS);
   const [products, setProducts] = useState(INITIAL_PRODUCTS);
@@ -95,7 +97,7 @@ export default function App() {
   const [selectedRoleObj, setSelectedRoleObj] = useState(null);
   const [loggedInUser, setLoggedInUser] = useState(null);
 
-  // Market Filters & Cart
+// Market Filters & Cart
   const [selectedCat, setSelectedCat] = useState('all');
   const [selectedSourceFilter, setSelectedSourceFilter] = useState('all');
   const [search, setSearch] = useState('');
@@ -103,16 +105,29 @@ export default function App() {
   const [latestInvoice, setLatestInvoice] = useState(null);
   const [alertBanner, setAlertBanner] = useState('');
 
-  // Checkout Address, GPS & Payment
+  // Checkout Address, GPS & Coupons/Promo Codes
   const [deliveryAddress, setDeliveryAddress] = useState('Vedayapalem, Nellore');
   const [gpsCoords, setGpsCoords] = useState({ lat: 14.4426, lng: 79.9865 });
   const [gpsStatus, setGpsStatus] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('upi');
+  const [promoCodeInput, setPromoCodeInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null); // { code, discountAmount, label }
+  const [couponError, setCouponError] = useState('');
+
+  // Dedicated Payment Page States (QR, PhonePe, GPay, Paytm, Other Apps, COD)
+  const [selectedPayOption, setSelectedPayOption] = useState('qr'); // 'qr' | 'phonepe' | 'gpay' | 'paytm' | 'other' | 'cod'
   const [upiRefInput, setUpiRefInput] = useState('');
 
-  const [merchantUpiId] = useState('8328261103@ybl');
-  const [freeDeliveryMin] = useState(499);
-  const [baseDeliveryFee] = useState(25);
+  // Admin Settings & Coupons
+  const [merchantUpiId, setMerchantUpiId] = useState('8328261103@ybl');
+  const [freeDeliveryMin, setFreeDeliveryMin] = useState(499);
+  const [baseDeliveryFee, setBaseDeliveryFee] = useState(25);
+  const [coupons, setCoupons] = useState([
+    { code: 'RYTHU50', type: 'flat', value: 50, minOrder: 299, desc: 'Flat ₹50 Off on orders above ₹299' },
+    { code: 'NELLORE10', type: 'percent', value: 10, minOrder: 199, desc: '10% Instant Discount (up to ₹150)' },
+    { code: 'FRESH30', type: 'flat', value: 30, minOrder: 149, desc: '₹30 Off on Fresh Farm Produce' },
+  ]);
+  const [newCouponCode, setNewCouponCode] = useState('');
+  const [newCouponValue, setNewCouponValue] = useState('');
 
   // Orders
   const [orders, setOrders] = useState([
@@ -125,9 +140,10 @@ export default function App() {
       lng: 79.9692,
       summary: '20 kg Onion Bulk Sack @ ₹23/kg',
       total: 460,
-      payment: 'UPI Paid (UTR: 43198201)',
+      payment: 'PhonePe Paid (UTR: 43198201)',
       period: 'today',
       status: 'Pending',
+      driver: 'Unassigned',
     },
     {
       id: 'RB-102',
@@ -138,9 +154,10 @@ export default function App() {
       lng: 79.9865,
       summary: '2 kg Red Onion + 1 L Full Cream Milk',
       total: 132,
-      payment: 'UPI Paid (UTR: 88219034)',
+      payment: 'Google Pay Paid (UTR: 88219034)',
       period: 'today',
       status: 'Pending',
+      driver: 'Ravi (Kovur)',
     },
     {
       id: 'RB-098',
@@ -151,9 +168,10 @@ export default function App() {
       lng: 79.9722,
       summary: '50 kg Potato Bulk Crate @ ₹21/kg',
       total: 1050,
-      payment: 'Bank Transfer Settled',
+      payment: 'QR Scan Paid',
       period: 'week',
       status: 'Delivered',
+      driver: 'Suresh (Nellore)',
     },
   ]);
 
@@ -194,9 +212,12 @@ export default function App() {
   const [editCod, setEditCod] = useState(true);
   const [bankSavedMsg, setBankSavedMsg] = useState('');
 
-  const [adminTab, setAdminTab] = useState('approvals');
+ // Admin Panel Tabs & Search
+  const [adminTab, setAdminTab] = useState('overview'); // 'overview' | 'approvals' | 'items' | 'orders' | 'settings'
+  const [adminItemSearch, setAdminItemSearch] = useState('');
+  const [adminEditPriceId, setAdminEditPriceId] = useState(null);
+  const [adminTempPrice, setAdminTempPrice] = useState('');
 
-  // 2nd Image Role Onboarding Metadata (Exact match to 1000043360.png)
   const ROLE_CARDS = {
     customer: {
       id: 'customer',
@@ -258,7 +279,7 @@ export default function App() {
         { icon: Truck, label: 'Reliable Supply' },
       ],
     },
-delivery: {
+    delivery: {
       id: 'delivery',
       titleTe: 'డెలివరీ పార్టనర్',
       titleEn: 'Delivery & Maps',
@@ -278,13 +299,13 @@ delivery: {
       titleTe: 'అడ్మిన్ (Admin)',
       titleEn: 'Admin Login',
       bannerTitle: 'For Master Admin',
-      bannerSubtitle: 'Verify Shops, Prices & Nellore Operations',
+      bannerSubtitle: 'Verify Shops, Prices, Coupons & Nellore Orders',
       heroImg: 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=500&q=80',
       cardBg: 'bg-[#E3F4F4] border-[#C4E6E6]',
       iconEmoji: '🛡️',
       pillars: [
         { icon: ShieldCheck, label: 'Shop Approvals' },
-        { icon: Tag, label: 'Price Control' },
+        { icon: Tag, label: 'Price & Coupons' },
         { icon: Truck, label: 'Live Tracking' },
       ],
     },
@@ -299,13 +320,11 @@ delivery: {
     { id: 'livestock', nameEn: 'Eggs & Poultry', nameTe: 'గుడ్లు, కోళ్లు', emoji: '🐓' },
   ];
 
-  // Open Role -> Shows 2nd Image Role Welcome Screen first!
   const handlePickRoleCard = (roleKey) => {
     setSelectedRoleObj(ROLE_CARDS[roleKey]);
     setScreen('roleWelcome');
   };
 
-  // Proceed from 2nd Image Role Welcome Screen -> Auth / Login / Registration
   const handleContinueFromWelcome = () => {
     setMobileInput('');
     setPasswordInput('');
@@ -316,7 +335,7 @@ delivery: {
     setScreen('auth');
   };
 
-  // Cart & Product Filtering
+// Products & Cart Calculations
   const approvedShopIds = new Set(shops.filter((s) => s.approved).map((s) => s.id));
   const visibleProducts = products.filter((p) => {
     const isApproved = approvedShopIds.has(p.sellerId);
@@ -350,7 +369,32 @@ delivery: {
     return sum + (p ? p.price * qty : 0);
   }, 0);
   const deliveryFee = subtotal === 0 ? 0 : subtotal >= freeDeliveryMin ? 0 : baseDeliveryFee;
-  const grandTotal = subtotal + deliveryFee;
+
+  // Coupon / Promo Code Calculation
+  const couponDiscount = (() => {
+    if (!appliedCoupon || subtotal === 0) return 0;
+    if (subtotal < appliedCoupon.minOrder) return 0;
+    if (appliedCoupon.type === 'flat') return appliedCoupon.value;
+    return Math.min(150, Math.round((subtotal * appliedCoupon.value) / 100));
+  })();
+
+  const grandTotal = Math.max(0, subtotal + deliveryFee - couponDiscount);
+
+  const handleApplyPromoCode = (codeStr) => {
+    const clean = (codeStr || promoCodeInput).trim().toUpperCase();
+    const found = coupons.find((c) => c.code === clean);
+    if (!found) {
+      setCouponError('Invalid Promo Code! Try RYTHU50, NELLORE10, or FRESH30');
+      return;
+    }
+    if (subtotal < found.minOrder) {
+      setCouponError(`Minimum order ₹${found.minOrder} required for ${found.code}`);
+      return;
+    }
+    setAppliedCoupon(found);
+    setPromoCodeInput(found.code);
+    setCouponError('');
+  };
 
   // GPS & Invoices
   const handleCaptureGps = () => {
@@ -371,7 +415,7 @@ delivery: {
   };
 
   const buildInvoiceText = (ord) =>
-    `RYTHU BASKET NELLORE - INVOICE\nOrder ID: ${ord.id}\nCustomer: ${ord.customer}\nItems: ${ord.summary}\nTotal: Rs.${ord.total}\nPayment: ${ord.payment}\nStatus: DELIVERED`;
+    `RYTHU BASKET NELLORE - INVOICE\nOrder ID: ${ord.id}\nCustomer: ${ord.customer}\nItems: ${ord.summary}\nTotal Paid: Rs.${ord.total}\nPayment: ${ord.payment}\nStatus: DELIVERED`;
 
   const getWhatsAppInvoiceLink = (ord) => {
     const phone = `91${(ord.buyerMobile || '9876543210').replace(/\D/g, '').slice(-10)}`;
@@ -390,7 +434,8 @@ delivery: {
     window.open(getWhatsAppInvoiceLink(updatedOrd), '_blank');
   };
 
-  const handlePlaceCustomerOrder = () => {
+  // Final Order Confirmation from Dedicated Payment Screen
+  const handleConfirmFinalPayment = () => {
     const entries = Object.entries(cart);
     if (entries.length === 0) return;
     const firstProd = products.find((p) => p.id === entries[0][0]);
@@ -402,33 +447,45 @@ delivery: {
       .filter(Boolean)
       .join(', ');
 
+    const payLabels = {
+      qr: 'QR Code Scan',
+      phonepe: 'PhonePe UPI',
+      gpay: 'Google Pay (GPay)',
+      paytm: 'Paytm UPI',
+      other: 'Other UPI App',
+      cod: 'Cash on Delivery (COD)',
+    };
+
     const paymentStr =
-      paymentMethod === 'upi'
-        ? `UPI (${upiRefInput.trim() ? 'UTR: ' + upiRefInput.trim() : 'Paid via UPI'})`
-        : 'Cash on Delivery (COD)';
+      selectedPayOption === 'cod'
+        ? 'Cash on Delivery (COD)'
+        : `${payLabels[selectedPayOption]}${upiRefInput.trim() ? ' (UTR: ' + upiRefInput.trim() + ')' : ''}`;
 
     const newOrd = {
       id: 'RB-' + Math.floor(105 + Math.random() * 890),
       sellerId: firstProd?.sellerId || 'shop_retail_1',
       buyerMobile: loggedInUser?.mobile || '9876543210',
-      customer: `${loggedInUser?.mobile || '9876543210'} (${deliveryAddress})`,
+      customer: `${loggedInUser?.name || 'Buyer'} (${loggedInUser?.mobile || '9876543210'} • ${deliveryAddress})`,
       lat: gpsCoords.lat,
       lng: gpsCoords.lng,
-      summary: itemLines,
+      summary: itemLines + (appliedCoupon ? ` [Coupon: ${appliedCoupon.code} -₹${couponDiscount}]` : ''),
       total: grandTotal,
       payment: paymentStr,
       period: 'today',
       status: 'Pending',
+      driver: 'Unassigned',
     };
 
     setOrders([newOrd, ...orders]);
     setCart({});
+    setAppliedCoupon(null);
+    setPromoCodeInput('');
     setUpiRefInput('');
-    setAlertBanner(`✅ Order ${newOrd.id} placed successfully!`);
+    setAlertBanner(`✅ Order ${newOrd.id} Confirmed via ${payLabels[selectedPayOption]}! Total: ₹${grandTotal}`);
     setScreen('market');
   };
 
-  // Auth Handlers
+// Auth Handlers
   const handleSendOtp = () => {
     if (mobileInput.replace(/\D/g, '').length !== 10) {
       setAuthError('10 అంకెల మొబైల్ నంబర్ ఇవ్వండి');
@@ -440,7 +497,7 @@ delivery: {
     setAuthError('');
   };
 
-const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = (e) => {
     e.preventDefault();
     const roleId = selectedRoleObj.id;
 
@@ -560,35 +617,36 @@ const handleLoginSubmit = (e) => {
     setAlertBanner(`✅ ${newProd.nameEn} added to your inventory!`);
   };
 
-  const currentShopRecord = shops.find((s) => s.id === loggedInUser?.shopId);
+const currentShopRecord = shops.find((s) => s.id === loggedInUser?.shopId);
   const myShopProducts = products.filter((p) => p.sellerId === loggedInUser?.shopId);
   const myShopOrders = orders.filter((o) => o.sellerId === loggedInUser?.shopId);
   const filteredPaymentOrders = myShopOrders.filter((o) => o.period === paymentPeriodFilter);
   const filteredPaymentSum = filteredPaymentOrders.reduce((s, o) => s + o.total, 0);
 
+  // Payment Links for QR, PhonePe, Google Pay, Paytm, Other UPI Apps
   const activeSellerShop = (() => {
     const firstId = Object.keys(cart)[0];
     const prod = products.find((p) => p.id === firstId);
     return shops.find((s) => s.id === prod?.sellerId);
   })();
-  const activeUpiId = activeSellerShop?.upiId || merchantUpiId;
-  const upiDeepLink = `upi://pay?pa=${encodeURIComponent(activeUpiId)}&pn=${encodeURIComponent(
-    activeSellerShop?.storeName || 'Rythu Basket'
-  )}&am=${grandTotal}&cu=INR`;
-  const freeQrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(upiDeepLink)}`;
+  const payUpiId = activeSellerShop?.upiId || merchantUpiId;
+  const payName = encodeURIComponent(activeSellerShop?.storeName || 'Rythu Basket Nellore');
+  const genericUpiUri = `upi://pay?pa=${encodeURIComponent(payUpiId)}&pn=${payName}&am=${grandTotal}&cu=INR`;
+  const phonePeUri = `phonepe://pay?pa=${encodeURIComponent(payUpiId)}&pn=${payName}&am=${grandTotal}&cu=INR`;
+  const gpayUri = `tez://upi/pay?pa=${encodeURIComponent(payUpiId)}&pn=${payName}&am=${grandTotal}&cu=INR`;
+  const paytmUri = `paytmmp://pay?pa=${encodeURIComponent(payUpiId)}&pn=${payName}&am=${grandTotal}&cu=INR`;
+  const freeQrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(genericUpiUri)}`;
 
- // =========================================================================
-  // VIEW 1: 1ST REFERENCE IMAGE HOME THEME (1000043358.png) WITH EXACT LOGO
+  // =========================================================================
+  // VIEW 1: HOME SCREEN AS IT IS (1000043358_2.png) WITH ONLY 'HOME' AT BOTTOM
   // =========================================================================
   if (screen === 'portalHome') {
     return (
       <div className="min-h-screen bg-[#FAF8F2] max-w-md mx-auto relative pb-24 font-sans text-gray-800 shadow-2xl overflow-x-hidden">
         {/* TOP FOREST-GREEN HERO HEADER WITH YOUR UNCHANGED LOGO */}
         <div className="bg-gradient-to-b from-[#0E6A2E] via-[#1B8A3D] to-[#74C365] text-white rounded-b-[36px] px-4 pt-5 pb-7 relative overflow-hidden shadow-md">
-          {/* Top Brand Row */}
           <div className="flex items-center justify-between relative z-10">
             <div className="flex items-center space-x-2.5">
-              {/* YOUR EXACT LOGO - UNCHANGED */}
               <div className="h-14 w-14 rounded-full bg-white p-0.5 shadow-lg border-2 border-yellow-300 overflow-hidden flex-shrink-0">
                 <img src="/icon-512.png" alt="Rythu Basket Logo" className="h-full w-full object-cover rounded-full" />
               </div>
@@ -603,7 +661,6 @@ const handleLoginSubmit = (e) => {
               </div>
             </div>
 
-            {/* Language Pill & Bell */}
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setLang(lang === 'te' ? 'en' : 'te')}
@@ -622,7 +679,6 @@ const handleLoginSubmit = (e) => {
             </div>
           </div>
 
-          {/* Hero Tagline + Farmer Visual + Order Now Pill */}
           <div className="mt-5 flex items-center justify-between relative z-10">
             <div className="max-w-[58%] space-y-2.5">
               <p className="text-sm font-extrabold text-[#0A471E] bg-white/85 backdrop-blur-sm px-2.5 py-1 rounded-lg inline-block">
@@ -650,14 +706,14 @@ const handleLoginSubmit = (e) => {
           </div>
         </div>
 
-        {/* Carousel Indicator Dots */}
+        {/* Dots */}
         <div className="flex justify-center space-x-1.5 mt-2.5">
           <span className="h-2 w-2 rounded-full bg-[#126E2E]"></span>
           <span className="h-2 w-2 rounded-full bg-gray-300"></span>
           <span className="h-2 w-2 rounded-full bg-gray-300"></span>
         </div>
 
-        {/* 2-COLUMN PASTEL ROLE CARDS GRID (EXACT 1ST IMAGE STYLE) */}
+        {/* 2-COLUMN ROLE CARDS */}
         <div className="px-4 pt-3 grid grid-cols-2 gap-3">
           {Object.values(ROLE_CARDS).map((rc) => (
             <button
@@ -681,7 +737,7 @@ const handleLoginSubmit = (e) => {
           ))}
         </div>
 
-        {/* CONTACT SUPPORT GREEN BANNER (EXACT 1ST IMAGE STYLE) */}
+        {/* CONTACT SUPPORT BANNER */}
         <div className="px-4 mt-3.5">
           <div className="bg-gradient-to-r from-[#146B2E] to-[#238E43] rounded-2xl p-3.5 text-white flex items-center justify-between shadow-md">
             <div className="flex items-center space-x-3">
@@ -703,7 +759,7 @@ const handleLoginSubmit = (e) => {
           </div>
         </div>
 
-        {/* RYTHU BASKET HIGHLIGHTS CARD (EXACT 1ST IMAGE STYLE) */}
+        {/* RYTHU BASKET HIGHLIGHTS */}
         <div className="px-4 mt-3.5">
           <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-emerald-100">
             <div className="flex items-center space-x-1.5 mb-2.5">
@@ -731,35 +787,14 @@ const handleLoginSubmit = (e) => {
           </div>
         </div>
 
-        {/* BOTTOM DARK-GREEN NAVIGATION BAR (EXACT 1ST IMAGE STYLE) */}
-        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0C4A20] text-white rounded-t-[26px] px-5 py-2.5 flex items-center justify-between shadow-2xl z-40">
+        {/* BOTTOM NAVIGATION BAR WITH ONLY 'HOME' OPTION ON HOME SCREEN */}
+        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0C4A20] text-white rounded-t-[26px] px-5 py-2.5 flex items-center justify-center shadow-2xl z-40">
           <button
             onClick={() => setScreen('portalHome')}
-            className="bg-[#C8E99A] text-[#0C4A20] font-black text-xs px-4 py-2 rounded-full flex items-center space-x-1.5 shadow"
+            className="bg-[#C8E99A] text-[#0C4A20] font-black text-xs px-8 py-2.5 rounded-full flex items-center space-x-2 shadow-md"
           >
             <Home className="h-4 w-4" />
             <span>Home</span>
-          </button>
-          <button
-            onClick={() => handlePickRoleCard('customer')}
-            className="flex flex-col items-center text-emerald-100/80 text-[10px] font-bold"
-          >
-            <ShoppingCart className="h-4 w-4 mb-0.5" />
-            <span>Orders</span>
-          </button>
-          <button
-            onClick={() => handlePickRoleCard('wholesale')}
-            className="flex flex-col items-center text-emerald-100/80 text-[10px] font-bold"
-          >
-            <Grid className="h-4 w-4 mb-0.5" />
-            <span>More</span>
-          </button>
-          <button
-            onClick={() => handlePickRoleCard('farmer')}
-            className="flex flex-col items-center text-emerald-100/80 text-[10px] font-bold"
-          >
-            <User className="h-4 w-4 mb-0.5" />
-            <span>Profile</span>
           </button>
         </nav>
       </div>
@@ -767,12 +802,11 @@ const handleLoginSubmit = (e) => {
   }
 
 // =========================================================================
-  // VIEW 2: 2ND REFERENCE IMAGE ROLE WELCOME SCREEN (1000043360.png)
+  // VIEW 2: ROLE WELCOME SCREEN (2ND IMAGE THEME)
   // =========================================================================
   if (screen === 'roleWelcome' && selectedRoleObj) {
     return (
       <div className="min-h-screen bg-[#FAF6E9] max-w-md mx-auto font-sans text-gray-800 shadow-2xl flex flex-col justify-between pb-6">
-        {/* Top Sky-Blue & Farm Landscape Header with Unchanged Logo */}
         <div>
           <div className="bg-gradient-to-b from-[#BCE4FA] via-[#E4F4FD] to-[#FAF6E9] pt-5 px-5 pb-4 relative">
             <div className="flex items-center justify-between mb-4">
@@ -783,7 +817,6 @@ const handleLoginSubmit = (e) => {
                 <ArrowLeft className="h-4 w-4" />
               </button>
 
-              {/* YOUR EXACT LOGO - UNCHANGED */}
               <div className="flex items-center space-x-2">
                 <div className="h-12 w-12 rounded-full bg-white p-0.5 shadow border-2 border-[#1B8A3D] overflow-hidden">
                   <img src="/icon-512.png" alt="Rythu Basket Logo" className="h-full w-full object-cover rounded-full" />
@@ -798,27 +831,19 @@ const handleLoginSubmit = (e) => {
               <div className="w-9" />
             </div>
 
-            {/* Role Title & Hero Visual (Matches 2nd Image Cards) */}
             <div className="text-center mt-2">
               <h1 className="text-3xl font-black text-[#12682B] tracking-tight drop-shadow-sm">
                 {selectedRoleObj.bannerTitle}
               </h1>
               <div className="w-28 h-1 bg-amber-400 rounded-full mx-auto my-1.5"></div>
-              <p className="text-sm font-extrabold text-gray-800">
-                {selectedRoleObj.bannerSubtitle}
-              </p>
+              <p className="text-sm font-extrabold text-gray-800">{selectedRoleObj.bannerSubtitle}</p>
             </div>
 
             <div className="mt-4 h-56 w-full rounded-3xl overflow-hidden shadow-lg border-4 border-white">
-              <img
-                src={selectedRoleObj.heroImg}
-                alt={selectedRoleObj.bannerTitle}
-                className="w-full h-full object-cover"
-              />
+              <img src={selectedRoleObj.heroImg} alt={selectedRoleObj.bannerTitle} className="w-full h-full object-cover" />
             </div>
           </div>
 
-          {/* 3-Column Feature Pillars Card (Matches 2nd Image Bottom Card) */}
           <div className="px-5 -mt-4 relative z-10">
             <div className="bg-[#FFFDF5] rounded-3xl p-4 shadow-md border border-amber-100 grid grid-cols-3 gap-2 text-center">
               {selectedRoleObj.pillars.map((pil, idx) => {
@@ -828,9 +853,7 @@ const handleLoginSubmit = (e) => {
                     <div className="h-10 w-10 rounded-full bg-emerald-50 text-[#12682B] flex items-center justify-center shadow-sm">
                       <Icon className="h-5 w-5" />
                     </div>
-                    <span className="text-[11px] font-extrabold text-gray-800 leading-tight">
-                      {pil.label}
-                    </span>
+                    <span className="text-[11px] font-extrabold text-gray-800 leading-tight">{pil.label}</span>
                   </div>
                 );
               })}
@@ -838,7 +861,6 @@ const handleLoginSubmit = (e) => {
           </div>
         </div>
 
-        {/* Green "Continue ->" Pill Button & Dots (Matches 2nd Image) */}
         <div className="px-6 pt-5 space-y-3 text-center">
           <button
             onClick={handleContinueFromWelcome}
@@ -847,19 +869,13 @@ const handleLoginSubmit = (e) => {
             <span>Continue</span>
             <span>➔</span>
           </button>
-
-          <div className="flex justify-center space-x-1.5">
-            <span className="h-2 w-2 rounded-full bg-[#12682B]"></span>
-            <span className="h-2 w-2 rounded-full bg-gray-300"></span>
-            <span className="h-2 w-2 rounded-full bg-gray-300"></span>
-          </div>
         </div>
       </div>
     );
   }
 
   // =========================================================================
-  // VIEW 3: AUTHENTICATION / MANDATORY REGISTRATION SCREEN (1ST IMAGE THEME)
+  // VIEW 3: AUTHENTICATION & REGISTRATION SCREEN
   // =========================================================================
   if (screen === 'auth' && selectedRoleObj) {
     return (
@@ -877,7 +893,7 @@ const handleLoginSubmit = (e) => {
               <p className="text-[11px] text-emerald-100">
                 {selectedRoleObj.id === 'customer' || selectedRoleObj.id === 'admin'
                   ? 'Mobile Number + OTP Login'
-                  : 'Login or Mandatory First-Time Shop Registration'}
+                  : 'Login or First-Time Registration'}
               </p>
             </div>
           </div>
@@ -896,10 +912,7 @@ const handleLoginSubmit = (e) => {
                   className="w-full bg-[#FAF8F2] border border-emerald-200 rounded-xl px-3.5 py-2.5 text-sm font-bold"
                 />
                 {!otpSent ? (
-                  <button
-                    onClick={handleSendOtp}
-                    className="w-full bg-[#126E2E] text-white font-extrabold text-xs py-3 rounded-xl shadow"
-                  >
+                  <button onClick={handleSendOtp} className="w-full bg-[#126E2E] text-white font-extrabold text-xs py-3 rounded-xl shadow">
                     Send OTP
                   </button>
                 ) : (
@@ -915,10 +928,7 @@ const handleLoginSubmit = (e) => {
                       placeholder="Enter 4-Digit OTP"
                       className="w-full bg-[#FAF8F2] border border-emerald-200 rounded-xl px-3.5 py-2.5 text-center text-base font-black tracking-[0.4em]"
                     />
-                    <button
-                      onClick={handleLoginSubmit}
-                      className="w-full bg-[#126E2E] text-white font-extrabold text-xs py-3 rounded-xl shadow"
-                    >
+                    <button onClick={handleLoginSubmit} className="w-full bg-[#126E2E] text-white font-extrabold text-xs py-3 rounded-xl shadow">
                       Verify OTP & Continue
                     </button>
                   </>
@@ -949,23 +959,8 @@ const handleLoginSubmit = (e) => {
                     <p className="text-[10px] text-gray-500">
                       Demo: Wholesale `9989334455`, Retail `9849223344`, Farmer `9440112233` (Password: `123`)
                     </p>
-                    <input
-                      type="tel"
-                      maxLength={10}
-                      required
-                      value={mobileInput}
-                      onChange={(e) => setMobileInput(e.target.value.replace(/\D/g, ''))}
-                      placeholder="Registered 10-Digit Phone Number"
-                      className="w-full bg-[#FAF8F2] border rounded-xl px-3 py-2.5 text-xs font-bold"
-                    />
-                    <input
-                      type="password"
-                      required
-                      value={passwordInput}
-                      onChange={(e) => setPasswordInput(e.target.value)}
-                      placeholder="Password"
-                      className="w-full bg-[#FAF8F2] border rounded-xl px-3 py-2.5 text-xs font-bold"
-                    />
+                    <input type="tel" maxLength={10} required value={mobileInput} onChange={(e) => setMobileInput(e.target.value.replace(/\D/g, ''))} placeholder="Registered 10-Digit Phone Number" className="w-full bg-[#FAF8F2] border rounded-xl px-3 py-2.5 text-xs font-bold" />
+                    <input type="password" required value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} placeholder="Password" className="w-full bg-[#FAF8F2] border rounded-xl px-3 py-2.5 text-xs font-bold" />
                     {authError && <p className="text-xs font-bold text-red-500">{authError}</p>}
                     <button type="submit" className="w-full bg-[#126E2E] text-white font-extrabold text-xs py-3 rounded-xl shadow">
                       Login to Dashboard
@@ -1023,13 +1018,15 @@ const handleLoginSubmit = (e) => {
   }
 
 // =========================================================================
-  // VIEW 4: LOGGED-IN DASHBOARDS & CUSTOMER MARKET (1ST IMAGE GREEN/CREAM THEME)
+  // VIEW 4: ROLE-SPECIFIC PAGES (MARKET, CART, CHECKOUT+COUPONS, PAYMENT PAGE, ADMIN, SHOPS)
   // =========================================================================
+  const roleId = loggedInUser?.role?.id;
+
   return (
     <div className="min-h-screen bg-[#FAF8F2] max-w-md mx-auto relative pb-24 font-sans text-gray-800 shadow-2xl">
-      {/* Consistent Forest-Green Header with Unchanged Logo */}
+      {/* Forest-Green Header */}
       <header className="bg-gradient-to-r from-[#0E6A2E] to-[#1B8A3D] text-white rounded-b-[28px] px-4 pt-4 pb-4 shadow-md sticky top-0 z-30">
-        <div className="flex items-center justify-between mb-2.5">
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center space-x-2.5">
             <div className="h-11 w-11 rounded-full bg-white p-0.5 shadow border-2 border-yellow-300 overflow-hidden">
               <img src="/icon-512.png" alt="Rythu Basket" className="h-full w-full object-cover rounded-full" />
@@ -1043,10 +1040,7 @@ const handleLoginSubmit = (e) => {
           </div>
 
           <div className="flex items-center space-x-1.5">
-            <button
-              onClick={() => setLang(lang === 'te' ? 'en' : 'te')}
-              className="bg-white text-[#0E6A2E] text-[11px] font-extrabold px-2.5 py-1 rounded-full"
-            >
+            <button onClick={() => setLang(lang === 'te' ? 'en' : 'te')} className="bg-white text-[#0E6A2E] text-[11px] font-extrabold px-2.5 py-1 rounded-full">
               {lang === 'te' ? 'తెలుగు' : 'EN'}
             </button>
             <button
@@ -1055,7 +1049,7 @@ const handleLoginSubmit = (e) => {
                 setScreen('portalHome');
               }}
               className="bg-white/20 p-2 rounded-full text-white"
-              title="Home / Switch Role"
+              title="Logout"
             >
               <LogOut className="h-3.5 w-3.5" />
             </button>
@@ -1101,7 +1095,9 @@ const handleLoginSubmit = (e) => {
         </div>
       )}
 
-      {/* CUSTOMER MARKETPLACE */}
+{/* =================================================================
+          MARKETPLACE (FOR CUSTOMERS, RETAILERS & WHOLESALERS TO BUY)
+         ================================================================= */}
       {screen === 'market' && (
         <main className="px-4 pt-3.5 space-y-3.5">
           <div className="flex space-x-1.5 overflow-x-auto pb-1">
@@ -1180,72 +1176,60 @@ const handleLoginSubmit = (e) => {
         </main>
       )}
 
-      {/* CART & CHECKOUT */}
+      {/* =================================================================
+          STEP 1: CART PAGE -> PROCEED TO CHECKOUT
+         ================================================================= */}
       {screen === 'cart' && (
         <main className="px-4 pt-4 space-y-3">
           <div className="flex items-center space-x-2">
             <button onClick={() => setScreen('market')} className="p-1.5 bg-white rounded-full shadow-sm">
               <ArrowLeft className="h-4 w-4" />
             </button>
-            <h2 className="text-base font-black">My Basket & Payment</h2>
+            <h2 className="text-base font-black">Step 1: My Cart ({totalItems} items)</h2>
           </div>
 
           {totalItems === 0 ? (
-            <div className="bg-white rounded-2xl p-8 text-center shadow-sm text-xs font-bold text-gray-500">
-              Your basket is empty.
+            <div className="bg-white rounded-2xl p-8 text-center shadow-sm space-y-3">
+              <p className="text-xs font-bold text-gray-500">Your cart is empty.</p>
+              <button onClick={() => setScreen('market')} className="bg-[#126E2E] text-white text-xs font-extrabold px-5 py-2.5 rounded-xl">
+                Browse Items
+              </button>
             </div>
           ) : (
             <>
-              {Object.entries(cart).map(([id, qty]) => {
-                const item = products.find((p) => p.id === id);
-                if (!item) return null;
-                return (
-                  <div key={id} className="bg-white rounded-2xl p-3 flex items-center justify-between shadow-sm text-xs">
-                    <div>
-                      <h4 className="font-extrabold">{item.nameTe} ({item.nameEn})</h4>
-                      <p className="text-[10px] text-gray-500">₹{item.price} × {qty} = ₹{item.price * qty}</p>
+              <div className="space-y-2">
+                {Object.entries(cart).map(([id, qty]) => {
+                  const item = products.find((p) => p.id === id);
+                  if (!item) return null;
+                  return (
+                    <div key={id} className="bg-white rounded-2xl p-3 flex items-center justify-between shadow-sm text-xs">
+                      <div>
+                        <h4 className="font-extrabold">{item.nameTe} ({item.nameEn})</h4>
+                        <p className="text-[10px] text-gray-500">
+                          ₹{item.price}/{item.unit} × {qty} = ₹{item.price * qty}
+                          {item.minQty > 1 ? ` (Wholesale Min: ${item.minQty})` : ''}
+                        </p>
+                      </div>
+                      <div className="flex items-center bg-[#126E2E] text-white rounded-lg px-2 py-1 space-x-2">
+                        <button onClick={() => removeItem(item)}><Minus className="h-3 w-3" /></button>
+                        <span>{qty}</span>
+                        <button onClick={() => addItem(item)}><Plus className="h-3 w-3" /></button>
+                      </div>
                     </div>
-                    <div className="flex items-center bg-[#126E2E] text-white rounded-lg px-2 py-1 space-x-2">
-                      <button onClick={() => removeItem(item)}><Minus className="h-3 w-3" /></button>
-                      <span>{qty}</span>
-                      <button onClick={() => addItem(item)}><Plus className="h-3 w-3" /></button>
-                    </div>
-                  </div>
-                );
-              })}
-
-              <div className="bg-white rounded-2xl p-3.5 shadow-sm space-y-2 text-xs">
-                <div className="flex justify-between font-extrabold">
-                  <span>Delivery Address & GPS</span>
-                  <button onClick={handleCaptureGps} className="text-[#126E2E] bg-emerald-50 px-2 py-0.5 rounded">📍 Pin GPS</button>
-                </div>
-                <input type="text" value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} className="w-full bg-[#FAF8F2] border rounded-xl px-3 py-2 font-semibold" />
-                {gpsStatus && <p className="text-[10px] text-emerald-700 font-bold">{gpsStatus}</p>}
+                  );
+                })}
               </div>
 
-              <div className="bg-white rounded-2xl p-3.5 shadow-sm space-y-2.5 text-xs">
-                <div className="grid grid-cols-2 gap-2 font-extrabold">
-                  <button onClick={() => setPaymentMethod('upi')} className={`py-2 rounded-xl border ${paymentMethod === 'upi' ? 'bg-emerald-50 border-[#126E2E] text-[#126E2E]' : 'bg-gray-50'}`}>UPI / QR Pay</button>
-                  <button onClick={() => setPaymentMethod('cod')} className={`py-2 rounded-xl border ${paymentMethod === 'cod' ? 'bg-emerald-50 border-[#126E2E] text-[#126E2E]' : 'bg-gray-50'}`}>Cash on Delivery</button>
+              <div className="bg-white rounded-2xl p-4 shadow-sm space-y-2 text-xs">
+                <div className="flex justify-between font-bold text-gray-600">
+                  <span>Items Subtotal</span>
+                  <span>₹{subtotal}</span>
                 </div>
-
-                {paymentMethod === 'upi' && (
-                  <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-3 text-center space-y-2">
-                    <p className="text-[11px] font-bold">Pay to Seller UPI: {activeUpiId}</p>
-                    <img src={freeQrImageUrl} alt="QR" className="w-28 h-28 mx-auto rounded-xl bg-white p-1 border" />
-                    <a href={upiDeepLink} className="block w-full bg-[#5F259F] text-white font-extrabold py-2 rounded-xl">
-                      Pay ₹{grandTotal} via PhonePe / GPay ↗
-                    </a>
-                    <input type="text" value={upiRefInput} onChange={(e) => setUpiRefInput(e.target.value)} placeholder="Enter UPI UTR / Ref ID" className="w-full bg-white border rounded-xl px-3 py-1.5 text-center font-bold" />
-                  </div>
-                )}
-
-                <div className="border-t pt-2 flex justify-between text-sm font-black">
-                  <span>Grand Total</span>
-                  <span>₹{grandTotal}</span>
-                </div>
-                <button onClick={handlePlaceCustomerOrder} className="w-full bg-[#126E2E] text-white font-extrabold py-3 rounded-xl shadow">
-                  Confirm Order • ₹{grandTotal}
+                <button
+                  onClick={() => setScreen('checkout')}
+                  className="w-full bg-[#126E2E] text-white font-extrabold py-3.5 rounded-xl shadow-md text-sm"
+                >
+                  Proceed to Checkout & Coupons ➔
                 </button>
               </div>
             </>
@@ -1253,7 +1237,283 @@ const handleLoginSubmit = (e) => {
         </main>
       )}
 
-      {/* WHOLESALE / RETAIL / FARMER DASHBOARD */}
+{/* =================================================================
+          STEP 2: CHECKOUT SCREEN (ADDRESS + PROMO CODES & COUPONS) -> PAYMENT PAGE
+         ================================================================= */}
+      {screen === 'checkout' && (
+        <main className="px-4 pt-4 space-y-3.5 text-xs">
+          <div className="flex items-center space-x-2">
+            <button onClick={() => setScreen('cart')} className="p-1.5 bg-white rounded-full shadow-sm">
+              <ArrowLeft className="h-4 w-4" />
+            </button>
+            <h2 className="text-base font-black">Step 2: Checkout & Promo Codes</h2>
+          </div>
+
+          {/* Delivery Address & GPS */}
+          <div className="bg-white rounded-2xl p-3.5 shadow-sm space-y-2">
+            <div className="flex justify-between font-extrabold">
+              <span>📍 Delivery Address & Live GPS</span>
+              <button onClick={handleCaptureGps} className="text-[#126E2E] bg-emerald-50 px-2.5 py-1 rounded-lg">
+                Pin GPS
+              </button>
+            </div>
+            <input
+              type="text"
+              value={deliveryAddress}
+              onChange={(e) => setDeliveryAddress(e.target.value)}
+              className="w-full bg-[#FAF8F2] border rounded-xl px-3 py-2 font-semibold"
+            />
+            {gpsStatus && <p className="text-[10px] text-emerald-700 font-bold">{gpsStatus}</p>}
+          </div>
+
+          {/* PROMO CODES & COUPONS SECTION */}
+          <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-amber-200 space-y-2.5">
+            <div className="flex items-center space-x-1.5 text-amber-800 font-black">
+              <Ticket className="h-4 w-4" />
+              <span>Apply Promo Code / Coupons</span>
+            </div>
+
+            <div className="flex space-x-2">
+              <input
+                type="text"
+                value={promoCodeInput}
+                onChange={(e) => setPromoCodeInput(e.target.value.toUpperCase())}
+                placeholder="Enter Promo Code (e.g., RYTHU50)"
+                className="flex-1 bg-[#FAF8F2] border rounded-xl px-3 py-2 font-black uppercase"
+              />
+              <button
+                onClick={() => handleApplyPromoCode()}
+                className="bg-[#126E2E] text-white font-extrabold px-4 py-2 rounded-xl"
+              >
+                Apply
+              </button>
+            </div>
+
+            {couponError && <p className="text-[11px] font-bold text-red-500">{couponError}</p>}
+
+            {appliedCoupon && (
+              <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-2 flex justify-between items-center text-emerald-900 font-extrabold">
+                <span>🎉 Coupon {appliedCoupon.code} Applied (-₹{couponDiscount})</span>
+                <button onClick={() => { setAppliedCoupon(null); setPromoCodeInput(''); }} className="text-red-600">Remove</button>
+              </div>
+            )}
+
+            {/* Available Coupons List */}
+            <div className="space-y-1.5 pt-1">
+              <p className="text-[10px] font-bold text-gray-400 uppercase">Available Coupons (Tap to Apply):</p>
+              {coupons.map((cp) => (
+                <div
+                  key={cp.code}
+                  onClick={() => handleApplyPromoCode(cp.code)}
+                  className="bg-[#FAF8F2] border border-dashed border-emerald-300 rounded-xl p-2.5 flex justify-between items-center cursor-pointer hover:bg-emerald-50/60"
+                >
+                  <div>
+                    <span className="font-black text-[#126E2E]">{cp.code}</span>
+                    <p className="text-[10px] text-gray-600">{cp.desc}</p>
+                  </div>
+                  <span className="text-[10px] font-extrabold bg-white px-2.5 py-1 rounded-lg border text-[#126E2E]">
+                    APPLY
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Bill Summary */}
+          <div className="bg-white rounded-2xl p-4 shadow-sm space-y-2">
+            <div className="flex justify-between text-gray-600">
+              <span>Item Subtotal</span>
+              <span className="font-bold">₹{subtotal}</span>
+            </div>
+            <div className="flex justify-between text-gray-600">
+              <span>Delivery Fee (Free above ₹{freeDeliveryMin})</span>
+              <span className="font-bold text-[#126E2E]">{deliveryFee === 0 ? 'FREE' : `₹${deliveryFee}`}</span>
+            </div>
+            {couponDiscount > 0 && (
+              <div className="flex justify-between text-emerald-700 font-extrabold">
+                <span>Coupon Discount ({appliedCoupon.code})</span>
+                <span>- ₹{couponDiscount}</span>
+              </div>
+            )}
+            <div className="border-t pt-2 flex justify-between text-sm font-black text-gray-900">
+              <span>To Pay</span>
+              <span>₹{grandTotal}</span>
+            </div>
+
+            <button
+              onClick={() => setScreen('payment')}
+              className="w-full mt-2 bg-[#126E2E] text-white font-extrabold py-3.5 rounded-xl shadow-md text-sm"
+            >
+              Proceed to Payment Options (₹{grandTotal}) ➔
+            </button>
+          </div>
+        </main>
+      )}
+
+      {/* =================================================================
+          STEP 3: DEDICATED PAYMENT OPTIONS PAGE (ONE BY ONE: QR, PHONEPE, GPAY, PAYTM, OTHER APPS, COD)
+         ================================================================= */}
+      {screen === 'payment' && (
+        <main className="px-4 pt-4 space-y-3 text-xs">
+          <div className="flex items-center space-x-2">
+            <button onClick={() => setScreen('checkout')} className="p-1.5 bg-white rounded-full shadow-sm">
+              <ArrowLeft className="h-4 w-4" />
+            </button>
+            <div>
+              <h2 className="text-base font-black">Step 3: Select Payment Method</h2>
+              <p className="text-[11px] text-gray-500">Payable Amount: <strong className="text-[#126E2E]">₹{grandTotal}</strong> • UPI: {payUpiId}</p>
+            </div>
+          </div>
+
+          {/* ONE-BY-ONE PAYMENT OPTIONS LIST */}
+          <div className="space-y-2.5">
+            {/* 1. QR CODE SCAN */}
+            <div className={`bg-white rounded-2xl p-3.5 border-2 transition ${selectedPayOption === 'qr' ? 'border-[#126E2E] shadow-md' : 'border-gray-100'}`}>
+              <button onClick={() => setSelectedPayOption('qr')} className="w-full flex items-center justify-between font-extrabold text-sm">
+                <div className="flex items-center space-x-2.5">
+                  <span className="h-9 w-9 rounded-xl bg-emerald-50 text-[#126E2E] flex items-center justify-center"><QrCode className="h-5 w-5" /></span>
+                  <span>1. Scan & Pay via QR Code</span>
+                </div>
+                <input type="radio" checked={selectedPayOption === 'qr'} readOnly className="accent-[#126E2E] h-4 w-4" />
+              </button>
+              {selectedPayOption === 'qr' && (
+                <div className="mt-3 pt-3 border-t text-center space-y-2">
+                  <img src={freeQrImageUrl} alt="UPI QR" className="w-36 h-36 mx-auto rounded-xl border p-1.5 bg-white" />
+                  <p className="text-[11px] font-bold text-gray-600">Scan with any UPI app to pay ₹{grandTotal}</p>
+                </div>
+              )}
+            </div>
+
+            {/* 2. PHONEPE */}
+            <div className={`bg-white rounded-2xl p-3.5 border-2 transition ${selectedPayOption === 'phonepe' ? 'border-[#5F259F] shadow-md' : 'border-gray-100'}`}>
+              <button onClick={() => setSelectedPayOption('phonepe')} className="w-full flex items-center justify-between font-extrabold text-sm">
+                <div className="flex items-center space-x-2.5">
+                  <span className="h-9 w-9 rounded-xl bg-purple-100 text-[#5F259F] font-black flex items-center justify-center">Pe</span>
+                  <span>2. PhonePe</span>
+                </div>
+                <input type="radio" checked={selectedPayOption === 'phonepe'} readOnly className="accent-[#5F259F] h-4 w-4" />
+              </button>
+              {selectedPayOption === 'phonepe' && (
+                <div className="mt-2.5 pt-2.5 border-t">
+                  <a href={phonePeUri} className="block w-full bg-[#5F259F] text-white text-center font-extrabold py-2.5 rounded-xl">
+                    Open PhonePe & Pay ₹{grandTotal} ↗
+                  </a>
+                </div>
+              )}
+            </div>
+
+{/* 3. GOOGLE PAY (GPAY) */}
+            <div className={`bg-white rounded-2xl p-3.5 border-2 transition ${selectedPayOption === 'gpay' ? 'border-blue-600 shadow-md' : 'border-gray-100'}`}>
+              <button onClick={() => setSelectedPayOption('gpay')} className="w-full flex items-center justify-between font-extrabold text-sm">
+                <div className="flex items-center space-x-2.5">
+                  <span className="h-9 w-9 rounded-xl bg-blue-50 text-blue-600 font-black flex items-center justify-center">G</span>
+                  <span>3. Google Pay (GPay)</span>
+                </div>
+                <input type="radio" checked={selectedPayOption === 'gpay'} readOnly className="accent-blue-600 h-4 w-4" />
+              </button>
+              {selectedPayOption === 'gpay' && (
+                <div className="mt-2.5 pt-2.5 border-t">
+                  <a href={gpayUri} className="block w-full bg-blue-600 text-white text-center font-extrabold py-2.5 rounded-xl">
+                    Open Google Pay & Pay ₹{grandTotal} ↗
+                  </a>
+                </div>
+              )}
+            </div>
+
+            {/* 4. PAYTM */}
+            <div className={`bg-white rounded-2xl p-3.5 border-2 transition ${selectedPayOption === 'paytm' ? 'border-sky-500 shadow-md' : 'border-gray-100'}`}>
+              <button onClick={() => setSelectedPayOption('paytm')} className="w-full flex items-center justify-between font-extrabold text-sm">
+                <div className="flex items-center space-x-2.5">
+                  <span className="h-9 w-9 rounded-xl bg-sky-50 text-sky-600 font-black flex items-center justify-center">Pm</span>
+                  <span>4. Paytm</span>
+                </div>
+                <input type="radio" checked={selectedPayOption === 'paytm'} readOnly className="accent-sky-500 h-4 w-4" />
+              </button>
+              {selectedPayOption === 'paytm' && (
+                <div className="mt-2.5 pt-2.5 border-t">
+                  <a href={paytmUri} className="block w-full bg-sky-500 text-white text-center font-extrabold py-2.5 rounded-xl">
+                    Open Paytm & Pay ₹{grandTotal} ↗
+                  </a>
+                </div>
+              )}
+            </div>
+
+            {/* 5. OTHER PAYMENT APPS (BHIM / CRED / AMAZON PAY) */}
+            <div className={`bg-white rounded-2xl p-3.5 border-2 transition ${selectedPayOption === 'other' ? 'border-[#126E2E] shadow-md' : 'border-gray-100'}`}>
+              <button onClick={() => setSelectedPayOption('other')} className="w-full flex items-center justify-between font-extrabold text-sm">
+                <div className="flex items-center space-x-2.5">
+                  <span className="h-9 w-9 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center"><Smartphone className="h-5 w-5" /></span>
+                  <span>5. Other Payment Apps (BHIM / Cred / UPI)</span>
+                </div>
+                <input type="radio" checked={selectedPayOption === 'other'} readOnly className="accent-[#126E2E] h-4 w-4" />
+              </button>
+              {selectedPayOption === 'other' && (
+                <div className="mt-2.5 pt-2.5 border-t">
+                  <a href={genericUpiUri} className="block w-full bg-gray-800 text-white text-center font-extrabold py-2.5 rounded-xl">
+                    Choose Installed UPI App & Pay ₹{grandTotal} ↗
+                  </a>
+                </div>
+              )}
+            </div>
+
+            {/* 6. CASH ON DELIVERY */}
+            <div className={`bg-white rounded-2xl p-3.5 border-2 transition ${selectedPayOption === 'cod' ? 'border-[#126E2E] shadow-md' : 'border-gray-100'}`}>
+              <button onClick={() => setSelectedPayOption('cod')} className="w-full flex items-center justify-between font-extrabold text-sm">
+                <div className="flex items-center space-x-2.5">
+                  <span className="h-9 w-9 rounded-xl bg-green-50 text-green-700 flex items-center justify-center"><Wallet className="h-5 w-5" /></span>
+                  <span>6. Cash on Delivery (COD)</span>
+                </div>
+                <input type="radio" checked={selectedPayOption === 'cod'} readOnly className="accent-[#126E2E] h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          {selectedPayOption !== 'cod' && (
+            <div className="bg-white rounded-2xl p-3 shadow-sm">
+              <label className="block text-[11px] font-bold text-gray-600 mb-1">
+                UPI Transaction / UTR Reference Number (Optional)
+              </label>
+              <input
+                type="text"
+                value={upiRefInput}
+                onChange={(e) => setUpiRefInput(e.target.value)}
+                placeholder="Enter 12-digit UTR after completing UPI payment"
+                className="w-full bg-[#FAF8F2] border rounded-xl px-3 py-2 font-bold"
+              />
+            </div>
+          )}
+
+          <button
+            onClick={handleConfirmFinalPayment}
+            className="w-full bg-[#126E2E] text-white font-black py-3.5 rounded-2xl shadow-lg text-sm"
+          >
+            ✓ Confirm Order & Complete (₹{grandTotal})
+          </button>
+        </main>
+      )}
+
+{/* =================================================================
+          MY ORDERS PAGE (FOR CUSTOMERS)
+         ================================================================= */}
+      {screen === 'myOrders' && (
+        <main className="px-4 pt-4 space-y-3 text-xs">
+          <h2 className="text-base font-black">My Orders</h2>
+          {orders.map((ord) => (
+            <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm space-y-1">
+              <div className="flex justify-between font-black">
+                <span>{ord.id} • {ord.status}</span>
+                <span className="text-[#126E2E]">₹{ord.total}</span>
+              </div>
+              <p className="text-gray-600">{ord.summary}</p>
+              <p className="text-[10px] font-bold text-gray-400">{ord.payment}</p>
+            </div>
+          ))}
+        </main>
+      )}
+
+      {/* =================================================================
+          WHOLESALE / RETAIL / FARMER DASHBOARD
+         ================================================================= */}
       {screen === 'shopDashboard' && (
         <main className="px-4 pt-4 space-y-3">
           <div className="bg-[#126E2E] text-white rounded-2xl p-4 shadow-sm flex justify-between items-center">
@@ -1310,7 +1570,7 @@ const handleLoginSubmit = (e) => {
                     )}
                     {ord.status === 'Accepted' && (
                       <button onClick={() => handleMarkOrderDelivered(ord)} className="w-full bg-blue-600 text-white font-extrabold py-2 rounded-xl">
-                        🚚 Mark Delivered & Send WhatsApp/SMS Invoice
+                        🚚 Mark Delivered & Auto-Send WhatsApp/SMS Invoice
                       </button>
                     )}
                   </div>
@@ -1319,7 +1579,7 @@ const handleLoginSubmit = (e) => {
             </div>
           )}
 
-{shopTab === 'stock' && (
+          {shopTab === 'stock' && (
             <div className="space-y-3 text-xs">
               <form onSubmit={handleAddShopItem} className="bg-white rounded-2xl p-3.5 shadow-sm space-y-2">
                 <h3 className="font-extrabold">+ Add New Item</h3>
@@ -1335,7 +1595,7 @@ const handleLoginSubmit = (e) => {
                     <option value="livestock">Eggs/Poultry</option>
                   </select>
                   <input type="number" required value={newItemPrice} onChange={(e) => setNewItemPrice(e.target.value)} placeholder="Price ₹" className="bg-[#FAF8F2] border rounded-xl px-2.5 py-2 font-black text-[#126E2E]" />
-                  {loggedInUser?.role?.id === 'wholesale' ? (
+                  {roleId === 'wholesale' ? (
                     <input type="number" min="1" value={newItemMinQty} onChange={(e) => setNewItemMinQty(e.target.value)} placeholder="Min Qty" className="bg-amber-50 border border-amber-300 rounded-xl px-2.5 py-2 font-black" />
                   ) : (
                     <select value={newItemUnit} onChange={(e) => setNewItemUnit(e.target.value)} className="bg-[#FAF8F2] border rounded-xl px-2 py-2 font-bold">
@@ -1355,12 +1615,12 @@ const handleLoginSubmit = (e) => {
                     {editingItemId === item.id ? (
                       <div className="flex items-center space-x-1.5 mt-1">
                         <input type="number" value={editPriceVal} onChange={(e) => setEditPriceVal(e.target.value)} className="w-16 border rounded px-2 py-1 font-black" />
-                        {loggedInUser?.role?.id === 'wholesale' && (
+                        {roleId === 'wholesale' && (
                           <input type="number" min="1" value={editMinQtyVal} onChange={(e) => setEditMinQtyVal(e.target.value)} className="w-16 bg-amber-50 border rounded px-2 py-1 font-black" />
                         )}
                         <button
                           onClick={() => {
-                            setProducts((prev) => prev.map((p) => p.id === item.id ? { ...p, price: Number(editPriceVal) || p.price, minQty: loggedInUser?.role?.id === 'wholesale' ? Math.max(1, Number(editMinQtyVal) || p.minQty) : p.minQty } : p));
+                            setProducts((prev) => prev.map((p) => p.id === item.id ? { ...p, price: Number(editPriceVal) || p.price, minQty: roleId === 'wholesale' ? Math.max(1, Number(editMinQtyVal) || p.minQty) : p.minQty } : p));
                             setEditingItemId(null);
                           }}
                           className="bg-[#126E2E] text-white p-1.5 rounded-lg"
@@ -1370,7 +1630,7 @@ const handleLoginSubmit = (e) => {
                       </div>
                     ) : (
                       <p className="text-[11px] font-bold text-[#126E2E]">
-                        ₹{item.price}/{item.unit} {loggedInUser?.role?.id === 'wholesale' ? `• Min Qty: ${item.minQty}` : ''}
+                        ₹{item.price}/{item.unit} {roleId === 'wholesale' ? `• Min Qty: ${item.minQty}` : ''}
                       </p>
                     )}
                   </div>
@@ -1404,7 +1664,7 @@ const handleLoginSubmit = (e) => {
             </div>
           )}
 
-          {shopTab === 'bank' && (
+ {shopTab === 'bank' && (
             <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3 text-xs">
               <h3 className="font-extrabold">Update Bank Account & UPI Details</h3>
               {bankSavedMsg && <div className="bg-emerald-50 text-emerald-800 font-bold p-2 rounded-xl">{bankSavedMsg}</div>}
@@ -1429,7 +1689,9 @@ const handleLoginSubmit = (e) => {
         </main>
       )}
 
-      {/* DELIVERY PARTNER DASHBOARD */}
+      {/* =================================================================
+          DELIVERY PARTNER DASHBOARD
+         ================================================================= */}
       {screen === 'deliveryDashboard' && (
         <main className="px-4 pt-4 space-y-3 text-xs">
           <div className="bg-[#126E2E] text-white rounded-2xl p-4 shadow-sm">
@@ -1458,22 +1720,60 @@ const handleLoginSubmit = (e) => {
         </main>
       )}
 
-      {/* ADMIN PANEL */}
+      {/* =================================================================
+          COMPLETE MASTER ADMIN PANEL (ALL ADMIN OPTIONS ENABLED)
+         ================================================================= */}
       {screen === 'adminPanel' && (
-        <main className="px-4 pt-4 space-y-3 text-xs">
+        <main className="px-4 pt-4 space-y-3.5 text-xs">
           <div className="bg-[#0C4A20] text-white rounded-2xl p-4 shadow-md">
-            <h2 className="text-base font-black">Master Admin • Shop Photo Approvals</h2>
+            <span className="bg-emerald-700 text-[10px] font-extrabold px-2 py-0.5 rounded">MASTER ADMIN CONTROL</span>
+            <h2 className="text-base font-black mt-1">రైతు బాస్కెట్ పూర్తి అడ్మిన్ కంట్రోల్</h2>
           </div>
 
-          <div className="flex space-x-2">
-            <button onClick={() => setAdminTab('approvals')} className={`px-3 py-1.5 rounded-xl font-extrabold border ${adminTab === 'approvals' ? 'bg-[#126E2E] text-white' : 'bg-white'}`}>
-              Shop Approvals ({shops.length})
-            </button>
-            <button onClick={() => setAdminTab('orders')} className={`px-3 py-1.5 rounded-xl font-extrabold border ${adminTab === 'orders' ? 'bg-[#126E2E] text-white' : 'bg-white'}`}>
-              All Orders ({orders.length})
-            </button>
+          {/* 5 Full Admin Tabs */}
+          <div className="flex space-x-1.5 overflow-x-auto pb-1">
+            {[
+              { id: 'overview', label: '📊 Overview' },
+              { id: 'approvals', label: `🏪 Shops (${shops.length})` },
+              { id: 'items', label: `📦 Items (${products.length})` },
+              { id: 'orders', label: `🚚 Orders (${orders.length})` },
+              { id: 'settings', label: '⚙️ Coupons & Rules' },
+            ].map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setAdminTab(t.id)}
+                className={`flex-shrink-0 px-3 py-1.5 rounded-xl font-extrabold border ${
+                  adminTab === t.id ? 'bg-[#126E2E] text-white border-[#126E2E]' : 'bg-white text-gray-700'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
           </div>
 
+          {/* 1. OVERVIEW */}
+          {adminTab === 'overview' && (
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="bg-white p-3.5 rounded-2xl shadow-sm">
+                <p className="text-gray-400 font-bold">Total Sales Revenue</p>
+                <p className="text-xl font-black text-[#126E2E] mt-1">₹{orders.reduce((s, o) => s + o.total, 0)}</p>
+              </div>
+              <div className="bg-white p-3.5 rounded-2xl shadow-sm">
+                <p className="text-gray-400 font-bold">Total Orders</p>
+                <p className="text-xl font-black text-gray-900 mt-1">{orders.length}</p>
+              </div>
+              <div className="bg-white p-3.5 rounded-2xl shadow-sm">
+                <p className="text-gray-400 font-bold">Approved Shops</p>
+                <p className="text-xl font-black text-emerald-700 mt-1">{shops.filter((s) => s.approved).length} / {shops.length}</p>
+              </div>
+              <div className="bg-white p-3.5 rounded-2xl shadow-sm">
+                <p className="text-gray-400 font-bold">Active Coupons</p>
+                <p className="text-xl font-black text-amber-600 mt-1">{coupons.length}</p>
+              </div>
+            </div>
+          )}
+
+{/* 2. SHOP PHOTO APPROVALS */}
           {adminTab === 'approvals' &&
             shops.map((shop) => (
               <div key={shop.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-emerald-50 space-y-2">
@@ -1494,60 +1794,127 @@ const handleLoginSubmit = (e) => {
               </div>
             ))}
 
+          {/* 3. ALL ITEMS PRICE & STOCK CONTROL */}
+          {adminTab === 'items' && (
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={adminItemSearch}
+                onChange={(e) => setAdminItemSearch(e.target.value)}
+                placeholder="Search item to edit price / stock..."
+                className="w-full bg-white border rounded-xl px-3 py-2 font-semibold"
+              />
+              {products
+                .filter((p) => p.nameEn.toLowerCase().includes(adminItemSearch.toLowerCase()) || p.nameTe.includes(adminItemSearch))
+                .map((item) => (
+                  <div key={item.id} className="bg-white rounded-2xl p-3 shadow-sm flex items-center justify-between">
+                    <div>
+                      <h4 className="font-extrabold">{item.nameTe} ({item.nameEn})</h4>
+                      <p className="text-[10px] text-gray-400">{item.sellerName}</p>
+                      {adminEditPriceId === item.id ? (
+                        <div className="flex items-center space-x-1 mt-1">
+                          <input type="number" value={adminTempPrice} onChange={(e) => setAdminTempPrice(e.target.value)} className="w-20 border rounded px-2 py-0.5 font-black" />
+                          <button
+                            onClick={() => {
+                              setProducts((prev) => prev.map((x) => (x.id === item.id ? { ...x, price: Number(adminTempPrice) || x.price } : x)));
+                              setAdminEditPriceId(null);
+                            }}
+                            className="bg-[#126E2E] text-white p-1 rounded"
+                          >
+                            <Check className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center space-x-1.5 mt-1">
+                          <span className="font-black text-[#126E2E]">₹{item.price}/{item.unit}</span>
+                          <button onClick={() => { setAdminEditPriceId(item.id); setAdminTempPrice(String(item.price)); }} className="bg-emerald-50 text-[#126E2E] p-1 rounded">
+                            <Edit3 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => setProducts((prev) => prev.filter((x) => x.id !== item.id))}
+                      className="p-2 bg-red-50 text-red-600 rounded-xl"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+            </div>
+          )}
+
+          {/* 4. ALL ORDERS & DELIVERY ASSIGNMENT */}
           {adminTab === 'orders' &&
             orders.map((ord) => (
-              <div key={ord.id} className="bg-white rounded-2xl p-3 shadow-sm flex justify-between">
-                <span>{ord.id} • {ord.customer}</span>
-                <span className="font-black text-[#126E2E]">₹{ord.total}</span>
+              <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm space-y-2">
+                <div className="flex justify-between font-black">
+                  <span>{ord.id} • {ord.status}</span>
+                  <span className="text-[#126E2E]">₹{ord.total}</span>
+                </div>
+                <p className="text-gray-700">{ord.customer} — {ord.summary}</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <select
+                    value={ord.status}
+                    onChange={(e) => setOrders((p) => p.map((x) => (x.id === ord.id ? { ...x, status: e.target.value } : x)))}
+                    className="bg-[#FAF8F2] border rounded-lg px-2 py-1.5 font-bold"
+                  >
+                    <option value="Pending">Pending</option>
+                    <option value="Accepted">Accepted</option>
+                    <option value="Out for Delivery">Out for Delivery</option>
+                    <option value="Delivered">Delivered</option>
+                  </select>
+                  <select
+                    value={ord.driver || 'Unassigned'}
+                    onChange={(e) => setOrders((p) => p.map((x) => (x.id === ord.id ? { ...x, driver: e.target.value } : x)))}
+                    className="bg-[#FAF8F2] border rounded-lg px-2 py-1.5 font-bold"
+                  >
+                    <option value="Unassigned">Assign Driver</option>
+                    <option value="Ravi (Kovur)">Ravi (Kovur)</option>
+                    <option value="Suresh (Nellore)">Suresh (Nellore)</option>
+                  </select>
+                </div>
               </div>
             ))}
+
+          {/* 5. COUPONS, UPI & DELIVERY SETTINGS */}
+          {adminTab === 'settings' && (
+            <div className="space-y-3">
+              <div className="bg-white rounded-2xl p-4 shadow-sm space-y-2">
+                <h3 className="font-extrabold">Create New Promo Code / Coupon</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  <input type="text" value={newCouponCode} onChange={(e) => setNewCouponCode(e.target.value.toUpperCase())} placeholder="Code (e.g., SAVE100)" className="bg-[#FAF8F2] border rounded-xl px-3 py-2 font-black uppercase" />
+                  <input type="number" value={newCouponValue} onChange={(e) => setNewCouponValue(e.target.value)} placeholder="Discount ₹" className="bg-[#FAF8F2] border rounded-xl px-3 py-2 font-black" />
+                </div>
+                <button
+                  onClick={() => {
+                    if (!newCouponCode.trim() || !newCouponValue) return;
+                    setCoupons([{ code: newCouponCode.trim(), type: 'flat', value: Number(newCouponValue), minOrder: 199, desc: `Flat ₹${newCouponValue} Off` }, ...coupons]);
+                    setNewCouponCode('');
+                    setNewCouponValue('');
+                  }}
+                  className="w-full bg-[#126E2E] text-white font-extrabold py-2.5 rounded-xl"
+                >
+                  + Add Coupon
+                </button>
+              </div>
+
+              <div className="bg-white rounded-2xl p-4 shadow-sm space-y-2">
+                <label className="block font-bold">Default Platform UPI ID</label>
+                <input type="text" value={merchantUpiId} onChange={(e) => setMerchantUpiId(e.target.value)} className="w-full bg-[#FAF8F2] border rounded-xl px-3 py-2 font-black text-[#126E2E]" />
+                <label className="block font-bold">Free Delivery Min Order (₹)</label>
+                <input type="number" value={freeDeliveryMin} onChange={(e) => setFreeDeliveryMin(Number(e.target.value))} className="w-full bg-[#FAF8F2] border rounded-xl px-3 py-2 font-black" />
+              </div>
+            </div>
+          )}
         </main>
       )}
 
-      {/* BOTTOM DARK-GREEN NAVIGATION BAR (1ST IMAGE THEME) */}
-      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0C4A20] text-white rounded-t-[26px] px-5 py-2.5 flex items-center justify-between shadow-2xl z-40">
-        <button
-          onClick={() => setScreen('portalHome')}
-          className="flex flex-col items-center text-emerald-100/80 text-[10px] font-bold"
-        >
-          <Home className="h-4 w-4 mb-0.5" />
-          <span>Home</span>
-        </button>
-
-        <button
-          onClick={() => setScreen('market')}
-          className={`flex flex-col items-center text-[10px] font-bold ${screen === 'market' ? 'text-[#C8E99A]' : 'text-emerald-100/80'}`}
-        >
-          <Grid className="h-4 w-4 mb-0.5" />
-          <span>Market</span>
-        </button>
-
-        <button
-          onClick={() => setScreen('cart')}
-          className="relative -mt-7 h-13 w-13 p-3 rounded-full bg-[#C8E99A] text-[#0C4A20] shadow-lg border-4 border-[#FAF8F2] flex items-center justify-center"
-        >
-          <ShoppingCart className="h-5 w-5" />
-          {totalItems > 0 && (
-            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-amber-400 text-gray-900 text-[10px] font-black flex items-center justify-center">
-              {totalItems}
-            </span>
-          )}
-        </button>
-
-        <button
-          onClick={() => {
-            const r = loggedInUser?.role?.id;
-            if (r === 'admin') setScreen('adminPanel');
-            else if (r === 'delivery') setScreen('deliveryDashboard');
-            else if (r === 'customer') setScreen('cart');
-            else setScreen('shopDashboard');
-          }}
-          className="flex flex-col items-center text-emerald-100/80 text-[10px] font-bold"
-        >
-          <ClipboardList className="h-4 w-4 mb-0.5" />
-          <span>Dashboard</span>
-        </button>
-
+{/* =================================================================
+          ROLE-SPECIFIC BOTTOM NAVIGATION BAR (AFTER ROLE LOGIN)
+         ================================================================= */}
+      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0C4A20] text-white rounded-t-[26px] px-4 py-2.5 flex items-center justify-around shadow-2xl z-40">
+        {/* Always allow returning to Home */}
         <button
           onClick={() => {
             setLoggedInUser(null);
@@ -1555,9 +1922,76 @@ const handleLoginSubmit = (e) => {
           }}
           className="flex flex-col items-center text-emerald-100/80 text-[10px] font-bold"
         >
-          <User className="h-4 w-4 mb-0.5" />
-          <span>Switch</span>
+          <Home className="h-4 w-4 mb-0.5" />
+          <span>Home</span>
         </button>
+
+        {/* Customer, Retail & Wholesale can browse Market & Cart */}
+        {(roleId === 'customer' || roleId === 'retail' || roleId === 'wholesale') && (
+          <>
+            <button
+              onClick={() => setScreen('market')}
+              className={`flex flex-col items-center text-[10px] font-bold ${screen === 'market' ? 'text-[#C8E99A]' : 'text-emerald-100/80'}`}
+            >
+              <Grid className="h-4 w-4 mb-0.5" />
+              <span>Market</span>
+            </button>
+
+            <button
+              onClick={() => setScreen('cart')}
+              className={`relative flex flex-col items-center text-[10px] font-bold ${
+                screen === 'cart' || screen === 'checkout' || screen === 'payment' ? 'text-[#C8E99A]' : 'text-emerald-100/80'
+              }`}
+            >
+              <ShoppingCart className="h-4 w-4 mb-0.5" />
+              <span>Cart ({totalItems})</span>
+            </button>
+          </>
+        )}
+
+        {/* Customer Orders */}
+        {roleId === 'customer' && (
+          <button
+            onClick={() => setScreen('myOrders')}
+            className={`flex flex-col items-center text-[10px] font-bold ${screen === 'myOrders' ? 'text-[#C8E99A]' : 'text-emerald-100/80'}`}
+          >
+            <ClipboardList className="h-4 w-4 mb-0.5" />
+            <span>My Orders</span>
+          </button>
+        )}
+
+        {/* Wholesale, Retail & Farmer Shop Dashboard */}
+        {(roleId === 'wholesale' || roleId === 'retail' || roleId === 'farmer') && (
+          <button
+            onClick={() => setScreen('shopDashboard')}
+            className={`flex flex-col items-center text-[10px] font-bold ${screen === 'shopDashboard' ? 'text-[#C8E99A]' : 'text-emerald-100/80'}`}
+          >
+            <Store className="h-4 w-4 mb-0.5" />
+            <span>My Shop</span>
+          </button>
+        )}
+
+        {/* Delivery Partner Deliveries */}
+        {roleId === 'delivery' && (
+          <button
+            onClick={() => setScreen('deliveryDashboard')}
+            className={`flex flex-col items-center text-[10px] font-bold ${screen === 'deliveryDashboard' ? 'text-[#C8E99A]' : 'text-emerald-100/80'}`}
+          >
+            <Navigation className="h-4 w-4 mb-0.5" />
+            <span>Deliveries</span>
+          </button>
+        )}
+
+        {/* Master Admin Panel */}
+        {roleId === 'admin' && (
+          <button
+            onClick={() => setScreen('adminPanel')}
+            className={`flex flex-col items-center text-[10px] font-bold ${screen === 'adminPanel' ? 'text-[#C8E99A]' : 'text-emerald-100/80'}`}
+          >
+            <ShieldCheck className="h-4 w-4 mb-0.5" />
+            <span>Admin Panel</span>
+          </button>
+        )}
       </nav>
     </div>
   );
