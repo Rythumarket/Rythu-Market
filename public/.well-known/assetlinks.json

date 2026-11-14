@@ -3,6 +3,6 @@
       "target": {
         "namespace": "android_app",
         "package_name": "app.vercel.rythu_market_rythu_market.twa",
-        "sha256_cert_fingerprints": ["1A:9D:2B:CC:98:CE:6A:6B:BA:71:59:8D:28:63:E5:9C:7A:D2:7B:57:52:35:B7:C9:1B:6E:B5:9B:3D:75:A4:D6"]
+        "sha256_cert_fingerprints": ["56:CE:98:71:D0:B1:52:F7:0C:D8:69:13:50:14:E3:E9:D1:DC:79:F1:9A:FF:4A:09:3E:5A:0E:C3:53:17:CE:01"]
       }
     }]
