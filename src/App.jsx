@@ -3,10 +3,10 @@ import {
   Search, ShoppingCart, Plus, Minus, Home, Grid,
   ClipboardList, User, MapPin, Phone, Sprout,
   Store, Truck, ShieldCheck, ChevronRight, ArrowLeft,
-  CheckCircle2, Lock, KeyRound, PackagePlus, LogOut,
-  Trash2, Edit3, Check, Navigation, QrCode, Wallet,
-  LocateFixed, Bell, MessageCircle, FileText, ArrowLeftRight,
-  Warehouse, Camera, Building2, CreditCard, MessageSquare
+  CheckCircle2, Lock, KeyRound, LogOut,
+  Edit3, Check, Bell, MessageCircle,
+  Warehouse, Camera, MessageSquare, Leaf, Handshake,
+  Percent, TrendingUp, Zap, Heart, Tag, LocateFixed
 } from 'lucide-react';
 
 const CAT_IMG = {
@@ -65,55 +65,56 @@ const INITIAL_SHOPS = [
   },
 ];
 const INITIAL_PRODUCTS = [
-  // FARMER POSTED ITEMS
-  { id: 'v1', sellerId: 'shop_farmer_1', sellerType: 'farmer', sellerName: 'Ramaiah Farm (Kovur)', nameEn: 'Tomato', nameTe: 'టమాటా', sub: 'Daily Staples', unit: 'kg', minQty: 1, price: 24, oldPrice: 32, cat: 'vegetables', inStock: true, img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=300&q=80' },
-  { id: 'v24', sellerId: 'shop_farmer_1', sellerType: 'farmer', sellerName: 'Ramaiah Farm (Kovur)', nameEn: 'Spinach', nameTe: 'పాలకూర', sub: 'Leafy Greens', unit: 'bunches', minQty: 1, price: 18, oldPrice: 25, cat: 'vegetables', inStock: true, img: CAT_IMG.leafy },
-  { id: 'f10', sellerId: 'shop_farmer_1', sellerType: 'farmer', sellerName: 'Ramaiah Farm (Kovur)', nameEn: 'Banganapalli Mango', nameTe: 'బంగినపల్లి మామిడి', sub: 'Seasonal & Exotic', unit: 'kg', minQty: 1, price: 95, oldPrice: 120, cat: 'fruits', inStock: true, img: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=300&q=80' },
-  { id: 'c2', sellerId: 'shop_farmer_1', sellerType: 'farmer', sellerName: 'Ramaiah Farm (Kovur)', nameEn: 'Country Chicken (Live)', nameTe: 'నాటు కోడి', sub: 'Live Chicken', unit: 'kg', minQty: 1, price: 360, oldPrice: 420, cat: 'livestock', inStock: true, img: CAT_IMG.poultry },
-  { id: 'sh1', sellerId: 'shop_farmer_1', sellerType: 'farmer', sellerName: 'Ramaiah Farm (Kovur)', nameEn: 'Nellore Jodipi Sheep', nameTe: 'నెల్లూరు జోడిపి గొర్రె', sub: 'Live Sheep', unit: 'animal', minQty: 1, price: 8900, oldPrice: 9800, cat: 'livestock', inStock: true, img: CAT_IMG.livestock },
+  // FARMER ITEMS
+  { id: 'v1', sellerId: 'shop_farmer_1', sellerType: 'farmer', sellerName: 'Ramaiah Farm (Kovur)', nameEn: 'Tomato', nameTe: 'టమాటా', unit: 'kg', minQty: 1, price: 24, oldPrice: 32, cat: 'vegetables', inStock: true, img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=300&q=80' },
+  { id: 'v24', sellerId: 'shop_farmer_1', sellerType: 'farmer', sellerName: 'Ramaiah Farm (Kovur)', nameEn: 'Spinach', nameTe: 'పాలకూర', unit: 'bunches', minQty: 1, price: 18, oldPrice: 25, cat: 'vegetables', inStock: true, img: CAT_IMG.leafy },
+  { id: 'f10', sellerId: 'shop_farmer_1', sellerType: 'farmer', sellerName: 'Ramaiah Farm (Kovur)', nameEn: 'Banganapalli Mango', nameTe: 'బంగినపల్లి మామిడి', unit: 'kg', minQty: 1, price: 95, oldPrice: 120, cat: 'fruits', inStock: true, img: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=300&q=80' },
+  { id: 'c2', sellerId: 'shop_farmer_1', sellerType: 'farmer', sellerName: 'Ramaiah Farm (Kovur)', nameEn: 'Country Chicken (Live)', nameTe: 'నాటు కోడి', unit: 'kg', minQty: 1, price: 360, oldPrice: 420, cat: 'livestock', inStock: true, img: CAT_IMG.poultry },
+  { id: 'sh1', sellerId: 'shop_farmer_1', sellerType: 'farmer', sellerName: 'Ramaiah Farm (Kovur)', nameEn: 'Nellore Jodipi Sheep', nameTe: 'నెల్లూరు జోడిపి గొర్రె', unit: 'animal', minQty: 1, price: 8900, oldPrice: 9800, cat: 'livestock', inStock: true, img: CAT_IMG.livestock },
 
-  // RETAIL SHOPKEEPER POSTED ITEMS
-  { id: 'v2', sellerId: 'shop_retail_1', sellerType: 'retail', sellerName: 'Balaji Retail Mart', nameEn: 'Red Onion', nameTe: 'ఉల్లిపాయ', sub: 'Daily Staples', unit: 'kg', minQty: 1, price: 32, oldPrice: 40, cat: 'vegetables', inStock: true, img: 'https://images.unsplash.com/photo-1508747705729-e0613307ab6e?auto=format&fit=crop&w=300&q=80' },
-  { id: 'v14', sellerId: 'shop_retail_1', sellerType: 'retail', sellerName: 'Balaji Retail Mart', nameEn: 'Brinjal / Eggplant', nameTe: 'వంకాయ', sub: 'Common Veggies', unit: 'kg', minQty: 1, price: 28, oldPrice: 35, cat: 'vegetables', inStock: true, img: 'https://images.unsplash.com/photo-1615484477778-ca3b77940c25?auto=format&fit=crop&w=300&q=80' },
-  { id: 'm1', sellerId: 'shop_retail_1', sellerType: 'retail', sellerName: 'Balaji Retail Mart', nameEn: 'Full Cream Milk', nameTe: 'చిక్కటి పాలు', sub: 'Liquid Dairy', unit: 'L', minQty: 1, price: 68, oldPrice: 75, cat: 'dairy', inStock: true, img: CAT_IMG.dairy },
-  { id: 'm9', sellerId: 'shop_retail_1', sellerType: 'retail', sellerName: 'Balaji Retail Mart', nameEn: 'Pure Cow Ghee', nameTe: 'నెయ్యి', sub: 'Fats & Solids', unit: '500 ml', minQty: 1, price: 340, oldPrice: 390, cat: 'dairy', inStock: true, img: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=300&q=80' },
-  { id: 'b6', sellerId: 'shop_retail_1', sellerType: 'retail', sellerName: 'Balaji Retail Mart', nameEn: 'Tender Coconut Water', nameTe: 'కొబ్బరి నీళ్లు', sub: 'Cold & Packaged', unit: 'pc', minQty: 1, price: 40, oldPrice: 50, cat: 'beverages', inStock: true, img: CAT_IMG.beverages },
-  { id: 'e2', sellerId: 'shop_retail_1', sellerType: 'retail', sellerName: 'Balaji Retail Mart', nameEn: 'Country Eggs (6 pcs)', nameTe: 'నాటు కోడి గుడ్లు', sub: 'Eggs', unit: 'pack', minQty: 1, price: 54, oldPrice: 66, cat: 'livestock', inStock: true, img: CAT_IMG.eggs },
+  // RETAIL ITEMS
+  { id: 'v2', sellerId: 'shop_retail_1', sellerType: 'retail', sellerName: 'Balaji Retail Mart', nameEn: 'Red Onion', nameTe: 'ఉల్లిపాయ', unit: 'kg', minQty: 1, price: 32, oldPrice: 40, cat: 'vegetables', inStock: true, img: 'https://images.unsplash.com/photo-1508747705729-e0613307ab6e?auto=format&fit=crop&w=300&q=80' },
+  { id: 'm1', sellerId: 'shop_retail_1', sellerType: 'retail', sellerName: 'Balaji Retail Mart', nameEn: 'Full Cream Milk', nameTe: 'చిక్కటి పాలు', unit: 'L', minQty: 1, price: 68, oldPrice: 75, cat: 'dairy', inStock: true, img: CAT_IMG.dairy },
+  { id: 'm9', sellerId: 'shop_retail_1', sellerType: 'retail', sellerName: 'Balaji Retail Mart', nameEn: 'Pure Cow Ghee', nameTe: 'నెయ్యి', unit: '500 ml', minQty: 1, price: 340, oldPrice: 390, cat: 'dairy', inStock: true, img: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=300&q=80' },
+  { id: 'b6', sellerId: 'shop_retail_1', sellerType: 'retail', sellerName: 'Balaji Retail Mart', nameEn: 'Tender Coconut Water', nameTe: 'కొబ్బరి నీళ్లు', unit: 'pc', minQty: 1, price: 40, oldPrice: 50, cat: 'beverages', inStock: true, img: CAT_IMG.beverages },
+  { id: 'e2', sellerId: 'shop_retail_1', sellerType: 'retail', sellerName: 'Balaji Retail Mart', nameEn: 'Country Eggs (6 pcs)', nameTe: 'నాటు కోడి గుడ్లు', unit: 'pack', minQty: 1, price: 54, oldPrice: 66, cat: 'livestock', inStock: true, img: CAT_IMG.eggs },
 
-  // WHOLESALE SHOPKEEPER POSTED ITEMS (MINIMUM QUANTITY ENFORCED FOR CUSTOMERS)
-  { id: 'w1', sellerId: 'shop_wholesale_1', sellerType: 'wholesale', sellerName: 'Nellore Mandi Wholesale', nameEn: 'Onion Bulk Sack', nameTe: 'ఉల్లిపాయలు (హోల్‌సేల్)', sub: 'Daily Staples', unit: 'kg', minQty: 10, price: 23, oldPrice: 32, cat: 'vegetables', inStock: true, img: 'https://images.unsplash.com/photo-1508747705729-e0613307ab6e?auto=format&fit=crop&w=300&q=80' },
-  { id: 'w2', sellerId: 'shop_wholesale_1', sellerType: 'wholesale', sellerName: 'Nellore Mandi Wholesale', nameEn: 'Potato Bulk Crate', nameTe: 'బంగాళాదుంప (హోల్‌సేల్)', sub: 'Daily Staples', unit: 'kg', minQty: 15, price: 21, oldPrice: 30, cat: 'vegetables', inStock: true, img: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=300&q=80' },
-  { id: 'w3', sellerId: 'shop_wholesale_1', sellerType: 'wholesale', sellerName: 'Nellore Mandi Wholesale', nameEn: 'Banana Bulk Bunch', nameTe: 'అరటిపండ్లు (హోల్‌సేల్)', sub: 'Everyday Fruits', unit: 'dozen', minQty: 5, price: 34, oldPrice: 45, cat: 'fruits', inStock: true, img: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&w=300&q=80' },
-  { id: 'w4', sellerId: 'shop_wholesale_1', sellerType: 'wholesale', sellerName: 'Nellore Mandi Wholesale', nameEn: 'Broiler Chicken Live Bulk', nameTe: 'బ్రాయిలర్ కోడి (హోల్‌సేల్)', sub: 'Live Chicken', unit: 'kg', minQty: 10, price: 150, oldPrice: 180, cat: 'livestock', inStock: true, img: CAT_IMG.poultry },
+  // WHOLESALE ITEMS (MINIMUM QUANTITY ENFORCED)
+  { id: 'w1', sellerId: 'shop_wholesale_1', sellerType: 'wholesale', sellerName: 'Nellore Mandi Wholesale', nameEn: 'Onion Bulk Sack', nameTe: 'ఉల్లిపాయలు (హోల్‌సేల్)', unit: 'kg', minQty: 10, price: 23, oldPrice: 32, cat: 'vegetables', inStock: true, img: 'https://images.unsplash.com/photo-1508747705729-e0613307ab6e?auto=format&fit=crop&w=300&q=80' },
+  { id: 'w2', sellerId: 'shop_wholesale_1', sellerType: 'wholesale', sellerName: 'Nellore Mandi Wholesale', nameEn: 'Potato Bulk Crate', nameTe: 'బంగాళాదుంప (హోల్‌సేల్)', unit: 'kg', minQty: 15, price: 21, oldPrice: 30, cat: 'vegetables', inStock: true, img: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=300&q=80' },
+  { id: 'w3', sellerId: 'shop_wholesale_1', sellerType: 'wholesale', sellerName: 'Nellore Mandi Wholesale', nameEn: 'Banana Bulk Bunch', nameTe: 'అరటిపండ్లు (హోల్‌సేల్)', unit: 'dozen', minQty: 5, price: 34, oldPrice: 45, cat: 'fruits', inStock: true, img: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&w=300&q=80' },
 ];
 
 export default function App() {
   const [lang, setLang] = useState('te');
-  const [screen, setScreen] = useState('roles'); // Starts at Role Selection + Auth Gate
+  // 'portalHome' (1st Image Theme) -> 'roleWelcome' (2nd Image Theme) -> 'auth' -> 'market' | 'shopDashboard' | 'deliveryDashboard' | 'adminPanel' | 'cart'
+  const [screen, setScreen] = useState('portalHome');
   const [shops, setShops] = useState(INITIAL_SHOPS);
   const [products, setProducts] = useState(INITIAL_PRODUCTS);
 
-  // Storefront Filters
+  const [selectedRoleObj, setSelectedRoleObj] = useState(null);
+  const [loggedInUser, setLoggedInUser] = useState(null);
+
+  // Market Filters & Cart
   const [selectedCat, setSelectedCat] = useState('all');
-  const [selectedSourceFilter, setSelectedSourceFilter] = useState('all'); // 'all' | 'farmer' | 'retail' | 'wholesale'
+  const [selectedSourceFilter, setSelectedSourceFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [cart, setCart] = useState({});
   const [latestInvoice, setLatestInvoice] = useState(null);
+  const [alertBanner, setAlertBanner] = useState('');
 
-  // GPS & Checkout Payment States
+  // Checkout Address, GPS & Payment
   const [deliveryAddress, setDeliveryAddress] = useState('Vedayapalem, Nellore');
   const [gpsCoords, setGpsCoords] = useState({ lat: 14.4426, lng: 79.9865 });
   const [gpsStatus, setGpsStatus] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('upi');
   const [upiRefInput, setUpiRefInput] = useState('');
 
-  // Admin Settings
-  const [merchantUpiId, setMerchantUpiId] = useState('8328261103@ybl');
-  const [freeDeliveryMin, setFreeDeliveryMin] = useState(499);
-  const [baseDeliveryFee, setBaseDeliveryFee] = useState(25);
-  const [bannerDiscount, setBannerDiscount] = useState(30);
+  const [merchantUpiId] = useState('8328261103@ybl');
+  const [freeDeliveryMin] = useState(499);
+  const [baseDeliveryFee] = useState(25);
 
-  // Orders with Payment Dates (today / week / month) for Seller Payment History
+  // Orders
   const [orders, setOrders] = useState([
     {
       id: 'RB-101',
@@ -154,25 +155,10 @@ export default function App() {
       period: 'week',
       status: 'Delivered',
     },
-    {
-      id: 'RB-085',
-      sellerId: 'shop_retail_1',
-      buyerMobile: '9000112233',
-      customer: 'Customer (9000112233 • Kovur)',
-      lat: 14.4912,
-      lng: 79.9854,
-      summary: '500 ml Pure Cow Ghee + Country Eggs',
-      total: 394,
-      payment: 'UPI Settled',
-      period: 'month',
-      status: 'Delivered',
-    },
   ]);
 
-  // Auth & First-Time Registration States
-  const [selectedRoleForLogin, setSelectedRoleForLogin] = useState(null);
-  const [loggedInUser, setLoggedInUser] = useState(null); // { role, mobile, shopId, name }
-  const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
+  // Auth & Registration States
+  const [authMode, setAuthMode] = useState('login');
   const [mobileInput, setMobileInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [generatedOtp, setGeneratedOtp] = useState('');
@@ -180,24 +166,22 @@ export default function App() {
   const [otpSent, setOtpSent] = useState(false);
   const [authError, setAuthError] = useState('');
 
-  // Mandatory Registration Fields (for Farmer, Retail, Wholesale, Delivery)
   const [regStoreName, setRegStoreName] = useState('');
   const [regOwnerName, setRegOwnerName] = useState('');
   const [regAddress, setRegAddress] = useState('');
-  const [regPayType, setRegPayType] = useState('upi'); // 'upi' | 'bank' | 'cod'
+  const [regPayType, setRegPayType] = useState('upi');
   const [regUpiId, setRegUpiId] = useState('');
   const [regBankAcc, setRegBankAcc] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [regPhotoPreview, setRegPhotoPreview] = useState('');
 
-  // Seller Dashboard Sub-Tabs (Wholesale & Retail)
-  const [shopTab, setShopTab] = useState('orders'); // 'orders' | 'stock' | 'payments' | 'bank'
-  const [paymentPeriodFilter, setPaymentPeriodFilter] = useState('today'); // 'today' | 'week' | 'month'
+  // Seller Dashboard States
+  const [shopTab, setShopTab] = useState('orders');
+  const [paymentPeriodFilter, setPaymentPeriodFilter] = useState('today');
   const [editingItemId, setEditingItemId] = useState(null);
   const [editPriceVal, setEditPriceVal] = useState('');
   const [editMinQtyVal, setEditMinQtyVal] = useState('');
 
-  // Add New Stock Item Form (Wholesale / Retail / Farmer)
   const [newItemEn, setNewItemEn] = useState('');
   const [newItemTe, setNewItemTe] = useState('');
   const [newItemCat, setNewItemCat] = useState('vegetables');
@@ -205,26 +189,108 @@ export default function App() {
   const [newItemPrice, setNewItemPrice] = useState('');
   const [newItemMinQty, setNewItemMinQty] = useState('1');
 
-  // Shop Payment Details Edit States
   const [editUpi, setEditUpi] = useState('');
   const [editBank, setEditBank] = useState('');
   const [editCod, setEditCod] = useState(true);
   const [bankSavedMsg, setBankSavedMsg] = useState('');
 
-  // Admin Tab
-  const [adminTab, setAdminTab] = useState('approvals'); // 'approvals' | 'orders' | 'settings'
-  const [alertBanner, setAlertBanner] = useState('');
+  const [adminTab, setAdminTab] = useState('approvals');
 
-  const roles = [
-    { id: 'customer', titleTe: 'వినియోగదారుడు', titleEn: 'Customer', subTe: 'రైతులు, రిటైల్ & హోల్‌సేల్ సరుకులు కొనండి', subEn: 'Buy from Farmers, Retail & Wholesale', icon: ShoppingCart, color: 'bg-emerald-50 text-emerald-600' },
-    { id: 'farmer', titleTe: 'రైతు', titleEn: 'Farmer', subTe: 'రిజిస్ట్రేషన్ & పంట అమ్మకం', subEn: 'Register & sell farm harvest', icon: Sprout, color: 'bg-green-50 text-green-600' },
-    { id: 'retail', titleTe: 'రిటైల్ షాపు', titleEn: 'Retail Shopkeeper', subTe: 'Today Orders, Stock ధరలు, Payments & Bank', subEn: 'Orders, Stock Prices, Payments & Bank', icon: Store, color: 'bg-amber-50 text-amber-600' },
-    { id: 'wholesale', titleTe: 'హోల్‌సేల్ వ్యాపారి', titleEn: 'Wholesale Shopkeeper', subTe: 'Min Qty కంట్రోల్, Orders, Payments & Bank', subEn: 'Min Qty Control, Orders, Payments & Bank', icon: Warehouse, color: 'bg-indigo-50 text-indigo-600' },
-    { id: 'delivery', titleTe: 'డెలివరీ పార్టనర్', titleEn: 'Delivery Partner', subTe: 'Google Maps రూట్ & ఆటో ఇన్‌వాయిస్', subEn: 'Maps navigation & auto invoice', icon: Truck, color: 'bg-blue-50 text-blue-600' },
-    { id: 'admin', titleTe: 'అడ్మిన్ (Admin)', titleEn: 'Master Admin', subTe: 'షాపుల ఫోటో వెరిఫికేషన్ & అప్రూవల్', subEn: 'Verify Shop Photos & Approve Shops', icon: ShieldCheck, color: 'bg-purple-50 text-purple-600' },
-  ];
+  // 2nd Image Role Onboarding Metadata (Exact match to 1000043360.png)
+  const ROLE_CARDS = {
+    customer: {
+      id: 'customer',
+      titleTe: 'వినియోగదారులు',
+      titleEn: 'Shop for Fresh Produce',
+      bannerTitle: 'For Customers',
+      bannerSubtitle: 'Get Fresh & Healthy Produce Easily',
+      heroImg: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=500&q=80',
+      cardBg: 'bg-[#E8F6E8] border-[#CBEAC9]',
+      iconEmoji: '🛒',
+      pillars: [
+        { icon: Leaf, label: 'Fresh Quality' },
+        { icon: Truck, label: 'Home Delivery' },
+        { icon: ShieldCheck, label: 'Healthy Life' },
+      ],
+    },
+    farmer: {
+      id: 'farmer',
+      titleTe: 'రైతు విభాగం',
+      titleEn: 'Farmers Section',
+      bannerTitle: 'For Farmers',
+      bannerSubtitle: 'Get the Best Price for Your Produce',
+      heroImg: 'https://images.unsplash.com/photo-1595855759920-86582396756a?auto=format&fit=crop&w=500&q=80',
+      cardBg: 'bg-[#FDF0D5] border-[#F6DFB1]',
+      iconEmoji: '👨‍🌾',
+      pillars: [
+        { icon: Sprout, label: 'Sell Directly' },
+        { icon: Tag, label: 'Get Better Price' },
+        { icon: Handshake, label: 'Grow Together' },
+      ],
+    },
+    retail: {
+      id: 'retail',
+      titleTe: 'రిటైల్ షాపులు',
+      titleEn: 'Retail Shops',
+      bannerTitle: 'For Retailers',
+      bannerSubtitle: 'Stock Fresh Produce for Your Shop',
+      heroImg: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=500&q=80',
+      cardBg: 'bg-[#FDF1D6] border-[#F5E0B5]',
+      iconEmoji: '🏪',
+      pillars: [
+        { icon: Store, label: 'Easy Ordering' },
+        { icon: Percent, label: 'Great Margins' },
+        { icon: TrendingUp, label: 'Grow Business' },
+      ],
+    },
+    wholesale: {
+      id: 'wholesale',
+      titleTe: 'హోల్‌సేల్ వ్యాపారులు',
+      titleEn: 'Wholesale Mandi',
+      bannerTitle: 'For Wholesale',
+      bannerSubtitle: 'Buy & Sell Fresh Produce in Bulk',
+      heroImg: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=500&q=80',
+      cardBg: 'bg-[#E5F2FA] border-[#C8E3F5]',
+      iconEmoji: '🏭',
+      pillars: [
+        { icon: ShoppingCart, label: 'Bulk Purchase' },
+        { icon: Tag, label: 'Best Rates' },
+        { icon: Truck, label: 'Reliable Supply' },
+      ],
+    },
+delivery: {
+      id: 'delivery',
+      titleTe: 'డెలివరీ పార్టనర్',
+      titleEn: 'Delivery & Maps',
+      bannerTitle: 'For Delivery',
+      bannerSubtitle: 'Deliver Fresh Produce Faster & Safer',
+      heroImg: 'https://images.unsplash.com/photo-1526367790999-0150786686a2?auto=format&fit=crop&w=500&q=80',
+      cardBg: 'bg-[#ECE9FA] border-[#D8D1F5]',
+      iconEmoji: '🛵',
+      pillars: [
+        { icon: Zap, label: 'Quick Delivery' },
+        { icon: ShieldCheck, label: 'Safe & Secure' },
+        { icon: Heart, label: 'Happy Customers' },
+      ],
+    },
+    admin: {
+      id: 'admin',
+      titleTe: 'అడ్మిన్ (Admin)',
+      titleEn: 'Admin Login',
+      bannerTitle: 'For Master Admin',
+      bannerSubtitle: 'Verify Shops, Prices & Nellore Operations',
+      heroImg: 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=500&q=80',
+      cardBg: 'bg-[#E3F4F4] border-[#C4E6E6]',
+      iconEmoji: '🛡️',
+      pillars: [
+        { icon: ShieldCheck, label: 'Shop Approvals' },
+        { icon: Tag, label: 'Price Control' },
+        { icon: Truck, label: 'Live Tracking' },
+      ],
+    },
+  };
 
-const categories = [
+  const categories = [
     { id: 'all', nameEn: 'All', nameTe: 'అన్నీ', emoji: '🧺' },
     { id: 'vegetables', nameEn: 'Vegetables', nameTe: 'కూరగాయలు', emoji: '🍅' },
     { id: 'fruits', nameEn: 'Fruits', nameTe: 'పండ్లు', emoji: '🥭' },
@@ -233,19 +299,33 @@ const categories = [
     { id: 'livestock', nameEn: 'Eggs & Poultry', nameTe: 'గుడ్లు, కోళ్లు', emoji: '🐓' },
   ];
 
-  // Only show products from APPROVED shops (or farmers)
-  const approvedShopIds = new Set(shops.filter((s) => s.approved).map((s) => s.id));
+  // Open Role -> Shows 2nd Image Role Welcome Screen first!
+  const handlePickRoleCard = (roleKey) => {
+    setSelectedRoleObj(ROLE_CARDS[roleKey]);
+    setScreen('roleWelcome');
+  };
 
+  // Proceed from 2nd Image Role Welcome Screen -> Auth / Login / Registration
+  const handleContinueFromWelcome = () => {
+    setMobileInput('');
+    setPasswordInput('');
+    setOtpInput('');
+    setOtpSent(false);
+    setAuthError('');
+    setAuthMode('login');
+    setScreen('auth');
+  };
+
+  // Cart & Product Filtering
+  const approvedShopIds = new Set(shops.filter((s) => s.approved).map((s) => s.id));
   const visibleProducts = products.filter((p) => {
-    const isApprovedSeller = approvedShopIds.has(p.sellerId);
+    const isApproved = approvedShopIds.has(p.sellerId);
     const catOk = selectedCat === 'all' || p.cat === selectedCat;
     const srcOk = selectedSourceFilter === 'all' || p.sellerType === selectedSourceFilter;
     const q = search.toLowerCase();
-    const searchOk = p.nameEn.toLowerCase().includes(q) || p.nameTe.includes(q) || p.sellerName.toLowerCase().includes(q);
-    return isApprovedSeller && catOk && srcOk && searchOk;
+    return isApproved && catOk && srcOk && (p.nameEn.toLowerCase().includes(q) || p.nameTe.includes(q));
   });
 
-  // Cart Handlers (Enforces Wholesale Minimum Quantity!)
   const addItem = (product) => {
     setCart((prev) => {
       const current = prev[product.id] || 0;
@@ -258,11 +338,8 @@ const categories = [
     setCart((prev) => {
       const current = prev[product.id] || 0;
       const next = { ...prev };
-      if (current <= product.minQty) {
-        delete next[product.id];
-      } else {
-        next[product.id] = current - 1;
-      }
+      if (current <= product.minQty) delete next[product.id];
+      else next[product.id] = current - 1;
       return next;
     });
   };
@@ -275,7 +352,7 @@ const categories = [
   const deliveryFee = subtotal === 0 ? 0 : subtotal >= freeDeliveryMin ? 0 : baseDeliveryFee;
   const grandTotal = subtotal + deliveryFee;
 
-  // GPS Capture
+  // GPS & Invoices
   const handleCaptureGps = () => {
     if (!navigator.geolocation) return;
     setGpsStatus(lang === 'te' ? 'GPS తీసుకుంటోంది...' : 'Fetching GPS...');
@@ -293,16 +370,8 @@ const categories = [
     );
   };
 
-  // Auto Build WhatsApp & SMS Text Invoice Links upon Delivery
   const buildInvoiceText = (ord) =>
-    `RYTHU BASKET NELLORE - INVOICE\n` +
-    `Order ID: ${ord.id}\n` +
-    `Customer: ${ord.customer}\n` +
-    `Items: ${ord.summary}\n` +
-    `Total Amount: Rs.${ord.total}\n` +
-    `Payment: ${ord.payment}\n` +
-    `Status: DELIVERED\n` +
-    `Thank you for shopping with Rythu Basket!`;
+    `RYTHU BASKET NELLORE - INVOICE\nOrder ID: ${ord.id}\nCustomer: ${ord.customer}\nItems: ${ord.summary}\nTotal: Rs.${ord.total}\nPayment: ${ord.payment}\nStatus: DELIVERED`;
 
   const getWhatsAppInvoiceLink = (ord) => {
     const phone = `91${(ord.buyerMobile || '9876543210').replace(/\D/g, '').slice(-10)}`;
@@ -314,20 +383,16 @@ const categories = [
     return `sms:${phone}?body=${encodeURIComponent(buildInvoiceText(ord))}`;
   };
 
-  // Mark Order Delivered & Trigger Automatic Invoice Dispatch
   const handleMarkOrderDelivered = (ord) => {
     const updatedOrd = { ...ord, status: 'Delivered' };
     setOrders((prev) => prev.map((o) => (o.id === ord.id ? updatedOrd : o)));
     setLatestInvoice(updatedOrd);
-    // Automatically open WhatsApp invoice to registered mobile number
     window.open(getWhatsAppInvoiceLink(updatedOrd), '_blank');
   };
 
-  // Place Customer Order
   const handlePlaceCustomerOrder = () => {
     const entries = Object.entries(cart);
     if (entries.length === 0) return;
-
     const firstProd = products.find((p) => p.id === entries[0][0]);
     const itemLines = entries
       .map(([id, qty]) => {
@@ -359,23 +424,11 @@ const categories = [
     setOrders([newOrd, ...orders]);
     setCart({});
     setUpiRefInput('');
-    setAlertBanner(`✅ Order ${newOrd.id} placed! Seller will accept & deliver shortly.`);
-    setScreen('home');
+    setAlertBanner(`✅ Order ${newOrd.id} placed successfully!`);
+    setScreen('market');
   };
 
-  // Role Card Tap -> Open Auth Gate
-  const handleSelectRole = (roleObj) => {
-    setSelectedRoleForLogin(roleObj);
-    setMobileInput('');
-    setPasswordInput('');
-    setOtpInput('');
-    setOtpSent(false);
-    setAuthError('');
-    setAuthMode('login');
-    setScreen('auth');
-  };
-
- // Send OTP (Customer & Admin)
+  // Auth Handlers
   const handleSendOtp = () => {
     if (mobileInput.replace(/\D/g, '').length !== 10) {
       setAuthError('10 అంకెల మొబైల్ నంబర్ ఇవ్వండి');
@@ -387,22 +440,20 @@ const categories = [
     setAuthError('');
   };
 
-  // Verify Login (OTP for Customer/Admin; Mobile + Password for Shops/Farmers/Delivery)
-  const handleLoginSubmit = (e) => {
+const handleLoginSubmit = (e) => {
     e.preventDefault();
-    const roleId = selectedRoleForLogin.id;
+    const roleId = selectedRoleObj.id;
 
     if (roleId === 'customer' || roleId === 'admin') {
       if (otpInput.trim() !== generatedOtp) {
         setAuthError('తప్పు OTP! మళ్ళీ ప్రయత్నించండి');
         return;
       }
-      setLoggedInUser({ role: selectedRoleForLogin, mobile: mobileInput, name: selectedRoleForLogin.titleEn });
-      setScreen(roleId === 'admin' ? 'adminPanel' : 'home');
+      setLoggedInUser({ role: selectedRoleObj, mobile: mobileInput, name: selectedRoleObj.titleEn });
+      setScreen(roleId === 'admin' ? 'adminPanel' : 'market');
       return;
     }
 
-    // Shop / Farmer / Delivery Password Login
     const matchedShop = shops.find((s) => s.role === roleId && s.mobile === mobileInput);
     if (!matchedShop) {
       setAuthError('ఈ నంబర్ రిజిస్టర్ కాలేదు. ముందుగా New Registration చేయండి.');
@@ -414,7 +465,7 @@ const categories = [
     }
 
     setLoggedInUser({
-      role: selectedRoleForLogin,
+      role: selectedRoleObj,
       mobile: matchedShop.mobile,
       shopId: matchedShop.id,
       name: matchedShop.storeName,
@@ -423,15 +474,9 @@ const categories = [
     setEditBank(matchedShop.bankAccount || '');
     setEditCod(matchedShop.acceptCod);
     setShopTab('orders');
-
-    if (roleId === 'wholesale' || roleId === 'retail' || roleId === 'farmer') {
-      setScreen('shopDashboard');
-    } else {
-      setScreen('deliveryDashboard');
-    }
+    setScreen(roleId === 'delivery' ? 'deliveryDashboard' : 'shopDashboard');
   };
 
-  // Handle Shop Photo Upload (FileReader)
   const handlePhotoUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -440,7 +485,6 @@ const categories = [
     reader.readAsDataURL(file);
   };
 
-  // First-Time Registration Submit (Mandatory Store Name, Owner, Phone, Address, Payment/Bank/COD, Password, Shop Photo)
   const handleRegisterSubmit = (e) => {
     e.preventDefault();
     if (mobileInput.replace(/\D/g, '').length !== 10) {
@@ -451,25 +495,17 @@ const categories = [
       setAuthError('అన్ని వివరాలను తప్పనిసరిగా పూరించండి');
       return;
     }
-    if (regPayType === 'upi' && !regUpiId.trim()) {
-      setAuthError('పేమెంట్ రిసీవ్ చేసుకోవడానికి UPI ID తప్పనిసరి');
-      return;
-    }
-    if (regPayType === 'bank' && !regBankAcc.trim()) {
-      setAuthError('పేమెంట్ రిసీవ్ చేసుకోవడానికి Bank Account Number తప్పనిసరి');
-      return;
-    }
-    if ((selectedRoleForLogin.id === 'wholesale' || selectedRoleForLogin.id === 'retail') && !regPhotoPreview) {
-      setAuthError('షాపు ఫోటో అప్‌లోడ్ చేయడం తప్పనిసరి (Admin Approval కోసం)');
+    if ((selectedRoleObj.id === 'wholesale' || selectedRoleObj.id === 'retail') && !regPhotoPreview) {
+      setAuthError('షాపు ఫోటో అప్‌లోడ్ చేయడం తప్పనిసరి (Admin Verification కోసం)');
       return;
     }
 
     const newShopId = 'shop_' + Date.now();
-    const needsAdminApproval = selectedRoleForLogin.id === 'wholesale' || selectedRoleForLogin.id === 'retail';
+    const needsAdminApproval = selectedRoleObj.id === 'wholesale' || selectedRoleObj.id === 'retail';
 
     const newShopObj = {
       id: newShopId,
-      role: selectedRoleForLogin.id,
+      role: selectedRoleObj.id,
       storeName: regStoreName.trim(),
       ownerName: regOwnerName.trim(),
       mobile: mobileInput,
@@ -477,38 +513,31 @@ const categories = [
       address: regAddress.trim(),
       upiId: regUpiId.trim(),
       bankAccount: regBankAcc.trim(),
-      acceptCod: regPayType === 'cod' || true,
+      acceptCod: true,
       photoUrl: regPhotoPreview || CAT_IMG.vegetables,
-      approved: !needsAdminApproval, // Wholesale & Retail stay hidden until Admin approves photo!
+      approved: !needsAdminApproval,
     };
 
     setShops([newShopObj, ...shops]);
     setLoggedInUser({
-      role: selectedRoleForLogin,
+      role: selectedRoleObj,
       mobile: newShopObj.mobile,
       shopId: newShopId,
       name: newShopObj.storeName,
     });
     setEditUpi(newShopObj.upiId);
     setEditBank(newShopObj.bankAccount);
-    setEditCod(newShopObj.acceptCod);
     setShopTab('orders');
 
     if (needsAdminApproval) {
-      setAlertBanner(
-        `⏳ Registration Complete! మీ షాపు ఫోటో Admin వెరిఫికేషన్‌కు పంపబడింది. Admin Approve చేసిన వెంటనే మీ షాపు & ఐటమ్స్ Customer కి కనిపిస్తాయి.`
-      );
+      setAlertBanner('⏳ మీ షాపు ఫోటో Admin వెరిఫికేషన్‌కు పంపబడింది. Admin Approve చేసిన తర్వాత మీ షాపు కనిపిస్తుంది.');
     }
-
-    if (selectedRoleForLogin.id === 'delivery') setScreen('deliveryDashboard');
-    else setScreen('shopDashboard');
+    setScreen(selectedRoleObj.id === 'delivery' ? 'deliveryDashboard' : 'shopDashboard');
   };
 
-  // Seller Add Stock Item
   const handleAddShopItem = (e) => {
     e.preventDefault();
     if (!newItemEn.trim() || !newItemPrice || !loggedInUser) return;
-
     const newProd = {
       id: 'prod_' + Date.now(),
       sellerId: loggedInUser.shopId,
@@ -516,7 +545,6 @@ const categories = [
       sellerName: loggedInUser.name,
       nameEn: newItemEn.trim(),
       nameTe: newItemTe.trim() || newItemEn.trim(),
-      sub: loggedInUser.role.id === 'wholesale' ? 'Wholesale Bulk' : 'Fresh Stock',
       unit: newItemUnit,
       minQty: loggedInUser.role.id === 'wholesale' ? Math.max(1, Number(newItemMinQty)) : 1,
       price: Number(newItemPrice),
@@ -525,12 +553,11 @@ const categories = [
       inStock: true,
       img: CAT_IMG[newItemCat] || CAT_IMG.vegetables,
     };
-
     setProducts([newProd, ...products]);
     setNewItemEn('');
     setNewItemTe('');
     setNewItemPrice('');
-    setAlertBanner(`✅ ${newProd.nameEn} added to your shop inventory!`);
+    setAlertBanner(`✅ ${newProd.nameEn} added to your inventory!`);
   };
 
   const currentShopRecord = shops.find((s) => s.id === loggedInUser?.shopId);
@@ -544,443 +571,539 @@ const categories = [
     const prod = products.find((p) => p.id === firstId);
     return shops.find((s) => s.id === prod?.sellerId);
   })();
-
-const activeUpiId = activeSellerShop?.upiId || merchantUpiId;
+  const activeUpiId = activeSellerShop?.upiId || merchantUpiId;
   const upiDeepLink = `upi://pay?pa=${encodeURIComponent(activeUpiId)}&pn=${encodeURIComponent(
     activeSellerShop?.storeName || 'Rythu Basket'
   )}&am=${grandTotal}&cu=INR`;
   const freeQrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(upiDeepLink)}`;
 
+ // =========================================================================
+  // VIEW 1: 1ST REFERENCE IMAGE HOME THEME (1000043358.png) WITH EXACT LOGO
   // =========================================================================
-  // GATE 1: ROLE SELECTION & REGISTRATION / LOGIN
-  // =========================================================================
-  if (!loggedInUser || screen === 'roles' || screen === 'auth') {
+  if (screen === 'portalHome') {
     return (
-      <div className="min-h-screen bg-[#F6FBF8] max-w-md mx-auto font-sans text-gray-800 shadow-xl pb-10">
-        <div className="bg-[#0B5D34] text-white rounded-b-[32px] px-5 pt-6 pb-7 shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-3">
-              <div className="h-12 w-12 rounded-full bg-white p-0.5 shadow-md border-2 border-yellow-300 overflow-hidden">
-                <img src="/icon-512.png" alt="Rythu Basket" className="h-full w-full object-cover rounded-full" />
+      <div className="min-h-screen bg-[#FAF8F2] max-w-md mx-auto relative pb-24 font-sans text-gray-800 shadow-2xl overflow-x-hidden">
+        {/* TOP FOREST-GREEN HERO HEADER WITH YOUR UNCHANGED LOGO */}
+        <div className="bg-gradient-to-b from-[#0E6A2E] via-[#1B8A3D] to-[#74C365] text-white rounded-b-[36px] px-4 pt-5 pb-7 relative overflow-hidden shadow-md">
+          {/* Top Brand Row */}
+          <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center space-x-2.5">
+              {/* YOUR EXACT LOGO - UNCHANGED */}
+              <div className="h-14 w-14 rounded-full bg-white p-0.5 shadow-lg border-2 border-yellow-300 overflow-hidden flex-shrink-0">
+                <img src="/icon-512.png" alt="Rythu Basket Logo" className="h-full w-full object-cover rounded-full" />
               </div>
               <div>
-                <h1 className="text-lg font-black">రైతు బాస్కెట్</h1>
-                <p className="text-[11px] text-emerald-200 font-semibold">Rythu Basket • నెల్లూరు</p>
+                <h1 className="text-xl font-black tracking-tight leading-none drop-shadow-sm">
+                  రైతు బాస్కెట్
+                </h1>
+                <p className="text-xs font-extrabold text-yellow-200 mt-0.5">Rythu Basket</p>
+                <p className="text-[10px] text-emerald-100 font-medium">
+                  రైతు నుండి వినియోగదారుడి వరకు...
+                </p>
               </div>
             </div>
 
-            <div className="bg-white/15 p-0.5 rounded-full flex text-[11px] font-bold">
+            {/* Language Pill & Bell */}
+            <div className="flex items-center space-x-2">
               <button
-                onClick={() => setLang('te')}
-                className={`px-3 py-1 rounded-full ${lang === 'te' ? 'bg-white text-[#0B5D34]' : 'text-white'}`}
+                onClick={() => setLang(lang === 'te' ? 'en' : 'te')}
+                className="bg-white text-[#0E6A2E] text-xs font-extrabold px-3 py-1.5 rounded-full shadow flex items-center space-x-1"
               >
-                తెలుగు
+                <span>🌐</span>
+                <span>{lang === 'te' ? 'తెలుగు' : 'English'}</span>
               </button>
               <button
-                onClick={() => setLang('en')}
-                className={`px-3 py-1 rounded-full ${lang === 'en' ? 'bg-white text-[#0B5D34]' : 'text-white'}`}
+                onClick={() => handlePickRoleCard('admin')}
+                className="h-9 w-9 rounded-full bg-white/20 flex items-center justify-center relative"
               >
-                EN
+                <Bell className="h-4 w-4 text-white" />
+                <span className="h-2 w-2 rounded-full bg-red-500 absolute top-2 right-2"></span>
               </button>
             </div>
           </div>
 
-          <h2 className="text-xl font-black">
-            {lang === 'te' ? 'నమస్కారం! మీరు ఎవరు?' : 'Welcome! Select Your Role'}
-          </h2>
-          <p className="text-xs text-emerald-100 mt-1">
-            {lang === 'te'
-              ? 'Customer & Admin కి OTP Login • Shops & Farmers కి Registration'
-              : 'OTP Login for Customer/Admin • Mandatory Registration for Shops/Farmers'}
-          </p>
+          {/* Hero Tagline + Farmer Visual + Order Now Pill */}
+          <div className="mt-5 flex items-center justify-between relative z-10">
+            <div className="max-w-[58%] space-y-2.5">
+              <p className="text-sm font-extrabold text-[#0A471E] bg-white/85 backdrop-blur-sm px-2.5 py-1 rounded-lg inline-block">
+                మా రైతు ఉత్పత్తులు
+              </p>
+              <h2 className="text-2xl font-black text-[#093D19] leading-tight drop-shadow-sm">
+                మీ ఇంటి వద్దకు!
+              </h2>
+              <button
+                onClick={() => handlePickRoleCard('customer')}
+                className="bg-[#126E2E] hover:bg-[#0D5723] text-white text-xs font-extrabold px-4 py-2.5 rounded-full shadow-lg flex items-center space-x-1.5 active:scale-95 transition"
+              >
+                <span>ఇప్పుడే ఆర్డర్ చేయండి</span>
+                <span>➔</span>
+              </button>
+            </div>
+
+            <div className="w-36 h-36 rounded-2xl overflow-hidden shadow-lg border-2 border-white/50 flex-shrink-0 bg-emerald-100">
+              <img
+                src="https://images.unsplash.com/photo-1595855759920-86582396756a?auto=format&fit=crop&w=400&q=80"
+                alt="Fresh Harvest"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </div>
         </div>
 
-        {screen !== 'auth' ? (
-          <div className="px-4 pt-5 space-y-2.5">
-            {roles.map((r) => {
-              const Icon = r.icon;
-              return (
-                <button
-                  key={r.id}
-                  onClick={() => handleSelectRole(r)}
-                  className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between shadow-sm border border-gray-100 hover:border-[#00B251]"
-                >
-                  <div className="flex items-center space-x-3.5">
-                    <div className={`h-11 w-11 rounded-xl flex items-center justify-center ${r.color}`}>
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div className="text-left">
-                      <h3 className="text-sm font-extrabold text-gray-900">
-                        {lang === 'te' ? r.titleTe : r.titleEn}
-                      </h3>
-                      <p className="text-[11px] font-bold text-[#00B251]">
-                        {lang === 'te' ? r.subTe : r.subEn}
-                      </p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-gray-400" />
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="px-4 pt-5">
-            <div className="bg-white rounded-3xl p-5 shadow-md border border-gray-100 space-y-4">
-              <div className="flex items-center space-x-2">
-                <button onClick={() => setScreen('roles')} className="p-2 bg-gray-100 rounded-full">
-                  <ArrowLeft className="h-4 w-4 text-gray-700" />
-                </button>
+        {/* Carousel Indicator Dots */}
+        <div className="flex justify-center space-x-1.5 mt-2.5">
+          <span className="h-2 w-2 rounded-full bg-[#126E2E]"></span>
+          <span className="h-2 w-2 rounded-full bg-gray-300"></span>
+          <span className="h-2 w-2 rounded-full bg-gray-300"></span>
+        </div>
+
+        {/* 2-COLUMN PASTEL ROLE CARDS GRID (EXACT 1ST IMAGE STYLE) */}
+        <div className="px-4 pt-3 grid grid-cols-2 gap-3">
+          {Object.values(ROLE_CARDS).map((rc) => (
+            <button
+              key={rc.id}
+              onClick={() => handlePickRoleCard(rc.id)}
+              className={`${rc.cardBg} border rounded-2xl p-3 flex items-center justify-between shadow-sm hover:shadow-md active:scale-[0.98] transition text-left`}
+            >
+              <div className="flex items-center space-x-2.5">
+                <div className="h-11 w-11 rounded-2xl bg-white/90 shadow-sm flex items-center justify-center text-2xl flex-shrink-0">
+                  {rc.iconEmoji}
+                </div>
                 <div>
-                  <h3 className="text-base font-black text-gray-900">
-                    {lang === 'te' ? selectedRoleForLogin.titleTe : selectedRoleForLogin.titleEn}
-                  </h3>
-                  <p className="text-[11px] text-gray-500">
-                    {selectedRoleForLogin.id === 'customer' || selectedRoleForLogin.id === 'admin'
-                      ? 'Mobile Number + OTP Login'
-                      : 'Login or First-Time Shop/Partner Registration'}
-                  </p>
+                  <h3 className="text-xs font-black text-gray-900 leading-tight">{rc.titleTe}</h3>
+                  <p className="text-[10px] font-bold text-gray-600 mt-0.5 leading-tight">{rc.titleEn}</p>
                 </div>
               </div>
+              <span className="h-6 w-6 rounded-full bg-white/80 flex items-center justify-center text-gray-700 flex-shrink-0">
+                <ChevronRight className="h-3.5 w-3.5" />
+              </span>
+            </button>
+          ))}
+        </div>
 
-              {/* CUSTOMER & ADMIN: DIRECT OTP LOGIN */}
-              {selectedRoleForLogin.id === 'customer' || selectedRoleForLogin.id === 'admin' ? (
-                <div className="space-y-3">
-                  <input
-                    type="tel"
-                    maxLength={10}
-                    value={mobileInput}
-                    onChange={(e) => setMobileInput(e.target.value.replace(/\D/g, ''))}
-                    placeholder="10-Digit Mobile Number (e.g., 8328261103)"
-                    className="w-full bg-gray-50 border rounded-xl px-3.5 py-2.5 text-sm font-bold"
-                  />
-                  {!otpSent ? (
-                    <button
-                      onClick={handleSendOtp}
-                      className="w-full bg-[#00B251] text-white font-extrabold text-xs py-3 rounded-xl"
-                    >
-                      Send OTP
-                    </button>
-                  ) : (
-                    <>
-                      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2 text-center text-xs font-black text-[#00B251]">
-                        Demo OTP: {generatedOtp}
-                      </div>
-                      <input
-                        type="tel"
-                        maxLength={4}
-                        value={otpInput}
-                        onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, ''))}
-                        placeholder="Enter 4-Digit OTP"
-                        className="w-full bg-gray-50 border rounded-xl px-3.5 py-2.5 text-center text-base font-black tracking-[0.4em]"
-                      />
-                      <button
-                        onClick={handleLoginSubmit}
-                        className="w-full bg-[#00B251] text-white font-extrabold text-xs py-3 rounded-xl"
-                      >
-                        Verify OTP & Enter
-                      </button>
-                    </>
-                  )}
-                  {authError && <p className="text-xs font-bold text-red-500">{authError}</p>}
-                </div>
-              ) : (
-                /* FARMER, RETAIL, WHOLESALE, DELIVERY: LOGIN OR MANDATORY FIRST-TIME REGISTRATION */
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2 bg-gray-100 p-1 rounded-xl text-xs font-extrabold">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAuthMode('login');
-                        setAuthError('');
-                      }}
-                      className={`py-2 rounded-lg ${authMode === 'login' ? 'bg-white text-[#00B251] shadow-sm' : 'text-gray-600'}`}
-                    >
-                      Existing Login
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAuthMode('register');
-                        setAuthError('');
-                      }}
-                      className={`py-2 rounded-lg ${authMode === 'register' ? 'bg-white text-[#00B251] shadow-sm' : 'text-gray-600'}`}
-                    >
-                      New Registration
-                    </button>
+        {/* CONTACT SUPPORT GREEN BANNER (EXACT 1ST IMAGE STYLE) */}
+        <div className="px-4 mt-3.5">
+          <div className="bg-gradient-to-r from-[#146B2E] to-[#238E43] rounded-2xl p-3.5 text-white flex items-center justify-between shadow-md">
+            <div className="flex items-center space-x-3">
+              <div className="h-11 w-11 rounded-full bg-white/20 flex items-center justify-center text-2xl">
+                🎧
+              </div>
+              <div>
+                <h4 className="text-sm font-black">సహాయం కావాలా?</h4>
+                <p className="text-[11px] text-emerald-100">Contact Support • Nellore</p>
+              </div>
+            </div>
+            <a
+              href="tel:8328261103"
+              className="bg-white text-[#146B2E] text-xs font-black px-3.5 py-2 rounded-full shadow flex items-center space-x-1"
+            >
+              <Phone className="h-3.5 w-3.5" />
+              <span>Call Us</span>
+            </a>
+          </div>
+        </div>
+
+        {/* RYTHU BASKET HIGHLIGHTS CARD (EXACT 1ST IMAGE STYLE) */}
+        <div className="px-4 mt-3.5">
+          <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-emerald-100">
+            <div className="flex items-center space-x-1.5 mb-2.5">
+              <Leaf className="h-4 w-4 text-[#1B8A3D]" />
+              <h4 className="text-xs font-black text-[#115E28]">Rythu Basket Highlights</h4>
+            </div>
+            <div className="grid grid-cols-4 gap-2 text-center">
+              {[
+                { icon: Leaf, text: '100% Fresh Produce' },
+                { icon: Sprout, text: 'Direct from Farmers' },
+                { icon: ShieldCheck, text: 'Safe & Secure Payments' },
+                { icon: Truck, text: 'Fast Delivery' },
+              ].map((h, i) => {
+                const Icon = h.icon;
+                return (
+                  <div key={i} className="flex flex-col items-center space-y-1">
+                    <div className="h-9 w-9 rounded-full bg-emerald-50 text-[#1B8A3D] flex items-center justify-center">
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <span className="text-[9px] font-bold text-gray-700 leading-tight">{h.text}</span>
                   </div>
-
-                  {authMode === 'login' ? (
-                    <form onSubmit={handleLoginSubmit} className="space-y-3">
-                      <p className="text-[10px] text-gray-400">
-                        Demo Numbers: Wholesale `9989334455`, Retail `9849223344`, Farmer `9440112233` (Password: `123`)
-                      </p>
-                      <input
-                        type="tel"
-                        maxLength={10}
-                        required
-                        value={mobileInput}
-                        onChange={(e) => setMobileInput(e.target.value.replace(/\D/g, ''))}
-                        placeholder="Registered 10-Digit Phone Number"
-                        className="w-full bg-gray-50 border rounded-xl px-3 py-2.5 text-xs font-bold"
-                      />
-                      <input
-                        type="password"
-                        required
-                        value={passwordInput}
-                        onChange={(e) => setPasswordInput(e.target.value)}
-                        placeholder="Password"
-                        className="w-full bg-gray-50 border rounded-xl px-3 py-2.5 text-xs font-bold"
-                      />
-                      {authError && <p className="text-xs font-bold text-red-500">{authError}</p>}
-                      <button
-                        type="submit"
-                        className="w-full bg-[#00B251] text-white font-extrabold text-xs py-3 rounded-xl shadow-md"
-                      >
-                        Login to Dashboard
-                      </button>
-                    </form>
-                  ) : (
-                    /* MANDATORY FIRST-TIME REGISTRATION FORM */
-                    <form onSubmit={handleRegisterSubmit} className="space-y-2.5 text-xs">
-                      <input
-                        type="text"
-                        required
-                        value={regStoreName}
-                        onChange={(e) => setRegStoreName(e.target.value)}
-                        placeholder="Name of the Store / Farm *"
-                        className="w-full bg-gray-50 border rounded-xl px-3 py-2 font-bold"
-                      />
-                      <input
-                        type="text"
-                        required
-                        value={regOwnerName}
-                        onChange={(e) => setRegOwnerName(e.target.value)}
-                        placeholder="Owner Name *"
-                        className="w-full bg-gray-50 border rounded-xl px-3 py-2 font-bold"
-                      />
-<input
-                        type="tel"
-                        maxLength={10}
-                        required
-                        value={mobileInput}
-                        onChange={(e) => setMobileInput(e.target.value.replace(/\D/g, ''))}
-                        placeholder="Phone Number (10 digits) *"
-                        className="w-full bg-gray-50 border rounded-xl px-3 py-2 font-bold"
-                      />
-                      <input
-                        type="text"
-                        required
-                        value={regAddress}
-                        onChange={(e) => setRegAddress(e.target.value)}
-                        placeholder="Full Shop / Farm Address in Nellore *"
-                        className="w-full bg-gray-50 border rounded-xl px-3 py-2 font-bold"
-                      />
-
-                      {/* Mandatory Payment Receive Details (UPI / Bank / COD) */}
-                      <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-2.5 space-y-2">
-                        <label className="block font-extrabold text-emerald-900">
-                          Payment Receive Details (ఆర్డర్ అంగీకరించాక డబ్బు పొందడానికి) *
-                        </label>
-                        <div className="grid grid-cols-3 gap-1.5 text-[11px] font-bold">
-                          <button
-                            type="button"
-                            onClick={() => setRegPayType('upi')}
-                            className={`py-1.5 rounded-lg border ${regPayType === 'upi' ? 'bg-[#00B251] text-white' : 'bg-white'}`}
-                          >
-                            UPI ID
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setRegPayType('bank')}
-                            className={`py-1.5 rounded-lg border ${regPayType === 'bank' ? 'bg-[#00B251] text-white' : 'bg-white'}`}
-                          >
-                            Bank A/C
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setRegPayType('cod')}
-                            className={`py-1.5 rounded-lg border ${regPayType === 'cod' ? 'bg-[#00B251] text-white' : 'bg-white'}`}
-                          >
-                            COD Only
-                          </button>
-                        </div>
-
-                        {regPayType === 'upi' && (
-                          <input
-                            type="text"
-                            required
-                            value={regUpiId}
-                            onChange={(e) => setRegUpiId(e.target.value)}
-                            placeholder="Enter Shop UPI ID (e.g., 9849223344@ybl) *"
-                            className="w-full bg-white border rounded-lg px-2.5 py-1.5 font-bold"
-                          />
-                        )}
-                        {regPayType === 'bank' && (
-                          <input
-                            type="text"
-                            required
-                            value={regBankAcc}
-                            onChange={(e) => setRegBankAcc(e.target.value)}
-                            placeholder="Bank Name, A/C Number & IFSC *"
-                            className="w-full bg-white border rounded-lg px-2.5 py-1.5 font-bold"
-                          />
-                        )}
-                      </div>
-
-                      <input
-                        type="password"
-                        required
-                        value={regPassword}
-                        onChange={(e) => setRegPassword(e.target.value)}
-                        placeholder="Create Password *"
-                        className="w-full bg-gray-50 border rounded-xl px-3 py-2 font-bold"
-                      />
-
-                      {/* Mandatory Shop Photo Upload for Admin Verification */}
-                      {(selectedRoleForLogin.id === 'wholesale' || selectedRoleForLogin.id === 'retail') && (
-                        <div className="border-2 border-dashed border-gray-300 rounded-xl p-3 text-center space-y-1.5">
-                          <label className="cursor-pointer flex flex-col items-center space-y-1">
-                            <Camera className="h-5 w-5 text-[#00B251]" />
-                            <span className="font-extrabold text-gray-700">
-                              Upload Shop Photo (Admin Verification కోసం) *
-                            </span>
-                            <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
-                          </label>
-                          {regPhotoPreview && (
-                            <img src={regPhotoPreview} alt="Shop Preview" className="h-24 w-full object-cover rounded-lg mt-1" />
-                          )}
-                        </div>
-                      )}
-
-                      {authError && <p className="text-xs font-bold text-red-500">{authError}</p>}
-
-                      <button
-                        type="submit"
-                        className="w-full bg-[#00B251] text-white font-extrabold py-3 rounded-xl shadow-md"
-                      >
-                        Complete Registration
-                      </button>
-                    </form>
-                  )}
-                </div>
-              )}
+                );
+              })}
             </div>
           </div>
-        )}
+        </div>
+
+        {/* BOTTOM DARK-GREEN NAVIGATION BAR (EXACT 1ST IMAGE STYLE) */}
+        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0C4A20] text-white rounded-t-[26px] px-5 py-2.5 flex items-center justify-between shadow-2xl z-40">
+          <button
+            onClick={() => setScreen('portalHome')}
+            className="bg-[#C8E99A] text-[#0C4A20] font-black text-xs px-4 py-2 rounded-full flex items-center space-x-1.5 shadow"
+          >
+            <Home className="h-4 w-4" />
+            <span>Home</span>
+          </button>
+          <button
+            onClick={() => handlePickRoleCard('customer')}
+            className="flex flex-col items-center text-emerald-100/80 text-[10px] font-bold"
+          >
+            <ShoppingCart className="h-4 w-4 mb-0.5" />
+            <span>Orders</span>
+          </button>
+          <button
+            onClick={() => handlePickRoleCard('wholesale')}
+            className="flex flex-col items-center text-emerald-100/80 text-[10px] font-bold"
+          >
+            <Grid className="h-4 w-4 mb-0.5" />
+            <span>More</span>
+          </button>
+          <button
+            onClick={() => handlePickRoleCard('farmer')}
+            className="flex flex-col items-center text-emerald-100/80 text-[10px] font-bold"
+          >
+            <User className="h-4 w-4 mb-0.5" />
+            <span>Profile</span>
+          </button>
+        </nav>
       </div>
     );
   }
 
 // =========================================================================
-  // GATE 2: LOGGED-IN APPLICATION
+  // VIEW 2: 2ND REFERENCE IMAGE ROLE WELCOME SCREEN (1000043360.png)
+  // =========================================================================
+  if (screen === 'roleWelcome' && selectedRoleObj) {
+    return (
+      <div className="min-h-screen bg-[#FAF6E9] max-w-md mx-auto font-sans text-gray-800 shadow-2xl flex flex-col justify-between pb-6">
+        {/* Top Sky-Blue & Farm Landscape Header with Unchanged Logo */}
+        <div>
+          <div className="bg-gradient-to-b from-[#BCE4FA] via-[#E4F4FD] to-[#FAF6E9] pt-5 px-5 pb-4 relative">
+            <div className="flex items-center justify-between mb-4">
+              <button
+                onClick={() => setScreen('portalHome')}
+                className="h-9 w-9 rounded-full bg-white/90 shadow flex items-center justify-center text-gray-700"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+
+              {/* YOUR EXACT LOGO - UNCHANGED */}
+              <div className="flex items-center space-x-2">
+                <div className="h-12 w-12 rounded-full bg-white p-0.5 shadow border-2 border-[#1B8A3D] overflow-hidden">
+                  <img src="/icon-512.png" alt="Rythu Basket Logo" className="h-full w-full object-cover rounded-full" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-black text-[#0E5A27] leading-tight">రైతు బాస్కెట్</h2>
+                  <p className="text-[11px] font-extrabold text-[#1B8A3D]">Rythu Basket</p>
+                  <p className="text-[9px] text-gray-600 italic">Farm to Everyone...</p>
+                </div>
+              </div>
+
+              <div className="w-9" />
+            </div>
+
+            {/* Role Title & Hero Visual (Matches 2nd Image Cards) */}
+            <div className="text-center mt-2">
+              <h1 className="text-3xl font-black text-[#12682B] tracking-tight drop-shadow-sm">
+                {selectedRoleObj.bannerTitle}
+              </h1>
+              <div className="w-28 h-1 bg-amber-400 rounded-full mx-auto my-1.5"></div>
+              <p className="text-sm font-extrabold text-gray-800">
+                {selectedRoleObj.bannerSubtitle}
+              </p>
+            </div>
+
+            <div className="mt-4 h-56 w-full rounded-3xl overflow-hidden shadow-lg border-4 border-white">
+              <img
+                src={selectedRoleObj.heroImg}
+                alt={selectedRoleObj.bannerTitle}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </div>
+
+          {/* 3-Column Feature Pillars Card (Matches 2nd Image Bottom Card) */}
+          <div className="px-5 -mt-4 relative z-10">
+            <div className="bg-[#FFFDF5] rounded-3xl p-4 shadow-md border border-amber-100 grid grid-cols-3 gap-2 text-center">
+              {selectedRoleObj.pillars.map((pil, idx) => {
+                const Icon = pil.icon;
+                return (
+                  <div key={idx} className="flex flex-col items-center space-y-1.5">
+                    <div className="h-10 w-10 rounded-full bg-emerald-50 text-[#12682B] flex items-center justify-center shadow-sm">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <span className="text-[11px] font-extrabold text-gray-800 leading-tight">
+                      {pil.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Green "Continue ->" Pill Button & Dots (Matches 2nd Image) */}
+        <div className="px-6 pt-5 space-y-3 text-center">
+          <button
+            onClick={handleContinueFromWelcome}
+            className="w-full bg-gradient-to-r from-[#0E6A2E] to-[#1E8E3E] text-white font-black text-base py-3.5 rounded-full shadow-lg flex items-center justify-center space-x-2 active:scale-95 transition"
+          >
+            <span>Continue</span>
+            <span>➔</span>
+          </button>
+
+          <div className="flex justify-center space-x-1.5">
+            <span className="h-2 w-2 rounded-full bg-[#12682B]"></span>
+            <span className="h-2 w-2 rounded-full bg-gray-300"></span>
+            <span className="h-2 w-2 rounded-full bg-gray-300"></span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // VIEW 3: AUTHENTICATION / MANDATORY REGISTRATION SCREEN (1ST IMAGE THEME)
+  // =========================================================================
+  if (screen === 'auth' && selectedRoleObj) {
+    return (
+      <div className="min-h-screen bg-[#FAF8F2] max-w-md mx-auto font-sans text-gray-800 shadow-2xl pb-10">
+        <div className="bg-gradient-to-r from-[#0E6A2E] to-[#1B8A3D] text-white rounded-b-[30px] px-5 pt-5 pb-6 shadow-md">
+          <div className="flex items-center space-x-3">
+            <button onClick={() => setScreen('roleWelcome')} className="p-2 bg-white/20 rounded-full">
+              <ArrowLeft className="h-4 w-4 text-white" />
+            </button>
+            <div className="h-11 w-11 rounded-full bg-white p-0.5 overflow-hidden">
+              <img src="/icon-512.png" alt="Logo" className="h-full w-full object-cover rounded-full" />
+            </div>
+            <div>
+              <h2 className="text-base font-black">{selectedRoleObj.titleTe} • {selectedRoleObj.bannerTitle}</h2>
+              <p className="text-[11px] text-emerald-100">
+                {selectedRoleObj.id === 'customer' || selectedRoleObj.id === 'admin'
+                  ? 'Mobile Number + OTP Login'
+                  : 'Login or Mandatory First-Time Shop Registration'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-4 pt-5">
+          <div className="bg-white rounded-3xl p-5 shadow-md border border-emerald-100 space-y-4">
+            {selectedRoleObj.id === 'customer' || selectedRoleObj.id === 'admin' ? (
+              <div className="space-y-3">
+                <input
+                  type="tel"
+                  maxLength={10}
+                  value={mobileInput}
+                  onChange={(e) => setMobileInput(e.target.value.replace(/\D/g, ''))}
+                  placeholder="10-Digit Mobile Number (e.g., 8328261103)"
+                  className="w-full bg-[#FAF8F2] border border-emerald-200 rounded-xl px-3.5 py-2.5 text-sm font-bold"
+                />
+                {!otpSent ? (
+                  <button
+                    onClick={handleSendOtp}
+                    className="w-full bg-[#126E2E] text-white font-extrabold text-xs py-3 rounded-xl shadow"
+                  >
+                    Send OTP
+                  </button>
+                ) : (
+                  <>
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2 text-center text-xs font-black text-[#126E2E]">
+                      Demo OTP: {generatedOtp}
+                    </div>
+                    <input
+                      type="tel"
+                      maxLength={4}
+                      value={otpInput}
+                      onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, ''))}
+                      placeholder="Enter 4-Digit OTP"
+                      className="w-full bg-[#FAF8F2] border border-emerald-200 rounded-xl px-3.5 py-2.5 text-center text-base font-black tracking-[0.4em]"
+                    />
+                    <button
+                      onClick={handleLoginSubmit}
+                      className="w-full bg-[#126E2E] text-white font-extrabold text-xs py-3 rounded-xl shadow"
+                    >
+                      Verify OTP & Continue
+                    </button>
+                  </>
+                )}
+                {authError && <p className="text-xs font-bold text-red-500">{authError}</p>}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-2 bg-[#FAF8F2] p-1 rounded-xl text-xs font-extrabold border">
+                  <button
+                    type="button"
+                    onClick={() => { setAuthMode('login'); setAuthError(''); }}
+                    className={`py-2 rounded-lg ${authMode === 'login' ? 'bg-[#126E2E] text-white shadow-sm' : 'text-gray-600'}`}
+                  >
+                    Existing Login
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setAuthMode('register'); setAuthError(''); }}
+                    className={`py-2 rounded-lg ${authMode === 'register' ? 'bg-[#126E2E] text-white shadow-sm' : 'text-gray-600'}`}
+                  >
+                    New Registration
+                  </button>
+                </div>
+
+                {authMode === 'login' ? (
+                  <form onSubmit={handleLoginSubmit} className="space-y-3">
+                    <p className="text-[10px] text-gray-500">
+                      Demo: Wholesale `9989334455`, Retail `9849223344`, Farmer `9440112233` (Password: `123`)
+                    </p>
+                    <input
+                      type="tel"
+                      maxLength={10}
+                      required
+                      value={mobileInput}
+                      onChange={(e) => setMobileInput(e.target.value.replace(/\D/g, ''))}
+                      placeholder="Registered 10-Digit Phone Number"
+                      className="w-full bg-[#FAF8F2] border rounded-xl px-3 py-2.5 text-xs font-bold"
+                    />
+                    <input
+                      type="password"
+                      required
+                      value={passwordInput}
+                      onChange={(e) => setPasswordInput(e.target.value)}
+                      placeholder="Password"
+                      className="w-full bg-[#FAF8F2] border rounded-xl px-3 py-2.5 text-xs font-bold"
+                    />
+                    {authError && <p className="text-xs font-bold text-red-500">{authError}</p>}
+                    <button type="submit" className="w-full bg-[#126E2E] text-white font-extrabold text-xs py-3 rounded-xl shadow">
+                      Login to Dashboard
+                    </button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleRegisterSubmit} className="space-y-2.5 text-xs">
+                    <input type="text" required value={regStoreName} onChange={(e) => setRegStoreName(e.target.value)} placeholder="Name of the Store / Farm *" className="w-full bg-[#FAF8F2] border rounded-xl px-3 py-2 font-bold" />
+                    <input type="text" required value={regOwnerName} onChange={(e) => setRegOwnerName(e.target.value)} placeholder="Owner Name *" className="w-full bg-[#FAF8F2] border rounded-xl px-3 py-2 font-bold" />
+                    <input type="tel" maxLength={10} required value={mobileInput} onChange={(e) => setMobileInput(e.target.value.replace(/\D/g, ''))} placeholder="Phone Number (10 digits) *" className="w-full bg-[#FAF8F2] border rounded-xl px-3 py-2 font-bold" />
+                    <input type="text" required value={regAddress} onChange={(e) => setRegAddress(e.target.value)} placeholder="Full Address in Nellore *" className="w-full bg-[#FAF8F2] border rounded-xl px-3 py-2 font-bold" />
+
+                    <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-2.5 space-y-2">
+                      <label className="block font-extrabold text-emerald-900">Payment Receive Details *</label>
+                      <div className="grid grid-cols-3 gap-1.5 text-[11px] font-bold">
+                        {['upi', 'bank', 'cod'].map((pt) => (
+                          <button key={pt} type="button" onClick={() => setRegPayType(pt)} className={`py-1.5 rounded-lg border uppercase ${regPayType === pt ? 'bg-[#126E2E] text-white' : 'bg-white'}`}>
+                            {pt}
+                          </button>
+                        ))}
+                      </div>
+                      {regPayType === 'upi' && (
+                        <input type="text" required value={regUpiId} onChange={(e) => setRegUpiId(e.target.value)} placeholder="UPI ID (e.g., 9849223344@ybl) *" className="w-full bg-white border rounded-lg px-2.5 py-1.5 font-bold" />
+                      )}
+                      {regPayType === 'bank' && (
+                        <input type="text" required value={regBankAcc} onChange={(e) => setRegBankAcc(e.target.value)} placeholder="Bank Account Number & IFSC *" className="w-full bg-white border rounded-lg px-2.5 py-1.5 font-bold" />
+                      )}
+                    </div>
+
+                    <input type="password" required value={regPassword} onChange={(e) => setRegPassword(e.target.value)} placeholder="Create Password *" className="w-full bg-[#FAF8F2] border rounded-xl px-3 py-2 font-bold" />
+
+                    {(selectedRoleObj.id === 'wholesale' || selectedRoleObj.id === 'retail') && (
+                      <div className="border-2 border-dashed border-emerald-300 rounded-xl p-3 text-center space-y-1.5 bg-emerald-50/40">
+                        <label className="cursor-pointer flex flex-col items-center space-y-1">
+                          <Camera className="h-5 w-5 text-[#126E2E]" />
+                          <span className="font-extrabold text-gray-700">Upload Shop Photo (Admin Approval కోసం) *</span>
+                          <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+                        </label>
+                        {regPhotoPreview && <img src={regPhotoPreview} alt="Preview" className="h-24 w-full object-cover rounded-lg mt-1" />}
+                      </div>
+                    )}
+
+                    {authError && <p className="text-xs font-bold text-red-500">{authError}</p>}
+                    <button type="submit" className="w-full bg-[#126E2E] text-white font-extrabold py-3 rounded-xl shadow">
+                      Complete Registration
+                    </button>
+                  </form>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+// =========================================================================
+  // VIEW 4: LOGGED-IN DASHBOARDS & CUSTOMER MARKET (1ST IMAGE GREEN/CREAM THEME)
   // =========================================================================
   return (
-    <div className="min-h-screen bg-[#F6FBF8] max-w-md mx-auto relative pb-28 font-sans text-gray-800 shadow-xl">
-      {/* GREEN HEADER */}
-      <header className="bg-[#00B251] text-white rounded-b-[28px] px-4 pt-4 pb-5 shadow-md sticky top-0 z-30">
-        <div className="flex items-center justify-between mb-3">
+    <div className="min-h-screen bg-[#FAF8F2] max-w-md mx-auto relative pb-24 font-sans text-gray-800 shadow-2xl">
+      {/* Consistent Forest-Green Header with Unchanged Logo */}
+      <header className="bg-gradient-to-r from-[#0E6A2E] to-[#1B8A3D] text-white rounded-b-[28px] px-4 pt-4 pb-4 shadow-md sticky top-0 z-30">
+        <div className="flex items-center justify-between mb-2.5">
           <div className="flex items-center space-x-2.5">
-            <div className="h-11 w-11 rounded-full bg-white p-0.5 shadow-md overflow-hidden border-2 border-yellow-300">
+            <div className="h-11 w-11 rounded-full bg-white p-0.5 shadow border-2 border-yellow-300 overflow-hidden">
               <img src="/icon-512.png" alt="Rythu Basket" className="h-full w-full object-cover rounded-full" />
             </div>
             <div>
-              <h1 className="text-base font-extrabold leading-tight">
-                {lang === 'te' ? 'రైతు బాస్కెట్' : 'Rythu Basket'}
-              </h1>
-              <p className="text-[11px] text-emerald-100 font-medium truncate max-w-[180px]">
-                {loggedInUser.name} • {loggedInUser.mobile}
+              <h1 className="text-base font-black leading-tight">రైతు బాస్కెట్</h1>
+              <p className="text-[11px] text-emerald-100 font-semibold truncate max-w-[180px]">
+                {loggedInUser?.name} • {loggedInUser?.mobile}
               </p>
             </div>
           </div>
 
           <div className="flex items-center space-x-1.5">
-            <div className="bg-[#008F41] p-0.5 rounded-full flex text-[11px] font-bold">
-              <button
-                onClick={() => setLang('te')}
-                className={`px-2 py-1 rounded-full ${lang === 'te' ? 'bg-white text-[#00B251]' : 'text-white'}`}
-              >
-                తెలుగు
-              </button>
-              <button
-                onClick={() => setLang('en')}
-                className={`px-2 py-1 rounded-full ${lang === 'en' ? 'bg-white text-[#00B251]' : 'text-white'}`}
-              >
-                EN
-              </button>
-            </div>
+            <button
+              onClick={() => setLang(lang === 'te' ? 'en' : 'te')}
+              className="bg-white text-[#0E6A2E] text-[11px] font-extrabold px-2.5 py-1 rounded-full"
+            >
+              {lang === 'te' ? 'తెలుగు' : 'EN'}
+            </button>
             <button
               onClick={() => {
                 setLoggedInUser(null);
-                setScreen('roles');
+                setScreen('portalHome');
               }}
               className="bg-white/20 p-2 rounded-full text-white"
-              title="Logout"
+              title="Home / Switch Role"
             >
               <LogOut className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
 
-        <div className="relative">
-          <Search className="h-4 w-4 text-gray-400 absolute left-3.5 top-3" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              if (screen !== 'home') setScreen('home');
-            }}
-            placeholder={lang === 'te' ? 'రైతు, రిటైల్, హోల్‌సేల్ సరుకులు వెతకండి...' : 'Search Farmer, Retail & Wholesale items...'}
-            className="w-full bg-white text-gray-800 placeholder-gray-400 text-xs font-medium rounded-xl py-2.5 pl-10 pr-4 shadow-sm focus:outline-none"
-          />
-        </div>
+        {screen === 'market' && (
+          <div className="relative">
+            <Search className="h-4 w-4 text-gray-400 absolute left-3.5 top-2.5" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search Farmer, Retail & Wholesale items..."
+              className="w-full bg-white text-gray-800 text-xs font-medium rounded-xl py-2 pl-9 pr-4 focus:outline-none"
+            />
+          </div>
+        )}
       </header>
 
-      {/* ALERT BANNER */}
       {alertBanner && (
-        <div className="mx-4 mt-3 bg-amber-50 border border-amber-300 rounded-2xl p-3 flex items-start justify-between shadow-sm">
-          <p className="text-[11px] font-extrabold text-amber-900">{alertBanner}</p>
-          <button onClick={() => setAlertBanner('')} className="text-xs font-bold text-amber-700 ml-2">✕</button>
+        <div className="mx-4 mt-3 bg-amber-50 border border-amber-300 rounded-2xl p-3 flex items-start justify-between text-xs font-extrabold text-amber-900">
+          <span>{alertBanner}</span>
+          <button onClick={() => setAlertBanner('')} className="ml-2">✕</button>
         </div>
       )}
 
-      {/* AUTOMATIC WHATSAPP & SMS TEXT INVOICE CARD UPON DELIVERY */}
       {latestInvoice && (
-        <div className="mx-4 mt-3 bg-white border-2 border-[#00B251] rounded-2xl p-4 shadow-lg space-y-2">
-          <div className="flex justify-between items-center border-b pb-1.5">
-            <span className="text-xs font-black text-[#00B251]">✅ DELIVERED & INVOICE SENT ({latestInvoice.id})</span>
-            <button onClick={() => setLatestInvoice(null)} className="text-xs font-bold text-gray-400">✕</button>
+        <div className="mx-4 mt-3 bg-white border-2 border-[#126E2E] rounded-2xl p-4 shadow-lg space-y-2 text-xs">
+          <div className="flex justify-between font-black text-[#126E2E] border-b pb-1">
+            <span>✅ DELIVERED & INVOICE ({latestInvoice.id})</span>
+            <button onClick={() => setLatestInvoice(null)}>✕</button>
           </div>
-          <p className="text-[11px] text-gray-700">
-            <strong>To:</strong> {latestInvoice.customer} • <strong>Amount:</strong> ₹{latestInvoice.total}
-          </p>
-          <div className="grid grid-cols-2 gap-2 pt-1">
-            <a
-              href={getWhatsAppInvoiceLink(latestInvoice)}
-              target="_blank"
-              rel="noreferrer"
-              className="bg-[#25D366] text-white text-xs font-extrabold py-2 rounded-xl flex items-center justify-center space-x-1"
-            >
-              <MessageCircle className="h-4 w-4" />
-              <span>WhatsApp Invoice</span>
+          <p><strong>To:</strong> {latestInvoice.customer} • <strong>₹{latestInvoice.total}</strong></p>
+          <div className="grid grid-cols-2 gap-2">
+            <a href={getWhatsAppInvoiceLink(latestInvoice)} target="_blank" rel="noreferrer" className="bg-[#25D366] text-white font-extrabold py-2 rounded-xl text-center">
+              WhatsApp Bill
             </a>
-            <a
-              href={getSmsInvoiceLink(latestInvoice)}
-              className="bg-blue-600 text-white text-xs font-extrabold py-2 rounded-xl flex items-center justify-center space-x-1"
-            >
-              <MessageSquare className="h-4 w-4" />
-              <span>SMS Text Invoice</span>
+            <a href={getSmsInvoiceLink(latestInvoice)} className="bg-blue-600 text-white font-extrabold py-2 rounded-xl text-center">
+              SMS Text Bill
             </a>
           </div>
         </div>
       )}
 
-      {/* =================================================================
-          SCREEN 1: CUSTOMER STOREFRONT (FARMER + RETAIL + WHOLESALE ITEMS)
-         ================================================================= */}
-      {screen === 'home' && (
-        <main className="px-4 pt-4 space-y-4">
-          {/* Seller Source Filter Pills */}
+      {/* CUSTOMER MARKETPLACE */}
+      {screen === 'market' && (
+        <main className="px-4 pt-3.5 space-y-3.5">
           <div className="flex space-x-1.5 overflow-x-auto pb-1">
             {[
               { id: 'all', label: 'All Sellers' },
@@ -992,7 +1115,7 @@ const activeUpiId = activeSellerShop?.upiId || merchantUpiId;
                 key={s.id}
                 onClick={() => setSelectedSourceFilter(s.id)}
                 className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-extrabold border ${
-                  selectedSourceFilter === s.id ? 'bg-[#00B251] text-white border-[#00B251]' : 'bg-white text-gray-700 border-gray-200'
+                  selectedSourceFilter === s.id ? 'bg-[#126E2E] text-white border-[#126E2E]' : 'bg-white text-gray-700 border-gray-200'
                 }`}
               >
                 {s.label}
@@ -1000,40 +1123,30 @@ const activeUpiId = activeSellerShop?.upiId || merchantUpiId;
             ))}
           </div>
 
-          {/* Categories */}
           <div className="flex space-x-2 overflow-x-auto pb-1">
             {categories.map((cat) => (
               <button
                 key={cat.id}
                 onClick={() => setSelectedCat(cat.id)}
-                className={`flex-shrink-0 px-3 py-2 rounded-2xl border flex items-center space-x-1.5 ${
-                  selectedCat === cat.id ? 'bg-emerald-50 border-[#00B251] text-[#00B251]' : 'bg-white border-gray-100'
+                className={`flex-shrink-0 px-3 py-1.5 rounded-2xl border flex items-center space-x-1.5 text-[11px] font-extrabold ${
+                  selectedCat === cat.id ? 'bg-[#E8F6E8] border-[#126E2E] text-[#126E2E]' : 'bg-white border-gray-100'
                 }`}
               >
                 <span>{cat.emoji}</span>
-                <span className="text-[11px] font-extrabold">{lang === 'te' ? cat.nameTe : cat.nameEn}</span>
+                <span>{lang === 'te' ? cat.nameTe : cat.nameEn}</span>
               </button>
             ))}
           </div>
 
-          {/* Products Grid */}
           <div className="grid grid-cols-2 gap-3">
             {visibleProducts.map((item) => {
               const qty = cart[item.id] || 0;
               return (
-                <div key={item.id} className="bg-white rounded-2xl p-2.5 shadow-sm border border-gray-100 flex flex-col justify-between">
+                <div key={item.id} className="bg-white rounded-2xl p-2.5 shadow-sm border border-emerald-50 flex flex-col justify-between">
                   <div>
                     <div className="h-24 w-full rounded-xl bg-gray-50 overflow-hidden mb-2 relative">
                       <img src={item.img} alt={item.nameEn} className="h-full w-full object-cover" />
-                      <span
-                        className={`absolute top-1 left-1 text-[8px] font-black px-1.5 py-0.5 rounded uppercase text-white ${
-                          item.sellerType === 'farmer'
-                            ? 'bg-green-600'
-                            : item.sellerType === 'wholesale'
-                            ? 'bg-indigo-700'
-                            : 'bg-amber-600'
-                        }`}
-                      >
+                      <span className={`absolute top-1 left-1 text-[8px] font-black px-1.5 py-0.5 rounded uppercase text-white ${item.sellerType === 'farmer' ? 'bg-green-700' : item.sellerType === 'wholesale' ? 'bg-indigo-700' : 'bg-amber-600'}`}>
                         {item.sellerType}
                       </span>
                       {item.minQty > 1 && (
@@ -1042,33 +1155,21 @@ const activeUpiId = activeSellerShop?.upiId || merchantUpiId;
                         </span>
                       )}
                     </div>
-                    <h4 className="text-xs font-extrabold text-gray-900 leading-snug">
-                      {lang === 'te' ? item.nameTe : item.nameEn}
-                    </h4>
+                    <h4 className="text-xs font-extrabold text-gray-900">{lang === 'te' ? item.nameTe : item.nameEn}</h4>
                     <p className="text-[9px] text-gray-500 font-semibold truncate">{item.sellerName}</p>
                   </div>
 
-                  <div className="flex items-center justify-between mt-2.5 pt-1">
-                    <div>
-                      <span className="text-xs font-black text-[#00B251]">₹{item.price}/{item.unit}</span>
-                    </div>
-
+                  <div className="flex items-center justify-between mt-2 pt-1">
+                    <span className="text-xs font-black text-[#126E2E]">₹{item.price}/{item.unit}</span>
                     {qty === 0 ? (
-                      <button
-                        onClick={() => addItem(item)}
-                        className="px-2.5 py-1 rounded-lg bg-[#00B251] text-white text-[10px] font-extrabold shadow-sm"
-                      >
+                      <button onClick={() => addItem(item)} className="px-2.5 py-1 rounded-lg bg-[#126E2E] text-white text-[10px] font-extrabold">
                         + {item.minQty > 1 ? `Add ${item.minQty}` : 'Add'}
                       </button>
                     ) : (
-                      <div className="flex items-center bg-[#00B251] text-white rounded-lg px-1.5 py-1 space-x-1.5">
-                        <button onClick={() => removeItem(item)}>
-                          <Minus className="h-3 w-3" />
-                        </button>
+                      <div className="flex items-center bg-[#126E2E] text-white rounded-lg px-1.5 py-1 space-x-1.5">
+                        <button onClick={() => removeItem(item)}><Minus className="h-3 w-3" /></button>
                         <span className="text-[11px] font-bold">{qty}</span>
-                        <button onClick={() => addItem(item)}>
-                          <Plus className="h-3 w-3" />
-                        </button>
+                        <button onClick={() => addItem(item)}><Plus className="h-3 w-3" /></button>
                       </div>
                     )}
                   </div>
@@ -1079,96 +1180,63 @@ const activeUpiId = activeSellerShop?.upiId || merchantUpiId;
         </main>
       )}
 
-{/* =================================================================
-          SCREEN 2: CART & CHECKOUT (PAYS DIRECTLY TO SELLER UPI/BANK/COD)
-         ================================================================= */}
+      {/* CART & CHECKOUT */}
       {screen === 'cart' && (
-        <main className="px-4 pt-4 space-y-3.5">
+        <main className="px-4 pt-4 space-y-3">
           <div className="flex items-center space-x-2">
-            <button onClick={() => setScreen('home')} className="p-1.5 bg-white rounded-full shadow-sm">
-              <ArrowLeft className="h-4 w-4 text-gray-700" />
+            <button onClick={() => setScreen('market')} className="p-1.5 bg-white rounded-full shadow-sm">
+              <ArrowLeft className="h-4 w-4" />
             </button>
-            <h2 className="text-base font-extrabold text-gray-900">My Basket & Checkout</h2>
+            <h2 className="text-base font-black">My Basket & Payment</h2>
           </div>
 
           {totalItems === 0 ? (
-            <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
-              <p className="text-sm font-bold text-gray-500">Your basket is empty</p>
-              <button onClick={() => setScreen('home')} className="mt-3 bg-[#00B251] text-white text-xs font-bold px-4 py-2 rounded-xl">
-                Browse Items
-              </button>
+            <div className="bg-white rounded-2xl p-8 text-center shadow-sm text-xs font-bold text-gray-500">
+              Your basket is empty.
             </div>
           ) : (
             <>
-              <div className="space-y-2">
-                {Object.entries(cart).map(([id, qty]) => {
-                  const item = products.find((p) => p.id === id);
-                  if (!item) return null;
-                  return (
-                    <div key={id} className="bg-white rounded-2xl p-3 flex items-center justify-between shadow-sm">
-                      <div>
-                        <h4 className="text-xs font-extrabold">{item.nameTe} ({item.nameEn})</h4>
-                        <p className="text-[10px] text-gray-500">
-                          ₹{item.price}/{item.unit} × {qty} = ₹{item.price * qty}
-                          {item.minQty > 1 ? ` (Wholesale Min: ${item.minQty} ${item.unit})` : ''}
-                        </p>
-                      </div>
-                      <div className="flex items-center bg-[#00B251] text-white rounded-lg px-2 py-1 space-x-2">
-                        <button onClick={() => removeItem(item)}><Minus className="h-3 w-3" /></button>
-                        <span className="text-xs font-bold">{qty}</span>
-                        <button onClick={() => addItem(item)}><Plus className="h-3 w-3" /></button>
-                      </div>
+              {Object.entries(cart).map(([id, qty]) => {
+                const item = products.find((p) => p.id === id);
+                if (!item) return null;
+                return (
+                  <div key={id} className="bg-white rounded-2xl p-3 flex items-center justify-between shadow-sm text-xs">
+                    <div>
+                      <h4 className="font-extrabold">{item.nameTe} ({item.nameEn})</h4>
+                      <p className="text-[10px] text-gray-500">₹{item.price} × {qty} = ₹{item.price * qty}</p>
                     </div>
-                  );
-                })}
-              </div>
+                    <div className="flex items-center bg-[#126E2E] text-white rounded-lg px-2 py-1 space-x-2">
+                      <button onClick={() => removeItem(item)}><Minus className="h-3 w-3" /></button>
+                      <span>{qty}</span>
+                      <button onClick={() => addItem(item)}><Plus className="h-3 w-3" /></button>
+                    </div>
+                  </div>
+                );
+              })}
 
-              <div className="bg-white rounded-2xl p-3.5 shadow-sm space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs font-extrabold">Delivery Address & GPS</span>
-                  <button onClick={handleCaptureGps} className="text-[10px] font-extrabold text-[#00B251] bg-emerald-50 px-2 py-1 rounded-lg">
-                    📍 Pin GPS
-                  </button>
+              <div className="bg-white rounded-2xl p-3.5 shadow-sm space-y-2 text-xs">
+                <div className="flex justify-between font-extrabold">
+                  <span>Delivery Address & GPS</span>
+                  <button onClick={handleCaptureGps} className="text-[#126E2E] bg-emerald-50 px-2 py-0.5 rounded">📍 Pin GPS</button>
                 </div>
-                <input
-                  type="text"
-                  value={deliveryAddress}
-                  onChange={(e) => setDeliveryAddress(e.target.value)}
-                  className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs font-semibold"
-                />
-                {gpsStatus && <p className="text-[10px] font-bold text-emerald-700">{gpsStatus}</p>}
+                <input type="text" value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} className="w-full bg-[#FAF8F2] border rounded-xl px-3 py-2 font-semibold" />
+                {gpsStatus && <p className="text-[10px] text-emerald-700 font-bold">{gpsStatus}</p>}
               </div>
 
               <div className="bg-white rounded-2xl p-3.5 shadow-sm space-y-2.5 text-xs">
                 <div className="grid grid-cols-2 gap-2 font-extrabold">
-                  <button
-                    onClick={() => setPaymentMethod('upi')}
-                    className={`py-2 rounded-xl border ${paymentMethod === 'upi' ? 'bg-emerald-50 border-[#00B251] text-[#00B251]' : 'bg-gray-50'}`}
-                  >
-                    UPI / QR Pay
-                  </button>
-                  <button
-                    onClick={() => setPaymentMethod('cod')}
-                    className={`py-2 rounded-xl border ${paymentMethod === 'cod' ? 'bg-emerald-50 border-[#00B251] text-[#00B251]' : 'bg-gray-50'}`}
-                  >
-                    Cash on Delivery
-                  </button>
+                  <button onClick={() => setPaymentMethod('upi')} className={`py-2 rounded-xl border ${paymentMethod === 'upi' ? 'bg-emerald-50 border-[#126E2E] text-[#126E2E]' : 'bg-gray-50'}`}>UPI / QR Pay</button>
+                  <button onClick={() => setPaymentMethod('cod')} className={`py-2 rounded-xl border ${paymentMethod === 'cod' ? 'bg-emerald-50 border-[#126E2E] text-[#126E2E]' : 'bg-gray-50'}`}>Cash on Delivery</button>
                 </div>
 
                 {paymentMethod === 'upi' && (
                   <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-3 text-center space-y-2">
-                    <p className="text-[11px] font-bold">Pay directly to Seller UPI: {activeUpiId}</p>
-                    <img src={freeQrImageUrl} alt="UPI QR" className="w-28 h-28 mx-auto rounded-xl bg-white p-1 border" />
+                    <p className="text-[11px] font-bold">Pay to Seller UPI: {activeUpiId}</p>
+                    <img src={freeQrImageUrl} alt="QR" className="w-28 h-28 mx-auto rounded-xl bg-white p-1 border" />
                     <a href={upiDeepLink} className="block w-full bg-[#5F259F] text-white font-extrabold py-2 rounded-xl">
                       Pay ₹{grandTotal} via PhonePe / GPay ↗
                     </a>
-                    <input
-                      type="text"
-                      value={upiRefInput}
-                      onChange={(e) => setUpiRefInput(e.target.value)}
-                      placeholder="Enter UPI UTR / Ref ID"
-                      className="w-full bg-white border rounded-xl px-3 py-1.5 text-center font-bold"
-                    />
+                    <input type="text" value={upiRefInput} onChange={(e) => setUpiRefInput(e.target.value)} placeholder="Enter UPI UTR / Ref ID" className="w-full bg-white border rounded-xl px-3 py-1.5 text-center font-bold" />
                   </div>
                 )}
 
@@ -1176,10 +1244,7 @@ const activeUpiId = activeSellerShop?.upiId || merchantUpiId;
                   <span>Grand Total</span>
                   <span>₹{grandTotal}</span>
                 </div>
-                <button
-                  onClick={handlePlaceCustomerOrder}
-                  className="w-full bg-[#00B251] text-white font-extrabold py-3 rounded-xl shadow-md"
-                >
+                <button onClick={handlePlaceCustomerOrder} className="w-full bg-[#126E2E] text-white font-extrabold py-3 rounded-xl shadow">
                   Confirm Order • ₹{grandTotal}
                 </button>
               </div>
@@ -1188,33 +1253,21 @@ const activeUpiId = activeSellerShop?.upiId || merchantUpiId;
         </main>
       )}
 
-      {/* =================================================================
-          SCREEN 3: WHOLESALE / RETAIL / FARMER DASHBOARD
-          (Today Orders Accept/Reject, Stock Price + Min Qty, Today/Week/Month Payments, Bank/UPI Update)
-         ================================================================= */}
+      {/* WHOLESALE / RETAIL / FARMER DASHBOARD */}
       {screen === 'shopDashboard' && (
-        <main className="px-4 pt-4 space-y-3.5">
-          <div className="bg-indigo-900 text-white rounded-2xl p-4 shadow-sm">
-            <div className="flex justify-between items-start">
-              <div>
-                <span className="bg-indigo-700 text-[10px] font-extrabold px-2 py-0.5 rounded uppercase">
-                  {loggedInUser.role.titleEn} Dashboard
-                </span>
-                <h2 className="text-base font-black mt-1">{loggedInUser.name}</h2>
-              </div>
-              {currentShopRecord && (
-                <span
-                  className={`text-[10px] font-extrabold px-2 py-1 rounded-lg ${
-                    currentShopRecord.approved ? 'bg-emerald-500 text-white' : 'bg-amber-400 text-gray-900'
-                  }`}
-                >
-                  {currentShopRecord.approved ? '✓ Approved Live' : '⏳ Pending Admin Approval'}
-                </span>
-              )}
+        <main className="px-4 pt-4 space-y-3">
+          <div className="bg-[#126E2E] text-white rounded-2xl p-4 shadow-sm flex justify-between items-center">
+            <div>
+              <span className="bg-white/20 text-[10px] font-extrabold px-2 py-0.5 rounded uppercase">{loggedInUser?.role?.bannerTitle}</span>
+              <h2 className="text-base font-black mt-1">{loggedInUser?.name}</h2>
             </div>
+            {currentShopRecord && (
+              <span className={`text-[10px] font-extrabold px-2 py-1 rounded-lg ${currentShopRecord.approved ? 'bg-[#C8E99A] text-[#0C4A20]' : 'bg-amber-300 text-gray-900'}`}>
+                {currentShopRecord.approved ? '✓ Approved' : '⏳ Pending Approval'}
+              </span>
+            )}
           </div>
 
-          {/* 4 MANDATORY DASHBOARD TABS */}
           <div className="flex space-x-1.5 overflow-x-auto pb-1">
             {[
               { id: 'orders', label: `📋 Today's Orders (${myShopOrders.length})` },
@@ -1226,7 +1279,7 @@ const activeUpiId = activeSellerShop?.upiId || merchantUpiId;
                 key={t.id}
                 onClick={() => setShopTab(t.id)}
                 className={`flex-shrink-0 px-3 py-1.5 rounded-xl text-[11px] font-extrabold border ${
-                  shopTab === t.id ? 'bg-indigo-800 text-white border-indigo-800' : 'bg-white text-gray-700 border-gray-200'
+                  shopTab === t.id ? 'bg-[#126E2E] text-white border-[#126E2E]' : 'bg-white text-gray-700 border-gray-200'
                 }`}
               >
                 {t.label}
@@ -1234,329 +1287,168 @@ const activeUpiId = activeSellerShop?.upiId || merchantUpiId;
             ))}
           </div>
 
-          {/* TAB 1: TODAY'S ORDERS (ACCEPT / REJECT / MARK DELIVERED -> AUTO INVOICE) */}
           {shopTab === 'orders' && (
             <div className="space-y-2.5">
-              {myShopOrders.length === 0 ? (
-                <div className="bg-white rounded-2xl p-6 text-center text-xs font-bold text-gray-400">
-                  No orders received yet.
-                </div>
-              ) : (
-                myShopOrders.map((ord) => (
-                  <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-gray-100 space-y-2 text-xs">
-                    <div className="flex justify-between font-black">
-                      <span>{ord.id} • {ord.status}</span>
-                      <span className="text-[#00B251]">₹{ord.total}</span>
-                    </div>
-                    <p className="font-bold text-gray-700">{ord.customer}</p>
-                    <p className="text-[11px] text-gray-500">{ord.summary}</p>
-                    <p className="text-[10px] font-bold text-indigo-700">{ord.payment}</p>
-
-                    <div className="flex space-x-2 pt-1">
-                      {ord.status === 'Pending' && (
-                        <>
-                          <button
-                            onClick={() => setOrders((p) => p.map((x) => (x.id === ord.id ? { ...x, status: 'Accepted' } : x)))}
-                            className="flex-1 bg-[#00B251] text-white font-extrabold py-2 rounded-xl"
-                          >
-                            ✓ Accept Order
-                          </button>
-                          <button
-                            onClick={() => setOrders((p) => p.map((x) => (x.id === ord.id ? { ...x, status: 'Rejected' } : x)))}
-                            className="flex-1 bg-red-50 text-red-600 font-extrabold py-2 rounded-xl"
-                          >
-                            ✕ Reject
-                          </button>
-                        </>
-                      )}
-
-                      {ord.status === 'Accepted' && (
-                        <button
-                          onClick={() => handleMarkOrderDelivered(ord)}
-                          className="w-full bg-blue-600 text-white font-extrabold py-2 rounded-xl"
-                        >
-                          🚚 Mark Delivered & Auto-Send WhatsApp/SMS Invoice
-                        </button>
-                      )}
-
-                      {ord.status === 'Delivered' && (
-                        <div className="w-full grid grid-cols-2 gap-2">
-                          <a
-                            href={getWhatsAppInvoiceLink(ord)}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="bg-[#25D366] text-white font-bold py-1.5 rounded-lg text-center"
-                          >
-                            WhatsApp Bill
-                          </a>
-                          <a
-                            href={getSmsInvoiceLink(ord)}
-                            className="bg-gray-100 text-gray-800 font-bold py-1.5 rounded-lg text-center"
-                          >
-                            SMS Text Bill
-                          </a>
-                        </div>
-                      )}
-                    </div>
+              {myShopOrders.map((ord) => (
+                <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-emerald-50 space-y-2 text-xs">
+                  <div className="flex justify-between font-black">
+                    <span>{ord.id} • {ord.status}</span>
+                    <span className="text-[#126E2E]">₹{ord.total}</span>
                   </div>
-                ))
-              )}
+                  <p className="font-bold text-gray-700">{ord.customer}</p>
+                  <p className="text-[11px] text-gray-500">{ord.summary}</p>
+                  <div className="flex space-x-2 pt-1">
+                    {ord.status === 'Pending' && (
+                      <>
+                        <button onClick={() => setOrders((p) => p.map((x) => (x.id === ord.id ? { ...x, status: 'Accepted' } : x)))} className="flex-1 bg-[#126E2E] text-white font-extrabold py-2 rounded-xl">
+                          ✓ Accept
+                        </button>
+                        <button onClick={() => setOrders((p) => p.map((x) => (x.id === ord.id ? { ...x, status: 'Rejected' } : x)))} className="flex-1 bg-red-50 text-red-600 font-extrabold py-2 rounded-xl">
+                          ✕ Reject
+                        </button>
+                      </>
+                    )}
+                    {ord.status === 'Accepted' && (
+                      <button onClick={() => handleMarkOrderDelivered(ord)} className="w-full bg-blue-600 text-white font-extrabold py-2 rounded-xl">
+                        🚚 Mark Delivered & Send WhatsApp/SMS Invoice
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
-{/* TAB 2: STOCK ITEM-WISE PRICE UPDATE & WHOLESALE MINIMUM QUANTITY CONTROL */}
-          {shopTab === 'stock' && (
-            <div className="space-y-3">
-              {/* Add New Stock Item */}
-              <form onSubmit={handleAddShopItem} className="bg-white rounded-2xl p-3.5 shadow-sm space-y-2.5 text-xs">
-                <h3 className="font-extrabold text-gray-900">+ Add New Item to Your Shop</h3>
+{shopTab === 'stock' && (
+            <div className="space-y-3 text-xs">
+              <form onSubmit={handleAddShopItem} className="bg-white rounded-2xl p-3.5 shadow-sm space-y-2">
+                <h3 className="font-extrabold">+ Add New Item</h3>
                 <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="text"
-                    required
-                    value={newItemEn}
-                    onChange={(e) => setNewItemEn(e.target.value)}
-                    placeholder="Item Name (English)"
-                    className="bg-gray-50 border rounded-xl px-2.5 py-2 font-bold"
-                  />
-                  <input
-                    type="text"
-                    value={newItemTe}
-                    onChange={(e) => setNewItemTe(e.target.value)}
-                    placeholder="పేరు (తెలుగులో)"
-                    className="bg-gray-50 border rounded-xl px-2.5 py-2 font-bold"
-                  />
+                  <input type="text" required value={newItemEn} onChange={(e) => setNewItemEn(e.target.value)} placeholder="Item Name (English)" className="bg-[#FAF8F2] border rounded-xl px-2.5 py-2 font-bold" />
+                  <input type="text" value={newItemTe} onChange={(e) => setNewItemTe(e.target.value)} placeholder="పేరు (తెలుగులో)" className="bg-[#FAF8F2] border rounded-xl px-2.5 py-2 font-bold" />
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  <select value={newItemCat} onChange={(e) => setNewItemCat(e.target.value)} className="bg-gray-50 border rounded-xl px-2 py-2 font-bold">
+                  <select value={newItemCat} onChange={(e) => setNewItemCat(e.target.value)} className="bg-[#FAF8F2] border rounded-xl px-2 py-2 font-bold">
                     <option value="vegetables">Vegetables</option>
                     <option value="fruits">Fruits</option>
                     <option value="dairy">Dairy</option>
-                    <option value="beverages">Beverages</option>
                     <option value="livestock">Eggs/Poultry</option>
                   </select>
-                  <input
-                    type="number"
-                    required
-                    value={newItemPrice}
-                    onChange={(e) => setNewItemPrice(e.target.value)}
-                    placeholder="Price (₹)"
-                    className="bg-gray-50 border rounded-xl px-2.5 py-2 font-black text-[#00B251]"
-                  />
-                  {loggedInUser.role.id === 'wholesale' ? (
-                    <input
-                      type="number"
-                      required
-                      min="1"
-                      value={newItemMinQty}
-                      onChange={(e) => setNewItemMinQty(e.target.value)}
-                      placeholder="Min Qty"
-                      className="bg-amber-50 border border-amber-300 rounded-xl px-2.5 py-2 font-black"
-                    />
+                  <input type="number" required value={newItemPrice} onChange={(e) => setNewItemPrice(e.target.value)} placeholder="Price ₹" className="bg-[#FAF8F2] border rounded-xl px-2.5 py-2 font-black text-[#126E2E]" />
+                  {loggedInUser?.role?.id === 'wholesale' ? (
+                    <input type="number" min="1" value={newItemMinQty} onChange={(e) => setNewItemMinQty(e.target.value)} placeholder="Min Qty" className="bg-amber-50 border border-amber-300 rounded-xl px-2.5 py-2 font-black" />
                   ) : (
-                    <select value={newItemUnit} onChange={(e) => setNewItemUnit(e.target.value)} className="bg-gray-50 border rounded-xl px-2 py-2 font-bold">
-                      <option value="kg">per kg</option>
-                      <option value="L">per L</option>
-                      <option value="pc">per pc</option>
+                    <select value={newItemUnit} onChange={(e) => setNewItemUnit(e.target.value)} className="bg-[#FAF8F2] border rounded-xl px-2 py-2 font-bold">
+                      <option value="kg">kg</option>
+                      <option value="L">L</option>
+                      <option value="pc">pc</option>
                     </select>
                   )}
                 </div>
-                <button type="submit" className="w-full bg-[#00B251] text-white font-extrabold py-2.5 rounded-xl">
-                  Add Stock Item
-                </button>
+                <button type="submit" className="w-full bg-[#126E2E] text-white font-extrabold py-2.5 rounded-xl">Add Item</button>
               </form>
 
-              {/* Edit Existing Shop Stock Prices & Wholesale Min Qty */}
               {myShopProducts.map((item) => (
-                <div key={item.id} className="bg-white rounded-2xl p-3 shadow-sm flex items-center justify-between text-xs">
+                <div key={item.id} className="bg-white rounded-2xl p-3 shadow-sm flex items-center justify-between">
                   <div>
-                    <h4 className="font-extrabold text-gray-900">{item.nameTe} ({item.nameEn})</h4>
+                    <h4 className="font-extrabold">{item.nameTe} ({item.nameEn})</h4>
                     {editingItemId === item.id ? (
-                      <div className="flex items-center space-x-1.5 mt-1.5">
-                        <input
-                          type="number"
-                          value={editPriceVal}
-                          onChange={(e) => setEditPriceVal(e.target.value)}
-                          placeholder="₹ Price"
-                          className="w-16 border rounded px-2 py-1 font-black"
-                        />
-                        {loggedInUser.role.id === 'wholesale' && (
-                          <input
-                            type="number"
-                            min="1"
-                            value={editMinQtyVal}
-                            onChange={(e) => setEditMinQtyVal(e.target.value)}
-                            placeholder="Min Qty"
-                            className="w-16 bg-amber-50 border border-amber-300 rounded px-2 py-1 font-black"
-                          />
+                      <div className="flex items-center space-x-1.5 mt-1">
+                        <input type="number" value={editPriceVal} onChange={(e) => setEditPriceVal(e.target.value)} className="w-16 border rounded px-2 py-1 font-black" />
+                        {loggedInUser?.role?.id === 'wholesale' && (
+                          <input type="number" min="1" value={editMinQtyVal} onChange={(e) => setEditMinQtyVal(e.target.value)} className="w-16 bg-amber-50 border rounded px-2 py-1 font-black" />
                         )}
                         <button
                           onClick={() => {
-                            setProducts((prev) =>
-                              prev.map((p) =>
-                                p.id === item.id
-                                  ? {
-                                      ...p,
-                                      price: Number(editPriceVal) || p.price,
-                                      minQty:
-                                        loggedInUser.role.id === 'wholesale'
-                                          ? Math.max(1, Number(editMinQtyVal) || p.minQty)
-                                          : p.minQty,
-                                    }
-                                  : p
-                              )
-                            );
+                            setProducts((prev) => prev.map((p) => p.id === item.id ? { ...p, price: Number(editPriceVal) || p.price, minQty: loggedInUser?.role?.id === 'wholesale' ? Math.max(1, Number(editMinQtyVal) || p.minQty) : p.minQty } : p));
                             setEditingItemId(null);
                           }}
-                          className="bg-[#00B251] text-white p-1.5 rounded-lg"
+                          className="bg-[#126E2E] text-white p-1.5 rounded-lg"
                         >
                           <Check className="h-3.5 w-3.5" />
                         </button>
                       </div>
                     ) : (
-                      <p className="text-[11px] font-bold text-[#00B251] mt-0.5">
-                        Price: ₹{item.price}/{item.unit}
-                        {loggedInUser.role.id === 'wholesale' ? ` • Min Order Qty: ${item.minQty} ${item.unit}` : ''}
+                      <p className="text-[11px] font-bold text-[#126E2E]">
+                        ₹{item.price}/{item.unit} {loggedInUser?.role?.id === 'wholesale' ? `• Min Qty: ${item.minQty}` : ''}
                       </p>
                     )}
                   </div>
-
-                  <button
-                    onClick={() => {
-                      setEditingItemId(item.id);
-                      setEditPriceVal(String(item.price));
-                      setEditMinQtyVal(String(item.minQty));
-                    }}
-                    className="bg-indigo-50 text-indigo-700 px-2.5 py-1.5 rounded-xl font-extrabold flex items-center space-x-1"
-                  >
-                    <Edit3 className="h-3.5 w-3.5" />
-                    <span>Edit</span>
+                  <button onClick={() => { setEditingItemId(item.id); setEditPriceVal(String(item.price)); setEditMinQtyVal(String(item.minQty)); }} className="bg-emerald-50 text-[#126E2E] px-2.5 py-1.5 rounded-xl font-extrabold">
+                    Edit
                   </button>
                 </div>
               ))}
             </div>
           )}
 
-          {/* TAB 3: TODAY / WEEKLY / MONTHLY PAYMENTS HISTORY */}
           {shopTab === 'payments' && (
-            <div className="space-y-3 text-xs">
+            <div className="space-y-2.5 text-xs">
               <div className="grid grid-cols-3 gap-2">
-                {[
-                  { id: 'today', label: "Today's" },
-                  { id: 'week', label: 'Weekly' },
-                  { id: 'month', label: 'Monthly' },
-                ].map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => setPaymentPeriodFilter(p.id)}
-                    className={`py-2 rounded-xl font-extrabold border ${
-                      paymentPeriodFilter === p.id
-                        ? 'bg-[#00B251] text-white border-[#00B251]'
-                        : 'bg-white text-gray-700 border-gray-200'
-                    }`}
-                  >
-                    {p.label}
+                {['today', 'week', 'month'].map((p) => (
+                  <button key={p} onClick={() => setPaymentPeriodFilter(p)} className={`py-2 rounded-xl font-extrabold border uppercase ${paymentPeriodFilter === p ? 'bg-[#126E2E] text-white' : 'bg-white'}`}>
+                    {p}
                   </button>
                 ))}
               </div>
-
               <div className="bg-white rounded-2xl p-4 shadow-sm flex justify-between items-center">
                 <span className="font-bold text-gray-500 uppercase">{paymentPeriodFilter} Earnings</span>
-                <span className="text-xl font-black text-[#00B251]">₹{filteredPaymentSum}</span>
+                <span className="text-xl font-black text-[#126E2E]">₹{filteredPaymentSum}</span>
               </div>
-
               {filteredPaymentOrders.map((o) => (
-                <div key={o.id} className="bg-white rounded-2xl p-3 shadow-sm flex justify-between items-center">
-                  <div>
-                    <p className="font-black text-gray-900">{o.id} • {o.customer}</p>
-                    <p className="text-[10px] text-gray-500">{o.payment} ({o.status})</p>
-                  </div>
-                  <span className="font-black text-[#00B251]">+₹{o.total}</span>
+                <div key={o.id} className="bg-white rounded-2xl p-3 shadow-sm flex justify-between">
+                  <span>{o.id} • {o.payment}</span>
+                  <span className="font-black text-[#126E2E]">+₹{o.total}</span>
                 </div>
               ))}
             </div>
           )}
 
-          {/* TAB 4: BANK ACCOUNT & UPI DETAILS UPDATE */}
           {shopTab === 'bank' && (
             <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3 text-xs">
-              <h3 className="font-extrabold text-gray-900">Update Bank Account & UPI Details</h3>
-              {bankSavedMsg && (
-                <div className="bg-emerald-50 text-emerald-800 font-bold p-2 rounded-xl">{bankSavedMsg}</div>
-              )}
-              <div>
-                <label className="block font-bold text-gray-600 mb-1">Shop UPI ID (PhonePe / GPay / Paytm)</label>
-                <input
-                  type="text"
-                  value={editUpi}
-                  onChange={(e) => setEditUpi(e.target.value)}
-                  className="w-full bg-gray-50 border rounded-xl px-3 py-2 font-bold"
-                />
-              </div>
-              <div>
-                <label className="block font-bold text-gray-600 mb-1">Bank Name, Account Number & IFSC</label>
-                <input
-                  type="text"
-                  value={editBank}
-                  onChange={(e) => setEditBank(e.target.value)}
-                  className="w-full bg-gray-50 border rounded-xl px-3 py-2 font-bold"
-                />
-              </div>
+              <h3 className="font-extrabold">Update Bank Account & UPI Details</h3>
+              {bankSavedMsg && <div className="bg-emerald-50 text-emerald-800 font-bold p-2 rounded-xl">{bankSavedMsg}</div>}
+              <input type="text" value={editUpi} onChange={(e) => setEditUpi(e.target.value)} placeholder="UPI ID" className="w-full bg-[#FAF8F2] border rounded-xl px-3 py-2 font-bold" />
+              <input type="text" value={editBank} onChange={(e) => setEditBank(e.target.value)} placeholder="Bank Account & IFSC" className="w-full bg-[#FAF8F2] border rounded-xl px-3 py-2 font-bold" />
               <label className="flex items-center space-x-2 font-bold">
                 <input type="checkbox" checked={editCod} onChange={(e) => setEditCod(e.target.checked)} />
                 <span>Accept Cash on Delivery (COD)</span>
               </label>
               <button
                 onClick={() => {
-                  setShops((prev) =>
-                    prev.map((s) =>
-                      s.id === loggedInUser.shopId
-                        ? { ...s, upiId: editUpi, bankAccount: editBank, acceptCod: editCod }
-                        : s
-                    )
-                  );
-                  setBankSavedMsg('✅ Bank & UPI payment details updated successfully!');
+                  setShops((prev) => prev.map((s) => (s.id === loggedInUser.shopId ? { ...s, upiId: editUpi, bankAccount: editBank, acceptCod: editCod } : s)));
+                  setBankSavedMsg('✅ Payment details saved!');
                   setTimeout(() => setBankSavedMsg(''), 3000);
                 }}
-                className="w-full bg-indigo-800 text-white font-extrabold py-3 rounded-xl"
+                className="w-full bg-[#126E2E] text-white font-extrabold py-3 rounded-xl"
               >
-                Save Bank & UPI Details
+                Save Bank & UPI
               </button>
             </div>
           )}
         </main>
       )}
 
-{/* =================================================================
-          SCREEN 4: DELIVERY PARTNER DASHBOARD
-         ================================================================= */}
+      {/* DELIVERY PARTNER DASHBOARD */}
       {screen === 'deliveryDashboard' && (
-        <main className="px-4 pt-4 space-y-3">
-          <div className="bg-blue-900 text-white rounded-2xl p-4 shadow-sm">
+        <main className="px-4 pt-4 space-y-3 text-xs">
+          <div className="bg-[#126E2E] text-white rounded-2xl p-4 shadow-sm">
             <h2 className="text-base font-black">Delivery Partner Dashboard</h2>
-            <p className="text-xs text-blue-200">{loggedInUser.name} • {loggedInUser.mobile}</p>
+            <p className="text-emerald-100">{loggedInUser?.name} • {loggedInUser?.mobile}</p>
           </div>
           {orders.map((ord) => (
-            <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm space-y-2 text-xs">
+            <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm space-y-2">
               <div className="flex justify-between font-black">
                 <span>{ord.id} • {ord.status}</span>
-                <span className="text-[#00B251]">₹{ord.total}</span>
+                <span className="text-[#126E2E]">₹{ord.total}</span>
               </div>
-              <p className="text-[11px] text-gray-600">{ord.customer} — {ord.summary}</p>
+              <p className="text-gray-600">{ord.customer} — {ord.summary}</p>
               <div className="flex space-x-2">
-                <a
-                  href={`https://www.google.com/maps/dir/?api=1&destination=${ord.lat},${ord.lng}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex-1 bg-blue-600 text-white font-extrabold py-2 rounded-xl text-center"
-                >
+                <a href={`https://www.google.com/maps/dir/?api=1&destination=${ord.lat},${ord.lng}`} target="_blank" rel="noreferrer" className="flex-1 bg-blue-600 text-white font-extrabold py-2 rounded-xl text-center">
                   🗺️ Google Maps
                 </a>
                 {ord.status !== 'Delivered' && (
-                  <button
-                    onClick={() => handleMarkOrderDelivered(ord)}
-                    className="flex-1 bg-[#00B251] text-white font-extrabold py-2 rounded-xl"
-                  >
+                  <button onClick={() => handleMarkOrderDelivered(ord)} className="flex-1 bg-[#126E2E] text-white font-extrabold py-2 rounded-xl">
                     ✓ Delivered + Send Bill
                   </button>
                 )}
@@ -1566,118 +1458,75 @@ const activeUpiId = activeSellerShop?.upiId || merchantUpiId;
         </main>
       )}
 
-      {/* =================================================================
-          SCREEN 5: MASTER ADMIN PANEL (SHOP PHOTO VERIFICATION & APPROVAL)
-         ================================================================= */}
+      {/* ADMIN PANEL */}
       {screen === 'adminPanel' && (
-        <main className="px-4 pt-4 space-y-3.5">
-          <div className="bg-purple-900 text-white rounded-2xl p-4 shadow-md">
-            <span className="bg-purple-700 text-[10px] font-extrabold px-2 py-0.5 rounded">MASTER ADMIN</span>
-            <h2 className="text-base font-black mt-1">రైతు బాస్కెట్ అడ్మిన్ కంట్రోల్</h2>
+        <main className="px-4 pt-4 space-y-3 text-xs">
+          <div className="bg-[#0C4A20] text-white rounded-2xl p-4 shadow-md">
+            <h2 className="text-base font-black">Master Admin • Shop Photo Approvals</h2>
           </div>
 
           <div className="flex space-x-2">
-            {[
-              { id: 'approvals', label: `🏪 Shop Approvals (${shops.length})` },
-              { id: 'orders', label: `🚚 All Orders (${orders.length})` },
-            ].map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setAdminTab(t.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold border ${
-                  adminTab === t.id ? 'bg-purple-800 text-white border-purple-800' : 'bg-white text-gray-700'
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
+            <button onClick={() => setAdminTab('approvals')} className={`px-3 py-1.5 rounded-xl font-extrabold border ${adminTab === 'approvals' ? 'bg-[#126E2E] text-white' : 'bg-white'}`}>
+              Shop Approvals ({shops.length})
+            </button>
+            <button onClick={() => setAdminTab('orders')} className={`px-3 py-1.5 rounded-xl font-extrabold border ${adminTab === 'orders' ? 'bg-[#126E2E] text-white' : 'bg-white'}`}>
+              All Orders ({orders.length})
+            </button>
           </div>
 
-          {adminTab === 'approvals' && (
-            <div className="space-y-3">
-              {shops.map((shop) => (
-                <div key={shop.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-gray-100 space-y-2 text-xs">
-                  <img src={shop.photoUrl} alt={shop.storeName} className="h-32 w-full object-cover rounded-xl border" />
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <span className="text-[10px] font-extrabold uppercase bg-purple-50 text-purple-700 px-2 py-0.5 rounded">
-                        {shop.role}
-                      </span>
-                      <h4 className="text-sm font-black text-gray-900 mt-1">{shop.storeName}</h4>
-                      <p className="text-[11px] text-gray-600">Owner: {shop.ownerName} • {shop.mobile}</p>
-                      <p className="text-[11px] text-gray-500">Address: {shop.address}</p>
-                      <p className="text-[10px] font-bold text-emerald-700 mt-0.5">
-                        UPI: {shop.upiId || 'N/A'} | Bank: {shop.bankAccount || 'N/A'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() =>
-                      setShops((prev) =>
-                        prev.map((s) => (s.id === shop.id ? { ...s, approved: !s.approved } : s))
-                      )
-                    }
-                    className={`w-full font-extrabold py-2.5 rounded-xl ${
-                      shop.approved
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : 'bg-[#00B251] text-white shadow-md'
-                    }`}
-                  >
-                    {shop.approved ? '✓ Approved & Visible on App (Tap to Suspend)' : 'Verify Photo & Approve Shop'}
-                  </button>
+          {adminTab === 'approvals' &&
+            shops.map((shop) => (
+              <div key={shop.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-emerald-50 space-y-2">
+                <img src={shop.photoUrl} alt={shop.storeName} className="h-32 w-full object-cover rounded-xl border" />
+                <div>
+                  <span className="text-[10px] font-extrabold uppercase bg-emerald-50 text-[#126E2E] px-2 py-0.5 rounded">{shop.role}</span>
+                  <h4 className="text-sm font-black mt-1">{shop.storeName}</h4>
+                  <p className="text-gray-600">Owner: {shop.ownerName} • {shop.mobile}</p>
+                  <p className="text-gray-500">Address: {shop.address}</p>
+                  <p className="text-[10px] font-bold text-emerald-700">UPI: {shop.upiId || 'N/A'} | Bank: {shop.bankAccount || 'N/A'}</p>
                 </div>
-              ))}
-            </div>
-          )}
+                <button
+                  onClick={() => setShops((prev) => prev.map((s) => (s.id === shop.id ? { ...s, approved: !s.approved } : s)))}
+                  className={`w-full font-extrabold py-2.5 rounded-xl ${shop.approved ? 'bg-emerald-50 text-[#126E2E] border border-emerald-200' : 'bg-[#126E2E] text-white'}`}
+                >
+                  {shop.approved ? '✓ Approved & Live (Tap to Suspend)' : 'Verify Photo & Approve Shop'}
+                </button>
+              </div>
+            ))}
 
-          {adminTab === 'orders' && (
-            <div className="space-y-2.5">
-              {orders.map((ord) => (
-                <div key={ord.id} className="bg-white rounded-2xl p-3 shadow-sm text-xs space-y-1">
-                  <div className="flex justify-between font-black">
-                    <span>{ord.id} • {ord.status}</span>
-                    <span className="text-[#00B251]">₹{ord.total}</span>
-                  </div>
-                  <p>{ord.customer} — {ord.summary}</p>
-                </div>
-              ))}
-            </div>
-          )}
+          {adminTab === 'orders' &&
+            orders.map((ord) => (
+              <div key={ord.id} className="bg-white rounded-2xl p-3 shadow-sm flex justify-between">
+                <span>{ord.id} • {ord.customer}</span>
+                <span className="font-black text-[#126E2E]">₹{ord.total}</span>
+              </div>
+            ))}
         </main>
       )}
 
-      {/* BOTTOM NAVIGATION BAR */}
-      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#00B251] text-white rounded-t-[26px] px-6 py-2.5 flex items-center justify-between shadow-2xl z-40">
+      {/* BOTTOM DARK-GREEN NAVIGATION BAR (1ST IMAGE THEME) */}
+      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0C4A20] text-white rounded-t-[26px] px-5 py-2.5 flex items-center justify-between shadow-2xl z-40">
         <button
-          onClick={() => setScreen('home')}
-          className={`flex flex-col items-center space-y-0.5 ${screen === 'home' ? 'text-white font-extrabold' : 'text-emerald-100/80'}`}
+          onClick={() => setScreen('portalHome')}
+          className="flex flex-col items-center text-emerald-100/80 text-[10px] font-bold"
         >
-          <Home className="h-5 w-5" />
-          <span className="text-[10px]">{lang === 'te' ? 'మార్కెట్' : 'Market'}</span>
+          <Home className="h-4 w-4 mb-0.5" />
+          <span>Home</span>
         </button>
 
         <button
-          onClick={() => {
-            const r = loggedInUser.role.id;
-            if (r === 'admin') setScreen('adminPanel');
-            else if (r === 'delivery') setScreen('deliveryDashboard');
-            else if (r === 'customer') setScreen('cart');
-            else setScreen('shopDashboard');
-          }}
-          className="flex flex-col items-center space-y-0.5 text-emerald-100/80"
+          onClick={() => setScreen('market')}
+          className={`flex flex-col items-center text-[10px] font-bold ${screen === 'market' ? 'text-[#C8E99A]' : 'text-emerald-100/80'}`}
         >
-          <ClipboardList className="h-5 w-5" />
-          <span className="text-[10px]">
-            {loggedInUser.role.id === 'customer' ? 'Orders' : 'Dashboard'}
-          </span>
+          <Grid className="h-4 w-4 mb-0.5" />
+          <span>Market</span>
         </button>
 
         <button
           onClick={() => setScreen('cart')}
-          className="relative -mt-8 h-14 w-14 rounded-full bg-white text-[#00B251] shadow-lg border-4 border-[#F6FBF8] flex items-center justify-center"
+          className="relative -mt-7 h-13 w-13 p-3 rounded-full bg-[#C8E99A] text-[#0C4A20] shadow-lg border-4 border-[#FAF8F2] flex items-center justify-center"
         >
-          <ShoppingCart className="h-6 w-6" />
+          <ShoppingCart className="h-5 w-5" />
           {totalItems > 0 && (
             <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-amber-400 text-gray-900 text-[10px] font-black flex items-center justify-center">
               {totalItems}
@@ -1687,28 +1536,27 @@ const activeUpiId = activeSellerShop?.upiId || merchantUpiId;
 
         <button
           onClick={() => {
-            if (loggedInUser.role.id === 'wholesale' || loggedInUser.role.id === 'retail' || loggedInUser.role.id === 'farmer') {
-              setShopTab('payments');
-              setScreen('shopDashboard');
-            } else {
-              setScreen('home');
-            }
+            const r = loggedInUser?.role?.id;
+            if (r === 'admin') setScreen('adminPanel');
+            else if (r === 'delivery') setScreen('deliveryDashboard');
+            else if (r === 'customer') setScreen('cart');
+            else setScreen('shopDashboard');
           }}
-          className="flex flex-col items-center space-y-0.5 text-emerald-100/80"
+          className="flex flex-col items-center text-emerald-100/80 text-[10px] font-bold"
         >
-          <Wallet className="h-5 w-5" />
-          <span className="text-[10px]">Payments</span>
+          <ClipboardList className="h-4 w-4 mb-0.5" />
+          <span>Dashboard</span>
         </button>
 
         <button
           onClick={() => {
             setLoggedInUser(null);
-            setScreen('roles');
+            setScreen('portalHome');
           }}
-          className="flex flex-col items-center space-y-0.5 text-emerald-100/80"
+          className="flex flex-col items-center text-emerald-100/80 text-[10px] font-bold"
         >
-          <User className="h-5 w-5" />
-          <span className="text-[10px]">{lang === 'te' ? 'రోల్ మార్చు' : 'Switch'}</span>
+          <User className="h-4 w-4 mb-0.5" />
+          <span>Switch</span>
         </button>
       </nav>
     </div>
