@@ -1,4 +1,4 @@
-React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Search, ShoppingCart, Plus, Minus, Home, Grid,
   ClipboardList, User, MapPin, Phone, Sprout,
