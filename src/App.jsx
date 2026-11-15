@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import {
   Search, Mic, Heart, Bell, ShoppingCart, Plus, Minus, Home, Grid,
   ClipboardList, User, MapPin, Phone, Sprout, Store, Truck, ShieldCheck,
-  ChevronRight, ArrowLeft, CheckCircle2, Lock, LogOut, Edit3, Check,
-  Camera, MessageCircle, Warehouse, Ticket, Wallet, Navigation, Star,
-  QrCode, Barcode, AlertTriangle, TrendingUp, FileText, CreditCard,
-  Headphones, RefreshCw, XCircle, Award, ShieldAlert, Eye, EyeOff
+  ChevronRight, ArrowLeft, CheckCircle2, Lock, LogOut,
+  Camera, Warehouse, Wallet, Navigation, Star,
+  QrCode, Barcode, AlertTriangle, CreditCard,
+  Eye, EyeOff, Trash2
 } from 'lucide-react';
 
 const IMG = {
@@ -23,22 +23,58 @@ const IMG = {
 };
 
 const INITIAL_PRODUCTS = [
-  { id: 'p1', nameEn: 'Fresh Tomato (Grade A)', nameTe: 'తాజా టమాటా', cat: 'Vegetables', tier: 'Local', price: 40, unit: 'kg', rating: 4.5, reviews: 12, stock: 120, minWholesaleKg: 25, seller: 'Ramaiah Garu (Kaligiri)', img: IMG.tomato, desc: 'Fresh and juicy country tomatoes harvested directly from Kaligiri & Kovur farms.' },
-  { id: 'p2', nameEn: 'Organic Tomato', nameTe: 'సేంద్రీయ టమాటా', cat: 'Vegetables', tier: 'Premium', price: 50, unit: 'kg', rating: 4.8, reviews: 24, stock: 80, minWholesaleKg: 20, seller: 'Ramaiah Garu (Kaligiri)', img: IMG.tomato, desc: '100% chemical-free organic tomatoes grown with natural compost.' },
-  { id: 'p3', nameEn: 'Red Onion', nameTe: 'ఉల్లిపాయలు', cat: 'Vegetables', tier: 'Local', price: 30, unit: 'kg', rating: 4.4, reviews: 19, stock: 350, minWholesaleKg: 50, seller: 'Sri Venkateswara Traders', img: IMG.onion, desc: 'Crisp red onions ideal for daily cooking and bulk wholesale orders.' },
-  { id: 'p4', nameEn: 'Farm Potato', nameTe: 'బంగాళాదుంప', cat: 'Vegetables', tier: 'Local', price: 28, unit: 'kg', rating: 4.3, reviews: 15, stock: 400, minWholesaleKg: 50, seller: 'Sri Venkateswara Traders', img: IMG.potato, desc: 'Clean, starchy farm potatoes graded for retail & household use.' },
-  { id: 'p5', nameEn: 'Fresh Palakura (Spinach)', nameTe: 'పాలకూర', cat: 'Leafy Greens', tier: 'Local', price: 18, unit: 'bunch', rating: 4.7, reviews: 31, stock: 8, minWholesaleKg: 20, seller: 'Padma Farms (Nellore)', img: IMG.spinach, desc: 'Morning-harvested tender green spinach bunches.' },
-  { id: 'p6', nameEn: 'Banganapalli Mangoes', nameTe: 'బంగినపల్లి మామిడి', cat: 'Fruits', tier: 'Premium', price: 110, unit: 'kg', rating: 4.9, reviews: 42, stock: 95, minWholesaleKg: 20, seller: 'Rapur Orchards', img: IMG.mango, desc: 'Sweet, naturally ripened Banganapalli mangoes from Nellore district.' },
-  { id: 'p7', nameEn: 'Sweet Bananas', nameTe: 'అరటిపండ్లు', cat: 'Fruits', tier: 'Local', price: 45, unit: 'dozen', rating: 4.6, reviews: 18, stock: 60, minWholesaleKg: 10, seller: 'Kavali Banana Farms', img: IMG.banana, desc: 'Farm-fresh yellow bananas rich in natural energy.' },
-  { id: 'p8', nameEn: 'Farm Fresh Milk', nameTe: 'చిక్కటి పాలు', cat: 'Dairy & Eggs', tier: 'Local', price: 68, unit: 'L', rating: 4.8, reviews: 50, stock: 45, minWholesaleKg: 10, seller: 'Kovur Dairy Farm', img: IMG.milk, desc: 'Pure, unadulterated morning buffalo milk.' },
-  { id: 'p9', nameEn: 'Country Eggs (6 pcs)', nameTe: 'నాటు కోడి గుడ్లు', cat: 'Dairy & Eggs', tier: 'Premium', price: 54, unit: 'pack', rating: 4.7, reviews: 27, stock: 6, minWholesaleKg: 10, seller: 'Rapur Poultry', img: IMG.eggs, desc: 'Free-range country hen eggs with rich nutrition.' },
+  { id: 'p1', nameEn: 'Fresh Tomato (Grade A)', nameTe: 'తాజా టమాటా', cat: 'Vegetables', tier: 'Local', price: 40, unit: 'kg', rating: 4.5, reviews: 12, stock: 120, seller: 'Ramaiah Garu (Kaligiri)', img: IMG.tomato, desc: 'Fresh and juicy country tomatoes harvested directly from Kaligiri & Kovur farms.' },
+  { id: 'p2', nameEn: 'Organic Tomato', nameTe: 'సేంద్రీయ టమాటా', cat: 'Vegetables', tier: 'Premium', price: 50, unit: 'kg', rating: 4.8, reviews: 24, stock: 80, seller: 'Ramaiah Garu (Kaligiri)', img: IMG.tomato, desc: '100% chemical-free organic tomatoes grown with natural compost.' },
+  { id: 'p3', nameEn: 'Red Onion', nameTe: 'ఉల్లిపాయలు', cat: 'Vegetables', tier: 'Local', price: 30, unit: 'kg', rating: 4.4, reviews: 19, stock: 350, seller: 'Sri Venkateswara Traders', img: IMG.onion, desc: 'Crisp red onions ideal for daily cooking and bulk orders.' },
+  { id: 'p4', nameEn: 'Farm Potato', nameTe: 'బంగాళాదుంప', cat: 'Vegetables', tier: 'Local', price: 28, unit: 'kg', rating: 4.3, reviews: 15, stock: 400, seller: 'Sri Venkateswara Traders', img: IMG.potato, desc: 'Clean, starchy farm potatoes graded for retail & household use.' },
+  { id: 'p5', nameEn: 'Fresh Palakura (Spinach)', nameTe: 'పాలకూర', cat: 'Leafy Greens', tier: 'Local', price: 18, unit: 'bunch', rating: 4.7, reviews: 31, stock: 8, seller: 'Padma Farms (Nellore)', img: IMG.spinach, desc: 'Morning-harvested tender green spinach bunches.' },
+  { id: 'p6', nameEn: 'Banganapalli Mangoes', nameTe: 'బంగినపల్లి మామిడి', cat: 'Fruits', tier: 'Premium', price: 110, unit: 'kg', rating: 4.9, reviews: 42, stock: 95, seller: 'Rapur Orchards', img: IMG.mango, desc: 'Sweet, naturally ripened Banganapalli mangoes from Nellore district.' },
+  { id: 'p7', nameEn: 'Sweet Bananas', nameTe: 'అరటిపండ్లు', cat: 'Fruits', tier: 'Local', price: 45, unit: 'dozen', rating: 4.6, reviews: 18, stock: 60, seller: 'Kavali Banana Farms', img: IMG.banana, desc: 'Farm-fresh yellow bananas rich in natural energy.' },
+  { id: 'p8', nameEn: 'Farm Fresh Milk', nameTe: 'చిక్కటి పాలు', cat: 'Dairy & Eggs', tier: 'Local', price: 68, unit: 'L', rating: 4.8, reviews: 50, stock: 45, seller: 'Kovur Dairy Farm', img: IMG.milk, desc: 'Pure, unadulterated morning buffalo milk.' },
+  { id: 'p9', nameEn: 'Country Eggs (6 pcs)', nameTe: 'నాటు కోడి గుడ్లు', cat: 'Dairy & Eggs', tier: 'Premium', price: 54, unit: 'pack', rating: 4.7, reviews: 27, stock: 6, seller: 'Rapur Poultry', img: IMG.eggs, desc: 'Free-range country hen eggs with rich nutrition.' },
 ];
 
+// ORIGINAL BRAND LOGOS FOR PHONEPE, GOOGLE PAY, PAYTM & CARDS
+const PhonePeLogo = () => (
+  <svg viewBox="0 0 36 36" className="h-7 w-7 flex-shrink-0">
+    <rect width="36" height="36" rx="9" fill="#5F259F" />
+    <text x="50%" y="54%" dominantBaseline="middle" textAnchor="middle" fill="#FFFFFF" fontSize="15" fontWeight="900" fontFamily="sans-serif">
+      पे
+    </text>
+  </svg>
+);
+
+const GooglePayLogo = () => (
+  <svg viewBox="0 0 36 36" className="h-7 w-7 flex-shrink-0">
+    <rect width="36" height="36" rx="9" fill="#FFFFFF" stroke="#E5E7EB" strokeWidth="1.5" />
+    <path d="M24.5 18.2c0-.5 0-1-.1-1.4H18v2.7h3.7c-.2.9-.7 1.7-1.5 2.2v1.8h2.4c1.4-1.3 1.9-3.2 1.9-5.3z" fill="#4285F4" />
+    <path d="M18 24.8c2 0 3.7-.7 4.9-1.8l-2.4-1.8c-.7.5-1.5.7-2.5.7-1.9 0-3.5-1.3-4.1-3h-2.5v1.9c1.2 2.4 3.7 4 6.6 4z" fill="#34A853" />
+    <path d="M13.9 18.9c-.2-.5-.2-1-.2-1.5s.1-1 .2-1.5v-1.9h-2.5c-.5 1-.8 2.2-.8 3.4s.3 2.4.8 3.4l2.5-1.9z" fill="#FBBC05" />
+    <path d="M18 13c1.1 0 2.1.4 2.8 1.1l2.1-2.1C21.7 10.8 20 10 18 10c-2.9 0-5.4 1.6-6.6 4l2.5 1.9c.6-1.7 2.2-2.9 4.1-2.9z" fill="#EA4335" />
+  </svg>
+);
+
+const PaytmLogo = () => (
+  <svg viewBox="0 0 36 36" className="h-7 w-7 flex-shrink-0">
+    <rect width="36" height="36" rx="9" fill="#00BAF2" />
+    <text x="50%" y="53%" dominantBaseline="middle" textAnchor="middle" fill="#002970" fontSize="9.5" fontWeight="900" fontFamily="sans-serif">
+      Paytm
+    </text>
+  </svg>
+);
+
+const CardBrandLogo = () => (
+  <svg viewBox="0 0 36 36" className="h-7 w-7 flex-shrink-0">
+    <rect width="36" height="36" rx="9" fill="#1E293B" />
+    <circle cx="14.5" cy="18" r="6" fill="#EB001B" />
+    <circle cx="21.5" cy="18" r="6" fill="#F79E1B" fillOpacity="0.88" />
+  </svg>
+);
+
 export default function App() {
-  const [lang, setLang] = useState('en'); // 'en' | 'te'
-  const [activeRole, setActiveRole] = useState(null); // null | 'customer' | 'farmer' | 'wholesale' | 'retail' | 'delivery' | 'admin'
+  const [lang, setLang] = useState('en');
+  const [activeRole, setActiveRole] = useState(null);
   const [subScreen, setSubScreen] = useState('splash');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // Shared Store & State
   const [products, setProducts] = useState(INITIAL_PRODUCTS);
@@ -60,14 +96,21 @@ export default function App() {
   const [deliverySlot, setDeliverySlot] = useState('Today, 6 PM – 8 PM');
   const [couponInput, setCouponInput] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState('upi'); // 'upi' | 'card' | 'cod'
+
+// Payment States (PhonePe, Google Pay, Paytm, QR, Card, COD)
+  const [paymentMethod, setPaymentMethod] = useState('phonepe'); // 'phonepe' | 'gpay' | 'paytm' | 'qr' | 'card' | 'cod'
+  const [upiRefInput, setUpiRefInput] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCvv, setCardCvv] = useState('');
+  const [cardHolder, setCardHolder] = useState('');
+  const [paymentError, setPaymentError] = useState('');
+  const [merchantUpiId] = useState('8328261103@ybl');
 
   // Orders List
   const [orders, setOrders] = useState([
-    { id: 'RB123456', roleType: 'customer', customerName: 'Sundar Reddy', phone: '9876543210', address: 'Flat No. 302, Green Park, Nellore', itemsSummary: 'Tomato (1kg), Onion (1kg)', total: 70, distanceKm: 2.5, deliveryFee: 25, pickupOtp: '4821', deliveryOtp: '9304', status: 'Out for Delivery', date: 'Today, 5:30 PM', driver: 'Ramesh Kumar', rating: 0 },
-    { id: 'RB123455', roleType: 'customer', customerName: 'Lakshmi Prasad', phone: '9848012345', address: 'Magunta Layout, Nellore', itemsSummary: 'Banganapalli Mangoes (2kg)', total: 220, distanceKm: 3.2, deliveryFee: 30, pickupOtp: '1122', deliveryOtp: '7744', status: 'Delivered', date: 'Delivered on 12 Nov', driver: 'Ramesh Kumar', rating: 5 },
-    { id: 'FB001', roleType: 'farmer', customerName: 'Sri Lakshmi Super Market', phone: '9849223344', address: 'Vedayapalem, Nellore', itemsSummary: 'Tomato - 50 kg @ ₹18/kg', total: 900, distanceKm: 4.0, deliveryFee: 40, pickupOtp: '5511', deliveryOtp: '8899', status: 'Accepted', date: 'Today, 10:00 AM', driver: 'Ramesh Kumar', rating: 5 },
-    { id: 'WS-1024', roleType: 'wholesale', customerName: 'Balaji Retail Mart', phone: '9121334455', address: 'Kovur Road, Nellore', itemsSummary: 'Tomato 50kg, Onion 50kg, Potato 50kg', total: 2700, distanceKm: 5.1, deliveryFee: 50, pickupOtp: '3344', deliveryOtp: '6677', status: 'Pending', date: 'Today, 10:30 AM', driver: 'Unassigned', rating: 0 },
+    { id: 'RB123456', customerName: 'Sundar Reddy', phone: '9876543210', address: 'Flat No. 302, Green Park, Nellore', itemsSummary: 'Fresh Tomato (1 kg), Red Onion (1 kg)', total: 70, paymentInfo: 'PhonePe UPI', distanceKm: 2.5, deliveryFee: 25, pickupOtp: '4821', deliveryOtp: '9304', status: 'Out for Delivery', date: 'Today, 5:30 PM', driver: 'Ramesh Kumar', rating: 0 },
+    { id: 'RB123455', customerName: 'Lakshmi Prasad', phone: '9848012345', address: 'Magunta Layout, Nellore', itemsSummary: 'Banganapalli Mangoes (2 kg)', total: 220, paymentInfo: 'Google Pay', distanceKm: 3.2, deliveryFee: 30, pickupOtp: '1122', deliveryOtp: '7744', status: 'Delivered', date: 'Delivered on 12 Nov', driver: 'Ramesh Kumar', rating: 5 },
   ]);
   const [activeOrder, setActiveOrder] = useState(null);
   const [orderTabFilter, setOrderTabFilter] = useState('All');
@@ -77,12 +120,12 @@ export default function App() {
   const [authPass, setAuthPass] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [authName, setAuthName] = useState('');
-  const [authExtra, setAuthExtra] = useState(''); // Village / GST / Driving License
+  const [authExtra, setAuthExtra] = useState('');
   const [authVehicle, setAuthVehicle] = useState('Bike / Scooter');
   const [authOtpMode, setAuthOtpMode] = useState(false);
   const [otpCode, setOtpCode] = useState('');
 
- // Farmer States
+  // Farmer States
   const [farmerTab, setFarmerTab] = useState('Active');
   const [listStep, setListStep] = useState(1);
   const [listCrop, setListCrop] = useState('Tomato');
@@ -96,7 +139,7 @@ export default function App() {
   ]);
 
   // Wholesale & Retail States
-  const [bulkUnit, setBulkUnit] = useState('KG'); // 'KG' | 'Quintal' | 'Ton'
+  const [bulkUnit, setBulkUnit] = useState('KG');
   const [retailTab, setRetailTab] = useState('New');
   const [newProdName, setNewProdName] = useState('');
   const [newProdCat, setNewProdCat] = useState('Vegetables');
@@ -120,19 +163,36 @@ export default function App() {
 
   const notify = (msg) => {
     setToastMsg(msg);
-    setTimeout(() => setToastMsg(''), 3000);
+    setTimeout(() => setToastMsg(''), 2800);
+  };
+
+  // Accurate Quantity Add / Increment / Decrement with Clear Feedback
+  const handleAddOrIncrement = (p) => {
+    const nextQty = (cart[p.id] || 0) + 1;
+    setCart((prev) => ({ ...prev, [p.id]: nextQty }));
+    notify(`🛒 ${p.nameEn}: ${nextQty} ${p.unit} in Cart (₹${p.price * nextQty})`);
+  };
+
+  const handleDecrement = (p) => {
+    const current = cart[p.id] || 0;
+    if (current <= 1) {
+      setCart((prev) => {
+        const copy = { ...prev };
+        delete copy[p.id];
+        return copy;
+      });
+      notify(`Removed ${p.nameEn} from Cart`);
+    } else {
+      const nextQty = current - 1;
+      setCart((prev) => ({ ...prev, [p.id]: nextQty }));
+      notify(`🛒 ${p.nameEn}: ${nextQty} ${p.unit} in Cart (₹${p.price * nextQty})`);
+    }
   };
 
   const selectRole = (role) => {
     setActiveRole(role);
-    setIsLoggedIn(false);
     setAuthOtpMode(false);
     setSubScreen('splash');
-  };
-
-  const completeLogin = (defaultScreen) => {
-    setIsLoggedIn(true);
-    setSubScreen(defaultScreen);
   };
 
   const handlePhotoChange = (e, setter) => {
@@ -143,7 +203,7 @@ export default function App() {
     reader.readAsDataURL(file);
   };
 
-  // Cart Calculations
+  // Cart Totals
   const cartItemsCount = Object.values(cart).reduce((a, b) => a + b, 0);
   const cartSubtotal = Object.entries(cart).reduce((sum, [id, qty]) => {
     const prod = products.find((p) => p.id === id);
@@ -151,22 +211,56 @@ export default function App() {
   }, 0);
   const finalTotal = Math.max(0, cartSubtotal - appliedDiscount);
 
+  // Payment URIs & Dynamic QR
+  const encodedMerchant = encodeURIComponent('Rythu Basket Nellore');
+  const genericUpiUri = `upi://pay?pa=${encodeURIComponent(merchantUpiId)}&pn=${encodedMerchant}&am=${finalTotal}&cu=INR`;
+  const phonePeUri = `phonepe://pay?pa=${encodeURIComponent(merchantUpiId)}&pn=${encodedMerchant}&am=${finalTotal}&cu=INR`;
+  const gpayUri = `tez://upi/pay?pa=${encodeURIComponent(merchantUpiId)}&pn=${encodedMerchant}&am=${finalTotal}&cu=INR`;
+  const paytmUri = `paytmmp://pay?pa=${encodeURIComponent(merchantUpiId)}&pn=${encodedMerchant}&am=${finalTotal}&cu=INR`;
+  const dynamicQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(genericUpiUri)}`;
+
   const toggleWishlist = (id) => {
     setWishlist((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
   const sendWhatsAppInvoice = (ord) => {
     const text =
-      `*RYTHU BASKET - INVOICE*\nOrder ID: ${ord.id}\nCustomer: ${ord.customerName}\nItems: ${ord.itemsSummary}\nTotal: ₹${ord.total}\nStatus: ${ord.status}`;
+      `*RYTHU BASKET - INVOICE*\nOrder ID: ${ord.id}\nCustomer: ${ord.customerName}\nItems: ${ord.itemsSummary}\nTotal: ₹${ord.total}\nPayment: ${ord.paymentInfo || 'Paid'}\nStatus: ${ord.status}`;
     window.open(`https://wa.me/91${ord.phone}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
-  // =========================================================================
-  // ROLE LAUNCHER GATE (CHOOSE CUSTOMER, FARMER, WHOLESALE, RETAIL, DELIVERY, ADMIN)
+  // Reusable Quantity Stepper Button (Shows `- 2 +` once added!)
+  const QuantityControl = ({ product }) => {
+    const qty = cart[product.id] || 0;
+    if (qty === 0) {
+      return (
+        <button
+          onClick={() => handleAddOrIncrement(product)}
+          className="bg-[#167A37] hover:bg-[#11602B] text-white text-[11px] font-extrabold px-3 py-1.5 rounded-xl shadow-sm active:scale-95 transition"
+        >
+          Add +
+        </button>
+      );
+    }
+    return (
+      <div className="flex items-center bg-[#167A37] text-white rounded-xl px-1.5 py-1 space-x-2 shadow-sm">
+        <button onClick={() => handleDecrement(product)} className="p-0.5 hover:bg-white/20 rounded">
+          <Minus className="h-3.5 w-3.5" />
+        </button>
+        <span className="text-xs font-black min-w-[16px] text-center">{qty}</span>
+        <button onClick={() => handleAddOrIncrement(product)} className="p-0.5 hover:bg-white/20 rounded">
+          <Plus className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    );
+  };
+
+// =========================================================================
+  // ROLE LAUNCHER GATE (UNCHANGED LOGO + ALL ROLE APPS)
   // =========================================================================
   if (!activeRole) {
     const roleCards = [
-      { id: 'customer', title: 'Customer App', te: 'వినియోగదారుల యాప్', desc: '14 Screens • Splash, Browse, Cart, Checkout, Live Tracking, Reviews', icon: ShoppingCart, badge: 'B2C Store', bg: 'bg-emerald-50 border-emerald-200 text-emerald-800' },
+      { id: 'customer', title: 'Customer App', te: 'వినియోగదారుల యాప్', desc: '14 Screens • Splash, Browse, Live Qty Cart, Checkout, UPI/Card Payments', icon: ShoppingCart, badge: 'B2C Store', bg: 'bg-emerald-50 border-emerald-200 text-emerald-800' },
       { id: 'farmer', title: 'Farmers App', te: 'రైతుల యాప్', desc: '14 Screens • List Produce, Photo Upload, Mandi Rates, Earnings, Negotiation', icon: Sprout, badge: 'Farm Direct', bg: 'bg-lime-50 border-lime-200 text-lime-800' },
       { id: 'wholesale', title: 'Wholesale Store App', te: 'హోల్‌సేల్ స్టోర్', desc: 'Bulk Orders (KG/Quintal/Ton), Price Comparison, GST Invoice, Credit', icon: Warehouse, badge: 'B2B Bulk', bg: 'bg-amber-50 border-amber-200 text-amber-800' },
       { id: 'retail', title: 'Retail Store App', te: 'రిటైల్ స్టోర్', desc: 'Add Products, Barcode Scan, Wholesale/Farmer Buy, P&L, Digital Billing', icon: Store, badge: 'POS & Shop', bg: 'bg-orange-50 border-orange-200 text-orange-800' },
@@ -179,8 +273,9 @@ export default function App() {
         <div className="bg-gradient-to-br from-[#0F6B2F] to-[#238E43] text-white rounded-b-[32px] p-6 shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="h-12 w-12 rounded-2xl bg-white p-1 shadow">
-                <img src="/icon-512.png" alt="Rythu Basket" className="h-full w-full object-cover rounded-xl" />
+              {/* YOUR EXACT UNCHANGED LOGO */}
+              <div className="h-14 w-14 rounded-full bg-white p-0.5 shadow border-2 border-yellow-300 overflow-hidden">
+                <img src="/icon-512.png" alt="Rythu Basket" className="h-full w-full object-cover rounded-full" />
               </div>
               <div>
                 <h1 className="text-xl font-black tracking-tight">Rythu Basket</h1>
@@ -195,7 +290,7 @@ export default function App() {
             </button>
           </div>
           <p className="text-xs text-emerald-50 mt-4 font-semibold">
-            Select an App Module below to open its full Splash → Login/Sign Up → Dashboard experience:
+            Select an App Module below:
           </p>
         </div>
 
@@ -231,8 +326,8 @@ export default function App() {
     );
   }
 
-// =========================================================================
-  // 1. SHARED SPLASH SCREEN (FOR CUSTOMER, FARMER, WHOLESALE, RETAIL, DELIVERY)
+  // =========================================================================
+  // 1. SPLASH SCREEN (WITH YOUR EXACT UNCHANGED LOGO)
   // =========================================================================
   if (subScreen === 'splash') {
     const splashMeta = {
@@ -259,8 +354,8 @@ export default function App() {
         </div>
 
         <div className="relative z-10 text-center px-6 my-auto">
-          <div className="h-24 w-24 rounded-3xl bg-white p-1.5 shadow-xl mx-auto mb-4 border-2 border-[#167A37]">
-            <img src="/icon-512.png" alt="Rythu Basket" className="h-full w-full object-cover rounded-2xl" />
+          <div className="h-24 w-24 rounded-full bg-white p-1 shadow-xl mx-auto mb-4 border-2 border-[#167A37] overflow-hidden">
+            <img src="/icon-512.png" alt="Rythu Basket" className="h-full w-full object-cover rounded-full" />
           </div>
           <h1 className="text-3xl font-black text-[#11652D] tracking-tight">Rythu Basket</h1>
           <p className="text-sm font-extrabold text-gray-800 mt-1">{splashMeta.tagline}</p>
@@ -284,7 +379,7 @@ export default function App() {
   }
 
   // =========================================================================
-  // 2. LOGIN & 3. SIGN UP SCREENS (ALL ROLES)
+  // 2. LOGIN & 3. SIGN UP SCREENS
   // =========================================================================
   if (subScreen === 'login' || subScreen === 'signup') {
     const defaultAfterLogin =
@@ -322,8 +417,8 @@ export default function App() {
           </div>
 
           <div className="text-center mt-4 mb-6">
-            <div className="h-16 w-16 rounded-2xl bg-emerald-50 p-1 mx-auto mb-2 border border-emerald-200">
-              <img src="/icon-512.png" alt="Logo" className="h-full w-full object-cover rounded-xl" />
+            <div className="h-16 w-16 rounded-full bg-emerald-50 p-0.5 mx-auto mb-2 border border-emerald-200 overflow-hidden">
+              <img src="/icon-512.png" alt="Logo" className="h-full w-full object-cover rounded-full" />
             </div>
             <h1 className="text-xl font-black text-gray-900">
               {subScreen === 'login' ? roleTitles.login : roleTitles.signup}
@@ -337,7 +432,7 @@ export default function App() {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                completeLogin(defaultAfterLogin);
+                setSubScreen(defaultAfterLogin);
               }}
               className="space-y-3.5 text-xs"
             >
@@ -392,7 +487,7 @@ export default function App() {
 
               <button
                 type="button"
-                onClick={() => completeLogin(defaultAfterLogin)}
+                onClick={() => setSubScreen(defaultAfterLogin)}
                 className="w-full border border-gray-200 bg-white text-gray-800 font-extrabold py-3 rounded-xl flex items-center justify-center space-x-2 shadow-sm"
               >
                 <span className="text-blue-600 font-black text-sm">G</span>
@@ -418,49 +513,22 @@ export default function App() {
               </div>
             </form>
           ) : (
-            /* SIGN UP FORM */
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                completeLogin(defaultAfterLogin);
+                setSubScreen(defaultAfterLogin);
               }}
               className="space-y-3 text-xs"
             >
-<input
-                type="text"
-                required
-                value={authName}
-                onChange={(e) => setAuthName(e.target.value)}
-                placeholder={
-                  activeRole === 'wholesale'
-                    ? 'Business / Distributor Name *'
-                    : activeRole === 'retail'
-                    ? 'Shop Name & Owner Name *'
-                    : 'Full Name *'
-                }
-                className="w-full bg-gray-50 border rounded-xl px-3.5 py-3 font-bold"
-              />
-              <input
-                type="tel"
-                required
-                value={authPhone}
-                onChange={(e) => setAuthPhone(e.target.value)}
-                placeholder="Mobile Number *"
-                className="w-full bg-gray-50 border rounded-xl px-3.5 py-3 font-bold"
-              />
+              <input type="text" required value={authName} onChange={(e) => setAuthName(e.target.value)} placeholder="Full Name / Store Name *" className="w-full bg-gray-50 border rounded-xl px-3.5 py-3 font-bold" />
+              <input type="tel" required value={authPhone} onChange={(e) => setAuthPhone(e.target.value)} placeholder="Mobile Number *" className="w-full bg-gray-50 border rounded-xl px-3.5 py-3 font-bold" />
               {activeRole !== 'customer' && (
                 <input
                   type="text"
                   required
                   value={authExtra}
                   onChange={(e) => setAuthExtra(e.target.value)}
-                  placeholder={
-                    activeRole === 'farmer'
-                      ? 'Village (e.g., Kaligiri / Kovur) *'
-                      : activeRole === 'delivery'
-                      ? 'Driving License Number *'
-                      : 'GST Number & Shop Address *'
-                  }
+                  placeholder={activeRole === 'farmer' ? 'Village (e.g., Kaligiri) *' : activeRole === 'delivery' ? 'Driving License Number *' : 'GST Number & Address *'}
                   className="w-full bg-gray-50 border rounded-xl px-3.5 py-3 font-bold"
                 />
               )}
@@ -468,30 +536,12 @@ export default function App() {
                 <select value={authVehicle} onChange={(e) => setAuthVehicle(e.target.value)} className="w-full bg-gray-50 border rounded-xl px-3.5 py-3 font-bold">
                   <option>Bike / Scooter</option>
                   <option>Auto / Mini Van</option>
-                  <option>Electric Cycle</option>
                 </select>
               )}
-              <input
-                type="password"
-                required
-                value={authPass}
-                onChange={(e) => setAuthPass(e.target.value)}
-                placeholder="Create Password *"
-                className="w-full bg-gray-50 border rounded-xl px-3.5 py-3 font-bold"
-              />
-              <label className="flex items-center space-x-2 text-[11px] font-semibold text-gray-600">
-                <input type="checkbox" defaultChecked required className="accent-[#167A37]" />
-                <span>I agree to the Terms & Conditions and Privacy Policy</span>
-              </label>
+              <input type="password" required value={authPass} onChange={(e) => setAuthPass(e.target.value)} placeholder="Create Password *" className="w-full bg-gray-50 border rounded-xl px-3.5 py-3 font-bold" />
               <button type="submit" className="w-full bg-[#167A37] text-white font-black py-3.5 rounded-xl shadow-md text-sm">
                 Sign Up & Continue
               </button>
-              <p className="text-center text-gray-500">
-                Already have an account?{' '}
-                <button type="button" onClick={() => setSubScreen('login')} className="text-[#167A37] font-extrabold underline">
-                  Login
-                </button>
-              </p>
             </form>
           )}
         </div>
@@ -499,18 +549,15 @@ export default function App() {
     );
   }
 
-// =========================================================================
-  // TOP TOAST NOTIFICATION HELPER
-  // =========================================================================
   const ToastBanner = () =>
     toastMsg ? (
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#11652D] text-white text-xs font-extrabold px-4 py-2.5 rounded-full shadow-xl">
+      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#11652D] text-white text-xs font-extrabold px-4 py-2.5 rounded-full shadow-xl whitespace-nowrap">
         {toastMsg}
       </div>
     ) : null;
 
-  // =========================================================================
-  // ROLE A: CUSTOMER APP (SCREENS 4 TO 14)
+// =========================================================================
+  // ROLE A: CUSTOMER APP (1000043644_2.png EXACT UI + LIVE QTY + WORKING PAYMENTS)
   // =========================================================================
   if (activeRole === 'customer') {
     const filteredCustomerProducts = products.filter((p) => {
@@ -522,23 +569,82 @@ export default function App() {
 
     const currentAddr = addresses.find((a) => a.id === selectedAddressId) || addresses[0];
 
+    const handleCompleteCustomerOrder = () => {
+      setPaymentError('');
+      if (paymentMethod === 'card') {
+        const digits = cardNumber.replace(/\s+/g, '');
+        if (digits.length < 12 || !cardExpiry.trim() || cardCvv.length < 3 || !cardHolder.trim()) {
+          setPaymentError('Please enter valid Card Number, Expiry (MM/YY), CVV, and Cardholder Name.');
+          return;
+        }
+      }
+
+      const payNames = {
+        phonepe: 'PhonePe UPI',
+        gpay: 'Google Pay (GPay)',
+        paytm: 'Paytm UPI',
+        qr: 'UPI QR Scan',
+        card: `Card ending •••• ${cardNumber.replace(/\s+/g, '').slice(-4) || '4242'}`,
+        cod: 'Cash on Delivery (COD)',
+      };
+
+      const itemSummaryList = Object.entries(cart)
+        .map(([id, qty]) => {
+          const item = products.find((p) => p.id === id);
+          return item ? `${item.nameEn} (${qty} ${item.unit})` : '';
+        })
+        .filter(Boolean)
+        .join(', ');
+
+      const newOrd = {
+        id: 'RB' + Math.floor(123457 + Math.random() * 800),
+        customerName: authName || 'Customer',
+        phone: authPhone || '9876543210',
+        address: currentAddr.line,
+        itemsSummary: itemSummaryList,
+        total: finalTotal,
+        paymentInfo: `${payNames[paymentMethod]}${upiRefInput.trim() ? ` (UTR: ${upiRefInput.trim()})` : ''}`,
+        distanceKm: 2.8,
+        deliveryFee: 25,
+        pickupOtp: '4821',
+        deliveryOtp: '9304',
+        status: 'Confirmed',
+        date: 'Just now',
+        driver: 'Ramesh Kumar',
+        rating: 0,
+      };
+
+      setOrders([newOrd, ...orders]);
+      setActiveOrder(newOrd);
+      setCart({});
+      setAppliedDiscount(0);
+      setUpiRefInput('');
+      setCardNumber('');
+      setCardExpiry('');
+      setCardCvv('');
+      setCardHolder('');
+      setSubScreen('orderPlaced');
+    };
+
     return (
       <div className="min-h-screen bg-[#F5F8F5] max-w-md mx-auto relative pb-24 font-sans text-gray-800 shadow-2xl">
         <ToastBanner />
 
-        {/* 4. CUSTOMER HOME */}
+        {/* 4. CUSTOMER HOME (EXACT 1000043644_2.png LAYOUT) */}
         {subScreen === 'home' && (
           <div className="p-4 space-y-4">
-            {/* Top Location, Language, Wishlist & Bell */}
+            {/* Top Bar with Your Unchanged Logo, Location, Language & Wishlist */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-1.5">
-                <MapPin className="h-4 w-4 text-[#167A37]" />
+              <div className="flex items-center space-x-2">
+                <div className="h-9 w-9 rounded-full bg-white p-0.5 shadow border border-[#167A37] overflow-hidden">
+                  <img src="/icon-512.png" alt="Logo" className="h-full w-full object-cover rounded-full" />
+                </div>
                 <div>
                   <p className="text-[10px] text-gray-400 font-bold">Deliver to</p>
                   <p className="text-xs font-black text-gray-900">Nellore • Vedayapalem ▾</p>
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1.5">
                 <button onClick={() => setLang(lang === 'en' ? 'te' : 'en')} className="bg-emerald-50 text-[#167A37] text-[10px] font-extrabold px-2.5 py-1 rounded-full border border-emerald-200">
                   {lang === 'en' ? 'తెలుగు' : 'EN'}
                 </button>
@@ -608,7 +714,7 @@ export default function App() {
               ))}
             </div>
 
-            {/* Popular Categories */}
+            {/* Popular Produce Grid with Live Quantity Stepper */}
             <div>
               <div className="flex justify-between items-center mb-2">
                 <h3 className="text-sm font-black text-gray-900">Popular Produce</h3>
@@ -617,7 +723,7 @@ export default function App() {
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                {filteredCustomerProducts.slice(0, 4).map((p) => (
+                {filteredCustomerProducts.slice(0, 6).map((p) => (
                   <div key={p.id} className="bg-white rounded-2xl p-3 shadow-sm border border-gray-100 space-y-2">
                     <div className="relative">
                       <img
@@ -633,24 +739,19 @@ export default function App() {
                         <Heart className={`h-3.5 w-3.5 ${wishlist.includes(p.id) ? 'fill-rose-500 text-rose-500' : 'text-gray-400'}`} />
                       </button>
                     </div>
-                    <h4 onClick={() => { setSelectedProduct(p); setSubScreen('productDetails'); }} className="text-xs font-extrabold cursor-pointer">
+                    <h4 onClick={() => { setSelectedProduct(p); setSubScreen('productDetails'); }} className="text-xs font-extrabold cursor-pointer truncate">
                       {lang === 'te' ? p.nameTe : p.nameEn}
                     </h4>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-black text-[#167A37]">₹{p.price} / {p.unit}</span>
-                      <button
-                        onClick={() => { setCart((c) => ({ ...c, [p.id]: (c[p.id] || 0) + 1 })); notify('Added to Cart'); }}
-                        className="bg-[#167A37] text-white text-[10px] font-extrabold px-2.5 py-1 rounded-lg"
-                      >
-                        Add +
-                      </button>
+                      <span className="text-xs font-black text-[#167A37]">₹{p.price}/{p.unit}</span>
+                      <QuantityControl product={p} />
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Special Offer Banner */}
+{/* Special Offer Banner */}
             <div className="bg-[#E4F5D8] rounded-2xl p-3.5 flex items-center justify-between border border-emerald-200">
               <div>
                 <span className="text-[10px] font-black text-[#167A37] uppercase">Special Offer • Code: RYTHU20</span>
@@ -662,7 +763,7 @@ export default function App() {
           </div>
         )}
 
-{/* 5. BROWSE CATEGORIES */}
+        {/* 5. BROWSE CATEGORIES */}
         {subScreen === 'categories' && (
           <div className="p-4 space-y-4">
             <div className="flex items-center space-x-2">
@@ -690,7 +791,7 @@ export default function App() {
           </div>
         )}
 
-        {/* 6. PRODUCT LISTING (ALL / LOCAL / PREMIUM) */}
+        {/* 6. PRODUCT LISTING (WITH LIVE QUANTITY STEPPER) */}
         {subScreen === 'productList' && (
           <div className="p-4 space-y-3">
             <div className="flex items-center space-x-2">
@@ -719,19 +820,14 @@ export default function App() {
                       <p className="text-xs font-black text-[#167A37] mt-0.5">₹{p.price} / {p.unit}</p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => { setCart((c) => ({ ...c, [p.id]: (c[p.id] || 0) + 1 })); notify('Added to Cart'); }}
-                    className="bg-[#167A37] text-white text-xs font-extrabold px-3 py-1.5 rounded-xl"
-                  >
-                    Add +
-                  </button>
+                  <QuantityControl product={p} />
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* 7. PRODUCT DETAILS (RATINGS & REVIEWS) */}
+        {/* 7. PRODUCT DETAILS (WITH LIVE QUANTITY STEPPER) */}
         {subScreen === 'productDetails' && selectedProduct && (
           <div className="p-4 space-y-4">
             <div className="flex items-center justify-between">
@@ -741,7 +837,7 @@ export default function App() {
               </button>
             </div>
             <img src={selectedProduct.img} alt={selectedProduct.nameEn} className="h-52 w-full object-cover rounded-3xl shadow" />
-            <div className="bg-white rounded-3xl p-4 shadow-sm space-y-2">
+            <div className="bg-white rounded-3xl p-4 shadow-sm space-y-3">
               <h2 className="text-lg font-black">{selectedProduct.nameEn} ({selectedProduct.nameTe})</h2>
               <p className="text-base font-black text-[#167A37]">₹{selectedProduct.price} / {selectedProduct.unit}</p>
               <div className="flex items-center space-x-1 text-xs font-bold text-amber-500">
@@ -749,11 +845,22 @@ export default function App() {
                 <span>{selectedProduct.rating} ({selectedProduct.reviews} verified reviews)</span>
               </div>
               <p className="text-xs text-gray-600 leading-relaxed">{selectedProduct.desc}</p>
+
+              <div className="flex items-center justify-between pt-2 border-t">
+                <span className="text-xs font-extrabold text-gray-700">
+                  Selected Quantity: <strong className="text-[#167A37]">{cart[selectedProduct.id] || 0} {selectedProduct.unit}</strong>
+                </span>
+                <QuantityControl product={selectedProduct} />
+              </div>
+
               <button
-                onClick={() => { setCart((c) => ({ ...c, [selectedProduct.id]: (c[selectedProduct.id] || 0) + 1 })); setSubScreen('cart'); }}
-                className="w-full bg-[#167A37] text-white font-black py-3 rounded-2xl shadow mt-2 text-sm"
+                onClick={() => {
+                  if (!cart[selectedProduct.id]) handleAddOrIncrement(selectedProduct);
+                  setSubScreen('cart');
+                }}
+                className="w-full bg-[#167A37] text-white font-black py-3 rounded-2xl shadow text-sm"
               >
-                Add to Cart & View
+                Go to Cart ({cartItemsCount} items)
               </button>
             </div>
           </div>
@@ -772,9 +879,7 @@ export default function App() {
                   <h4 className="font-extrabold">{p.nameEn}</h4>
                   <p className="font-black text-[#167A37]">₹{p.price}/{p.unit}</p>
                 </div>
-                <button onClick={() => { setCart((c) => ({ ...c, [p.id]: (c[p.id] || 0) + 1 })); setSubScreen('cart'); }} className="bg-[#167A37] text-white font-bold px-3 py-1.5 rounded-xl">
-                  Move to Cart
-                </button>
+                <QuantityControl product={p} />
               </div>
             ))}
           </div>
@@ -784,11 +889,18 @@ export default function App() {
         {subScreen === 'cart' && (
           <div className="p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-black">My Cart</h2>
-              <button onClick={() => setCart({})} className="text-xs font-bold text-red-500">Clear All</button>
+              <h2 className="text-base font-black">My Cart ({cartItemsCount} items)</h2>
+              {cartItemsCount > 0 && (
+                <button onClick={() => setCart({})} className="text-xs font-bold text-red-500">Clear All</button>
+              )}
             </div>
             {cartItemsCount === 0 ? (
-              <div className="bg-white rounded-2xl p-8 text-center text-xs font-bold text-gray-500">Cart is empty.</div>
+              <div className="bg-white rounded-2xl p-8 text-center space-y-3">
+                <p className="text-xs font-bold text-gray-500">Your cart is empty.</p>
+                <button onClick={() => setSubScreen('home')} className="bg-[#167A37] text-white text-xs font-extrabold px-5 py-2.5 rounded-xl">
+                  Browse Fresh Produce
+                </button>
+              </div>
             ) : (
               <>
                 {Object.entries(cart).map(([id, qty]) => {
@@ -800,24 +912,26 @@ export default function App() {
                         <img src={p.img} alt={p.nameEn} className="h-12 w-12 rounded-xl object-cover" />
                         <div>
                           <h4 className="font-extrabold">{p.nameEn}</h4>
-                          <p className="text-[#167A37] font-black">₹{p.price} / {p.unit}</p>
+                          <p className="text-[#167A37] font-black">
+                            ₹{p.price} × {qty} {p.unit} = ₹{p.price * qty}
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2 bg-gray-100 px-2 py-1 rounded-xl font-black">
-                        <button onClick={() => setCart((c) => { const n = { ...c }; if (n[id] <= 1) delete n[id]; else n[id]--; return n; })}><Minus className="h-3 w-3" /></button>
+                        <button onClick={() => handleDecrement(p)}><Minus className="h-3 w-3" /></button>
                         <span>{qty}</span>
-                        <button onClick={() => setCart((c) => ({ ...c, [id]: qty + 1 }))}><Plus className="h-3 w-3" /></button>
+                        <button onClick={() => handleAddOrIncrement(p)}><Plus className="h-3 w-3" /></button>
                       </div>
                     </div>
                   );
                 })}
                 <div className="bg-white rounded-2xl p-4 shadow-sm space-y-2.5">
                   <div className="flex justify-between font-black text-sm">
-                    <span>Subtotal</span>
+                    <span>Subtotal ({cartItemsCount} items)</span>
                     <span>₹{cartSubtotal}</span>
                   </div>
-                  <button onClick={() => setSubScreen('checkout')} className="w-full bg-[#167A37] text-white font-black py-3 rounded-2xl shadow text-sm">
-                    Proceed to Checkout
+                  <button onClick={() => { setPaymentError(''); setSubScreen('checkout'); }} className="w-full bg-[#167A37] text-white font-black py-3 rounded-2xl shadow text-sm">
+                    Proceed to Checkout ➔
                   </button>
                 </div>
               </>
@@ -825,17 +939,17 @@ export default function App() {
           </div>
         )}
 
-        {/* 9. CHECKOUT (MULTIPLE ADDRESSES, COUPONS, UPI / CARDS / COD) */}
+{/* 9. CHECKOUT WITH ORIGINAL PAYMENT LOGOS (PHONEPE, GOOGLE PAY, PAYTM, QR, CARDS, COD) */}
         {subScreen === 'checkout' && (
           <div className="p-4 space-y-3 text-xs">
             <div className="flex items-center space-x-2">
               <button onClick={() => setSubScreen('cart')} className="p-2 bg-white rounded-full shadow-sm"><ArrowLeft className="h-4 w-4" /></button>
-              <h2 className="text-base font-black">Checkout</h2>
+              <h2 className="text-base font-black">Checkout & Payment</h2>
             </div>
 
-            {/* Multiple Delivery Addresses */}
+            {/* Delivery Address */}
             <div className="bg-white rounded-2xl p-3.5 shadow-sm space-y-2">
-              <h3 className="font-extrabold">Select Delivery Address</h3>
+              <h3 className="font-extrabold">Delivery Address</h3>
               {addresses.map((addr) => (
                 <label key={addr.id} className={`block p-2.5 rounded-xl border ${selectedAddressId === addr.id ? 'border-[#167A37] bg-emerald-50/40' : 'border-gray-200'}`}>
                   <div className="flex items-center space-x-2">
@@ -862,7 +976,7 @@ export default function App() {
               </div>
             </div>
 
-{/* Delivery Slot & Coupons */}
+            {/* Delivery Slot & Coupons */}
             <div className="bg-white rounded-2xl p-3.5 shadow-sm space-y-2">
               <h3 className="font-extrabold">Delivery Slot</h3>
               <select value={deliverySlot} onChange={(e) => setDeliverySlot(e.target.value)} className="w-full bg-gray-50 border rounded-xl px-3 py-2 font-bold">
@@ -890,61 +1004,186 @@ export default function App() {
               </div>
             </div>
 
-            {/* Payment Method: UPI, Cards, Cash on Delivery */}
-            <div className="bg-white rounded-2xl p-3.5 shadow-sm space-y-2">
-              <h3 className="font-extrabold">Payment Method</h3>
-              {[
-                { id: 'upi', label: 'UPI (PhonePe, GPay, Paytm)' },
-                { id: 'card', label: 'Credit / Debit Card' },
-                { id: 'cod', label: 'Cash on Delivery (COD)' },
-              ].map((pm) => (
-                <label key={pm.id} className="flex items-center space-x-2 p-2 rounded-xl border border-gray-100 font-bold">
-                  <input type="radio" checked={paymentMethod === pm.id} onChange={() => setPaymentMethod(pm.id)} className="accent-[#167A37]" />
-                  <span>{pm.label}</span>
+            {/* WORKING PAYMENT OPTIONS WITH ORIGINAL BRAND LOGOS */}
+            <div className="bg-white rounded-2xl p-3.5 shadow-sm space-y-2.5">
+              <h3 className="font-extrabold text-sm">Select Payment Option (Pay ₹{finalTotal})</h3>
+
+              {/* 1. PhonePe */}
+              <div className={`rounded-xl border-2 p-3 transition ${paymentMethod === 'phonepe' ? 'border-[#5F259F] bg-purple-50/30' : 'border-gray-100'}`}>
+                <label onClick={() => setPaymentMethod('phonepe')} className="flex items-center justify-between cursor-pointer">
+                  <div className="flex items-center space-x-3">
+                    <PhonePeLogo />
+                    <div>
+                      <p className="font-black text-gray-900">PhonePe</p>
+                      <p className="text-[10px] text-gray-500">Instant UPI Payment via PhonePe</p>
+                    </div>
+                  </div>
+                  <input type="radio" checked={paymentMethod === 'phonepe'} onChange={() => setPaymentMethod('phonepe')} className="accent-[#5F259F] h-4 w-4" />
                 </label>
-              ))}
+                {paymentMethod === 'phonepe' && (
+                  <div className="mt-2.5 pt-2.5 border-t space-y-2">
+                    <a href={phonePeUri} className="block w-full bg-[#5F259F] text-white text-center font-extrabold py-2.5 rounded-xl shadow-sm">
+                      Open PhonePe App & Pay ₹{finalTotal} ↗
+                    </a>
+                    <input type="text" value={upiRefInput} onChange={(e) => setUpiRefInput(e.target.value)} placeholder="Enter 12-digit PhonePe UTR (Optional)" className="w-full bg-white border rounded-xl px-3 py-1.5 font-bold text-center" />
+                  </div>
+                )}
+              </div>
+
+              {/* 2. Google Pay */}
+              <div className={`rounded-xl border-2 p-3 transition ${paymentMethod === 'gpay' ? 'border-[#4285F4] bg-blue-50/30' : 'border-gray-100'}`}>
+                <label onClick={() => setPaymentMethod('gpay')} className="flex items-center justify-between cursor-pointer">
+                  <div className="flex items-center space-x-3">
+                    <GooglePayLogo />
+                    <div>
+                      <p className="font-black text-gray-900">Google Pay (GPay)</p>
+                      <p className="text-[10px] text-gray-500">Pay directly with Google Pay UPI</p>
+                    </div>
+                  </div>
+                  <input type="radio" checked={paymentMethod === 'gpay'} onChange={() => setPaymentMethod('gpay')} className="accent-[#4285F4] h-4 w-4" />
+                </label>
+                {paymentMethod === 'gpay' && (
+                  <div className="mt-2.5 pt-2.5 border-t space-y-2">
+                    <a href={gpayUri} className="block w-full bg-[#1A73E8] text-white text-center font-extrabold py-2.5 rounded-xl shadow-sm">
+                      Open Google Pay & Pay ₹{finalTotal} ↗
+                    </a>
+                    <input type="text" value={upiRefInput} onChange={(e) => setUpiRefInput(e.target.value)} placeholder="Enter 12-digit GPay UPI Ref ID (Optional)" className="w-full bg-white border rounded-xl px-3 py-1.5 font-bold text-center" />
+                  </div>
+                )}
+              </div>
+
+              {/* 3. Paytm */}
+              <div className={`rounded-xl border-2 p-3 transition ${paymentMethod === 'paytm' ? 'border-[#00BAF2] bg-sky-50/30' : 'border-gray-100'}`}>
+                <label onClick={() => setPaymentMethod('paytm')} className="flex items-center justify-between cursor-pointer">
+                  <div className="flex items-center space-x-3">
+                    <PaytmLogo />
+                    <div>
+                      <p className="font-black text-gray-900">Paytm</p>
+                      <p className="text-[10px] text-gray-500">Pay via Paytm UPI / Wallet</p>
+                    </div>
+                  </div>
+                  <input type="radio" checked={paymentMethod === 'paytm'} onChange={() => setPaymentMethod('paytm')} className="accent-[#00BAF2] h-4 w-4" />
+                </label>
+                {paymentMethod === 'paytm' && (
+                  <div className="mt-2.5 pt-2.5 border-t space-y-2">
+                    <a href={paytmUri} className="block w-full bg-[#00BAF2] text-[#002970] text-center font-black py-2.5 rounded-xl shadow-sm">
+                      Open Paytm & Pay ₹{finalTotal} ↗
+                    </a>
+                    <input type="text" value={upiRefInput} onChange={(e) => setUpiRefInput(e.target.value)} placeholder="Enter Paytm UPI Ref ID (Optional)" className="w-full bg-white border rounded-xl px-3 py-1.5 font-bold text-center" />
+                  </div>
+                )}
+              </div>
+
+              {/* 4. Scan QR Code */}
+              <div className={`rounded-xl border-2 p-3 transition ${paymentMethod === 'qr' ? 'border-[#167A37] bg-emerald-50/30' : 'border-gray-100'}`}>
+                <label onClick={() => setPaymentMethod('qr')} className="flex items-center justify-between cursor-pointer">
+                  <div className="flex items-center space-x-3">
+                    <span className="h-7 w-7 rounded-lg bg-emerald-100 text-[#167A37] flex items-center justify-center"><QrCode className="h-4 w-4" /></span>
+                    <div>
+                      <p className="font-black text-gray-900">Scan QR Code (Any UPI App)</p>
+                      <p className="text-[10px] text-gray-500">UPI ID: {merchantUpiId}</p>
+                    </div>
+                  </div>
+                  <input type="radio" checked={paymentMethod === 'qr'} onChange={() => setPaymentMethod('qr')} className="accent-[#167A37] h-4 w-4" />
+                </label>
+                {paymentMethod === 'qr' && (
+                  <div className="mt-2.5 pt-2.5 border-t text-center space-y-2">
+                    <img src={dynamicQrUrl} alt="UPI QR" className="w-32 h-32 mx-auto rounded-xl border p-1 bg-white" />
+                    <a href={genericUpiUri} className="inline-block text-[#167A37] font-extrabold underline">
+                      Or Tap to Open Other UPI Apps ↗
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              {/* 5. Working Credit / Debit Card Option */}
+              <div className={`rounded-xl border-2 p-3 transition ${paymentMethod === 'card' ? 'border-slate-800 bg-slate-50' : 'border-gray-100'}`}>
+                <label onClick={() => setPaymentMethod('card')} className="flex items-center justify-between cursor-pointer">
+                  <div className="flex items-center space-x-3">
+                    <CardBrandLogo />
+                    <div>
+                      <p className="font-black text-gray-900">Credit / Debit Card</p>
+                      <p className="text-[10px] text-gray-500">Visa, Mastercard, RuPay</p>
+                    </div>
+                  </div>
+                  <input type="radio" checked={paymentMethod === 'card'} onChange={() => setPaymentMethod('card')} className="accent-slate-800 h-4 w-4" />
+                </label>
+                {paymentMethod === 'card' && (
+                  <div className="mt-3 pt-2.5 border-t space-y-2">
+                    <input
+                      type="text"
+                      maxLength={19}
+                      value={cardNumber}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/\D/g, '').slice(0, 16);
+                        setCardNumber(raw.replace(/(\d{4})(?=\d)/g, '$1 '));
+                      }}
+                      placeholder="Card Number (16 digits)"
+                      className="w-full bg-white border rounded-xl px-3 py-2 font-bold tracking-wider"
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        maxLength={5}
+                        value={cardExpiry}
+                        onChange={(e) => setCardExpiry(e.target.value)}
+                        placeholder="Expiry (MM/YY)"
+                        className="bg-white border rounded-xl px-3 py-2 font-bold"
+                      />
+                      <input
+                        type="password"
+                        maxLength={4}
+                        value={cardCvv}
+                        onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, ''))}
+                        placeholder="CVV"
+                        className="bg-white border rounded-xl px-3 py-2 font-bold"
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      value={cardHolder}
+                      onChange={(e) => setCardHolder(e.target.value)}
+                      placeholder="Cardholder Name"
+                      className="w-full bg-white border rounded-xl px-3 py-2 font-bold"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* 6. Cash on Delivery */}
+              <div className={`rounded-xl border-2 p-3 transition ${paymentMethod === 'cod' ? 'border-[#167A37] bg-emerald-50/30' : 'border-gray-100'}`}>
+                <label onClick={() => setPaymentMethod('cod')} className="flex items-center justify-between cursor-pointer">
+                  <div className="flex items-center space-x-3">
+                    <span className="h-7 w-7 rounded-lg bg-green-100 text-green-700 flex items-center justify-center"><Wallet className="h-4 w-4" /></span>
+                    <div>
+                      <p className="font-black text-gray-900">Cash on Delivery (COD)</p>
+                      <p className="text-[10px] text-gray-500">Pay cash when fresh produce arrives</p>
+                    </div>
+                  </div>
+                  <input type="radio" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} className="accent-[#167A37] h-4 w-4" />
+                </label>
+              </div>
+
+              {paymentError && <p className="text-xs font-extrabold text-red-600">{paymentError}</p>}
             </div>
 
             <button
-              onClick={() => {
-                const newOrd = {
-                  id: 'RB' + Math.floor(123457 + Math.random() * 800),
-                  roleType: 'customer',
-                  customerName: authName || 'Customer',
-                  phone: authPhone || '9876543210',
-                  address: currentAddr.line,
-                  itemsSummary: `${cartItemsCount} Fresh Farm Items`,
-                  total: finalTotal,
-                  distanceKm: 2.8,
-                  deliveryFee: 25,
-                  pickupOtp: '4821',
-                  deliveryOtp: '9304',
-                  status: 'Confirmed',
-                  date: 'Just now',
-                  driver: 'Ramesh Kumar',
-                  rating: 0,
-                };
-                setOrders([newOrd, ...orders]);
-                setActiveOrder(newOrd);
-                setCart({});
-                setAppliedDiscount(0);
-                setSubScreen('orderPlaced');
-              }}
+              onClick={handleCompleteCustomerOrder}
               className="w-full bg-[#167A37] text-white font-black py-3.5 rounded-2xl shadow-lg text-sm"
             >
-              Place Order • ₹{finalTotal}
+              Pay & Place Order • ₹{finalTotal}
             </button>
           </div>
         )}
 
-        {/* 10. ORDER PLACED */}
+{/* 10. ORDER PLACED */}
         {subScreen === 'orderPlaced' && activeOrder && (
           <div className="p-6 text-center space-y-4 my-auto pt-12">
             <div className="h-20 w-20 rounded-full bg-emerald-100 text-[#167A37] flex items-center justify-center mx-auto">
               <CheckCircle2 className="h-12 w-12" />
             </div>
             <h2 className="text-xl font-black">Order Placed Successfully!</h2>
-            <p className="text-xs font-bold text-gray-500">Order ID: {activeOrder.id}</p>
+            <p className="text-xs font-bold text-gray-500">Order ID: {activeOrder.id} • Paid via {activeOrder.paymentInfo}</p>
             <div className="space-y-2.5 pt-2">
               <button onClick={() => setSubScreen('orderTracking')} className="w-full bg-[#167A37] text-white font-black py-3 rounded-2xl text-xs">
                 Track Order
@@ -980,7 +1219,6 @@ export default function App() {
               ))}
             </div>
 
-            {/* Live Delivery Partner Location & Contact */}
             <div className="bg-white rounded-2xl p-4 shadow-sm flex items-center justify-between">
               <div>
                 <p className="text-[10px] text-gray-400 font-bold">Delivery Partner</p>
@@ -1000,12 +1238,12 @@ export default function App() {
             </div>
 
             <button onClick={() => setSubScreen('orderDelivered')} className="w-full bg-[#167A37] text-white font-black py-3 rounded-2xl">
-              Simulate Delivery Completed Screen
+              Mark Delivered & Rate
             </button>
           </div>
         )}
 
-        {/* 13. ORDER DELIVERED & RATING */}
+        {/* 13. ORDER DELIVERED */}
         {subScreen === 'orderDelivered' && activeOrder && (
           <div className="p-6 text-center space-y-4 pt-10">
             <div className="h-20 w-20 rounded-full bg-emerald-100 text-[#167A37] flex items-center justify-center mx-auto">
@@ -1032,7 +1270,7 @@ export default function App() {
           </div>
         )}
 
-        {/* 14. MY ORDERS (REORDER + CANCEL & REFUND) */}
+        {/* 14. MY ORDERS */}
         {subScreen === 'myOrders' && (
           <div className="p-4 space-y-3 text-xs">
             <h2 className="text-base font-black">My Orders</h2>
@@ -1050,6 +1288,7 @@ export default function App() {
                   <span className="text-[#167A37]">₹{ord.total}</span>
                 </div>
                 <p className="text-gray-600">{ord.itemsSummary}</p>
+                <p className="text-[10px] font-bold text-gray-400">Paid via: {ord.paymentInfo}</p>
                 <div className="flex space-x-2 pt-1">
                   <button onClick={() => { setActiveOrder(ord); setSubScreen('orderTracking'); }} className="flex-1 bg-emerald-50 text-[#167A37] font-extrabold py-1.5 rounded-xl">
                     Track Order
@@ -1057,35 +1296,31 @@ export default function App() {
                   <button onClick={() => { setCart({ p1: 1, p3: 1 }); setSubScreen('cart'); notify('Items added to Cart!'); }} className="flex-1 bg-[#167A37] text-white font-extrabold py-1.5 rounded-xl">
                     Reorder
                   </button>
-                  {ord.status !== 'Delivered' && ord.status !== 'Cancelled' && (
-                    <button
-                      onClick={() => {
-                        setOrders((p) => p.map((x) => (x.id === ord.id ? { ...x, status: 'Cancelled (Refund Initiated)' } : x)));
-                        notify('Order Cancelled • Refund Initiated');
-                      }}
-                      className="px-2.5 bg-red-50 text-red-600 font-extrabold py-1.5 rounded-xl"
-                    >
-                      Cancel
-                    </button>
-                  )}
                 </div>
               </div>
             ))}
           </div>
         )}
 
-{/* CUSTOMER BOTTOM NAV */}
+        {/* CUSTOMER BOTTOM NAV WITH LIVE CART COUNT BADGE */}
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-5 py-2 flex justify-between items-center z-40">
           {[
             { id: 'home', icon: Home, label: 'Home' },
             { id: 'categories', icon: Grid, label: 'Categories' },
-            { id: 'cart', icon: ShoppingCart, label: `Cart (${cartItemsCount})` },
+            { id: 'cart', icon: ShoppingCart, label: 'Cart', badge: cartItemsCount },
             { id: 'myOrders', icon: ClipboardList, label: 'Orders' },
           ].map((nav) => {
             const Icon = nav.icon;
             return (
-              <button key={nav.id} onClick={() => setSubScreen(nav.id)} className={`flex flex-col items-center text-[10px] font-extrabold ${subScreen === nav.id ? 'text-[#167A37]' : 'text-gray-400'}`}>
-                <Icon className="h-5 w-5 mb-0.5" />
+              <button key={nav.id} onClick={() => setSubScreen(nav.id)} className={`relative flex flex-col items-center text-[10px] font-extrabold ${subScreen === nav.id ? 'text-[#167A37]' : 'text-gray-400'}`}>
+                <div className="relative">
+                  <Icon className="h-5 w-5 mb-0.5" />
+                  {nav.badge > 0 && (
+                    <span className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[9px] font-black h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center">
+                      {nav.badge}
+                    </span>
+                  )}
+                </div>
                 <span>{nav.label}</span>
               </button>
             );
@@ -1095,8 +1330,8 @@ export default function App() {
     );
   }
 
-  // =========================================================================
-  // ROLE B: FARMERS APP (SCREENS 4 TO 14)
+ // =========================================================================
+  // ROLE B: FARMERS APP
   // =========================================================================
   if (activeRole === 'farmer') {
     const lowStockItems = products.filter((p) => p.stock < 10);
@@ -1115,7 +1350,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* 4. FARMER HOME DASHBOARD */}
         {subScreen === 'farmerHome' && (
           <div className="p-4 space-y-4 text-xs">
             <div className="bg-gradient-to-r from-[#D9F2DC] to-[#BCE6C2] rounded-3xl p-4 flex items-center justify-between">
@@ -1150,22 +1384,9 @@ export default function App() {
                 </button>
               ))}
             </div>
-
-            <div className="bg-white rounded-2xl p-3.5 shadow-sm space-y-2">
-              <div className="flex justify-between font-black">
-                <span>Today's Market Rates (Kaligiri)</span>
-                <button onClick={() => setSubScreen('marketRates')} className="text-[#167A37]">View All ›</button>
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="bg-gray-50 p-2 rounded-xl"><p className="font-bold">Tomato</p><p className="text-[#167A37] font-black">₹18/kg</p></div>
-                <div className="bg-gray-50 p-2 rounded-xl"><p className="font-bold">Onion</p><p className="text-[#167A37] font-black">₹20/kg</p></div>
-                <div className="bg-gray-50 p-2 rounded-xl"><p className="font-bold">Mirchi</p><p className="text-[#167A37] font-black">₹40/kg</p></div>
-              </div>
-            </div>
           </div>
         )}
 
-        {/* 5 & 6. LIST PRODUCE + UPLOAD PRODUCT PHOTOS */}
         {subScreen === 'listProduce' && (
           <div className="p-4 space-y-3 text-xs">
             <h2 className="text-base font-black">List Your Produce (Step {listStep} of 3)</h2>
@@ -1204,7 +1425,7 @@ export default function App() {
                   <button
                     onClick={() => {
                       setProducts([
-                        { id: 'fp_' + Date.now(), nameEn: `${listCrop} (${listQty}kg Lot)`, nameTe: listCrop, cat: 'Vegetables', tier: 'Local', price: Number(listPrice), unit: 'kg', rating: 4.9, reviews: 1, stock: Number(listQty), minWholesaleKg: 25, seller: 'Ramaiah Garu (Kaligiri)', img: listPhoto || IMG.tomato, desc: `Pickup: ${pickupDate}` },
+                        { id: 'fp_' + Date.now(), nameEn: `${listCrop} (${listQty}kg Lot)`, nameTe: listCrop, cat: 'Vegetables', tier: 'Local', price: Number(listPrice), unit: 'kg', rating: 4.9, reviews: 1, stock: Number(listQty), seller: 'Ramaiah Garu (Kaligiri)', img: listPhoto || IMG.tomato, desc: `Pickup: ${pickupDate}` },
                         ...products,
                       ]);
                       notify('✅ Produce Listed & Alert Sent to Buyers!');
@@ -1220,7 +1441,6 @@ export default function App() {
           </div>
         )}
 
-{/* 7. MY PRODUCE */}
         {subScreen === 'myProduce' && (
           <div className="p-4 space-y-3 text-xs">
             <div className="flex justify-between items-center">
@@ -1244,7 +1464,6 @@ export default function App() {
           </div>
         )}
 
-        {/* 8 & 9. FARMER ORDERS, BUYER NEGOTIATION & PICKUP TRACKING */}
         {subScreen === 'farmerOrders' && (
           <div className="p-4 space-y-3 text-xs">
             <h2 className="text-base font-black">Bulk Orders & Buyer Negotiation</h2>
@@ -1271,7 +1490,6 @@ export default function App() {
           </div>
         )}
 
-        {/* 10. EARNINGS & PAYMENT HISTORY */}
         {subScreen === 'farmerEarnings' && (
           <div className="p-4 space-y-3 text-xs">
             <div className="bg-gradient-to-r from-[#167A37] to-[#238E43] text-white rounded-3xl p-5 shadow">
@@ -1286,26 +1504,15 @@ export default function App() {
           </div>
         )}
 
-        {/* 11. LIVE MARKET RATES & ALERTS */}
         {subScreen === 'marketRates' && (
           <div className="p-4 space-y-2.5 text-xs">
             <h2 className="text-base font-black">Live Market Rates & Daily Alerts</h2>
-            {[
-              { name: 'Tomato', rate: '₹18/kg ↑' },
-              { name: 'Onion', rate: '₹20/kg ↑' },
-              { name: 'Mirchi', rate: '₹40/kg ↑' },
-              { name: 'Potato', rate: '₹15/kg' },
-              { name: 'Cotton', rate: '₹72/kg ↑' },
-            ].map((m) => (
-              <div key={m.name} className="bg-white rounded-2xl p-3.5 shadow-sm flex justify-between font-black">
-                <span>{m.name}</span>
-                <span className="text-[#167A37]">{m.rate}</span>
-              </div>
+            {['Tomato: ₹18/kg ↑', 'Onion: ₹20/kg ↑', 'Mirchi: ₹40/kg ↑', 'Potato: ₹15/kg'].map((m) => (
+              <div key={m} className="bg-white rounded-2xl p-3.5 shadow-sm font-black">{m}</div>
             ))}
           </div>
         )}
 
-        {/* 12, 13, 14. PROFILE (BANK/UPI), SUPPORT & NOTIFICATIONS */}
         {(subScreen === 'farmerProfile' || subScreen === 'farmerSupport' || subScreen === 'farmerNotifs') && (
           <div className="p-4 space-y-3 text-xs">
             <h2 className="text-base font-black">Bank Account, UPI & Support</h2>
@@ -1314,16 +1521,9 @@ export default function App() {
               <input type="text" value={farmerBank} onChange={(e) => setFarmerBank(e.target.value)} className="w-full bg-gray-50 border rounded-xl p-2.5 font-bold" />
               <button onClick={() => notify('✅ Bank & UPI Details Updated!')} className="w-full bg-[#167A37] text-white font-extrabold py-2.5 rounded-xl">Save Bank / UPI</button>
             </div>
-            <div className="bg-white rounded-2xl p-4 shadow-sm space-y-2">
-              <h3 className="font-black">Notifications</h3>
-              <p className="p-2 bg-emerald-50 rounded-xl font-semibold">🔔 Your Tomato produce has been accepted by Balaji Mart.</p>
-              <p className="p-2 bg-amber-50 rounded-xl font-semibold">📈 Market price of Tomato increased to ₹20/kg.</p>
-              <a href="tel:8328261103" className="block w-full bg-[#167A37] text-white text-center font-extrabold py-2.5 rounded-xl">📞 Call Support</a>
-            </div>
           </div>
         )}
 
-        {/* FARMER BOTTOM NAV */}
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-4 py-2 flex justify-between items-center z-40">
           {[
             { id: 'farmerHome', icon: Home, label: 'Home' },
@@ -1346,7 +1546,7 @@ export default function App() {
   }
 
 // =========================================================================
-  // ROLE C: WHOLESALE STORE APP (7 SCREENS)
+  // ROLE C: WHOLESALE STORE APP
   // =========================================================================
   if (activeRole === 'wholesale') {
     const unitMultiplier = bulkUnit === 'KG' ? 1 : bulkUnit === 'Quintal' ? 100 : 1000;
@@ -1362,7 +1562,6 @@ export default function App() {
           <button onClick={() => setActiveRole(null)} className="p-2 bg-white/20 rounded-full"><LogOut className="h-4 w-4" /></button>
         </div>
 
-        {/* 4. WHOLESALE DASHBOARD */}
         {subScreen === 'wholesaleDash' && (
           <div className="p-4 space-y-4 text-xs">
             <div className="bg-gradient-to-r from-[#167A37] to-[#238E43] text-white rounded-3xl p-4 shadow">
@@ -1376,20 +1575,13 @@ export default function App() {
               <div className="bg-white p-3.5 rounded-2xl shadow-sm"><p className="text-gray-400 font-bold">Stock Alerts</p><p className="text-xl font-black text-amber-600 mt-1">5 Low</p></div>
               <div className="bg-white p-3.5 rounded-2xl shadow-sm"><p className="text-gray-400 font-bold">Monthly Earnings</p><p className="text-xl font-black text-[#167A37] mt-1">₹1,24,500</p></div>
             </div>
-
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <button onClick={() => setSubScreen('wholesaleBrowse')} className="bg-white p-3 rounded-2xl shadow-sm font-extrabold">🌾 Farmer Bulk Buy</button>
-              <button onClick={() => setSubScreen('wholesaleOrders')} className="bg-white p-3 rounded-2xl shadow-sm font-extrabold">🧾 GST Invoices</button>
-              <button onClick={() => setSubScreen('wholesaleAccount')} className="bg-white p-3 rounded-2xl shadow-sm font-extrabold">💳 Credit & Analytics</button>
-            </div>
           </div>
         )}
 
-        {/* 5. BULK PRODUCT BROWSING (KG / QUINTAL / TON + MARKET PRICE COMPARISON) */}
         {subScreen === 'wholesaleBrowse' && (
           <div className="p-4 space-y-3 text-xs">
             <div className="flex justify-between items-center">
-              <h2 className="text-base font-black">Bulk Browse & Price Compare</h2>
+              <h2 className="text-base font-black">Bulk Browse ({bulkUnit})</h2>
               <div className="flex space-x-1 bg-white p-1 rounded-xl border">
                 {['KG', 'Quintal', 'Ton'].map((u) => (
                   <button key={u} onClick={() => setBulkUnit(u)} className={`px-2.5 py-1 rounded-lg font-extrabold ${bulkUnit === u ? 'bg-[#167A37] text-white' : 'text-gray-600'}`}>
@@ -1399,54 +1591,48 @@ export default function App() {
               </div>
             </div>
 
-            {products.slice(0, 6).map((p) => (
-              <div key={p.id} className="bg-white rounded-2xl p-3.5 shadow-sm flex items-center justify-between">
-                <div>
-                  <h4 className="font-extrabold">{p.nameEn}</h4>
-                  <p className="text-[10px] text-gray-500">Farmer Direct: ₹{p.price - 4}/kg vs Mandi: ₹{p.price}/kg</p>
-                  <p className="font-black text-[#167A37] mt-0.5">
-                    ₹{(p.price - 4) * unitMultiplier} / {bulkUnit}
-                  </p>
+            {products.slice(0, 6).map((p) => {
+              const qtyKg = cart[p.id] || 0;
+              return (
+                <div key={p.id} className="bg-white rounded-2xl p-3.5 shadow-sm flex items-center justify-between">
+                  <div>
+                    <h4 className="font-extrabold">{p.nameEn}</h4>
+                    <p className="font-black text-[#167A37]">₹{(p.price - 4) * unitMultiplier} / {bulkUnit}</p>
+                    {qtyKg > 0 && <p className="text-[10px] font-black text-amber-700">Selected: {qtyKg} KG</p>}
+                  </div>
+                  <button
+                    onClick={() => {
+                      const next = qtyKg + unitMultiplier;
+                      setCart((c) => ({ ...c, [p.id]: next }));
+                      notify(`Added ${next} KG ${p.nameEn}`);
+                    }}
+                    className="bg-[#167A37] text-white font-extrabold px-3 py-2 rounded-xl"
+                  >
+                    + 1 {bulkUnit}
+                  </button>
                 </div>
-                <button
-                  onClick={() => {
-                    setCart((c) => ({ ...c, [p.id]: (c[p.id] || 0) + unitMultiplier }));
-                    notify(`Added 1 ${bulkUnit} (${unitMultiplier}kg) to Bulk Order`);
-                  }}
-                  className="bg-[#167A37] text-white font-extrabold px-3 py-2 rounded-xl"
-                >
-                  + 1 {bulkUnit}
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
-        {/* 6. BULK PURCHASE & CHECKOUT + 7. MY ORDERS & GST INVOICE */}
         {subScreen === 'wholesaleOrders' && (
           <div className="p-4 space-y-3 text-xs">
             <h2 className="text-base font-black">Bulk Orders & GST Invoices</h2>
             {cartItemsCount > 0 && (
               <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3.5 space-y-2">
-                <p className="font-black text-[#167A37]">Current Bulk Cart: {cartItemsCount} KG • ₹{cartSubtotal}</p>
+                <p className="font-black text-[#167A37]">Bulk Cart: {cartItemsCount} KG • ₹{cartSubtotal}</p>
                 <button
                   onClick={() => {
                     const gstOrd = {
                       id: 'WS-' + Math.floor(1025 + Math.random() * 900),
-                      roleType: 'wholesale',
                       customerName: authName || 'Sri Venkateswara Traders',
                       phone: authPhone || '9989334455',
                       address: 'Nellore Mandi',
                       itemsSummary: `Bulk Order (${cartItemsCount} KG)`,
                       total: cartSubtotal,
-                      distanceKm: 4.5,
-                      deliveryFee: 50,
-                      pickupOtp: '2211',
-                      deliveryOtp: '8844',
+                      paymentInfo: 'Wholesale GST Invoice',
                       status: 'Processing',
-                      date: 'Just now',
-                      driver: 'Ramesh Kumar',
-                      rating: 0,
                     };
                     setOrders([gstOrd, ...orders]);
                     setCart({});
@@ -1475,14 +1661,12 @@ export default function App() {
           </div>
         )}
 
-        {/* INVENTORY, CREDIT & ANALYTICS */}
         {subScreen === 'wholesaleAccount' && (
           <div className="p-4 space-y-3 text-xs">
-            <h2 className="text-base font-black">Inventory, Credit & Analytics</h2>
+            <h2 className="text-base font-black">Credit & Analytics</h2>
             <div className="bg-white rounded-2xl p-4 shadow-sm space-y-2">
               <div className="flex justify-between font-bold"><span>Approved Credit Limit</span><span className="text-[#167A37] font-black">₹2,00,000</span></div>
               <div className="flex justify-between font-bold"><span>Available Credit</span><span className="font-black">₹1,65,000</span></div>
-              <div className="flex justify-between font-bold"><span>Delivery Scheduling</span><span className="text-blue-600 font-black">Daily 6:00 AM Slot</span></div>
             </div>
           </div>
         )}
@@ -1508,7 +1692,7 @@ export default function App() {
   }
 
 // =========================================================================
-  // ROLE D: RETAIL STORE APP (7 SCREENS)
+  // ROLE D: RETAIL STORE APP
   // =========================================================================
   if (activeRole === 'retail') {
     return (
@@ -1522,17 +1706,11 @@ export default function App() {
           <button onClick={() => setActiveRole(null)} className="p-2 bg-white/20 rounded-full"><LogOut className="h-4 w-4" /></button>
         </div>
 
-        {/* 4. RETAIL DASHBOARD */}
         {subScreen === 'retailDash' && (
           <div className="p-4 space-y-4 text-xs">
             <div className="bg-gradient-to-r from-[#167A37] to-[#238E43] text-white rounded-3xl p-4 shadow">
               <p className="text-emerald-100 font-bold">Today's Sales</p>
               <h2 className="text-3xl font-black mt-1">₹12,560 <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">↑ 8%</span></h2>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white p-3.5 rounded-2xl shadow-sm"><p className="text-gray-400 font-bold">Customer Orders</p><p className="text-xl font-black text-blue-600 mt-1">18</p></div>
-              <div className="bg-white p-3.5 rounded-2xl shadow-sm"><p className="text-gray-400 font-bold">Total Earnings</p><p className="text-xl font-black text-[#167A37] mt-1">₹48,320</p></div>
             </div>
 
             <div className="grid grid-cols-3 gap-2 text-center">
@@ -1544,14 +1722,13 @@ export default function App() {
           </div>
         )}
 
-        {/* 5. ADD PRODUCTS + PHOTO UPLOAD */}
         {subScreen === 'retailAddProduct' && (
           <form
             onSubmit={(e) => {
               e.preventDefault();
               if (!newProdName || !newProdPrice) return;
               setProducts([
-                { id: 'rp_' + Date.now(), nameEn: newProdName, nameTe: newProdName, cat: newProdCat, tier: 'Local', price: Number(newProdPrice), unit: 'kg', rating: 4.8, reviews: 1, stock: Number(newProdStock) || 20, minWholesaleKg: 10, seller: 'Sri Lakshmi Super Market', img: newProdPhoto || IMG.tomato, desc: 'Retail shop fresh stock' },
+                { id: 'rp_' + Date.now(), nameEn: newProdName, nameTe: newProdName, cat: newProdCat, tier: 'Local', price: Number(newProdPrice), unit: 'kg', rating: 4.8, reviews: 1, stock: Number(newProdStock) || 20, seller: 'Sri Lakshmi Super Market', img: newProdPhoto || IMG.tomato, desc: 'Retail shop fresh stock' },
                 ...products,
               ]);
               setNewProdName('');
@@ -1583,7 +1760,6 @@ export default function App() {
           </form>
         )}
 
-        {/* 6. CUSTOMER ORDERS & ACCEPTANCE */}
         {subScreen === 'retailOrders' && (
           <div className="p-4 space-y-3 text-xs">
             <h2 className="text-base font-black">Customer Orders</h2>
@@ -1606,18 +1782,14 @@ export default function App() {
           </div>
         )}
 
-        {/* 7. MY STORE (P&L, OFFERS, WHOLESALE BUY, PAYMENT HISTORY) */}
         {subScreen === 'retailStoreInfo' && (
           <div className="p-4 space-y-3 text-xs">
-            <h2 className="text-base font-black">My Store • Profit & Loss & Reports</h2>
+            <h2 className="text-base font-black">My Store • Profit & Loss</h2>
             <div className="bg-white rounded-2xl p-4 shadow-sm space-y-2">
               <div className="flex justify-between font-bold"><span>Monthly Sales</span><span className="font-black">₹1,45,000</span></div>
               <div className="flex justify-between font-bold"><span>Wholesale & Farmer Purchases</span><span className="font-black">₹1,08,000</span></div>
               <div className="flex justify-between font-extrabold text-[#167A37] border-t pt-2"><span>Net Profit</span><span>+₹37,000 (25.5%)</span></div>
             </div>
-            <button onClick={() => { setActiveRole('wholesale'); setSubScreen('wholesaleBrowse'); }} className="w-full bg-amber-600 text-white font-black py-3 rounded-xl">
-              Buy Stock from Wholesalers / Farmers ➔
-            </button>
           </div>
         )}
 
@@ -1641,8 +1813,8 @@ export default function App() {
     );
   }
 
-// =========================================================================
-  // ROLE E: DELIVERY PARTNER APP (14 SCREENS + PROMINENT DASHBOARD METRICS)
+  // =========================================================================
+  // ROLE E: DELIVERY PARTNER APP
   // =========================================================================
   if (activeRole === 'delivery') {
     const currentDeliveryOrd = activeOrder || orders[0];
@@ -1654,7 +1826,6 @@ export default function App() {
       <div className="min-h-screen bg-[#F5F8F5] max-w-md mx-auto relative pb-24 font-sans text-gray-800 shadow-2xl">
         <ToastBanner />
 
-        {/* Header with Online / Offline Toggle */}
         <div className="bg-white px-4 py-3.5 border-b flex items-center justify-between sticky top-0 z-30">
           <div>
             <p className="text-[10px] text-gray-400 font-bold">Delivery Partner ID: DP2587</p>
@@ -1674,21 +1845,18 @@ export default function App() {
           </div>
         </div>
 
-        {/* 4. PROMINENT DELIVERY PARTNER DASHBOARD */}
         {subScreen === 'deliveryDash' && (
           <div className="p-4 space-y-4 text-xs">
-            {/* Prominent Today's Earnings Card */}
             <div className="bg-gradient-to-r from-[#167A37] to-[#238E43] text-white rounded-3xl p-4 shadow-lg">
               <div className="flex justify-between items-center">
                 <span className="text-emerald-100 font-bold">Today's Earnings</span>
                 <span className="bg-white/20 text-[10px] font-black px-2.5 py-0.5 rounded-full">
-                  Status: {isOnline ? '🟢 Online & Ready' : '⚪ Offline'}
+                  {isOnline ? '🟢 Online' : '⚪ Offline'}
                 </span>
               </div>
-              <h2 className="text-3xl font-black mt-1">₹850 <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">↑ 12% + Incentives</span></h2>
+              <h2 className="text-3xl font-black mt-1">₹850 <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">↑ 12%</span></h2>
             </div>
 
-            {/* Prominent Metrics Grid: New Orders, Accepted Orders, Completed Deliveries */}
             <div className="grid grid-cols-3 gap-2.5 text-center">
               <button onClick={() => setSubScreen('availableOrders')} className="bg-white rounded-2xl p-3 shadow-sm border border-amber-100">
                 <p className="text-[10px] text-gray-500 font-bold">New Orders</p>
@@ -1704,27 +1872,16 @@ export default function App() {
               </button>
             </div>
 
-            {/* Prominent Start Delivery CTA */}
             <button
               onClick={() => { setActiveOrder(currentDeliveryOrd); setSubScreen('orderDetails'); }}
-              className="w-full bg-[#167A37] hover:bg-[#0F5927] text-white font-black py-4 rounded-2xl shadow-lg text-sm flex items-center justify-center space-x-2"
+              className="w-full bg-[#167A37] text-white font-black py-4 rounded-2xl shadow-lg text-sm flex items-center justify-center space-x-2"
             >
               <Truck className="h-5 w-5" />
               <span>Start Delivery ({currentDeliveryOrd.id}) ➔</span>
             </button>
-
-            <div className="grid grid-cols-2 gap-2.5">
-              <button onClick={() => setSubScreen('availableOrders')} className="bg-white p-3 rounded-2xl shadow-sm font-extrabold text-left">
-                📍 Nearby Requests ({newOrdersCount})
-              </button>
-              <button onClick={() => setSubScreen('deliveryWallet')} className="bg-white p-3 rounded-2xl shadow-sm font-extrabold text-left">
-                💰 Wallet: ₹{walletBalance}
-              </button>
-            </div>
           </div>
         )}
 
-        {/* 5. AVAILABLE ORDERS (ACCEPT / REJECT + DISTANCE CHARGES) */}
         {subScreen === 'availableOrders' && (
           <div className="p-4 space-y-3 text-xs">
             <h2 className="text-base font-black">Available Nearby Orders</h2>
@@ -1735,7 +1892,6 @@ export default function App() {
                   <span className="text-[#167A37]">Earn ₹{ord.deliveryFee}</span>
                 </div>
                 <p className="font-bold text-gray-700">{ord.customerName} • {ord.address}</p>
-                <p className="text-gray-500">{ord.itemsSummary} • Order Value: ₹{ord.total}</p>
                 <div className="flex space-x-2 pt-1">
                   <button
                     onClick={() => {
@@ -1748,10 +1904,7 @@ export default function App() {
                   >
                     Accept Order
                   </button>
-                  <button
-                    onClick={() => notify('Order Rejected')}
-                    className="px-4 bg-red-50 text-red-600 font-extrabold py-2 rounded-xl"
-                  >
+                  <button onClick={() => notify('Order Rejected')} className="px-4 bg-red-50 text-red-600 font-extrabold py-2 rounded-xl">
                     Reject
                   </button>
                 </div>
@@ -1760,7 +1913,6 @@ export default function App() {
           </div>
         )}
 
-        {/* 6. ORDER DETAILS (PICKUP OTP + CALL CUSTOMER + START DELIVERY) */}
         {subScreen === 'orderDetails' && currentDeliveryOrd && (
           <div className="p-4 space-y-3 text-xs">
             <div className="flex items-center space-x-2">
@@ -1770,7 +1922,6 @@ export default function App() {
             <div className="bg-white rounded-2xl p-4 shadow-sm space-y-2.5">
               <div className="flex justify-between items-center">
                 <div>
-                  <p className="text-[10px] text-gray-400 font-bold">Customer</p>
                   <h4 className="text-sm font-black">{currentDeliveryOrd.customerName}</h4>
                   <p className="text-gray-600">{currentDeliveryOrd.address}</p>
                 </div>
@@ -1782,56 +1933,36 @@ export default function App() {
                 <span>Pickup Verification OTP:</span>
                 <span className="text-amber-800">{currentDeliveryOrd.pickupOtp}</span>
               </div>
-              <button
-                onClick={() => setSubScreen('deliveryNav')}
-                className="w-full bg-[#167A37] text-white font-black py-3 rounded-xl text-sm"
-              >
+              <button onClick={() => setSubScreen('deliveryNav')} className="w-full bg-[#167A37] text-white font-black py-3 rounded-xl text-sm">
                 Start Delivery & Open Navigation ➔
               </button>
             </div>
           </div>
         )}
 
-        {/* 7. NAVIGATION & LIVE LOCATION */}
         {subScreen === 'deliveryNav' && currentDeliveryOrd && (
           <div className="p-4 space-y-3 text-xs">
             <div className="bg-[#167A37] text-white rounded-2xl p-4">
-              <p className="font-black text-sm">On the Way • Arriving in 12 min ({currentDeliveryOrd.distanceKm} km)</p>
+              <p className="font-black text-sm">On the Way • Arriving in 12 min</p>
               <p className="text-emerald-100">{currentDeliveryOrd.address}</p>
             </div>
-            <div className="bg-white rounded-2xl p-4 shadow-sm text-center space-y-3">
-              <a
-                href="https://www.google.com/maps/dir/?api=1&destination=14.4426,79.9865"
-                target="_blank"
-                rel="noreferrer"
-                className="block w-full bg-blue-600 text-white font-black py-3 rounded-xl"
-              >
-                🗺️ Open Turn-by-Turn Google Maps ↗
+            <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
+              <a href="https://www.google.com/maps/dir/?api=1&destination=14.4426,79.9865" target="_blank" rel="noreferrer" className="block w-full bg-blue-600 text-white text-center font-black py-3 rounded-xl">
+                🗺️ Open Google Maps Navigation ↗
               </a>
-              <button
-                onClick={() => setSubScreen('deliveryConfirm')}
-                className="w-full bg-[#167A37] text-white font-black py-3 rounded-xl"
-              >
+              <button onClick={() => setSubScreen('deliveryConfirm')} className="w-full bg-[#167A37] text-white font-black py-3 rounded-xl">
                 Reached Customer Location ➔
               </button>
             </div>
           </div>
         )}
 
-{/* 8. DELIVERY CONFIRMATION (CUSTOMER OTP + PROOF PHOTO) */}
         {subScreen === 'deliveryConfirm' && currentDeliveryOrd && (
           <div className="p-4 space-y-3 text-xs">
             <h2 className="text-base font-black">Delivery Confirmation</h2>
             <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
-              <p className="font-bold text-gray-600">Ask Customer for 4-Digit Delivery OTP (Demo: {currentDeliveryOrd.deliveryOtp})</p>
-              <input
-                type="tel"
-                maxLength={4}
-                value={deliveryOtpInput}
-                onChange={(e) => setDeliveryOtpInput(e.target.value)}
-                placeholder="Enter Customer Delivery OTP"
-                className="w-full bg-gray-50 border rounded-xl py-3 text-center text-base font-black tracking-[0.4em]"
-              />
+              <p className="font-bold text-gray-600">Customer Delivery OTP (Demo: {currentDeliveryOrd.deliveryOtp})</p>
+              <input type="tel" maxLength={4} value={deliveryOtpInput} onChange={(e) => setDeliveryOtpInput(e.target.value)} placeholder="Enter 4-Digit OTP" className="w-full bg-gray-50 border rounded-xl py-3 text-center text-base font-black tracking-[0.4em]" />
               <label className="border-2 border-dashed border-emerald-300 rounded-2xl p-4 flex flex-col items-center cursor-pointer bg-emerald-50/40">
                 <Camera className="h-6 w-6 text-[#167A37] mb-1" />
                 <span className="font-extrabold">Upload Delivery Proof Photo</span>
@@ -1844,7 +1975,7 @@ export default function App() {
                   setOrders((p) => p.map((x) => (x.id === done.id ? done : x)));
                   setWalletBalance((w) => w + done.deliveryFee);
                   sendWhatsAppInvoice(done);
-                  notify(`✅ Delivered! +₹${done.deliveryFee} credited to Wallet`);
+                  notify(`✅ Delivered! +₹${done.deliveryFee} credited`);
                   setSubScreen('deliveryDash');
                 }}
                 className="w-full bg-[#167A37] text-white font-black py-3.5 rounded-xl text-sm"
@@ -1855,39 +1986,24 @@ export default function App() {
           </div>
         )}
 
-        {/* 9, 10, 11. EARNINGS, WALLET & BANK WITHDRAWAL */}
-        {(subScreen === 'deliveryEarnings' || subScreen === 'deliveryWallet' || subScreen === 'deliveryOrders') && (
+        {(subScreen === 'deliveryWallet' || subScreen === 'deliveryOrders') && (
           <div className="p-4 space-y-3 text-xs">
             <div className="bg-gradient-to-r from-[#167A37] to-[#238E43] text-white rounded-3xl p-4 shadow">
-              <p className="text-emerald-100 font-bold">Available Wallet Balance</p>
+              <p className="text-emerald-100 font-bold">Wallet Balance</p>
               <div className="flex justify-between items-center mt-1">
                 <h2 className="text-3xl font-black">₹{walletBalance}</h2>
-                <button
-                  onClick={() => {
-                    notify(`💸 ₹${walletBalance} Withdrawal Requested to Bank!`);
-                    setWalletBalance(0);
-                  }}
-                  className="bg-white text-[#167A37] font-black px-4 py-2 rounded-xl"
-                >
+                <button onClick={() => { notify(`💸 ₹${walletBalance} Withdrawal Requested!`); setWalletBalance(0); }} className="bg-white text-[#167A37] font-black px-4 py-2 rounded-xl">
                   Withdraw
                 </button>
               </div>
             </div>
-            <div className="bg-white rounded-2xl p-4 shadow-sm space-y-2">
-              <h3 className="font-black">Earnings Breakdown</h3>
-              <div className="flex justify-between"><span>Completed Deliveries (28)</span><span className="font-black">₹11,630</span></div>
-              <div className="flex justify-between"><span>Delivery Incentives & Bonuses</span><span className="font-black text-[#167A37]">+₹500</span></div>
-              <div className="flex justify-between"><span>Customer Tips</span><span className="font-black text-[#167A37]">+₹320</span></div>
-            </div>
           </div>
         )}
 
-        {/* 12, 13, 14. PARTNER PROFILE, RATING & EMERGENCY SUPPORT */}
         {subScreen === 'deliveryProfile' && (
           <div className="p-4 space-y-3 text-xs">
             <div className="bg-white rounded-2xl p-4 shadow-sm space-y-2">
               <h3 className="text-base font-black">Ramesh Kumar • ⭐ 4.9 Rating</h3>
-              <p className="text-gray-500">Vehicle: {authVehicle} • Nellore Zone</p>
               <a href="tel:8328261103" className="block w-full bg-red-600 text-white text-center font-black py-3 rounded-xl">
                 🚨 Emergency Support Call
               </a>
