@@ -3,7 +3,7 @@ import {
   Search, ShoppingCart, Plus, Minus, Home, ClipboardList, User, MapPin,
   Phone, MessageSquare, Sprout, Store, Truck, ShieldCheck, ChevronRight,
   ArrowLeft, CheckCircle2, Wallet, Gift, Sparkles, Bell, Navigation,
-  LocateFixed, LogOut, Trash2, Printer, Share2, Tag, AlertCircle, Check
+  LocateFixed, LogOut, Trash2, Printer, Share2, Tag, Check, Warehouse
 } from 'lucide-react';
 
 // Bilingual Dictionary for Farmer Auto-Translation (English <-> Telugu)
