@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import {
   Search, ShoppingCart, Plus, Minus, Home, ClipboardList, User, MapPin,
   Phone, MessageSquare, Sprout, Store, Truck, ShieldCheck, ChevronRight,
-  ArrowLeft, CheckCircle2, Wallet, Gift, Sparkles, Bell, Navigation,
-  LocateFixed, LogOut, Trash2, Printer, Share2, Tag, Check, Warehouse,
-  Heart, Award, TrendingUp, Clock, Sliders, X, Package
+  ArrowLeft, CheckCircle2, Wallet, Gift, Sparkles,
+  LocateFixed, LogOut, Printer, Warehouse,
+  Heart, Clock, ChevronDown, Briefcase
 } from 'lucide-react';
+import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
+import { auth } from './firebase';
 
-// Bilingual Auto-Translation Dictionary (English <-> Telugu)
 const EN_TO_TE = {
   tomato: 'టమాటా',
   onion: 'ఉల్లిపాయలు',
@@ -30,20 +31,11 @@ const TE_TO_EN = Object.fromEntries(
 );
 
 const CATEGORIES = [
-  { id: 'All', labelEn: 'All Items', labelTe: 'అన్నీ', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=160&q=80' },
-  { id: 'Vegetables', labelEn: 'Vegetables', labelTe: 'కూరగాయలు', img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=160&q=80' },
-  { id: 'Fruits', labelEn: 'Fruits', labelTe: 'పండ్లు', img: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=160&q=80' },
-  { id: 'Leafy Greens', labelEn: 'Leafy Greens', labelTe: 'ఆకుకూరలు', img: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=160&q=80' },
-  { id: 'Staples', labelEn: 'Staples', labelTe: 'బియ్యం & పప్పులు', img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=160&q=80' },
-];
-
-const INITIAL_USERS = [
-  { id: 'u_cust_1', role: 'customer', name: 'Madhav Reddy', mobile: '9876543210', address: 'Vedayapalem, Nellore', approved: true, wallet: 100, walletExpiryHours: 36, referralsCount: 2, ordersCompleted: 1 },
-  { id: 'u_farm_1', role: 'farmer', name: 'K. Ramaiah (Kovur Farm)', mobile: '9440112233', address: 'Kovur, Nellore (12 km)', approved: true, wallet: 2450 },
-  { id: 'u_whole_1', role: 'wholesale', name: 'Nellore Mandi Wholesale', mobile: '9989334455', address: 'Atmakur Bus Stand, Nellore', approved: true, wallet: 5200 },
-  { id: 'u_ret_1', role: 'retail', name: 'Balaji Fresh Retail Mart', mobile: '9849223344', address: 'Magunta Layout, Nellore', approved: true, wallet: 1800 },
-  { id: 'u_del_1', role: 'delivery', name: 'Ramesh Kumar (Fleet)', mobile: '9000334455', address: 'Nellore Zone 1', approved: true, wallet: 3450, weeklyOrders: 78 },
-  { id: 'u_admin_1', role: 'admin', name: 'Master Admin HQ', mobile: '8328261103', address: 'Nellore HQ', approved: true, wallet: 0 },
+  { id: 'All', labelEn: 'All Items', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=160&q=80' },
+  { id: 'Vegetables', labelEn: 'Vegetables', img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=160&q=80' },
+  { id: 'Fruits', labelEn: 'Fruits', img: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=160&q=80' },
+  { id: 'Leafy Greens', labelEn: 'Leafy Greens', img: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=160&q=80' },
+  { id: 'Staples', labelEn: 'Staples', img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=160&q=80' },
 ];
 
 const INITIAL_PRODUCTS = [
@@ -105,7 +97,7 @@ const INITIAL_PRODUCTS = [
     img: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=400&q=80',
   },
   {
-id: 'p4',
+    id: 'p4',
     farmerId: 'u_farm_1',
     farmerName: 'Padma Organic • Nellore',
     distanceKm: 6,
@@ -144,32 +136,21 @@ id: 'p4',
   },
 ];
 
-// Crisp Vector Payment Badges
 const PaymentBadge = ({ type }) => {
-  if (type === 'phonepe') {
-    return <span className="h-8 w-8 rounded-xl bg-[#5F259F] text-white font-black text-xs flex items-center justify-center shadow-sm">पे</span>;
-  }
-  if (type === 'gpay') {
-    return <span className="h-8 w-8 rounded-xl bg-white border border-gray-200 text-[#1A73E8] font-black text-xs flex items-center justify-center shadow-sm">G</span>;
-  }
-  if (type === 'paytm') {
-    return <span className="h-8 w-8 rounded-xl bg-[#00BAF2] text-[#002970] font-black text-[9px] flex items-center justify-center shadow-sm">Paytm</span>;
-  }
-  if (type === 'cred') {
-    return <span className="h-8 w-8 rounded-xl bg-slate-900 text-amber-300 font-black text-[9px] flex items-center justify-center shadow-sm">CRED</span>;
-  }
-  if (type === 'card') {
-    return <span className="h-8 w-8 rounded-xl bg-slate-800 text-white font-black text-[9px] flex items-center justify-center shadow-sm">CARD</span>;
-  }
+  if (type === 'phonepe') return <span className="h-8 w-8 rounded-xl bg-[#5F259F] text-white font-black text-xs flex items-center justify-center shadow-sm">पे</span>;
+  if (type === 'gpay') return <span className="h-8 w-8 rounded-xl bg-white border border-gray-200 text-[#1A73E8] font-black text-xs flex items-center justify-center shadow-sm">G</span>;
+  if (type === 'paytm') return <span className="h-8 w-8 rounded-xl bg-[#00BAF2] text-[#002970] font-black text-[9px] flex items-center justify-center shadow-sm">Paytm</span>;
+  if (type === 'cred') return <span className="h-8 w-8 rounded-xl bg-slate-900 text-amber-300 font-black text-[9px] flex items-center justify-center shadow-sm">CRED</span>;
+  if (type === 'card') return <span className="h-8 w-8 rounded-xl bg-slate-800 text-white font-black text-[9px] flex items-center justify-center shadow-sm">CARD</span>;
   return (
     <span className="h-8 w-8 rounded-xl bg-emerald-100 text-[#15803D] flex items-center justify-center shadow-sm">
       <Wallet className="h-4 w-4" />
     </span>
   );
 };
+const isValidIndianMobile = (num) => /^[6-9]\d{9}$/.test(num);
 
 export default function App() {
-  // Load Google Fonts (Plus Jakarta Sans + Noto Sans Telugu) for commercial typography
   useEffect(() => {
     const id = 'rythu-google-fonts';
     if (!document.getElementById(id)) {
@@ -183,84 +164,94 @@ export default function App() {
 
   const [selectedRole, setSelectedRole] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
-  const [users, setUsers] = useState(INITIAL_USERS);
+  const [users, setUsers] = useState(() => {
+    try {
+      const saved = localStorage.getItem('rythu_registered_users');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [products, setProducts] = useState(INITIAL_PRODUCTS);
 
-  // Auth & Registration States
+  useEffect(() => {
+    try {
+      localStorage.setItem('rythu_registered_users', JSON.stringify(users));
+    } catch {
+      // ignore storage errors
+    }
+  }, [users]);
+
+  // Real Firebase SMS OTP States
   const [authScreen, setAuthScreen] = useState('login');
   const [loginMobile, setLoginMobile] = useState('');
   const [loginOtpSent, setLoginOtpSent] = useState(false);
   const [loginOtp, setLoginOtp] = useState('');
+  const [confirmationResult, setConfirmationResult] = useState(null);
+  const [sendingSms, setSendingSms] = useState(false);
+  const [verifyingSms, setVerifyingSms] = useState(false);
   const [authMsg, setAuthMsg] = useState('');
+
+  // Registration Form States
   const [regName, setRegName] = useState('');
   const [regMobile, setRegMobile] = useState('');
   const [regAddress, setRegAddress] = useState('');
   const [regReferralCode, setRegReferralCode] = useState('');
+  const [regOtpSent, setRegOtpSent] = useState(false);
+  const [regOtpInput, setRegOtpInput] = useState('');
   const [showWelcomeSmile, setShowWelcomeSmile] = useState(false);
 
-  // Navigation & UI States
+  // Navigation & Store States
   const [activeTab, setActiveTab] = useState('home');
   const [toast, setToast] = useState('');
   const [selectedCat, setSelectedCat] = useState('All');
   const [search, setSearch] = useState('');
   const [wishlist, setWishlist] = useState(['p1', 'p3']);
 
-  // Cart, Checkout & Payment States
+  // Location & Map Pin States
+  const [savedAddresses, setSavedAddresses] = useState([
+    {
+      id: 'addr1',
+      tag: 'Home',
+      title: 'Vedayapalem Main Road',
+      full: 'Vedayapalem, Nellore, Andhra Pradesh',
+      distance: '57 m',
+      lat: 14.4285,
+      lng: 79.9692,
+    },
+  ]);
+  const [activeAddrId, setActiveAddrId] = useState('addr1');
+  const [locSearch, setLocSearch] = useState('');
+  const [mapPinCoords, setMapPinCoords] = useState({ lat: 14.4426, lng: 79.9865 });
+  const [mapPinTitle, setMapPinTitle] = useState('Vedayapalem, Nellore');
+  const [mapPinFullAddress, setMapPinFullAddress] = useState('Vedayapalem, Nellore, Andhra Pradesh, 524004');
+  const [mapPinTag, setMapPinTag] = useState('Home');
+  const [isEditingPinText, setIsEditingPinText] = useState(false);
+  const [isLocatingGps, setIsLocatingGps] = useState(false);
+
+  // Cart & Payments
   const [cart, setCart] = useState({ p1: 2, p3: 1 });
   const [useWalletBalance, setUseWalletBalance] = useState(false);
   const [promoInput, setPromoInput] = useState('');
   const [appliedPromo, setAppliedPromo] = useState(null);
-  const [payMode, setPayMode] = useState('cred');
+  const [payMode, setPayMode] = useState('phonepe');
+  const [utrRefInput, setUtrRefInput] = useState('');
   const [cardNo, setCardNo] = useState('');
   const [cardExp, setCardExp] = useState('');
   const [cardCvv, setCardCvv] = useState('');
+  const [cardError, setCardError] = useState('');
+  const [merchantUpiId] = useState('8328261103@ybl');
 
-// B2B Wholesale / Retail States
+ // B2B States
   const [b2bSource, setB2bSource] = useState('farmer');
   const [b2bDeliveryMode, setB2bDeliveryMode] = useState('pickup');
 
   // Scratch Card & Notifications
   const [scratchCard, setScratchCard] = useState(null);
   const [notifications, setNotifications] = useState([
-    'Wallet Alert: ₹100 cashback expires in 36 hours (48h–6h window). Use it on your next order!',
-    '40km Wholesale Alert: Kovur Farmer listed 500 KG Fresh Country Tomato.',
+    'Wallet Alert: Cashback expires in 15 days (48h–6h reminder active).',
   ]);
-
-  // Orders State
-  const [orders, setOrders] = useState([
-    {
-      id: 'RB-501',
-      buyerRole: 'customer',
-      buyerName: 'Madhav Reddy',
-      buyerMobile: '9876543210',
-      buyerAddress: 'Vedayapalem, Nellore (14.4285, 79.9692)',
-      items: [{ id: 'p1', name: 'Fresh Country Tomato', qty: 2, price: 36 }],
-      total: 72,
-      cashback: 12,
-      status: 'Out for Delivery',
-      driverName: 'Ramesh Kumar',
-      driverMobile: '9000334455',
-      driverCoords: '14.4350, 79.9780 (1.2 km away)',
-      b2bOtp: null,
-      date: 'Today, 4:10 PM',
-    },
-    {
-      id: 'RB-502',
-      buyerRole: 'wholesale',
-      buyerName: 'Nellore Mandi Wholesale',
-      buyerMobile: '9989334455',
-      buyerAddress: 'Atmakur Bus Stand, Nellore (14.4426, 79.9865)',
-      items: [{ id: 'p1', name: 'Fresh Country Tomato', qty: 50, price: 24 }],
-      total: 1200,
-      cashback: 0,
-      status: 'Order Placed',
-      driverName: null,
-      driverMobile: null,
-      driverCoords: null,
-      b2bOtp: '6492',
-      date: 'Today, 4:25 PM',
-    },
-  ]);
+  const [orders, setOrders] = useState([]);
 
   // Farmer Form States
   const [fNameEn, setFNameEn] = useState('');
@@ -278,10 +269,225 @@ export default function App() {
 
   const notify = (m) => {
     setToast(m);
-    setTimeout(() => setToast(''), 3000);
+    setTimeout(() => setToast(''), 3500);
   };
 
-  // Farmer Bilingual Translation Handlers
+  const setupRecaptcha = () => {
+    if (!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        size: 'invisible',
+      });
+    }
+  };
+
+  const triggerFirebaseSmsOtp = async (tenDigitMobile) => {
+    setSendingSms(true);
+    setAuthMsg('');
+    try {
+      setupRecaptcha();
+      const appVerifier = window.recaptchaVerifier;
+      const formattedPhone = `+91${tenDigitMobile}`;
+      const result = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
+      setConfirmationResult(result);
+      notify(`SMS OTP sent to +91 ${tenDigitMobile}! Check your phone SMS inbox.`);
+      return true;
+    } catch (err) {
+      setAuthMsg(`SMS Failed: ${err.message}`);
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear();
+        window.recaptchaVerifier = null;
+      }
+      return false;
+    } finally {
+      setSendingSms(false);
+    }
+  };
+
+  const verifyFirebaseSmsOtp = async (sixDigitCode) => {
+    if (!confirmationResult) {
+      setAuthMsg('Please tap Send OTP first.');
+      return false;
+    }
+    setVerifyingSms(true);
+    try {
+      await confirmationResult.confirm(sixDigitCode);
+      return true;
+    } catch {
+      setAuthMsg('Incorrect 6-digit OTP! Check your SMS inbox and try again.');
+      return false;
+    } finally {
+      setVerifyingSms(false);
+    }
+  };
+
+  const handleSendLoginOtp = async () => {
+    const clean = loginMobile.replace(/\D/g, '');
+    if (!isValidIndianMobile(clean)) {
+      setAuthMsg('Please enter a valid 10-digit Indian mobile number (starts with 6–9).');
+      return;
+    }
+    const existing = users.find((u) => u.mobile === clean && u.role === selectedRole);
+    if (!existing) {
+      setAuthMsg('Mobile number not registered, please register.');
+      setLoginOtpSent(false);
+      return;
+    }
+    setLoginOtp('');
+    const ok = await triggerFirebaseSmsOtp(clean);
+    if (ok) setLoginOtpSent(true);
+  };
+
+  const handleVerifyLogin = async (e) => {
+    e.preventDefault();
+    const clean = loginMobile.replace(/\D/g, '');
+    const existing = users.find((u) => u.mobile === clean && u.role === selectedRole);
+    if (!existing) {
+      setAuthMsg('Mobile number not registered, please register.');
+      return;
+    }
+    const verified = await verifyFirebaseSmsOtp(loginOtp.trim());
+    if (!verified) return;
+
+    setCurrentUser(existing);
+    setActiveTab('home');
+  };
+
+const handleSendRegisterOtp = async () => {
+    const clean = regMobile.replace(/\D/g, '');
+    if (!regName.trim() || !regAddress.trim()) {
+      setAuthMsg('Please fill Full Name / Store Name and Address first.');
+      return;
+    }
+    if (!isValidIndianMobile(clean)) {
+      setAuthMsg('Enter a valid 10-digit Indian mobile number (starts with 6–9).');
+      return;
+    }
+    const already = users.find((u) => u.mobile === clean && u.role === selectedRole);
+    if (already) {
+      setAuthMsg('This mobile number is already registered for this role. Please Login.');
+      return;
+    }
+    setRegOtpInput('');
+    const ok = await triggerFirebaseSmsOtp(clean);
+    if (ok) setRegOtpSent(true);
+  };
+
+  const handleCompleteRegistration = async (e) => {
+    e.preventDefault();
+    const verified = await verifyFirebaseSmsOtp(regOtpInput.trim());
+    if (!verified) return;
+
+    const clean = regMobile.replace(/\D/g, '');
+    const needsApproval = selectedRole === 'farmer' || selectedRole === 'wholesale' || selectedRole === 'retail';
+    const newUser = {
+      id: 'u_' + Date.now(),
+      role: selectedRole,
+      name: regName.trim(),
+      mobile: clean,
+      address: regAddress.trim(),
+      approved: !needsApproval,
+      wallet: 0,
+      referralsCount: 0,
+      ordersCompleted: 0,
+      referredBy: regReferralCode.trim() || null,
+    };
+
+    setUsers([newUser, ...users]);
+    if (needsApproval) {
+      setNotifications((prev) => [
+        `New ${selectedRole.toUpperCase()} registration (${newUser.name} • ${clean}) awaiting Admin approval.`,
+        ...prev,
+      ]);
+    }
+    setRegOtpSent(false);
+    setCurrentUser(newUser);
+    setShowWelcomeSmile(true);
+    setActiveTab('home');
+    setTimeout(() => setShowWelcomeSmile(false), 3500);
+  };
+
+  const handleStrictLogout = () => {
+    setCurrentUser(null);
+    setSelectedRole(null);
+    setLoginMobile('');
+    setLoginOtpSent(false);
+    setConfirmationResult(null);
+    setAuthMsg('');
+    setActiveTab('home');
+  };
+
+  const fetchAddressFromCoords = async (lat, lng) => {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+      );
+      const data = await res.json();
+      if (data && data.display_name) {
+        const parts = data.display_name.split(',').map((s) => s.trim());
+        setMapPinTitle(parts.slice(0, 2).join(', ') || 'Current Pinned Location');
+        setMapPinFullAddress(data.display_name);
+        return;
+      }
+    } catch {
+      // fallback
+    }
+    setMapPinTitle(`Pinned Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
+    setMapPinFullAddress(`Lat ${lat.toFixed(5)}, Lng ${lng.toFixed(5)}, Nellore, Andhra Pradesh`);
+  };
+
+  const handleUseCurrentLocationMap = () => {
+    setIsLocatingGps(true);
+    setIsEditingPinText(false);
+    setActiveTab('mapPin');
+    if (!navigator.geolocation) {
+      setIsLocatingGps(false);
+      fetchAddressFromCoords(mapPinCoords.lat, mapPinCoords.lng);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = Number(pos.coords.latitude.toFixed(5));
+        const lng = Number(pos.coords.longitude.toFixed(5));
+        setMapPinCoords({ lat, lng });
+        await fetchAddressFromCoords(lat, lng);
+        setIsLocatingGps(false);
+      },
+      async () => {
+        const lat = 14.4426;
+        const lng = 79.9865;
+        setMapPinCoords({ lat, lng });
+        await fetchAddressFromCoords(lat, lng);
+        setIsLocatingGps(false);
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  };
+
+  const handleAdjustPin = async (dLat, dLng) => {
+    const lat = Number((mapPinCoords.lat + dLat).toFixed(5));
+    const lng = Number((mapPinCoords.lng + dLng).toFixed(5));
+    setMapPinCoords({ lat, lng });
+    await fetchAddressFromCoords(lat, lng);
+  };
+
+  const handleConfirmSetLocation = () => {
+    const newId = 'loc_' + Date.now();
+    const newEntry = {
+      id: newId,
+      tag: mapPinTag,
+      title: mapPinTitle,
+      full: mapPinFullAddress,
+      distance: '0 m',
+      lat: mapPinCoords.lat,
+      lng: mapPinCoords.lng,
+    };
+    setSavedAddresses((prev) => [newEntry, ...prev]);
+    setActiveAddrId(newId);
+    setCurrentUser((prev) => (prev ? { ...prev, address: mapPinTitle } : prev));
+    setActiveTab('home');
+    notify(`Selected Location - ${mapPinTitle}`);
+  };
+
   const handleFarmerEnChange = (val) => {
     setFNameEn(val);
     const key = val.trim().toLowerCase();
@@ -293,89 +499,14 @@ export default function App() {
     if (TE_TO_EN[val.trim()]) setFNameEn(TE_TO_EN[val.trim()]);
   };
 
-  // Login Verification
-  const handleSendOtp = () => {
-    const clean = loginMobile.replace(/\D/g, '');
-    if (clean.length !== 10) {
-      setAuthMsg('Please enter a valid 10-digit mobile number.');
-      return;
-    }
-    const existing = users.find((u) => u.mobile === clean && u.role === selectedRole);
-    if (!existing) {
-      setAuthMsg('Mobile number not registered, please register.');
-      setLoginOtpSent(false);
-      return;
-    }
-    setAuthMsg('');
-    setLoginOtpSent(true);
-    notify('OTP Sent: 4829');
-  };
-
-  const handleVerifyLogin = (e) => {
-    e.preventDefault();
-    const clean = loginMobile.replace(/\D/g, '');
-    const existing = users.find((u) => u.mobile === clean && u.role === selectedRole);
-    if (!existing) {
-      setAuthMsg('Mobile number not registered, please register.');
-      return;
-    }
-    setCurrentUser(existing);
-    setActiveTab('home');
-  };
-
-  // Registration with Welcome Smile Animation
-  const handleRegister = (e) => {
-    e.preventDefault();
-    const clean = regMobile.replace(/\D/g, '');
-    if (!regName.trim() || clean.length !== 10 || !regAddress.trim()) {
-      setAuthMsg('Please enter Full Name, 10-digit Mobile & Address.');
-      return;
-    }
-    const needsApproval = selectedRole === 'farmer' || selectedRole === 'wholesale' || selectedRole === 'retail';
-    const newUser = {
-      id: 'u_' + Date.now(),
-      role: selectedRole,
-      name: regName.trim(),
-      mobile: clean,
-      address: regAddress.trim(),
-      approved: !needsApproval,
-      wallet: 0,
-      walletExpiryHours: 360,
-      referralsCount: 0,
-      ordersCompleted: 0,
-      referredBy: regReferralCode.trim() || null,
-    };
-    setUsers([newUser, ...users]);
-    if (needsApproval) {
-      setNotifications((prev) => [
-        `New ${selectedRole.toUpperCase()} registration (${newUser.name}) awaiting Admin approval.`,
-        ...prev,
-      ]);
-    }
-    setCurrentUser(newUser);
-    setShowWelcomeSmile(true);
-    setActiveTab('home');
-    setTimeout(() => setShowWelcomeSmile(false), 3500);
-  };
-
-  // Strict Logout (Only way to switch roles)
-  const handleStrictLogout = () => {
-    setCurrentUser(null);
-    setSelectedRole(null);
-    setLoginMobile('');
-    setLoginOtpSent(false);
-    setAuthMsg('');
-    setActiveTab('home');
-  };
-
   const fontStyle = { fontFamily: "'Plus Jakarta Sans', 'Noto Sans Telugu', sans-serif" };
 
-  // =========================================================================
-  // 1. COMMERCIAL ROLE ENTRY GATE (DEEP FOREST GREEN + GOLD THEME)
+// =========================================================================
+  // 1. ROLE ENTRY GATE
   // =========================================================================
   if (!selectedRole) {
     const roles = [
-      { id: 'customer', title: 'Customer Store', te: 'వినియోగదారుడు', desc: 'Fresh harvest, tiered offers, wallet cashback & live tracking', icon: ShoppingCart, accent: 'bg-emerald-50 text-[#15803D] border-emerald-200' },
+      { id: 'customer', title: 'Customer Store', te: 'వినియోగదారుడు', desc: 'Map pin location, tiered offers, wallet & live tracking', icon: ShoppingCart, accent: 'bg-emerald-50 text-[#15803D] border-emerald-200' },
       { id: 'farmer', title: 'Farmer Portal', te: 'రైతు విభాగం', desc: 'Auto Telugu/English listing, 40km shop alerts & stock sync', icon: Sprout, accent: 'bg-lime-50 text-lime-800 border-lime-200' },
       { id: 'wholesale', title: 'Wholesale Store', te: 'హోల్‌సేల్ వ్యాపారి', desc: 'Bulk orders, farm pickup vs delivery & GST PDF invoices', icon: Warehouse, accent: 'bg-amber-50 text-amber-800 border-amber-200' },
       { id: 'retail', title: 'Retail Shopkeeper', te: 'రిటైల్ షాపు', desc: 'Farmer vs wholesale pricing, min qty & digital PDF bills', icon: Store, accent: 'bg-orange-50 text-orange-800 border-orange-200' },
@@ -385,8 +516,9 @@ export default function App() {
 
     return (
       <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto text-slate-800 shadow-2xl pb-10">
-        <div className="bg-gradient-to-br from-[#0F5132] via-[#15803D] to-[#16A34A] text-white rounded-b-[36px] p-6 shadow-xl relative overflow-hidden">
-          <div className="flex items-center space-x-3.5 relative z-10">
+        <div id="recaptcha-container"></div>
+        <div className="bg-gradient-to-br from-[#0F5132] via-[#15803D] to-[#16A34A] text-white rounded-b-[36px] p-6 shadow-xl">
+          <div className="flex items-center space-x-3.5">
             <div className="h-16 w-16 rounded-full bg-white p-0.5 shadow-lg border-2 border-[#EAB308] overflow-hidden flex-shrink-0">
               <img src="/icon-512.png" alt="Rythu Basket" className="h-full w-full object-cover rounded-full" />
             </div>
@@ -397,11 +529,6 @@ export default function App() {
               <h1 className="text-2xl font-extrabold tracking-tight mt-1">రైతు బాస్కెట్</h1>
               <p className="text-xs font-semibold text-emerald-100">Rythu Basket • Farm to Everyone</p>
             </div>
-          </div>
-
-          <div className="mt-5 bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-3 text-xs text-emerald-50 flex items-center justify-between">
-            <span>Select your workspace role to continue</span>
-            <span className="text-[#FDE047] font-bold">v2.0 Pro</span>
           </div>
         </div>
 
@@ -416,9 +543,10 @@ export default function App() {
                   setAuthScreen('login');
                   setLoginMobile('');
                   setLoginOtpSent(false);
+                  setRegOtpSent(false);
                   setAuthMsg('');
                 }}
-                className="w-full bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:border-[#15803D] hover:shadow-md flex items-center justify-between text-left transition-all active:scale-[0.99]"
+                className="w-full bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:border-[#15803D] hover:shadow-md flex items-center justify-between text-left transition-all"
               >
                 <div className="flex items-center space-x-3.5">
                   <div className={`h-12 w-12 rounded-2xl border flex items-center justify-center flex-shrink-0 ${r.accent}`}>
@@ -432,9 +560,7 @@ export default function App() {
                     <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">{r.desc}</p>
                   </div>
                 </div>
-                <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400">
-                  <ChevronRight className="h-4 w-4" />
-                </div>
+                <ChevronRight className="h-4 w-4 text-slate-400" />
               </button>
             );
           })}
@@ -443,21 +569,13 @@ export default function App() {
     );
   }
 
-// =========================================================================
-  // 2. LOGIN & REGISTRATION SCREEN
+  // =========================================================================
+  // 2. REAL SMS INBOX OTP LOGIN / REGISTRATION SCREEN
   // =========================================================================
   if (!currentUser) {
-    const demoNumbers = {
-      customer: '9876543210',
-      farmer: '9440112233',
-      wholesale: '9989334455',
-      retail: '9849223344',
-      delivery: '9000334455',
-      admin: '8328261103',
-    };
-
     return (
       <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto text-slate-800 shadow-2xl pb-10">
+        <div id="recaptcha-container"></div>
         {toast && (
           <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-xl">
             {toast}
@@ -465,32 +583,32 @@ export default function App() {
         )}
 
         <div className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white rounded-b-[32px] p-5 shadow-lg flex items-center space-x-3">
-          <button onClick={() => setSelectedRole(null)} className="p-2.5 bg-white/15 rounded-full hover:bg-white/25 transition">
+          <button onClick={() => setSelectedRole(null)} className="p-2.5 bg-white/15 rounded-full">
             <ArrowLeft className="h-4 w-4" />
           </button>
           <div className="h-12 w-12 rounded-full bg-white p-0.5 border border-[#EAB308] overflow-hidden">
             <img src="/icon-512.png" alt="Logo" className="h-full w-full object-cover rounded-full" />
           </div>
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-200">Authentication</span>
             <h2 className="text-base font-extrabold uppercase">{selectedRole} Portal</h2>
+            <p className="text-[11px] text-emerald-100">Direct Phone SMS OTP Authentication</p>
           </div>
         </div>
 
-        <div className="p-4 -mt-2">
+        <div className="p-4">
           <div className="bg-white rounded-3xl p-5 shadow-md border border-slate-100 space-y-4 text-xs">
             <div className="grid grid-cols-2 gap-1.5 bg-slate-100 p-1 rounded-2xl font-extrabold">
               <button
                 type="button"
                 onClick={() => { setAuthScreen('login'); setAuthMsg(''); }}
-                className={`py-2.5 rounded-xl transition ${authScreen === 'login' ? 'bg-[#15803D] text-white shadow-sm' : 'text-slate-600'}`}
+                className={`py-2.5 rounded-xl ${authScreen === 'login' ? 'bg-[#15803D] text-white' : 'text-slate-600'}`}
               >
                 Existing Login
               </button>
               <button
                 type="button"
                 onClick={() => { setAuthScreen('register'); setAuthMsg(''); }}
-                className={`py-2.5 rounded-xl transition ${authScreen === 'register' ? 'bg-[#15803D] text-white shadow-sm' : 'text-slate-600'}`}
+                className={`py-2.5 rounded-xl ${authScreen === 'register' ? 'bg-[#15803D] text-white' : 'text-slate-600'}`}
               >
                 New Registration
               </button>
@@ -498,21 +616,20 @@ export default function App() {
 
             {authScreen === 'login' ? (
               <form onSubmit={handleVerifyLogin} className="space-y-3.5">
-                <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-[11px] text-slate-600 flex items-center justify-between">
-                  <span>Demo Number:</span>
-                  <strong className="text-[#15803D] font-extrabold">{demoNumbers[selectedRole]}</strong>
-                </div>
-
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-500 mb-1">Mobile Number</label>
-                  <div className="flex items-center border border-slate-200 rounded-2xl px-3.5 py-3 bg-slate-50 focus-within:border-[#15803D] focus-within:bg-white transition">
-                    <span className="font-extrabold text-slate-500 pr-2.5 border-r border-slate-200">+91</span>
+                  <label className="block text-[11px] font-bold text-slate-500 mb-1">Registered 10-Digit Mobile Number</label>
+                  <div className="flex items-center border border-slate-200 rounded-2xl px-3.5 py-3 bg-slate-50">
+                    <span className="font-extrabold text-slate-500 pr-2.5 border-r">+91</span>
                     <input
                       type="tel"
                       maxLength={10}
                       value={loginMobile}
-                      onChange={(e) => { setLoginMobile(e.target.value.replace(/\D/g, '')); setAuthMsg(''); }}
-                      placeholder="Enter 10-digit mobile"
+                      onChange={(e) => {
+                        setLoginMobile(e.target.value.replace(/\D/g, ''));
+                        setAuthMsg('');
+                        setLoginOtpSent(false);
+                      }}
+                      placeholder="Enter your 10-digit mobile"
                       className="w-full bg-transparent pl-3 font-bold text-sm focus:outline-none"
                     />
                   </div>
@@ -521,51 +638,135 @@ export default function App() {
                 {authMsg && (
                   <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-2xl font-bold flex items-center justify-between">
                     <span>{authMsg}</span>
-                    <button
-                      type="button"
-                      onClick={() => { setRegMobile(loginMobile); setAuthScreen('register'); setAuthMsg(''); }}
-                      className="bg-red-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-extrabold ml-2"
-                    >
-                      Register
-                    </button>
+                    {authMsg.includes('not registered') && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRegMobile(loginMobile);
+                          setAuthScreen('register');
+                          setAuthMsg('');
+                        }}
+                        className="bg-red-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-extrabold ml-2 flex-shrink-0"
+                      >
+                        Register Now
+                      </button>
+                    )}
                   </div>
                 )}
 
                 {!loginOtpSent ? (
-                  <button type="button" onClick={handleSendOtp} className="w-full bg-[#15803D] hover:bg-[#116932] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm transition">
-                    Send Verification OTP
+                  <button
+                    type="button"
+                    disabled={sendingSms}
+                    onClick={handleSendLoginOtp}
+                    className="w-full bg-[#15803D] disabled:opacity-60 text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
+                  >
+                    {sendingSms ? 'Sending SMS OTP...' : 'Send SMS OTP to Phone'}
                   </button>
                 ) : (
                   <>
-                    <div className="bg-emerald-50 border border-emerald-200 text-[#15803D] font-extrabold p-2.5 rounded-2xl text-center">
-                      Demo OTP Code: 4829
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <label className="text-[11px] font-bold text-slate-500">Enter 6-Digit SMS OTP</label>
+                        <button type="button" onClick={handleSendLoginOtp} className="text-[11px] font-extrabold text-[#15803D] underline">
+                          Resend SMS
+                        </button>
+                      </div>
+                      <input
+                        type="tel"
+                        maxLength={6}
+                        required
+                        value={loginOtp}
+                        onChange={(e) => setLoginOtp(e.target.value.replace(/\D/g, ''))}
+                        placeholder="• • • • • •"
+                        className="w-full bg-slate-50 border border-emerald-300 rounded-2xl py-3 text-center text-base font-extrabold tracking-[0.4em]"
+                      />
                     </div>
-                    <input
-                      type="tel"
-                      maxLength={4}
-                      value={loginOtp}
-                      onChange={(e) => setLoginOtp(e.target.value)}
-                      placeholder="• • • •"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 text-center text-base font-extrabold tracking-[0.5em] focus:border-[#15803D] focus:outline-none"
-                    />
-                    <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm">
-                      Verify & Continue
+                    <button
+                      type="submit"
+                      disabled={verifyingSms}
+                      className="w-full bg-[#15803D] disabled:opacity-60 text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
+                    >
+                      {verifyingSms ? 'Verifying...' : 'Verify SMS OTP & Login'}
                     </button>
                   </>
                 )}
               </form>
             ) : (
-              <form onSubmit={handleRegister} className="space-y-3">
-                <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Full Name / Store Name *" className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-3 font-bold" />
-                <input type="tel" maxLength={10} required value={regMobile} onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, ''))} placeholder="10-Digit Mobile Number *" className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-3 font-bold" />
-                <input type="text" required value={regAddress} onChange={(e) => setRegAddress(e.target.value)} placeholder="Complete Address in Nellore *" className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-3 font-bold" />
+              <form onSubmit={handleCompleteRegistration} className="space-y-3">
+                <input
+                  type="text"
+                  required
+                  value={regName}
+                  onChange={(e) => setRegName(e.target.value)}
+                  placeholder="Full Name / Store Name *"
+                  className="w-full bg-slate-50 border rounded-2xl px-3.5 py-3 font-bold"
+                />
+                <div className="flex items-center border border-slate-200 rounded-2xl px-3.5 py-3 bg-slate-50">
+                  <span className="font-extrabold text-slate-500 pr-2.5 border-r">+91</span>
+                  <input
+                    type="tel"
+                    maxLength={10}
+                    required
+                    value={regMobile}
+                    onChange={(e) => {
+                      setRegMobile(e.target.value.replace(/\D/g, ''));
+                      setRegOtpSent(false);
+                      setAuthMsg('');
+                    }}
+                    placeholder="Valid 10-Digit Mobile Number *"
+                    className="w-full bg-transparent pl-3 font-bold text-sm focus:outline-none"
+                  />
+                </div>
+                <input
+                  type="text"
+                  required
+                  value={regAddress}
+                  onChange={(e) => setRegAddress(e.target.value)}
+                  placeholder="Complete Address in Nellore *"
+                  className="w-full bg-slate-50 border rounded-2xl px-3.5 py-3 font-bold"
+                />
                 {selectedRole === 'customer' && (
-                  <input type="text" value={regReferralCode} onChange={(e) => setRegReferralCode(e.target.value.toUpperCase())} placeholder="Referral Code (Optional • ₹50 Bonus)" className="w-full bg-amber-50/70 border border-amber-200 rounded-2xl px-3.5 py-3 font-bold" />
+                  <input
+                    type="text"
+                    value={regReferralCode}
+                    onChange={(e) => setRegReferralCode(e.target.value.toUpperCase())}
+                    placeholder="Referral Code (Optional • ₹50 Bonus)"
+                    className="w-full bg-amber-50/70 border border-amber-200 rounded-2xl px-3.5 py-3 font-bold"
+                  />
                 )}
-                {authMsg && <p className="text-red-600 font-bold">{authMsg}</p>}
-                <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm">
-                  Create Account
-                </button>
+
+{authMsg && <p className="text-red-600 font-bold">{authMsg}</p>}
+
+                {!regOtpSent ? (
+                  <button
+                    type="button"
+                    disabled={sendingSms}
+                    onClick={handleSendRegisterOtp}
+                    className="w-full bg-[#15803D] disabled:opacity-60 text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
+                  >
+                    {sendingSms ? 'Sending SMS OTP...' : 'Send SMS OTP to Verify Mobile'}
+                  </button>
+                ) : (
+                  <>
+                    <input
+                      type="tel"
+                      maxLength={6}
+                      required
+                      value={regOtpInput}
+                      onChange={(e) => setRegOtpInput(e.target.value.replace(/\D/g, ''))}
+                      placeholder="Enter 6-Digit SMS OTP"
+                      className="w-full bg-slate-50 border border-emerald-300 rounded-2xl py-3 text-center text-base font-extrabold tracking-[0.4em]"
+                    />
+                    <button
+                      type="submit"
+                      disabled={verifyingSms}
+                      className="w-full bg-[#EA580C] disabled:opacity-60 text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
+                    >
+                      {verifyingSms ? 'Verifying...' : 'Verify SMS OTP & Register'}
+                    </button>
+                  </>
+                )}
               </form>
             )}
           </div>
@@ -574,11 +775,10 @@ export default function App() {
     );
   }
 
-// Smiling Welcome Modal
   const WelcomeSmileModal = () =>
     showWelcomeSmile ? (
       <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl p-6 text-center max-w-xs w-full space-y-3 shadow-2xl border border-emerald-100">
+        <div className="bg-white rounded-3xl p-6 text-center max-w-xs w-full space-y-3 shadow-2xl">
           <div className="h-16 w-16 rounded-full bg-emerald-100 text-[#15803D] flex items-center justify-center mx-auto animate-bounce">
             <CheckCircle2 className="h-10 w-10" />
           </div>
@@ -588,7 +788,6 @@ export default function App() {
       </div>
     ) : null;
 
-  // Shared Professional Profile Tab
   const renderSharedProfileTab = () => (
     <div className="p-4 space-y-3.5 text-xs">
       <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex items-center space-x-3.5">
@@ -596,7 +795,7 @@ export default function App() {
           {currentUser.name.charAt(0)}
         </div>
         <div>
-          <span className="text-[10px] font-extrabold uppercase tracking-wider bg-emerald-50 text-[#15803D] px-2 py-0.5 rounded-md">
+          <span className="text-[10px] font-extrabold uppercase bg-emerald-50 text-[#15803D] px-2 py-0.5 rounded-md">
             {currentUser.role}
           </span>
           <h2 className="text-base font-extrabold text-slate-900 mt-0.5">{currentUser.name}</h2>
@@ -604,7 +803,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* Wallet Card with 15-Day Expiry & 48h-6h Alert */}
       <div className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white rounded-3xl p-5 shadow-md space-y-2">
         <div className="flex justify-between items-center">
           <span className="font-semibold text-emerald-100 flex items-center space-x-1.5">
@@ -620,7 +818,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* Refer & Earn */}
       {currentUser.role === 'customer' && (
         <div className="bg-white rounded-3xl p-4 shadow-sm border border-amber-200/70 space-y-2.5">
           <div className="flex justify-between items-center">
@@ -632,55 +829,227 @@ export default function App() {
               {currentUser.referralsCount || 0} / 10 Claimed
             </span>
           </div>
-          <p className="text-[11px] text-slate-500 leading-relaxed">
+          <p className="text-[11px] text-slate-500">
             Earn <strong>₹50</strong> wallet cashback when your friend installs & completes their 1st order of <strong>₹200+</strong> (valid for first 10 referrals).
           </p>
           <div className="flex space-x-2">
-            <input readOnly value={`https://rythu-market.vercel.app/?ref=${currentUser.mobile}`} className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[10px] font-bold text-slate-600" />
-            <button onClick={() => notify('Referral link copied to clipboard!')} className="bg-[#EA580C] text-white font-extrabold px-3.5 py-2 rounded-xl">
+            <input readOnly value={`https://rythu-market.vercel.app/?ref=${currentUser.mobile}`} className="flex-1 bg-slate-50 border rounded-xl px-3 py-2 text-[10px] font-bold" />
+            <button onClick={() => notify('Referral link copied!')} className="bg-[#EA580C] text-white font-extrabold px-3.5 py-2 rounded-xl">
               Share
             </button>
           </div>
         </div>
       )}
 
-      {/* Coupons & Offers */}
-      <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-2">
-        <h3 className="font-extrabold text-slate-900 flex items-center space-x-1.5">
-          <Tag className="h-4 w-4 text-[#15803D]" />
-          <span>Active Loyalty Tiers & Coupons</span>
-        </h3>
-        <div className="p-2.5 bg-emerald-50/70 border border-emerald-100 rounded-xl font-bold text-[#15803D]">
-          Orders 1–2: 50% OFF (Up to ₹100)
-        </div>
-        <div className="p-2.5 bg-sky-50/70 border border-sky-100 rounded-xl font-bold text-sky-800">
-          Orders 3–5: 25% OFF Instant Discount
-        </div>
-        <div className="p-2.5 bg-amber-50/70 border border-amber-100 rounded-xl font-bold text-amber-800">
-          Orders 5–10: ₹20 Assured Wallet Cashback
-        </div>
-      </div>
-
       <a href="tel:8328261103" className="w-full bg-white border border-slate-200 text-slate-800 font-extrabold py-3.5 rounded-2xl flex items-center justify-center space-x-2 shadow-sm">
         <Phone className="h-4 w-4 text-[#15803D]" />
         <span>Contact Support (8328261103)</span>
       </a>
 
-      <button
-        onClick={handleStrictLogout}
-        className="w-full bg-rose-600 hover:bg-rose-700 text-white font-extrabold py-3.5 rounded-2xl shadow-md flex items-center justify-center space-x-2 transition"
-      >
+      <button onClick={handleStrictLogout} className="w-full bg-rose-600 text-white font-extrabold py-3.5 rounded-2xl shadow-md flex items-center justify-center space-x-2">
         <LogOut className="h-4 w-4" />
         <span>Logout (Switch Role)</span>
       </button>
     </div>
   );
 
-  // =========================================================================
-  // 3. CUSTOMER STOREFRONT (COMMERCIAL AGRI-FRESH UI)
+// =========================================================================
+  // 3. CUSTOMER STOREFRONT (LOCATION PIN + REAL UPI/CARD LAUNCH)
   // =========================================================================
   if (currentUser.role === 'customer') {
-    const orderNum = (currentUser.ordersCompleted || 0) + 1;
+    const activeAddr = savedAddresses.find((a) => a.id === activeAddrId) || savedAddresses[0];
+
+    if (activeTab === 'selectLocation') {
+      const filteredAddrs = savedAddresses.filter(
+        (a) =>
+          a.title.toLowerCase().includes(locSearch.toLowerCase()) ||
+          a.full.toLowerCase().includes(locSearch.toLowerCase())
+      );
+
+      return (
+        <div style={fontStyle} className="min-h-screen bg-[#0F5132] max-w-md mx-auto text-slate-800 shadow-2xl flex flex-col">
+          <div className="px-4 py-4 text-white flex items-center space-x-3">
+            <button onClick={() => setActiveTab('home')} className="p-1.5 rounded-full hover:bg-white/15">
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <h1 className="text-sm font-extrabold tracking-wide uppercase">SELECT DELIVERY LOCATION</h1>
+          </div>
+
+          <div className="flex-1 bg-white rounded-t-[30px] p-4 space-y-4">
+            <div className="flex items-center border border-slate-200 rounded-2xl px-3.5 py-3 bg-slate-50">
+              <Search className="h-4 w-4 text-slate-400 mr-2.5" />
+              <input
+                type="text"
+                value={locSearch}
+                onChange={(e) => setLocSearch(e.target.value)}
+                placeholder="Search for location in Nellore..."
+                className="w-full bg-transparent text-xs font-semibold focus:outline-none"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={handleUseCurrentLocationMap}
+              className="w-full border border-emerald-200 bg-emerald-50/50 rounded-2xl py-3.5 px-4 flex items-center justify-center space-x-2 text-[#15803D] font-extrabold text-xs shadow-sm"
+            >
+              <LocateFixed className="h-4 w-4" />
+              <span>Use current location</span>
+            </button>
+
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-xs font-extrabold text-slate-500">Saved addresses</span>
+              <button
+                type="button"
+                onClick={handleUseCurrentLocationMap}
+                className="text-xs font-extrabold text-[#15803D] flex items-center space-x-1"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>ADD NEW ADDRESS</span>
+              </button>
+            </div>
+
+            <div className="space-y-2.5">
+              {filteredAddrs.map((addr) => (
+                <button
+                  key={addr.id}
+                  type="button"
+                  onClick={() => {
+                    setActiveAddrId(addr.id);
+                    setCurrentUser((prev) => ({ ...prev, address: addr.title }));
+                    setActiveTab('home');
+                    notify(`Selected Location - ${addr.title}`);
+                  }}
+                  className={`w-full text-left rounded-2xl p-3.5 border flex items-start space-x-3 transition ${
+                    activeAddrId === addr.id ? 'border-[#15803D] bg-emerald-50/40' : 'border-slate-100 bg-white shadow-sm'
+                  }`}
+                >
+                  <div className="flex flex-col items-center space-y-1 flex-shrink-0">
+                    <div className="h-9 w-9 rounded-xl bg-emerald-50 text-[#15803D] flex items-center justify-center">
+                      {addr.tag === 'Office' ? <Briefcase className="h-4 w-4" /> : <Home className="h-4 w-4" />}
+                    </div>
+                    <span className="text-[10px] font-extrabold text-[#15803D]">{addr.distance}</span>
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-extrabold text-slate-900">{addr.tag}</h3>
+                      {activeAddrId === addr.id && <Check className="h-4 w-4 text-[#15803D]" />}
+                    </div>
+                    <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-2">{addr.full}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (activeTab === 'mapPin') {
+      return (
+        <div style={fontStyle} className="min-h-screen bg-[#0F5132] max-w-md mx-auto text-slate-800 shadow-2xl flex flex-col">
+          <div className="px-4 py-4 text-white flex items-center space-x-3">
+            <button onClick={() => setActiveTab('selectLocation')} className="p-1.5 rounded-full hover:bg-white/15">
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <h1 className="text-sm font-extrabold tracking-wide uppercase">SELECT DELIVERY LOCATION</h1>
+          </div>
+
+          <div className="flex-1 bg-white rounded-t-[30px] overflow-hidden flex flex-col justify-between relative">
+            <div className="relative flex-1 min-h-[340px] bg-slate-100">
+              <div className="absolute top-3 left-3 right-3 z-20 bg-white rounded-2xl px-3.5 py-2.5 shadow-md flex items-center border border-slate-100">
+                <Search className="h-4 w-4 text-slate-400 mr-2" />
+                <input
+                  type="text"
+                  value={mapPinTitle}
+                  onChange={(e) => setMapPinTitle(e.target.value)}
+                  placeholder="Search for location"
+                  className="w-full text-xs font-bold focus:outline-none"
+                />
+              </div>
+
+              <iframe
+                title="Adjust Pin Map"
+                width="100%"
+                height="100%"
+                frameBorder="0"
+                className="w-full h-full min-h-[340px]"
+                src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapPinCoords.lng - 0.008}%2C${mapPinCoords.lat - 0.008}%2C${mapPinCoords.lng + 0.008}%2C${mapPinCoords.lat + 0.008}&layer=mapnik&marker=${mapPinCoords.lat}%2C${mapPinCoords.lng}`}
+              />
+
+              <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center z-10 pb-8">
+                <div className="bg-slate-900 text-white px-3.5 py-2 rounded-xl shadow-lg text-center mb-1.5">
+                  <p className="text-[11px] font-extrabold leading-tight">Drag the map to adjust location</p>
+                  <p className="text-[9px] text-slate-300">Your order will be delivered here</p>
+                </div>
+                <div className="h-10 w-10 rounded-full bg-[#15803D]/25 flex items-center justify-center">
+                  <div className="h-5 w-5 rounded-full bg-[#15803D] border-2 border-white shadow-md" />
+                </div>
+              </div>
+
+              <div className="absolute right-3 top-20 z-20 flex flex-col space-y-1 bg-white/95 p-1.5 rounded-xl shadow border text-[10px] font-extrabold">
+                <button type="button" onClick={() => handleAdjustPin(0.0015, 0)} className="px-2 py-1 bg-slate-100 rounded">↑ N</button>
+                <button type="button" onClick={() => handleAdjustPin(-0.0015, 0)} className="px-2 py-1 bg-slate-100 rounded">↓ S</button>
+                <button type="button" onClick={() => handleAdjustPin(0, 0.0015)} className="px-2 py-1 bg-slate-100 rounded">→ E</button>
+                <button type="button" onClick={() => handleAdjustPin(0, -0.0015)} className="px-2 py-1 bg-slate-100 rounded">← W</button>
+              </div>
+
+              <div className="absolute bottom-3 left-0 right-0 flex justify-center z-20">
+                <button
+                  type="button"
+                  onClick={handleUseCurrentLocationMap}
+                  className="bg-white text-[#15803D] border border-slate-200 text-xs font-extrabold px-4 py-2 rounded-xl shadow-md flex items-center space-x-1.5"
+                >
+                  <LocateFixed className="h-4 w-4" />
+                  <span>{isLocatingGps ? 'Detecting GPS...' : 'Go to current location'}</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-white p-4 border-t shadow-lg space-y-3 z-20">
+              <div className="flex items-start justify-between space-x-2">
+                <div className="flex items-start space-x-2 flex-1">
+                  <MapPin className="h-5 w-5 text-slate-900 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    {isEditingPinText ? (
+                      <div className="space-y-1.5">
+                        <input type="text" value={mapPinTitle} onChange={(e) => setMapPinTitle(e.target.value)} className="w-full border rounded-lg px-2.5 py-1 text-xs font-extrabold" />
+                        <input type="text" value={mapPinFullAddress} onChange={(e) => setMapPinFullAddress(e.target.value)} className="w-full border rounded-lg px-2.5 py-1 text-[11px]" />
+                      </div>
+                    ) : (
+                      <>
+                        <h3 className="text-sm font-extrabold text-slate-900 leading-tight">
+                          {isLocatingGps ? 'Fetching current address...' : mapPinTitle}
+                        </h3>
+                        <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-2">{mapPinFullAddress}</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <button type="button" onClick={() => setIsEditingPinText(!isEditingPinText)} className="border border-slate-200 text-[#15803D] text-xs font-extrabold px-3 py-1 rounded-lg">
+                  {isEditingPinText ? 'Done' : 'Change'}
+                </button>
+              </div>
+
+              <div className="flex items-center space-x-2 text-[11px]">
+                <span className="font-bold text-slate-400">Save as:</span>
+                {['Home', 'Office', 'Others'].map((t) => (
+                  <button key={t} type="button" onClick={() => setMapPinTag(t)} className={`px-3 py-1 rounded-full font-extrabold border ${mapPinTag === t ? 'bg-emerald-50 border-[#15803D] text-[#15803D]' : 'bg-slate-50 text-slate-600'}`}>
+                    {t}
+                  </button>
+                ))}
+              </div>
+
+              <button type="button" onClick={handleConfirmSetLocation} className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-xl text-sm shadow-md">
+                Set Location
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+const orderNum = (currentUser.ordersCompleted || 0) + 1;
     const totalUnits = Object.values(cart).reduce((a, b) => a + b, 0);
     const subtotal = Object.entries(cart).reduce((sum, [id, qty]) => {
       const p = products.find((x) => x.id === id);
@@ -699,7 +1068,7 @@ export default function App() {
       }
     }
 
-const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
+    const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
     const walletDeduction = useWalletBalance ? Math.min(currentUser.wallet || 0, Math.max(0, subtotal - autoTierDiscount)) : 0;
     const promoDeduction = appliedPromo ? 30 : 0;
     const payableTotal = Math.max(0, subtotal + deliveryFee - autoTierDiscount - promoDeduction - walletDeduction);
@@ -713,7 +1082,14 @@ const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
         ? 20
         : 5;
 
-    const handlePlaceCustomerOrder = () => {
+    const payeeEncoded = encodeURIComponent('Rythu Basket Nellore');
+    const genericUpiUri = `upi://pay?pa=${encodeURIComponent(merchantUpiId)}&pn=${payeeEncoded}&am=${payableTotal}&cu=INR`;
+    const phonePeUri = `phonepe://pay?pa=${encodeURIComponent(merchantUpiId)}&pn=${payeeEncoded}&am=${payableTotal}&cu=INR`;
+    const gpayUri = `tez://upi/pay?pa=${encodeURIComponent(merchantUpiId)}&pn=${payeeEncoded}&am=${payableTotal}&cu=INR`;
+    const paytmUri = `paytmmp://pay?pa=${encodeURIComponent(merchantUpiId)}&pn=${payeeEncoded}&am=${payableTotal}&cu=INR`;
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(genericUpiUri)}`;
+
+    const finalizeCustomerOrder = () => {
       const itemsArr = Object.entries(cart)
         .map(([id, qty]) => {
           const p = products.find((x) => x.id === id);
@@ -728,7 +1104,7 @@ const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
         buyerRole: 'customer',
         buyerName: currentUser.name,
         buyerMobile: currentUser.mobile,
-        buyerAddress: currentUser.address,
+        buyerAddress: activeAddr.full,
         items: itemsArr,
         total: payableTotal,
         cashback: estimatedCashback,
@@ -749,8 +1125,34 @@ const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
       setUsers((prev) => prev.map((u) => (u.id === updatedUser.id ? updatedUser : u)));
       setOrders([newOrd, ...orders]);
       setCart({});
+      setUtrRefInput('');
       setActiveTab('orders');
       notify(`Order ${newOrd.id} Placed! ₹${estimatedCashback} Cashback credits on delivery.`);
+    };
+
+    const handlePayAndPlaceOrderTrigger = () => {
+      setCardError('');
+      if (payMode === 'card') {
+        const digits = cardNo.replace(/\s+/g, '');
+        if (digits.length < 12 || !cardExp.trim() || cardCvv.length < 3) {
+          setCardError('Please enter valid 16-digit Card Number, Expiry (MM/YY) & CVV.');
+          return;
+        }
+        finalizeCustomerOrder();
+        return;
+      }
+      if (payMode === 'cod') {
+        finalizeCustomerOrder();
+        return;
+      }
+      const deepLinks = {
+        phonepe: phonePeUri,
+        gpay: gpayUri,
+        paytm: paytmUri,
+        cred: genericUpiUri,
+      };
+      setActiveTab('upiProcessing');
+      window.location.href = deepLinks[payMode] || genericUpiUri;
     };
 
     const handleSimulateCustomerDelivery = (ord) => {
@@ -781,7 +1183,6 @@ const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
           </div>
         )}
 
-        {/* SCRATCH CARD POPUP */}
         {scratchCard && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-3xl p-6 text-center max-w-xs w-full space-y-4 shadow-2xl">
@@ -814,20 +1215,29 @@ const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
           </div>
         )}
 
-        {/* GLASSMORPHISM FOREST-GREEN HEADER */}
-        <header className="bg-gradient-to-b from-[#0F5132] to-[#15803D] text-white sticky top-0 z-30 px-4 pt-3.5 pb-4 rounded-b-[28px] shadow-lg space-y-2.5">
+<header className="bg-gradient-to-b from-[#0F5132] to-[#15803D] text-white sticky top-0 z-30 px-4 pt-3.5 pb-4 rounded-b-[28px] shadow-lg space-y-2.5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2.5">
-              <div className="h-10 w-10 rounded-full bg-white p-0.5 border border-[#EAB308] overflow-hidden shadow">
+            <div className="flex items-center space-x-2.5 max-w-[74%]">
+              <div className="h-10 w-10 rounded-full bg-white p-0.5 border border-[#EAB308] overflow-hidden shadow flex-shrink-0">
                 <img src="/icon-512.png" alt="Logo" className="h-full w-full object-cover rounded-full" />
               </div>
-              <div>
+              <button
+                type="button"
+                onClick={() => {
+                  setLocSearch('');
+                  setActiveTab('selectLocation');
+                }}
+                className="text-left focus:outline-none"
+              >
                 <div className="flex items-center space-x-1 text-[10px] font-bold text-[#FDE047]">
                   <MapPin className="h-3 w-3" />
-                  <span>DELIVERING TO</span>
+                  <span>SELECTED LOCATION ▾</span>
                 </div>
-                <p className="text-xs font-extrabold truncate max-w-[175px]">{currentUser.address}</p>
-              </div>
+                <div className="flex items-center space-x-1">
+                  <p className="text-xs font-extrabold truncate max-w-[180px]">{activeAddr.title}</p>
+                  <ChevronDown className="h-3.5 w-3.5 text-emerald-200 flex-shrink-0" />
+                </div>
+              </button>
             </div>
 
             <button
@@ -839,19 +1249,17 @@ const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
             </button>
           </div>
 
-          {/* Search Input */}
           <div className="bg-white/95 text-slate-800 rounded-2xl px-3.5 py-2.5 flex items-center shadow-sm">
             <Search className="h-4 w-4 text-slate-400 mr-2.5" />
             <input
               type="text"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => { setSearch(e.target.value); if (activeTab !== 'home') setActiveTab('home'); }}
               placeholder="Search 'Nellore Sona Masuri' or 'Tomato'..."
               className="w-full bg-transparent text-xs font-semibold focus:outline-none"
             />
           </div>
 
-          {/* Offers & Free Delivery ₹99 Ticker */}
           {offersEnabled && (
             <div className="bg-black/20 rounded-xl px-3 py-1.5 text-[10px] font-bold text-[#FDE047] flex items-center justify-between">
               <span>FREE Delivery above ₹99 • 1st 2 Orders 50% OFF</span>
@@ -860,31 +1268,22 @@ const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
           )}
         </header>
 
-{/* TAB 1: HOME STOREFRONT */}
         {activeTab === 'home' && (
           <main className="px-4 pt-4 space-y-4 text-xs">
-            {/* HD Circular Category Cutout Strip */}
             <div className="flex space-x-3 overflow-x-auto pb-1">
               {CATEGORIES.map((c) => {
                 const active = selectedCat === c.id;
                 return (
-                  <button
-                    key={c.id}
-                    onClick={() => setSelectedCat(c.id)}
-                    className="flex-shrink-0 flex flex-col items-center space-y-1.5"
-                  >
+                  <button key={c.id} onClick={() => setSelectedCat(c.id)} className="flex-shrink-0 flex flex-col items-center space-y-1.5">
                     <div className={`h-14 w-14 rounded-full p-0.5 border-2 transition ${active ? 'border-[#15803D] scale-105 shadow-md' : 'border-slate-200'}`}>
                       <img src={c.img} alt={c.labelEn} className="h-full w-full object-cover rounded-full" />
                     </div>
-                    <span className={`text-[10px] font-extrabold ${active ? 'text-[#15803D]' : 'text-slate-600'}`}>
-                      {c.labelEn}
-                    </span>
+                    <span className={`text-[10px] font-extrabold ${active ? 'text-[#15803D]' : 'text-slate-600'}`}>{c.labelEn}</span>
                   </button>
                 );
               })}
             </div>
 
-            {/* Tiered Loyalty Offer Card */}
             {offersEnabled && (
               <div className="bg-gradient-to-r from-[#FEF9C3] to-[#DCFCE7] border border-emerald-200/80 rounded-2xl p-3.5 flex items-center justify-between shadow-sm">
                 <div>
@@ -902,7 +1301,6 @@ const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
               </div>
             )}
 
-            {/* Commercial Product Cards Grid */}
             <div className="grid grid-cols-2 gap-3">
               {visibleProducts.map((p) => {
                 const q = cart[p.id] || 0;
@@ -942,7 +1340,7 @@ const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
                       ) : q === 0 ? (
                         <button
                           onClick={() => setCart({ ...cart, [p.id]: 1 })}
-                          className="bg-[#EA580C] hover:bg-[#C2410C] text-white text-[11px] font-extrabold px-3.5 py-1.5 rounded-xl shadow-sm transition active:scale-95"
+                          className="bg-[#EA580C] text-white text-[11px] font-extrabold px-3.5 py-1.5 rounded-xl shadow-sm"
                         >
                           ADD
                         </button>
@@ -965,10 +1363,19 @@ const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
           </main>
         )}
 
-        {/* TAB 2: CART & CHECKOUT */}
         {activeTab === 'cart' && (
           <main className="p-4 space-y-3.5 text-xs">
             <h2 className="text-base font-extrabold text-slate-900">Checkout & Payment</h2>
+
+            <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-bold text-slate-400">Delivering to ({activeAddr.tag})</p>
+                <p className="font-extrabold text-slate-900 truncate max-w-[215px]">{activeAddr.full}</p>
+              </div>
+              <button onClick={() => setActiveTab('selectLocation')} className="text-[#15803D] font-extrabold underline">
+                Change
+              </button>
+            </div>
 
             {Object.keys(cart).length === 0 ? (
               <div className="bg-white rounded-3xl p-8 text-center font-bold text-slate-400 shadow-sm">Your basket is empty.</div>
@@ -995,10 +1402,9 @@ const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
                   );
                 })}
 
-                {/* Promo Code & Wallet */}
                 <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2.5">
                   <div className="flex space-x-2">
-                    <input type="text" value={promoInput} onChange={(e) => setPromoInput(e.target.value.toUpperCase())} placeholder="Promo Code: RYTHU30" className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-extrabold" />
+                    <input type="text" value={promoInput} onChange={(e) => setPromoInput(e.target.value.toUpperCase())} placeholder="Promo Code: RYTHU30" className="flex-1 bg-slate-50 border rounded-xl px-3 py-2 font-extrabold" />
                     <button onClick={() => { setAppliedPromo('RYTHU30'); notify('RYTHU30 Applied (-₹30)'); }} className="bg-[#15803D] text-white font-extrabold px-4 rounded-xl">
                       Apply
                     </button>
@@ -1012,15 +1418,14 @@ const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
                   )}
                 </div>
 
-                {/* Payment Modes */}
                 <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
                   <h3 className="font-extrabold text-slate-900">Select Payment Mode</h3>
                   {[
-                    { id: 'cred', label: `CRED UPI (₹${Math.max(10, Math.round(payableTotal * 0.08))} Cashback)` },
-                    { id: 'paytm', label: `Paytm (₹${Math.max(5, Math.round(payableTotal * 0.05))} Cashback)` },
-                    { id: 'card', label: `Credit / Debit Card (₹${Math.max(5, Math.round(payableTotal * 0.05))} Cashback)` },
                     { id: 'phonepe', label: 'PhonePe UPI' },
                     { id: 'gpay', label: 'Google Pay (GPay)' },
+                    { id: 'paytm', label: `Paytm (₹${Math.max(5, Math.round(payableTotal * 0.05))} Cashback)` },
+                    { id: 'cred', label: `CRED UPI (₹${Math.max(10, Math.round(payableTotal * 0.08))} Cashback)` },
+                    { id: 'card', label: `Credit / Debit Card (₹${Math.max(5, Math.round(payableTotal * 0.05))} Cashback)` },
                     { id: 'cod', label: 'Cash on Delivery (COD)' },
                   ].map((pm) => (
                     <label key={pm.id} className={`flex items-center justify-between p-2.5 rounded-xl border-2 cursor-pointer transition ${payMode === pm.id ? 'border-[#15803D] bg-emerald-50/40' : 'border-slate-100'}`}>
@@ -1032,18 +1437,19 @@ const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
                     </label>
                   ))}
 
-                  {payMode === 'card' && (
+{payMode === 'card' && (
                     <div className="pt-2 space-y-2">
-                      <input type="text" value={cardNo} onChange={(e) => setCardNo(e.target.value)} placeholder="16-Digit Card Number" className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
+                      <input type="text" maxLength={19} value={cardNo} onChange={(e) => setCardNo(e.target.value)} placeholder="16-Digit Card Number" className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
                       <div className="grid grid-cols-2 gap-2">
-                        <input type="text" value={cardExp} onChange={(e) => setCardExp(e.target.value)} placeholder="MM/YY" className="bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
-                        <input type="password" value={cardCvv} onChange={(e) => setCardCvv(e.target.value)} placeholder="CVV" className="bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
+                        <input type="text" maxLength={5} value={cardExp} onChange={(e) => setCardExp(e.target.value)} placeholder="MM/YY" className="bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
+                        <input type="password" maxLength={4} value={cardCvv} onChange={(e) => setCardCvv(e.target.value)} placeholder="CVV" className="bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
                       </div>
                     </div>
                   )}
+
+                  {cardError && <p className="text-rose-600 font-bold">{cardError}</p>}
                 </div>
 
-                {/* Bill Summary */}
                 <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-1.5">
                   <div className="flex justify-between"><span>Item Subtotal</span><span className="font-bold">₹{subtotal}</span></div>
                   {autoTierDiscount > 0 && <div className="flex justify-between text-[#15803D] font-extrabold"><span>{autoTierLabel}</span><span>-₹{autoTierDiscount}</span></div>}
@@ -1052,7 +1458,7 @@ const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
                   <div className="flex justify-between"><span>Delivery Fee (Free ₹99+)</span><span className="font-bold">{deliveryFee === 0 ? 'FREE' : `₹${deliveryFee}`}</span></div>
                   <div className="border-t pt-2 flex justify-between text-sm font-extrabold text-slate-900"><span>Grand Total</span><span>₹{payableTotal}</span></div>
                   <p className="text-[10px] font-extrabold text-[#EA580C]">₹{estimatedCashback} Cashback + Scratch Card unlocks on delivery!</p>
-                  <button onClick={handlePlaceCustomerOrder} className="w-full mt-2 bg-[#EA580C] hover:bg-[#C2410C] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm transition">
+                  <button onClick={handlePayAndPlaceOrderTrigger} className="w-full mt-2 bg-[#EA580C] hover:bg-[#C2410C] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm transition">
                     Pay & Place Order • ₹{payableTotal}
                   </button>
                 </div>
@@ -1061,98 +1467,137 @@ const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
           </main>
         )}
 
-{/* TAB 3: ORDERS + ANIMATED TRACKING + REORDER */}
+        {activeTab === 'upiProcessing' && (
+          <main className="p-4 space-y-4 text-xs">
+            <div className="bg-white rounded-3xl p-5 shadow-md border border-emerald-200 text-center space-y-3">
+              <div className="flex justify-center">
+                <PaymentBadge type={payMode} />
+              </div>
+              <h2 className="text-base font-extrabold text-slate-900">Complete Payment of ₹{payableTotal}</h2>
+              <p className="text-slate-500">
+                Launching <strong>{payMode.toUpperCase()}</strong> on your phone... If it didn't open automatically, tap below or scan QR:
+              </p>
+
+              <a
+                href={payMode === 'phonepe' ? phonePeUri : payMode === 'gpay' ? gpayUri : payMode === 'paytm' ? paytmUri : genericUpiUri}
+                className="block w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow"
+              >
+                Open {payMode.toUpperCase()} App Now ↗
+              </a>
+
+              <img src={qrCodeUrl} alt="UPI QR" className="w-32 h-32 mx-auto rounded-xl border p-1 bg-white" />
+
+              <input
+                type="text"
+                value={utrRefInput}
+                onChange={(e) => setUtrRefInput(e.target.value)}
+                placeholder="Enter 12-Digit UPI UTR / Ref ID (Optional)"
+                className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 text-center font-bold"
+              />
+
+              <button
+                onClick={finalizeCustomerOrder}
+                className="w-full bg-[#EA580C] text-white font-extrabold py-3.5 rounded-2xl shadow-lg text-sm"
+              >
+                Payment Completed — Confirm Order ➔
+              </button>
+            </div>
+          </main>
+        )}
+
         {activeTab === 'orders' && (
           <main className="p-4 space-y-3.5 text-xs">
             <h2 className="text-base font-extrabold text-slate-900">My Orders & Live Tracking</h2>
 
-            {orders
-              .filter((o) => o.buyerRole === 'customer')
-              .map((ord) => {
-                const isDelivered = ord.status === 'Delivered';
-                const steps = ['Order Placed', 'Order Accepted', 'Partner Assigned', 'Out for Delivery', 'Delivered'];
-                const currentStepIdx = steps.indexOf(ord.status);
+            {orders.filter((o) => o.buyerRole === 'customer').length === 0 ? (
+              <div className="bg-white rounded-3xl p-8 text-center font-bold text-slate-400">No orders placed yet.</div>
+            ) : (
+              orders
+                .filter((o) => o.buyerRole === 'customer')
+                .map((ord) => {
+                  const isDelivered = ord.status === 'Delivered';
+                  const steps = ['Order Placed', 'Order Accepted', 'Partner Assigned', 'Out for Delivery', 'Delivered'];
+                  const currentStepIdx = steps.indexOf(ord.status);
 
-                return (
-                  <div key={ord.id} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="font-extrabold text-sm">{ord.id} • <span className="text-[#15803D]">{ord.status}</span></span>
-                      <span className="font-extrabold text-sm">₹{ord.total}</span>
-                    </div>
-                    <p className="text-slate-500">{ord.items.map((i) => `${i.qty}kg ${i.name}`).join(', ')} • {ord.date}</p>
-
-                    {isDelivered ? (
-                      <div className="pt-2.5 border-t flex items-center justify-between">
-                        <span className="text-[11px] font-extrabold text-[#15803D]">Delivered on {ord.date}</span>
-                        <button
-                          onClick={() => {
-                            const updatedCart = {};
-                            ord.items.forEach((it) => { updatedCart[it.id] = it.qty; });
-                            setCart(updatedCart);
-                            setActiveTab('cart');
-                            notify('Cart updated with present day rates!');
-                          }}
-                          className="bg-[#15803D] text-white font-extrabold px-4 py-2 rounded-xl"
-                        >
-                          Reorder (Today's Rates)
-                        </button>
+                  return (
+                    <div key={ord.id} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="font-extrabold text-sm">{ord.id} • <span className="text-[#15803D]">{ord.status}</span></span>
+                        <span className="font-extrabold text-sm">₹{ord.total}</span>
                       </div>
-                    ) : (
-                      <div className="space-y-3 pt-2.5 border-t">
-                        <div className="grid grid-cols-4 gap-1 text-center">
-                          {['Order Placed', 'Order Accepted', 'Partner Assigned', 'Out for Delivery'].map((st, idx) => {
-                            const active = idx <= currentStepIdx;
-                            return (
-                              <div key={st} className="space-y-1">
-                                <div className={`h-2 rounded-full transition-all duration-500 ${active ? 'bg-[#15803D] animate-pulse' : 'bg-slate-200'}`} />
-                                <p className={`text-[9px] font-extrabold leading-tight ${active ? 'text-[#15803D]' : 'text-slate-400'}`}>{st}</p>
-                              </div>
-                            );
-                          })}
+                      <p className="text-slate-500">{ord.items.map((i) => `${i.qty}kg ${i.name}`).join(', ')} • {ord.date}</p>
+
+                      {isDelivered ? (
+                        <div className="pt-2.5 border-t flex items-center justify-between">
+                          <span className="text-[11px] font-extrabold text-[#15803D]">Delivered on {ord.date}</span>
+                          <button
+                            onClick={() => {
+                              const updatedCart = {};
+                              ord.items.forEach((it) => { updatedCart[it.id] = it.qty; });
+                              setCart(updatedCart);
+                              setActiveTab('cart');
+                              notify('Cart updated with present day rates!');
+                            }}
+                            className="bg-[#15803D] text-white font-extrabold px-4 py-2 rounded-xl"
+                          >
+                            Reorder (Today's Rates)
+                          </button>
                         </div>
-
-                        {ord.driverName ? (
-                          <div className="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-3 space-y-2.5">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <span className="text-[9px] font-extrabold uppercase bg-[#15803D] text-white px-2 py-0.5 rounded">Live Partner Assigned</span>
-                                <p className="font-extrabold text-slate-900 mt-1">{ord.driverName}</p>
-                                <p className="text-[10px] text-slate-600">GPS: {ord.driverCoords || 'Nellore Live Tracking'}</p>
-                              </div>
-                              <div className="flex space-x-2">
-                                <a href={`tel:${ord.driverMobile}`} className="p-2.5 bg-[#15803D] text-white rounded-full shadow">
-                                  <Phone className="h-4 w-4" />
-                                </a>
-                                <a href={`sms:${ord.driverMobile}`} className="p-2.5 bg-sky-600 text-white rounded-full shadow">
-                                  <MessageSquare className="h-4 w-4" />
-                                </a>
-                              </div>
-                            </div>
-
-                            <button
-                              onClick={() => handleSimulateCustomerDelivery(ord)}
-                              className="w-full bg-[#EA580C] text-white font-extrabold py-2.5 rounded-xl shadow-sm"
-                            >
-                              Complete Delivery (Unlock Cashback & Scratch Card)
-                            </button>
+                      ) : (
+                        <div className="space-y-3 pt-2.5 border-t">
+                          <div className="grid grid-cols-4 gap-1 text-center">
+                            {['Order Placed', 'Order Accepted', 'Partner Assigned', 'Out for Delivery'].map((st, idx) => {
+                              const active = idx <= currentStepIdx;
+                              return (
+                                <div key={st} className="space-y-1">
+                                  <div className={`h-2 rounded-full transition-all duration-500 ${active ? 'bg-[#15803D] animate-pulse' : 'bg-slate-200'}`} />
+                                  <p className={`text-[9px] font-extrabold leading-tight ${active ? 'text-[#15803D]' : 'text-slate-400'}`}>{st}</p>
+                                </div>
+                              );
+                            })}
                           </div>
-                        ) : (
-                          <p className="text-[11px] font-bold text-amber-800 bg-amber-50 p-2.5 rounded-xl text-center">
-                            Live map activates automatically once a Delivery Partner is assigned.
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+
+                          {ord.driverName ? (
+                            <div className="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-3 space-y-2.5">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <span className="text-[9px] font-extrabold uppercase bg-[#15803D] text-white px-2 py-0.5 rounded">Live Partner Assigned</span>
+                                  <p className="font-extrabold text-slate-900 mt-1">{ord.driverName}</p>
+                                  <p className="text-[10px] text-slate-600">GPS: {ord.driverCoords || 'Nellore Live Tracking'}</p>
+                                </div>
+                                <div className="flex space-x-2">
+                                  <a href={`tel:${ord.driverMobile}`} className="p-2.5 bg-[#15803D] text-white rounded-full shadow">
+                                    <Phone className="h-4 w-4" />
+                                  </a>
+                                  <a href={`sms:${ord.driverMobile}`} className="p-2.5 bg-sky-600 text-white rounded-full shadow">
+                                    <MessageSquare className="h-4 w-4" />
+                                  </a>
+                                </div>
+                              </div>
+
+                              <button
+                                onClick={() => handleSimulateCustomerDelivery(ord)}
+                                className="w-full bg-[#EA580C] text-white font-extrabold py-2.5 rounded-xl shadow-sm"
+                              >
+                                Complete Delivery (Unlock Cashback & Scratch Card)
+                              </button>
+                            </div>
+                          ) : (
+                            <p className="text-[11px] font-bold text-amber-800 bg-amber-50 p-2.5 rounded-xl text-center">
+                              Live map activates automatically once a Delivery Partner is assigned.
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+            )}
           </main>
         )}
 
-        {/* TAB 4: PROFILE */}
         {activeTab === 'profile' && renderSharedProfileTab()}
 
-        {/* ELEVATED FLOATING BOTTOM DOCK */}
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t border-slate-200 px-6 py-2 flex justify-between items-center z-40 shadow-lg">
           <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'home' ? 'text-[#15803D]' : 'text-slate-400'}`}>
             <Home className="h-5 w-5 mb-0.5" />
@@ -1287,28 +1732,32 @@ const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
         {activeTab === 'orders' && (
           <main className="p-4 space-y-3 text-xs">
             <h2 className="text-base font-extrabold">Incoming Shop Orders</h2>
-            {orders.map((ord) => (
-              <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
-                <div className="flex justify-between font-extrabold">
-                  <span>{ord.id} • {ord.status}</span>
-                  <span className="text-[#15803D]">₹{ord.total}</span>
+            {orders.length === 0 ? (
+              <div className="bg-white rounded-2xl p-6 text-center text-slate-400 font-bold">No orders yet.</div>
+            ) : (
+              orders.map((ord) => (
+                <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
+                  <div className="flex justify-between font-extrabold">
+                    <span>{ord.id} • {ord.status}</span>
+                    <span className="text-[#15803D]">₹{ord.total}</span>
+                  </div>
+                  <p className="text-slate-600">{ord.buyerName} • {ord.items.map((i) => `${i.qty}kg ${i.name}`).join(', ')}</p>
+                  {ord.b2bOtp && <p className="text-amber-800 font-extrabold bg-amber-50 p-2 rounded-xl">B2B Handover OTP: {ord.b2bOtp}</p>}
+                  {ord.status === 'Order Placed' && (
+                    <button
+                      onClick={() => {
+                        setOrders((prev) => prev.map((o) => (o.id === ord.id ? { ...o, status: 'Order Accepted' } : o)));
+                        setNotifications((prev) => [`Delivery Alert: Farmer accepted ${ord.id}. Ready for pickup!`, ...prev]);
+                        notify('Order Accepted! Nearby Delivery Partners notified.');
+                      }}
+                      className="w-full bg-[#15803D] text-white font-extrabold py-2.5 rounded-xl"
+                    >
+                      Accept Order & Notify Delivery Partners
+                    </button>
+                  )}
                 </div>
-                <p className="text-slate-600">{ord.buyerName} • {ord.items.map((i) => `${i.qty}kg ${i.name}`).join(', ')}</p>
-                {ord.b2bOtp && <p className="text-amber-800 font-extrabold bg-amber-50 p-2 rounded-xl">B2B Handover OTP: {ord.b2bOtp}</p>}
-                {ord.status === 'Order Placed' && (
-                  <button
-                    onClick={() => {
-                      setOrders((prev) => prev.map((o) => (o.id === ord.id ? { ...o, status: 'Order Accepted' } : o)));
-                      setNotifications((prev) => [`Delivery Alert: Farmer accepted ${ord.id}. Ready for pickup!`, ...prev]);
-                      notify('Order Accepted! Nearby Delivery Partners notified.');
-                    }}
-                    className="w-full bg-[#15803D] text-white font-extrabold py-2.5 rounded-xl"
-                  >
-                    Accept Order & Notify Delivery Partners
-                  </button>
-                )}
-              </div>
-            ))}
+              ))
+            )}
           </main>
         )}
 
@@ -1333,7 +1782,7 @@ const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
     );
   }
 
- // =========================================================================
+// =========================================================================
   // 5. WHOLESALE & RETAIL PORTAL
   // =========================================================================
   if (currentUser.role === 'wholesale' || currentUser.role === 'retail') {
@@ -1434,24 +1883,28 @@ const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
         {activeTab === 'orders' && (
           <main className="p-4 space-y-3 text-xs">
             <h2 className="text-base font-extrabold">B2B Orders, Delivery OTP & PDF Invoices</h2>
-            {orders.map((ord) => (
-              <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
-                <div className="flex justify-between font-extrabold">
-                  <span>{ord.id} • {ord.status}</span>
-                  <span className="text-[#15803D]">₹{ord.total}</span>
-                </div>
-                <p className="text-slate-600">{ord.items.map((i) => `${i.qty}kg ${i.name}`).join(', ')}</p>
-                {ord.b2bOtp && (
-                  <div className="bg-amber-50 border border-amber-200 p-2.5 rounded-xl font-extrabold text-amber-950">
-                    Delivery Verification OTP (Share with Rider): {ord.b2bOtp}
+            {orders.length === 0 ? (
+              <div className="bg-white rounded-2xl p-6 text-center text-slate-400 font-bold">No B2B orders yet.</div>
+            ) : (
+              orders.map((ord) => (
+                <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
+                  <div className="flex justify-between font-extrabold">
+                    <span>{ord.id} • {ord.status}</span>
+                    <span className="text-[#15803D]">₹{ord.total}</span>
                   </div>
-                )}
-                <button onClick={() => window.print()} className="w-full bg-slate-900 text-white font-extrabold py-2.5 rounded-xl flex items-center justify-center space-x-1.5">
-                  <Printer className="h-3.5 w-3.5" />
-                  <span>Print / Save PDF Invoice (Both Parties)</span>
-                </button>
-              </div>
-            ))}
+                  <p className="text-slate-600">{ord.items.map((i) => `${i.qty}kg ${i.name}`).join(', ')}</p>
+                  {ord.b2bOtp && (
+                    <div className="bg-amber-50 border border-amber-200 p-2.5 rounded-xl font-extrabold text-amber-950">
+                      Delivery Verification OTP (Share with Rider): {ord.b2bOtp}
+                    </div>
+                  )}
+                  <button onClick={() => window.print()} className="w-full bg-slate-900 text-white font-extrabold py-2.5 rounded-xl flex items-center justify-center space-x-1.5">
+                    <Printer className="h-3.5 w-3.5" />
+                    <span>Print / Save PDF Invoice (Both Parties)</span>
+                  </button>
+                </div>
+              ))
+            )}
           </main>
         )}
 
@@ -1482,7 +1935,7 @@ const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
   if (currentUser.role === 'delivery') {
     const availOrders = orders.filter((o) => o.status !== 'Delivered');
     const delivOrders = orders.filter((o) => o.status === 'Delivered');
-    const weeklyCompleted = currentUser.weeklyOrders || 78;
+    const weeklyCompleted = currentUser.weeklyOrders || 0;
 
     const handleCompleteDelivery = (ord) => {
       setProducts((prev) =>
@@ -1540,9 +1993,11 @@ const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
             {delivFilter === 'earnings' ? (
               <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-2">
                 <h3 className="font-extrabold">Earnings & Incentive Breakdown</h3>
-                <div className="flex justify-between"><span>Base Delivery Fees</span><span className="font-extrabold">₹2,950</span></div>
-                <div className="flex justify-between"><span>Weekly Target Bonus</span><span className="font-extrabold text-[#15803D]">+₹500</span></div>
+                <div className="flex justify-between"><span>Base Delivery Fees</span><span className="font-extrabold">₹{currentUser.wallet}</span></div>
+                <div className="flex justify-between"><span>Weekly 100-Order Target</span><span className="font-extrabold text-[#15803D]">₹1,500 Bonus</span></div>
               </div>
+            ) : (delivFilter === 'available' ? availOrders : delivOrders).length === 0 ? (
+              <div className="bg-white rounded-2xl p-6 text-center text-slate-400 font-bold">No orders in this list.</div>
             ) : (
               (delivFilter === 'available' ? availOrders : delivOrders).map((ord) => (
                 <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2.5">
@@ -1577,7 +2032,7 @@ const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
                             notify('Accepted! Live GPS shared with Customer.');
                           } else {
                             if (ord.b2bOtp) {
-                              const entered = window.prompt(`Enter ${ord.buyerRole.toUpperCase()} Delivery OTP (Demo: ${ord.b2bOtp}):`);
+                              const entered = window.prompt(`Enter ${ord.buyerRole.toUpperCase()} Delivery OTP (${ord.b2bOtp}):`);
                               if (entered !== ord.b2bOtp) {
                                 notify('Invalid B2B OTP!');
                                 return;
@@ -1614,7 +2069,7 @@ const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
     );
   }
 
-// =========================================================================
+  // =========================================================================
   // 7. MASTER ADMIN HQ
   // =========================================================================
   return (
