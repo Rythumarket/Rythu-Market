@@ -88,7 +88,7 @@ const INITIAL_PRODUCTS = [
     img: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=400&q=80',
   },
   {
-    id: 'p4',
+id: 'p4',
     farmerId: 'u_farm_1',
     farmerName: 'Padma Organic (Nellore • 6 km)',
     distanceKm: 6,
@@ -138,7 +138,7 @@ export default function App() {
   const [regReferralCode, setRegReferralCode] = useState('');
   const [showWelcomeSmile, setShowWelcomeSmile] = useState(false);
 
-// Navigation Tabs per Role
+  // Navigation Tabs per Role
   const [activeTab, setActiveTab] = useState('home');
   const [toast, setToast] = useState('');
 
@@ -165,7 +165,7 @@ export default function App() {
     '🌾 Kovur Farmer posted 500 KG Fresh Tomato (within 40 km radius).',
   ]);
 
-  // Orders State
+// Orders State
   const [orders, setOrders] = useState([
     {
       id: 'RB-501',
@@ -300,7 +300,7 @@ export default function App() {
     setTimeout(() => setShowWelcomeSmile(false), 3500);
   };
 
-  // Strict Logout (Only way to switch roles)
+// Strict Logout (Only way to switch roles)
   const handleStrictLogout = () => {
     setCurrentUser(null);
     setSelectedRole(null);
@@ -310,7 +310,7 @@ export default function App() {
     setActiveTab('home');
   };
 
- // =========================================================================
+  // =========================================================================
   // 1. ROLE ENTRY GATE (NO ROLE SWITCHING INSIDE APPS — LOGOUT REQUIRED)
   // =========================================================================
   if (!selectedRole) {
@@ -488,7 +488,7 @@ export default function App() {
     );
   }
 
-  // Smiling Registration Welcome Modal
+// Smiling Registration Welcome Modal
   const WelcomeSmileModal = () =>
     showWelcomeSmile ? (
       <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -550,7 +550,7 @@ export default function App() {
         </div>
       )}
 
-{/* Coupons & Offers List */}
+      {/* Coupons & Offers List */}
       <div className="bg-white rounded-2xl p-3.5 shadow-sm space-y-2">
         <h3 className="font-black text-gray-900">Coupons & Loyalty Offers</h3>
         <div className="p-2.5 bg-emerald-50 rounded-xl font-bold text-[#167A37]">
@@ -579,7 +579,7 @@ export default function App() {
     </div>
   );
 
-  // =========================================================================
+// =========================================================================
   // 3. CUSTOMER STOREFRONT (OFFERS TICKER, WALLET, CRED/PAYTM/CARDS, SCRATCH CARD, ANIMATED TRACKING)
   // =========================================================================
   if (currentUser.role === 'customer') {
@@ -674,7 +674,7 @@ export default function App() {
       setScratchCard({ orderId: ord.id, reward, scratched: false });
     };
 
-return (
+    return (
       <div className="min-h-screen bg-[#F4F7F4] max-w-md mx-auto relative pb-24 font-sans text-gray-800 shadow-2xl">
         <WelcomeSmileModal />
         {toast && (
@@ -714,7 +714,7 @@ return (
           </div>
         )}
 
-        {/* TOP HEADER WITH WALLET ICON + SCROLLING OFFERS TICKER */}
+{/* TOP HEADER WITH WALLET ICON + SCROLLING OFFERS TICKER */}
         <header className="bg-[#167A37] text-white sticky top-0 z-30 px-4 pt-3 pb-3 shadow-md">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-2">
@@ -774,7 +774,7 @@ return (
               </div>
             )}
 
- {/* Products List */}
+            {/* Products List */}
             <div className="grid grid-cols-2 gap-3">
               {products
                 .filter((p) => p.nameEn.toLowerCase().includes(search.toLowerCase()) || p.nameTe.includes(search))
@@ -810,7 +810,7 @@ return (
           </main>
         )}
 
-        {/* TAB 2: CART & CHECKOUT (COUPONS, CRED/PAYTM/CARD CASHBACK, WALLET) */}
+{/* TAB 2: CART & CHECKOUT (COUPONS, CRED/PAYTM/CARD CASHBACK, WALLET) */}
         {activeTab === 'cart' && (
           <main className="p-4 space-y-3 text-xs">
             <h2 className="text-base font-black">Checkout & Payment</h2>
@@ -903,7 +903,7 @@ return (
           </main>
         )}
 
-{/* TAB 3: ORDERS + ANIMATED LIVE TRACKING (ONLY WHEN PARTNER ASSIGNED) + REORDER */}
+        {/* TAB 3: ORDERS + ANIMATED LIVE TRACKING (ONLY WHEN PARTNER ASSIGNED) + REORDER */}
         {activeTab === 'orders' && (
           <main className="p-4 space-y-3 text-xs">
             <h2 className="text-base font-black">My Orders & Animated Live Tracking</h2>
@@ -993,7 +993,7 @@ return (
           </main>
         )}
 
-        {/* TAB 4: PROFILE */}
+{/* TAB 4: PROFILE */}
         {activeTab === 'profile' && renderSharedProfileTab()}
 
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-6 py-2 flex justify-between items-center z-40">
@@ -1016,7 +1016,7 @@ return (
     );
   }
 
-// =========================================================================
+  // =========================================================================
   // 4. FARMER PORTAL (BILINGUAL TRANSLATE, AVAILABILITY TIME, 40KM SHOP ALERT, AUTO STOCK DEDUCT)
   // =========================================================================
   if (currentUser.role === 'farmer') {
@@ -1115,7 +1115,7 @@ return (
           </main>
         )}
 
-        {activeTab === 'orders' && (
+{activeTab === 'orders' && (
           <main className="p-4 space-y-3 text-xs">
             <h2 className="text-base font-black">Shop Orders (Accepting Notifies Delivery Partners)</h2>
             {orders.map((ord) => (
@@ -1263,7 +1263,7 @@ return (
           </main>
         )}
 
-        {activeTab === 'orders' && (
+{activeTab === 'orders' && (
           <main className="p-4 space-y-3 text-xs">
             <h2 className="text-base font-black">My Orders, B2B OTP & PDF Invoices</h2>
             {orders.map((ord) => (
@@ -1287,7 +1287,7 @@ return (
           </main>
         )}
 
-{activeTab === 'profile' && renderSharedProfileTab()}
+        {activeTab === 'profile' && renderSharedProfileTab()}
 
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-8 py-2 flex justify-between items-center z-40">
           {[
@@ -1361,7 +1361,7 @@ return (
               </button>
             </div>
 
-            {/* Weekly 100 Orders Incentive Banner */}
+{/* Weekly 100 Orders Incentive Banner */}
             <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-2xl p-3.5 shadow space-y-1.5">
               <div className="flex justify-between font-black">
                 <span>🏆 Weekly 100 Orders Bonus: ₹1,500</span>
@@ -1431,7 +1431,7 @@ return (
           </main>
         )}
 
-{activeTab === 'profile' && renderSharedProfileTab()}
+        {activeTab === 'profile' && renderSharedProfileTab()}
 
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-12 py-2 flex justify-between items-center z-40">
           <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'home' ? 'text-[#167A37]' : 'text-gray-400'}`}>
@@ -1447,7 +1447,7 @@ return (
     );
   }
 
-  // =========================================================================
+// =========================================================================
   // 7. MASTER ADMIN CONTROL (SCRATCH RANGE, TOGGLE OFFERS, STOCK IN/OUT, APPROVALS)
   // =========================================================================
   return (
