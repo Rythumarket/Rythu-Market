@@ -148,7 +148,29 @@ const PaymentBadge = ({ type }) => {
     </span>
   );
 };
+
 const isValidIndianMobile = (num) => /^[6-9]\d{9}$/.test(num);
+
+// Build Android Intent + UPI Deep Link so PhonePe / GPay / Paytm launch reliably on mobile Chrome
+const buildPaymentLaunchUrl = (mode, upiId, amount) => {
+  const pa = encodeURIComponent(upiId);
+  const pn = encodeURIComponent('Rythu Basket Nellore');
+  const am = Number(amount || 1).toFixed(2);
+  const query = `pa=${pa}&pn=${pn}&am=${am}&cu=INR`;
+
+  const isAndroid = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent);
+  const pkgMap = {
+    phonepe: 'com.phonepe.app',
+    gpay: 'com.google.android.apps.nbu.paisa.user',
+    paytm: 'net.one97.paytm',
+    cred: 'com.dreamplug.androidapp',
+  };
+
+  if (isAndroid && pkgMap[mode]) {
+    return `intent://pay?${query}#Intent;scheme=upi;package=${pkgMap[mode]};end`;
+  }
+  return `upi://pay?${query}`;
+};
 
 export default function App() {
   useEffect(() => {
@@ -229,7 +251,7 @@ export default function App() {
   const [isEditingPinText, setIsEditingPinText] = useState(false);
   const [isLocatingGps, setIsLocatingGps] = useState(false);
 
-  // Cart & Payments
+// Cart & Payments
   const [cart, setCart] = useState({ p1: 2, p3: 1 });
   const [useWalletBalance, setUseWalletBalance] = useState(false);
   const [promoInput, setPromoInput] = useState('');
@@ -242,7 +264,7 @@ export default function App() {
   const [cardError, setCardError] = useState('');
   const [merchantUpiId] = useState('8328261103@ybl');
 
- // B2B States
+  // B2B States
   const [b2bSource, setB2bSource] = useState('farmer');
   const [b2bDeliveryMode, setB2bDeliveryMode] = useState('pickup');
 
@@ -352,7 +374,7 @@ export default function App() {
     setActiveTab('home');
   };
 
-const handleSendRegisterOtp = async () => {
+  const handleSendRegisterOtp = async () => {
     const clean = regMobile.replace(/\D/g, '');
     if (!regName.trim() || !regAddress.trim()) {
       setAuthMsg('Please fill Full Name / Store Name and Address first.');
@@ -416,6 +438,7 @@ const handleSendRegisterOtp = async () => {
     setActiveTab('home');
   };
 
+  // Reverse Geocoding + GPS Current Location
   const fetchAddressFromCoords = async (lat, lng) => {
     try {
       const res = await fetch(
@@ -435,7 +458,7 @@ const handleSendRegisterOtp = async () => {
     setMapPinFullAddress(`Lat ${lat.toFixed(5)}, Lng ${lng.toFixed(5)}, Nellore, Andhra Pradesh`);
   };
 
-  const handleUseCurrentLocationMap = () => {
+const handleUseCurrentLocationMap = () => {
     setIsLocatingGps(true);
     setIsEditingPinText(false);
     setActiveTab('mapPin');
@@ -501,7 +524,7 @@ const handleSendRegisterOtp = async () => {
 
   const fontStyle = { fontFamily: "'Plus Jakarta Sans', 'Noto Sans Telugu', sans-serif" };
 
-// =========================================================================
+  // =========================================================================
   // 1. ROLE ENTRY GATE
   // =========================================================================
   if (!selectedRole) {
@@ -569,7 +592,7 @@ const handleSendRegisterOtp = async () => {
     );
   }
 
-  // =========================================================================
+// =========================================================================
   // 2. REAL SMS INBOX OTP LOGIN / REGISTRATION SCREEN
   // =========================================================================
   if (!currentUser) {
@@ -736,7 +759,7 @@ const handleSendRegisterOtp = async () => {
                   />
                 )}
 
-{authMsg && <p className="text-red-600 font-bold">{authMsg}</p>}
+                {authMsg && <p className="text-red-600 font-bold">{authMsg}</p>}
 
                 {!regOtpSent ? (
                   <button
@@ -775,7 +798,7 @@ const handleSendRegisterOtp = async () => {
     );
   }
 
-  const WelcomeSmileModal = () =>
+const WelcomeSmileModal = () =>
     showWelcomeSmile ? (
       <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-3xl p-6 text-center max-w-xs w-full space-y-3 shadow-2xl">
@@ -854,7 +877,7 @@ const handleSendRegisterOtp = async () => {
   );
 
 // =========================================================================
-  // 3. CUSTOMER STOREFRONT (LOCATION PIN + REAL UPI/CARD LAUNCH)
+  // 3. CUSTOMER STOREFRONT (FIXED LOCATION PICKER + ANDROID UPI INTENT LAUNCH)
   // =========================================================================
   if (currentUser.role === 'customer') {
     const activeAddr = savedAddresses.find((a) => a.id === activeAddrId) || savedAddresses[0];
@@ -869,7 +892,7 @@ const handleSendRegisterOtp = async () => {
       return (
         <div style={fontStyle} className="min-h-screen bg-[#0F5132] max-w-md mx-auto text-slate-800 shadow-2xl flex flex-col">
           <div className="px-4 py-4 text-white flex items-center space-x-3">
-            <button onClick={() => setActiveTab('home')} className="p-1.5 rounded-full hover:bg-white/15">
+            <button type="button" onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white/15">
               <ArrowLeft className="h-5 w-5" />
             </button>
             <h1 className="text-sm font-extrabold tracking-wide uppercase">SELECT DELIVERY LOCATION</h1>
@@ -890,10 +913,10 @@ const handleSendRegisterOtp = async () => {
             <button
               type="button"
               onClick={handleUseCurrentLocationMap}
-              className="w-full border border-emerald-200 bg-emerald-50/50 rounded-2xl py-3.5 px-4 flex items-center justify-center space-x-2 text-[#15803D] font-extrabold text-xs shadow-sm"
+              className="w-full border-2 border-[#15803D] bg-emerald-50 rounded-2xl py-3.5 px-4 flex items-center justify-center space-x-2 text-[#15803D] font-extrabold text-xs shadow-sm active:scale-[0.99]"
             >
               <LocateFixed className="h-4 w-4" />
-              <span>Use current location</span>
+              <span>Use current location (Open GPS Map)</span>
             </button>
 
             <div className="flex items-center justify-between pt-1">
@@ -949,10 +972,10 @@ const handleSendRegisterOtp = async () => {
       return (
         <div style={fontStyle} className="min-h-screen bg-[#0F5132] max-w-md mx-auto text-slate-800 shadow-2xl flex flex-col">
           <div className="px-4 py-4 text-white flex items-center space-x-3">
-            <button onClick={() => setActiveTab('selectLocation')} className="p-1.5 rounded-full hover:bg-white/15">
+            <button type="button" onClick={() => setActiveTab('selectLocation')} className="p-2 rounded-full bg-white/15">
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <h1 className="text-sm font-extrabold tracking-wide uppercase">SELECT DELIVERY LOCATION</h1>
+            <h1 className="text-sm font-extrabold tracking-wide uppercase">PIN DELIVERY LOCATION</h1>
           </div>
 
           <div className="flex-1 bg-white rounded-t-[30px] overflow-hidden flex flex-col justify-between relative">
@@ -963,7 +986,7 @@ const handleSendRegisterOtp = async () => {
                   type="text"
                   value={mapPinTitle}
                   onChange={(e) => setMapPinTitle(e.target.value)}
-                  placeholder="Search for location"
+                  placeholder="Enter area / street name"
                   className="w-full text-xs font-bold focus:outline-none"
                 />
               </div>
@@ -979,8 +1002,8 @@ const handleSendRegisterOtp = async () => {
 
               <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center z-10 pb-8">
                 <div className="bg-slate-900 text-white px-3.5 py-2 rounded-xl shadow-lg text-center mb-1.5">
-                  <p className="text-[11px] font-extrabold leading-tight">Drag the map to adjust location</p>
-                  <p className="text-[9px] text-slate-300">Your order will be delivered here</p>
+                  <p className="text-[11px] font-extrabold leading-tight">Your order will be delivered here</p>
+                  <p className="text-[9px] text-slate-300">Use N/S/E/W buttons to fine-tune pin</p>
                 </div>
                 <div className="h-10 w-10 rounded-full bg-[#15803D]/25 flex items-center justify-center">
                   <div className="h-5 w-5 rounded-full bg-[#15803D] border-2 border-white shadow-md" />
@@ -1082,12 +1105,10 @@ const orderNum = (currentUser.ordersCompleted || 0) + 1;
         ? 20
         : 5;
 
-    const payeeEncoded = encodeURIComponent('Rythu Basket Nellore');
-    const genericUpiUri = `upi://pay?pa=${encodeURIComponent(merchantUpiId)}&pn=${payeeEncoded}&am=${payableTotal}&cu=INR`;
-    const phonePeUri = `phonepe://pay?pa=${encodeURIComponent(merchantUpiId)}&pn=${payeeEncoded}&am=${payableTotal}&cu=INR`;
-    const gpayUri = `tez://upi/pay?pa=${encodeURIComponent(merchantUpiId)}&pn=${payeeEncoded}&am=${payableTotal}&cu=INR`;
-    const paytmUri = `paytmmp://pay?pa=${encodeURIComponent(merchantUpiId)}&pn=${payeeEncoded}&am=${payableTotal}&cu=INR`;
-    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(genericUpiUri)}`;
+    const paymentAppLaunchUrl = buildPaymentLaunchUrl(payMode, merchantUpiId, payableTotal);
+    const genericUpiQr = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(
+      `upi://pay?pa=${encodeURIComponent(merchantUpiId)}&pn=${encodeURIComponent('Rythu Basket Nellore')}&am=${payableTotal}&cu=INR`
+    )}`;
 
     const finalizeCustomerOrder = () => {
       const itemsArr = Object.entries(cart)
@@ -1145,14 +1166,12 @@ const orderNum = (currentUser.ordersCompleted || 0) + 1;
         finalizeCustomerOrder();
         return;
       }
-      const deepLinks = {
-        phonepe: phonePeUri,
-        gpay: gpayUri,
-        paytm: paytmUri,
-        cred: genericUpiUri,
-      };
-      setActiveTab('upiProcessing');
-      window.location.href = deepLinks[payMode] || genericUpiUri;
+
+      // Launch PhonePe / GPay / Paytm / CRED via Android Intent URL first, then show confirmation screen
+      window.location.assign(paymentAppLaunchUrl);
+      setTimeout(() => {
+        setActiveTab('upiProcessing');
+      }, 300);
     };
 
     const handleSimulateCustomerDelivery = (ord) => {
@@ -1215,34 +1234,36 @@ const orderNum = (currentUser.ordersCompleted || 0) + 1;
           </div>
         )}
 
-<header className="bg-gradient-to-b from-[#0F5132] to-[#15803D] text-white sticky top-0 z-30 px-4 pt-3.5 pb-4 rounded-b-[28px] shadow-lg space-y-2.5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2.5 max-w-[74%]">
-              <div className="h-10 w-10 rounded-full bg-white p-0.5 border border-[#EAB308] overflow-hidden shadow flex-shrink-0">
+        {/* TOP HEADER WITH HIGH-PRIORITY CLICKABLE LOCATION SELECTOR */}
+        <header className="bg-gradient-to-b from-[#0F5132] to-[#15803D] text-white sticky top-0 z-40 px-4 pt-3.5 pb-4 rounded-b-[28px] shadow-lg space-y-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setLocSearch('');
+                setActiveTab('selectLocation');
+              }}
+              className="flex items-center space-x-2.5 flex-1 min-w-0 text-left bg-white/10 hover:bg-white/15 active:scale-[0.99] px-2.5 py-1.5 rounded-2xl transition cursor-pointer"
+            >
+              <div className="h-9 w-9 rounded-full bg-white p-0.5 border border-[#EAB308] overflow-hidden shadow flex-shrink-0">
                 <img src="/icon-512.png" alt="Logo" className="h-full w-full object-cover rounded-full" />
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setLocSearch('');
-                  setActiveTab('selectLocation');
-                }}
-                className="text-left focus:outline-none"
-              >
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center space-x-1 text-[10px] font-bold text-[#FDE047]">
-                  <MapPin className="h-3 w-3" />
-                  <span>SELECTED LOCATION ▾</span>
+                  <MapPin className="h-3 w-3 flex-shrink-0" />
+                  <span>SELECTED LOCATION</span>
                 </div>
                 <div className="flex items-center space-x-1">
-                  <p className="text-xs font-extrabold truncate max-w-[180px]">{activeAddr.title}</p>
+                  <p className="text-xs font-extrabold truncate">{activeAddr.title}</p>
                   <ChevronDown className="h-3.5 w-3.5 text-emerald-200 flex-shrink-0" />
                 </div>
-              </button>
-            </div>
+              </div>
+            </button>
 
             <button
+              type="button"
               onClick={() => setActiveTab('profile')}
-              className="bg-white/15 backdrop-blur-md border border-white/20 text-white px-3 py-1.5 rounded-full text-xs font-extrabold flex items-center space-x-1.5 shadow-sm"
+              className="bg-white/15 backdrop-blur-md border border-white/20 text-white px-3 py-2 rounded-full text-xs font-extrabold flex items-center space-x-1.5 shadow-sm flex-shrink-0"
             >
               <Wallet className="h-3.5 w-3.5 text-[#FDE047]" />
               <span>₹{currentUser.wallet || 0}</span>
@@ -1301,7 +1322,7 @@ const orderNum = (currentUser.ordersCompleted || 0) + 1;
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-3">
+  <div className="grid grid-cols-2 gap-3">
               {visibleProducts.map((p) => {
                 const q = cart[p.id] || 0;
                 const offPct = Math.round(((p.mrp - p.retailPrice) / p.mrp) * 100);
@@ -1372,7 +1393,7 @@ const orderNum = (currentUser.ordersCompleted || 0) + 1;
                 <p className="text-[10px] font-bold text-slate-400">Delivering to ({activeAddr.tag})</p>
                 <p className="font-extrabold text-slate-900 truncate max-w-[215px]">{activeAddr.full}</p>
               </div>
-              <button onClick={() => setActiveTab('selectLocation')} className="text-[#15803D] font-extrabold underline">
+              <button type="button" onClick={() => setActiveTab('selectLocation')} className="text-[#15803D] font-extrabold underline">
                 Change
               </button>
             </div>
@@ -1428,16 +1449,30 @@ const orderNum = (currentUser.ordersCompleted || 0) + 1;
                     { id: 'card', label: `Credit / Debit Card (₹${Math.max(5, Math.round(payableTotal * 0.05))} Cashback)` },
                     { id: 'cod', label: 'Cash on Delivery (COD)' },
                   ].map((pm) => (
-                    <label key={pm.id} className={`flex items-center justify-between p-2.5 rounded-xl border-2 cursor-pointer transition ${payMode === pm.id ? 'border-[#15803D] bg-emerald-50/40' : 'border-slate-100'}`}>
-                      <div className="flex items-center space-x-2.5">
-                        <PaymentBadge type={pm.id} />
-                        <span className="font-extrabold text-slate-800">{pm.label}</span>
-                      </div>
-                      <input type="radio" checked={payMode === pm.id} onChange={() => setPayMode(pm.id)} className="accent-[#15803D]" />
-                    </label>
+                    <div key={pm.id} className={`rounded-xl border-2 p-2.5 transition ${payMode === pm.id ? 'border-[#15803D] bg-emerald-50/40' : 'border-slate-100'}`}>
+                      <label onClick={() => setPayMode(pm.id)} className="flex items-center justify-between cursor-pointer">
+                        <div className="flex items-center space-x-2.5">
+                          <PaymentBadge type={pm.id} />
+                          <span className="font-extrabold text-slate-800">{pm.label}</span>
+                        </div>
+                        <input type="radio" checked={payMode === pm.id} onChange={() => setPayMode(pm.id)} className="accent-[#15803D]" />
+                      </label>
+
+                      {payMode === pm.id && (pm.id === 'phonepe' || pm.id === 'gpay' || pm.id === 'paytm' || pm.id === 'cred') && (
+                        <div className="mt-2.5 pt-2 border-t border-emerald-200/70">
+                          <a
+                            href={buildPaymentLaunchUrl(pm.id, merchantUpiId, payableTotal)}
+                            onClick={() => setTimeout(() => setActiveTab('upiProcessing'), 400)}
+                            className="block w-full bg-[#15803D] text-white text-center font-extrabold py-2.5 rounded-xl shadow-sm"
+                          >
+                            Launch {pm.label.split(' (')[0]} & Pay ₹{payableTotal} ↗
+                          </a>
+                        </div>
+                      )}
+                    </div>
                   ))}
 
-{payMode === 'card' && (
+                  {payMode === 'card' && (
                     <div className="pt-2 space-y-2">
                       <input type="text" maxLength={19} value={cardNo} onChange={(e) => setCardNo(e.target.value)} placeholder="16-Digit Card Number" className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
                       <div className="grid grid-cols-2 gap-2">
@@ -1458,9 +1493,20 @@ const orderNum = (currentUser.ordersCompleted || 0) + 1;
                   <div className="flex justify-between"><span>Delivery Fee (Free ₹99+)</span><span className="font-bold">{deliveryFee === 0 ? 'FREE' : `₹${deliveryFee}`}</span></div>
                   <div className="border-t pt-2 flex justify-between text-sm font-extrabold text-slate-900"><span>Grand Total</span><span>₹{payableTotal}</span></div>
                   <p className="text-[10px] font-extrabold text-[#EA580C]">₹{estimatedCashback} Cashback + Scratch Card unlocks on delivery!</p>
-                  <button onClick={handlePayAndPlaceOrderTrigger} className="w-full mt-2 bg-[#EA580C] hover:bg-[#C2410C] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm transition">
-                    Pay & Place Order • ₹{payableTotal}
-                  </button>
+
+                  {payMode === 'card' || payMode === 'cod' ? (
+                    <button type="button" onClick={handlePayAndPlaceOrderTrigger} className="w-full mt-2 bg-[#EA580C] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm">
+                      Pay & Place Order • ₹{payableTotal}
+                    </button>
+                  ) : (
+                    <a
+                      href={paymentAppLaunchUrl}
+                      onClick={() => setTimeout(() => setActiveTab('upiProcessing'), 400)}
+                      className="block w-full mt-2 bg-[#EA580C] text-white text-center font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
+                    >
+                      Pay & Place Order • ₹{payableTotal}
+                    </a>
+                  )}
                 </div>
               </>
             )}
@@ -1475,17 +1521,17 @@ const orderNum = (currentUser.ordersCompleted || 0) + 1;
               </div>
               <h2 className="text-base font-extrabold text-slate-900">Complete Payment of ₹{payableTotal}</h2>
               <p className="text-slate-500">
-                Launching <strong>{payMode.toUpperCase()}</strong> on your phone... If it didn't open automatically, tap below or scan QR:
+                Opening <strong>{payMode.toUpperCase()}</strong> on your phone... If it didn't open automatically, tap below or scan QR:
               </p>
 
               <a
-                href={payMode === 'phonepe' ? phonePeUri : payMode === 'gpay' ? gpayUri : payMode === 'paytm' ? paytmUri : genericUpiUri}
+                href={paymentAppLaunchUrl}
                 className="block w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow"
               >
                 Open {payMode.toUpperCase()} App Now ↗
               </a>
 
-              <img src={qrCodeUrl} alt="UPI QR" className="w-32 h-32 mx-auto rounded-xl border p-1 bg-white" />
+              <img src={genericUpiQr} alt="UPI QR" className="w-32 h-32 mx-auto rounded-xl border p-1 bg-white" />
 
               <input
                 type="text"
@@ -1496,6 +1542,7 @@ const orderNum = (currentUser.ordersCompleted || 0) + 1;
               />
 
               <button
+                type="button"
                 onClick={finalizeCustomerOrder}
                 className="w-full bg-[#EA580C] text-white font-extrabold py-3.5 rounded-2xl shadow-lg text-sm"
               >
@@ -1505,7 +1552,7 @@ const orderNum = (currentUser.ordersCompleted || 0) + 1;
           </main>
         )}
 
-        {activeTab === 'orders' && (
+{activeTab === 'orders' && (
           <main className="p-4 space-y-3.5 text-xs">
             <h2 className="text-base font-extrabold text-slate-900">My Orders & Live Tracking</h2>
 
@@ -2069,7 +2116,7 @@ const orderNum = (currentUser.ordersCompleted || 0) + 1;
     );
   }
 
-  // =========================================================================
+// =========================================================================
   // 7. MASTER ADMIN HQ
   // =========================================================================
   return (
