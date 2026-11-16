@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import {
-  Search, Mic, Heart, ShoppingCart, Plus, Minus, Home, Grid,
-  ClipboardList, User, MapPin, Phone, Sprout, Store, Truck, ShieldCheck,
-  ChevronRight, ArrowLeft, CheckCircle2, Lock, LogOut, Edit3, Check,
-  Camera, Warehouse, Wallet, Star, QrCode, AlertTriangle,
-  Eye, EyeOff, Trash2, Handshake
+  Search, ShoppingCart, Plus, Minus, Home,
+  ClipboardList, MapPin, Phone, Sprout, Store, Truck, ShieldCheck,
+  ChevronRight, ArrowLeft, CheckCircle2, QrCode,
+  Eye, EyeOff, Trash2, LogOut, Check, Camera, Warehouse, Wallet,
+  LocateFixed, Navigation, ChevronDown, X
 } from 'lucide-react';
 
 const INITIAL_SHOPS = [
@@ -182,7 +182,7 @@ const INITIAL_CATALOG = [
   },
 ];
 
-// ORIGINAL BRAND LOGOS (PHONEPE, GOOGLE PAY, PAYTM, CARD)
+// ORIGINAL PAYMENT BRAND LOGOS
 const PhonePeLogo = () => (
   <svg viewBox="0 0 36 36" className="h-7 w-7 flex-shrink-0">
     <rect width="36" height="36" rx="9" fill="#5F259F" />
@@ -217,58 +217,67 @@ const CardBrandLogo = () => (
 
 export default function App() {
   const [lang, setLang] = useState('te');
-  const [activeRole, setActiveRole] = useState(null); // null | 'customer' | 'farmer' | 'retail' | 'wholesale' | 'delivery' | 'admin'
-  const [subScreen, setSubScreen] = useState('auth'); // 'auth' | 'home' | 'categories' | 'cart' | 'checkout' | 'orders' | 'tracking' | 'roleDash'
+  const [activeRole, setActiveRole] = useState(null);
+  const [subScreen, setSubScreen] = useState('auth'); // 'auth' | 'home' | 'cart' | 'checkout' | 'upiProcessing' | 'tracking' | 'orders' | 'roleDash'
 
-  // Master Data
   const [shops, setShops] = useState(INITIAL_SHOPS);
   const [catalog, setCatalog] = useState(INITIAL_CATALOG);
   const [loggedInUser, setLoggedInUser] = useState(null);
 
-  // Customer BigBasket Storefront States
+  // Storefront States
   const [selectedCat, setSelectedCat] = useState('All');
   const [search, setSearch] = useState('');
   const [selectedVariants, setSelectedVariants] = useState({});
-  const [cart, setCart] = useState({ tomato__1: 1, rice__0: 1 });
-  const [wishlist, setWishlist] = useState(['mango', 'tomato']);
+  const [cart, setCart] = useState({ onion__0: 2 });
   const [toast, setToast] = useState('');
 
-  // Addresses, Delivery Slots & Coupons
+  // TOP ADDRESS DROPDOWN + GPS + MANUAL MAP PIN STATES
+  const [showAddressDropdown, setShowAddressDropdown] = useState(false);
+  const [showAddAddressModal, setShowAddAddressModal] = useState(false);
   const [addresses, setAddresses] = useState([
-    { id: 'addr1', tag: 'Home', text: 'Flat 204, Green Park Apts, Vedayapalem, Nellore - 524004' },
-    { id: 'addr2', tag: 'Office', text: 'Magunta Layout Main Road, Nellore - 524003' },
+    { id: 'addr1', tag: 'Home', text: 'Flat 204, Green Park Apts, Vedayapalem, Nellore', lat: 14.4285, lng: 79.9692 },
+    { id: 'addr2', tag: 'Office', text: 'Magunta Layout Main Road, Nellore', lat: 14.4426, lng: 79.9865 },
   ]);
   const [activeAddrId, setActiveAddrId] = useState('addr1');
+  const [newAddrTag, setNewAddrTag] = useState('Home');
   const [newAddrText, setNewAddrText] = useState('');
+  const [pinnedCoords, setPinnedCoords] = useState({ lat: 14.4426, lng: 79.9865 });
+  const [gpsLoading, setGpsLoading] = useState(false);
+
+  // Delivery Slot & Coupons
   const [deliverySlot, setDeliverySlot] = useState('Today, 6:00 PM - 8:00 PM');
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
 
   // Payment States
-  const [payMethod, setPayMethod] = useState('phonepe');
+  const [payMethod, setPayMethod] = useState('gpay'); // 'phonepe' | 'gpay' | 'paytm' | 'qr' | 'card' | 'cod'
   const [utrNumber, setUtrNumber] = useState('');
   const [cardNum, setCardNum] = useState('');
   const [cardExp, setCardExp] = useState('');
   const [cardCvv, setCardCvv] = useState('');
   const [cardName, setCardName] = useState('');
   const [payError, setPayError] = useState('');
-  const [merchantUpiId, setMerchantUpiId] = useState('8328261103@ybl');
+  const [merchantUpiId] = useState('8328261103@ybl');
 
-  // Orders List (Shared across Customer, Seller, Delivery, Admin)
+  // Orders & Live Tracking
   const [orders, setOrders] = useState([
     {
       id: 'RB-90412',
       sellerId: 'shop_retail_1',
       customerName: 'Sundar Reddy (9876543210)',
       phone: '9876543210',
-      address: 'Vedayapalem, Nellore',
+      address: 'Flat 204, Green Park Apts, Vedayapalem, Nellore',
+      lat: 14.4285,
+      lng: 79.9692,
       date: 'Today, 10:15 AM',
       period: 'today',
       status: 'Out for Delivery',
+      stepIndex: 3, // 0: Placed, 1: Confirmed, 2: Packed, 3: Out for Delivery, 4: Delivered
       slot: 'Today, 12:00 PM - 2:00 PM',
       payment: 'PhonePe UPI',
       total: 323,
       driver: 'Ramesh Kumar',
+      driverPhone: '9848012345',
       otp: '4829',
       items: ['1 × Fresh Country Tomato (1 kg)', '1 × Nellore Sona Masuri Rice (5 kg)'],
     },
@@ -278,37 +287,25 @@ export default function App() {
       customerName: 'Balaji Retail Mart (9849223344)',
       phone: '9849223344',
       address: 'Kovur Road, Nellore',
+      lat: 14.4912,
+      lng: 79.9854,
       date: 'Today, 11:00 AM',
       period: 'today',
-      status: 'Pending',
+      status: 'Confirmed',
+      stepIndex: 1,
       slot: 'Today, 6:00 PM - 8:00 PM',
-      payment: 'Google Pay UPI',
+      payment: 'Google Pay (GPay)',
       total: 650,
-      driver: 'Unassigned',
+      driver: 'Ramesh Kumar',
+      driverPhone: '9848012345',
       otp: '7312',
       items: ['1 × Red Onion Bulk (25 kg Sack)'],
     },
-    {
-      id: 'RB-90390',
-      sellerId: 'shop_wholesale_1',
-      customerName: 'Lakshmi Super Market (9121334455)',
-      phone: '9121334455',
-      address: 'Nellore Town',
-      date: '12 Nov 2026',
-      period: 'week',
-      status: 'Delivered',
-      slot: 'Morning Slot',
-      payment: 'Paytm UPI',
-      total: 1350,
-      driver: 'Ramesh Kumar',
-      otp: '5511',
-      items: ['10 × Farm Potato (5 kg)'],
-    },
   ]);
-  const [trackingOrder, setTrackingOrder] = useState(null);
+  const [trackingOrderId, setTrackingOrderId] = useState('RB-90412');
 
-  // Auth & Registration Form States
-  const [authTab, setAuthTab] = useState('login'); // 'login' | 'register'
+ // Auth & Registration Form States
+  const [authTab, setAuthTab] = useState('login');
   const [mobileInput, setMobileInput] = useState('');
   const [passInput, setPassInput] = useState('');
   const [showPass, setShowPass] = useState(false);
@@ -316,7 +313,6 @@ export default function App() {
   const [otpVal, setOtpVal] = useState('');
   const [authError, setAuthError] = useState('');
 
-// Mandatory Registration Fields
   const [regStoreName, setRegStoreName] = useState('');
   const [regOwnerName, setRegOwnerName] = useState('');
   const [regAddress, setRegAddress] = useState('');
@@ -324,7 +320,7 @@ export default function App() {
   const [regBank, setRegBank] = useState('');
   const [regPhoto, setRegPhoto] = useState('');
 
-  // Seller / Farmer / Delivery / Admin Dashboard States
+  // Seller / Delivery / Admin Dashboard States
   const [dashTab, setDashTab] = useState('orders');
   const [payPeriod, setPayPeriod] = useState('today');
   const [newItemName, setNewItemName] = useState('');
@@ -337,14 +333,8 @@ export default function App() {
   const [editMinQtyVal, setEditMinQtyVal] = useState('');
   const [editShopUpi, setEditShopUpi] = useState('');
   const [editShopBank, setEditShopBank] = useState('');
-
-  // Delivery Partner States
   const [isDriverOnline, setIsDriverOnline] = useState(true);
   const [driverWallet, setDriverWallet] = useState(2450);
-  const [delivOtpInput, setDelivOtpInput] = useState('');
-  const [delivProofPhoto, setDelivProofPhoto] = useState('');
-
-  // Admin States
   const [adminTab, setAdminTab] = useState('approvals');
 
   const showToast = (msg) => {
@@ -358,6 +348,71 @@ export default function App() {
     const reader = new FileReader();
     reader.onloadend = () => setter(reader.result);
     reader.readAsDataURL(file);
+  };
+
+  // USE CURRENT LOCATION (AUTO GPS + MAPS)
+  const handleUseCurrentLocation = (autoSaveToHeader = false) => {
+    setGpsLoading(true);
+    if (!navigator.geolocation) {
+      setGpsLoading(false);
+      showToast('GPS not supported on this browser');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = Number(pos.coords.latitude.toFixed(5));
+        const lng = Number(pos.coords.longitude.toFixed(5));
+        setPinnedCoords({ lat, lng });
+        const detectedLabel = `Current GPS Location, Nellore (${lat}, ${lng})`;
+        setNewAddrText(detectedLabel);
+        setGpsLoading(false);
+
+        if (autoSaveToHeader) {
+          const id = 'gps_' + Date.now();
+          setAddresses((prev) => [{ id, tag: 'Current GPS', text: detectedLabel, lat, lng }, ...prev]);
+          setActiveAddrId(id);
+          setShowAddressDropdown(false);
+          showToast('📍 Current GPS Location Captured & Pinned!');
+        } else {
+          showToast(`📍 GPS Coordinates Captured: ${lat}, ${lng}`);
+        }
+      },
+      () => {
+        // Fallback Nellore coordinates if permission blocked
+        const lat = 14.4426;
+        const lng = 79.9865;
+        setPinnedCoords({ lat, lng });
+        const detectedLabel = `Nellore City Center (${lat}, ${lng})`;
+        setNewAddrText(detectedLabel);
+        setGpsLoading(false);
+        if (autoSaveToHeader) {
+          const id = 'gps_' + Date.now();
+          setAddresses((prev) => [{ id, tag: 'Current GPS', text: detectedLabel, lat, lng }, ...prev]);
+          setActiveAddrId(id);
+          setShowAddressDropdown(false);
+        }
+        showToast('📍 Nellore Location Pinned on Map');
+      }
+    );
+  };
+
+  const handleSaveManualPinnedAddress = (e) => {
+    e.preventDefault();
+    if (!newAddrText.trim()) return;
+    const id = 'addr_' + Date.now();
+    const newEntry = {
+      id,
+      tag: newAddrTag,
+      text: newAddrText.trim(),
+      lat: pinnedCoords.lat,
+      lng: pinnedCoords.lng,
+    };
+    setAddresses([newEntry, ...addresses]);
+    setActiveAddrId(id);
+    setNewAddrText('');
+    setShowAddAddressModal(false);
+    setShowAddressDropdown(false);
+    showToast('✅ New Address & Map Pin Saved!');
   };
 
   // Cart Operations
@@ -379,8 +434,6 @@ export default function App() {
 
     if (next >= (prod.minQty || 1)) {
       showToast(`${prod.nameEn.split(' (')[0]} (${variant.label}): ${next} in Basket`);
-    } else {
-      showToast(`Removed ${prod.nameEn.split(' (')[0]}`);
     }
   };
 
@@ -412,7 +465,7 @@ export default function App() {
   const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0;
   const grandTotal = Math.max(0, itemSubtotal + deliveryCharge - couponDiscount);
 
-// Payment Links
+// Payment App Links
   const activeSellerShop = (() => {
     const first = cartLines[0]?.prod;
     return shops.find((s) => s.id === first?.sellerId);
@@ -438,23 +491,8 @@ export default function App() {
     }
   };
 
-  const sendWhatsAppOrSmsInvoice = (ord) => {
-    const text =
-      `RYTHU BASKET INVOICE\nOrder ID: ${ord.id}\nCustomer: ${ord.customerName}\nItems: ${ord.items.join(', ')}\nTotal: Rs.${ord.total}\nPayment: ${ord.payment}\nStatus: ${ord.status}`;
-    const cleanPhone = (ord.phone || '9876543210').replace(/\D/g, '').slice(-10);
-    window.open(`https://wa.me/91${cleanPhone}?text=${encodeURIComponent(text)}`, '_blank');
-  };
-
-  const handlePlaceOrder = () => {
-    setPayError('');
-    if (payMethod === 'card') {
-      const digits = cardNum.replace(/\s+/g, '');
-      if (digits.length < 12 || !cardExp.trim() || cardCvv.length < 3 || !cardName.trim()) {
-        setPayError('Please enter valid Card Number, Expiry (MM/YY), CVV & Cardholder Name.');
-        return;
-      }
-    }
-
+  // Finalize Order & Jump Directly to Live Order Tracking Screen
+  const finalizeAndOpenLiveTracking = () => {
     const methodLabels = {
       phonepe: 'PhonePe UPI',
       gpay: 'Google Pay (GPay)',
@@ -464,39 +502,83 @@ export default function App() {
       cod: 'Cash on Delivery (COD)',
     };
 
+    const activeAddr = addresses.find((a) => a.id === activeAddrId) || addresses[0];
     const firstProd = cartLines[0]?.prod;
+    const newOrdId = 'RB-' + Math.floor(90500 + Math.random() * 9000);
+
     const newOrder = {
-      id: 'RB-' + Math.floor(90500 + Math.random() * 9000),
+      id: newOrdId,
       sellerId: firstProd?.sellerId || 'shop_retail_1',
       customerName: `${loggedInUser?.name || 'Customer'} (${loggedInUser?.mobile || '9876543210'})`,
       phone: loggedInUser?.mobile || '9876543210',
-      address: (addresses.find((a) => a.id === activeAddrId) || addresses[0]).text,
+      address: activeAddr.text,
+      lat: activeAddr.lat,
+      lng: activeAddr.lng,
       date: 'Just now',
       period: 'today',
-      status: 'Pending',
+      status: 'Order Placed',
+      stepIndex: 1,
       slot: deliverySlot,
       payment: `${methodLabels[payMethod]}${utrNumber ? ` (UTR: ${utrNumber})` : ''}`,
       total: grandTotal,
-      driver: 'Unassigned',
+      driver: 'Ramesh Kumar',
+      driverPhone: '9848012345',
       otp: String(Math.floor(1000 + Math.random() * 9000)),
       items: cartLines.map((l) => `${l.qty} × ${l.prod.nameEn.split(' (')[0]} (${l.variant.label})`),
     };
 
     setOrders([newOrder, ...orders]);
-    setTrackingOrder(newOrder);
+    setTrackingOrderId(newOrdId);
     setCart({});
     setAppliedCoupon(null);
     setUtrNumber('');
     setSubScreen('tracking');
-    showToast('✅ Order Placed Successfully!');
+    showToast('✅ Order Placed! Live Tracking Started');
+  };
+
+  // Trigger Payment App When Pressing "Pay & Place Order"
+  const handlePayAndPlaceOrderClick = () => {
+    setPayError('');
+    if (payMethod === 'card') {
+      const digits = cardNum.replace(/\s+/g, '');
+      if (digits.length < 12 || !cardExp.trim() || cardCvv.length < 3 || !cardName.trim()) {
+        setPayError('Please enter valid Card Number, Expiry (MM/YY), CVV & Cardholder Name.');
+        return;
+      }
+      finalizeAndOpenLiveTracking();
+      return;
+    }
+
+    if (payMethod === 'cod') {
+      finalizeAndOpenLiveTracking();
+      return;
+    }
+
+    // Launch PhonePe / Google Pay / Paytm / UPI App first, then show Payment Confirmation Gate
+    const appUriMap = {
+      phonepe: phonePeLink,
+      gpay: gpayLink,
+      paytm: paytmLink,
+      qr: genericUpi,
+    };
+
+    setSubScreen('upiProcessing');
+    window.location.href = appUriMap[payMethod] || genericUpi;
+  };
+
+  const sendWhatsAppInvoice = (ord) => {
+    const text =
+      `RYTHU BASKET INVOICE\nOrder ID: ${ord.id}\nCustomer: ${ord.customerName}\nItems: ${ord.items.join(', ')}\nTotal: Rs.${ord.total}\nPayment: ${ord.payment}\nStatus: ${ord.status}`;
+    const cleanPhone = (ord.phone || '9876543210').replace(/\D/g, '').slice(-10);
+    window.open(`https://wa.me/91${cleanPhone}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   // =========================================================================
-  // 1. ALL ROLES SELECTION HOME SCREEN (WITH YOUR UNCHANGED LOGO)
+  // 1. ALL ROLES LAUNCHER
   // =========================================================================
   if (!activeRole) {
     const rolesList = [
-      { id: 'customer', title: 'Customer Store (BigBasket Style)', te: 'వినియోగదారుల స్టోర్', desc: 'Pack sizes, Live Qty Counter, Coupons, PhonePe/GPay/Paytm/Card & Tracking', icon: ShoppingCart, color: 'bg-emerald-50 text-[#2E7D32] border-emerald-200' },
+      { id: 'customer', title: 'Customer Store (BigBasket Style)', te: 'వినియోగదారుల స్టోర్', desc: 'Address Dropdown + GPS Pin, Live Qty, PhonePe/GPay/Paytm & Live Tracking', icon: ShoppingCart, color: 'bg-emerald-50 text-[#2E7D32] border-emerald-200' },
       { id: 'farmer', title: 'Farmer Portal', te: 'రైతు విభాగం', desc: 'List Harvest, Mandi Rates, Buyer Negotiation, Bank/UPI & Earnings', icon: Sprout, color: 'bg-lime-50 text-lime-800 border-lime-200' },
       { id: 'retail', title: 'Retail Shopkeeper', te: 'రిటైల్ షాపు', desc: 'Today Orders Accept/Reject, Item Price Update, Payments & Bank/UPI', icon: Store, color: 'bg-amber-50 text-amber-800 border-amber-200' },
       { id: 'wholesale', title: 'Wholesale Shopkeeper', te: 'హోల్‌సేల్ వ్యాపారి', desc: 'Min Order Qty Control, Today Orders, Payments & Bank/UPI Settings', icon: Warehouse, color: 'bg-indigo-50 text-indigo-800 border-indigo-200' },
@@ -509,7 +591,6 @@ export default function App() {
         <div className="bg-gradient-to-br from-[#1B5E20] via-[#2E7D32] to-[#558B2F] text-white rounded-b-[32px] p-6 shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              {/* YOUR EXACT UNCHANGED LOGO */}
               <div className="h-14 w-14 rounded-full bg-white p-0.5 shadow-md border-2 border-yellow-300 overflow-hidden">
                 <img src="/icon-512.png" alt="Rythu Basket" className="h-full w-full object-cover rounded-full" />
               </div>
@@ -564,7 +645,7 @@ export default function App() {
   }
 
 // =========================================================================
-  // 2. ROLE AUTHENTICATION & MANDATORY SHOP REGISTRATION SCREEN
+  // 2. ROLE AUTHENTICATION & REGISTRATION
   // =========================================================================
   if (subScreen === 'auth') {
     const handleEnterRole = (e) => {
@@ -595,7 +676,6 @@ export default function App() {
           setDashTab('orders');
           setSubScreen('roleDash');
         } else {
-          // Allow instant demo entry if user enters any 10-digit number
           const fallback = shops.find((s) => s.role === activeRole) || { id: 'shop_demo', storeName: `${activeRole.toUpperCase()} Store`, upiId: '8328261103@ybl', bankAccount: 'SBIN0001234' };
           setLoggedInUser({ role: activeRole, mobile: mobileInput || '9849223344', shopId: fallback.id, name: fallback.storeName });
           setEditShopUpi(fallback.upiId);
@@ -604,7 +684,6 @@ export default function App() {
           setSubScreen('roleDash');
         }
       } else {
-        // Mandatory First-Time Registration
         if (!regStoreName.trim() || !regOwnerName.trim() || mobileInput.length !== 10 || !regAddress.trim() || !passInput.trim()) {
           setAuthError('Please fill Store Name, Owner Name, 10-digit Mobile, Address & Password.');
           return;
@@ -698,11 +777,7 @@ export default function App() {
               {activeRole === 'customer' || activeRole === 'admin' ? (
                 <>
                   {!otpSent ? (
-                    <button
-                      type="button"
-                      onClick={() => setOtpSent(true)}
-                      className="w-full bg-[#2E7D32] text-white font-black py-3 rounded-xl"
-                    >
+                    <button type="button" onClick={() => setOtpSent(true)} className="w-full bg-[#2E7D32] text-white font-black py-3 rounded-xl">
                       Send OTP
                     </button>
                   ) : (
@@ -748,7 +823,6 @@ export default function App() {
     );
   }
 
-  // Toast Component
   const ToastBar = () =>
     toast ? (
       <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#1B5E20] text-white text-xs font-extrabold px-4 py-2.5 rounded-full shadow-xl whitespace-nowrap">
@@ -756,8 +830,8 @@ export default function App() {
       </div>
     ) : null;
 
-  // =========================================================================
-  // 3. CUSTOMER APP (BIGBASKET-STYLE WORKING STOREFRONT, CART, CHECKOUT & PAYMENTS)
+// =========================================================================
+  // 3. CUSTOMER APP (CLICKABLE TOP ADDRESS DROPDOWN + AUTO UPI LAUNCH + LIVE TRACKING)
   // =========================================================================
   if (activeRole === 'customer') {
     const approvedIds = new Set(shops.filter((s) => s.approved).map((s) => s.id));
@@ -768,20 +842,34 @@ export default function App() {
       return okSeller && okCat && (p.nameEn.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q));
     });
     const activeAddr = addresses.find((a) => a.id === activeAddrId) || addresses[0];
+    const currentTrackingOrder = orders.find((o) => o.id === trackingOrderId) || orders[0];
 
     return (
       <div className="min-h-screen bg-[#F4F6F5] max-w-md mx-auto relative pb-28 font-sans text-gray-800 shadow-2xl">
         <ToastBar />
 
+        {/* TOP HEADER WITH WORKING CLICKABLE ADDRESS DROPDOWN */}
         <header className="bg-white sticky top-0 z-30 border-b px-4 pt-3 pb-3 shadow-sm">
           <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center space-x-2">
-              <img src="/icon-512.png" alt="Rythu Basket" className="h-9 w-9 rounded-full border border-[#558B2F] object-cover" />
-              <div>
-                <span className="text-[9px] font-black uppercase bg-[#E8F5E9] text-[#2E7D32] px-1.5 py-0.5 rounded">⚡ 15 Mins Delivery</span>
-                <p className="text-xs font-black text-gray-900 truncate max-w-[190px]">{activeAddr.tag}: {activeAddr.text}</p>
-              </div>
+            <div className="flex items-center space-x-2 max-w-[74%]">
+              <img src="/icon-512.png" alt="Rythu Basket" className="h-9 w-9 rounded-full border border-[#558B2F] object-cover flex-shrink-0" />
+              <button
+                type="button"
+                onClick={() => setShowAddressDropdown(!showAddressDropdown)}
+                className="text-left focus:outline-none group"
+              >
+                <span className="text-[9px] font-black uppercase bg-[#E8F5E9] text-[#2E7D32] px-1.5 py-0.5 rounded">
+                  ⚡ 15 MINS DELIVERY
+                </span>
+                <div className="flex items-center space-x-1 mt-0.5">
+                  <p className="text-xs font-black text-gray-900 truncate max-w-[175px]">
+                    {activeAddr.tag}: {activeAddr.text}
+                  </p>
+                  <ChevronDown className="h-3.5 w-3.5 text-[#2E7D32] flex-shrink-0" />
+                </div>
+              </button>
             </div>
+
             <button onClick={() => setActiveRole(null)} className="bg-gray-100 text-gray-700 text-[11px] font-extrabold px-2.5 py-1.5 rounded-xl flex items-center space-x-1">
               <LogOut className="h-3.5 w-3.5" />
               <span>Roles</span>
@@ -798,7 +886,164 @@ export default function App() {
               className="w-full bg-transparent text-xs font-semibold focus:outline-none"
             />
           </div>
+
+          {/* CLICKABLE ADDRESS DROPDOWN PANEL */}
+          {showAddressDropdown && (
+            <div className="mt-2.5 bg-white border-2 border-[#558B2F] rounded-2xl p-3.5 shadow-2xl space-y-2.5 text-xs">
+              <div className="flex items-center justify-between border-b pb-2">
+                <span className="font-black text-gray-900">Select Delivery Location</span>
+                <button onClick={() => setShowAddressDropdown(false)} className="p-1 bg-gray-100 rounded-full">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
+              {/* 1. USE CURRENT LOCATION (AUTO GPS + OPENS MAP) */}
+              <button
+                type="button"
+                onClick={() => handleUseCurrentLocation(true)}
+                className="w-full bg-[#E8F5E9] border border-[#A5D6A7] text-[#1B5E20] font-extrabold py-2.5 px-3 rounded-xl flex items-center justify-between"
+              >
+                <span className="flex items-center space-x-2">
+                  <LocateFixed className="h-4 w-4 text-[#2E7D32]" />
+                  <span>{gpsLoading ? 'Capturing Current GPS...' : 'Use Current Location (Auto GPS)'}</span>
+                </span>
+                <span className="text-[10px] bg-[#2E7D32] text-white px-2 py-0.5 rounded-full">AUTO</span>
+              </button>
+
+              {/* 2. SAVED ADDRESSES LIST */}
+              <div className="space-y-1.5 max-h-36 overflow-y-auto">
+                {addresses.map((a) => (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveAddrId(a.id);
+                      setShowAddressDropdown(false);
+                      showToast(`📍 Delivering to ${a.tag}`);
+                    }}
+                    className={`w-full text-left p-2.5 rounded-xl border flex items-start justify-between ${
+                      activeAddrId === a.id ? 'border-[#558B2F] bg-[#F1F8E9]' : 'border-gray-200'
+                    }`}
+                  >
+                    <div>
+                      <p className="font-black text-gray-900">{a.tag}</p>
+                      <p className="text-[11px] text-gray-600">{a.text}</p>
+                    </div>
+                    {activeAddrId === a.id && <Check className="h-4 w-4 text-[#2E7D32] flex-shrink-0" />}
+                  </button>
+                ))}
+              </div>
+
+              {/* 3. ADD NEW ADDRESS & PIN MANUALLY ON MAP */}
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAddressDropdown(false);
+                  setShowAddAddressModal(true);
+                }}
+                className="w-full bg-[#2E7D32] text-white font-black py-2.5 rounded-xl flex items-center justify-center space-x-1.5"
+              >
+                <MapPin className="h-4 w-4" />
+                <span>+ Add New Address & Pin on Map</span>
+              </button>
+            </div>
+          )}
         </header>
+
+        {/* MODAL: ADD ADDRESS MANUALLY & PIN ON LIVE MAP */}
+        {showAddAddressModal && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <form onSubmit={handleSaveManualPinnedAddress} className="bg-white rounded-3xl p-4 w-full max-w-sm space-y-3 text-xs shadow-2xl">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-black">Add Address & Pin Location</h3>
+                <button type="button" onClick={() => setShowAddAddressModal(false)} className="p-1 bg-gray-100 rounded-full">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Embedded Live Map Preview */}
+              <div className="rounded-2xl overflow-hidden border border-gray-200 h-36 relative">
+                <iframe
+                  title="Nellore Location Pin"
+                  width="100%"
+                  height="100%"
+                  frameBorder="0"
+                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${pinnedCoords.lng - 0.015}%2C${pinnedCoords.lat - 0.015}%2C${pinnedCoords.lng + 0.015}%2C${pinnedCoords.lat + 0.015}&layer=mapnik&marker=${pinnedCoords.lat}%2C${pinnedCoords.lng}`}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleUseCurrentLocation(false)}
+                  className="bg-emerald-50 border border-emerald-200 text-[#1B5E20] font-extrabold py-2 rounded-xl flex items-center justify-center space-x-1"
+                >
+                  <LocateFixed className="h-3.5 w-3.5" />
+                  <span>{gpsLoading ? 'Fetching...' : 'Use Current GPS'}</span>
+                </button>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${pinnedCoords.lat},${pinnedCoords.lng}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="bg-blue-50 border border-blue-200 text-blue-700 font-extrabold py-2 rounded-xl flex items-center justify-center space-x-1"
+                >
+                  <Navigation className="h-3.5 w-3.5" />
+                  <span>Open Google Maps ↗</span>
+                </a>
+              </div>
+
+              {/* Manual Pin Coordinate Fine-Tuning */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500">Latitude (Pin)</label>
+                  <input
+                    type="number"
+                    step="0.0001"
+                    value={pinnedCoords.lat}
+                    onChange={(e) => setPinnedCoords({ ...pinnedCoords, lat: Number(e.target.value) })}
+                    className="w-full bg-gray-50 border rounded-xl px-2.5 py-1.5 font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500">Longitude (Pin)</label>
+                  <input
+                    type="number"
+                    step="0.0001"
+                    value={pinnedCoords.lng}
+                    onChange={(e) => setPinnedCoords({ ...pinnedCoords, lng: Number(e.target.value) })}
+                    className="w-full bg-gray-50 border rounded-xl px-2.5 py-1.5 font-bold"
+                  />
+                </div>
+              </div>
+
+              <div className="flex space-x-2">
+                {['Home', 'Office', 'Other'].map((tg) => (
+                  <button
+                    key={tg}
+                    type="button"
+                    onClick={() => setNewAddrTag(tg)}
+                    className={`px-3 py-1 rounded-full font-extrabold border ${newAddrTag === tg ? 'bg-[#2E7D32] text-white' : 'bg-gray-50'}`}
+                  >
+                    {tg}
+                  </button>
+                ))}
+              </div>
+
+              <input
+                type="text"
+                required
+                value={newAddrText}
+                onChange={(e) => setNewAddrText(e.target.value)}
+                placeholder="House No, Street, Area in Nellore *"
+                className="w-full bg-gray-50 border rounded-xl px-3 py-2.5 font-bold"
+              />
+
+              <button type="submit" className="w-full bg-[#2E7D32] text-white font-black py-3 rounded-xl">
+                Save Pinned Address
+              </button>
+            </form>
+          </div>
+        )}
 
         {/* CUSTOMER HOME */}
         {subScreen === 'home' && (
@@ -890,7 +1135,7 @@ export default function App() {
           </main>
         )}
 
-        {/* CART */}
+{/* CART */}
         {subScreen === 'cart' && (
           <main className="p-4 space-y-3 text-xs">
             <div className="flex justify-between items-center">
@@ -938,7 +1183,7 @@ export default function App() {
           </main>
         )}
 
-        {/* CHECKOUT & PAYMENTS (ORIGINAL PHONEPE, GPAY, PAYTM LOGOS + WORKING CARD) */}
+        {/* CHECKOUT & PAYMENTS */}
         {subScreen === 'checkout' && (
           <main className="p-4 space-y-3 text-xs">
             <div className="flex items-center space-x-2">
@@ -947,13 +1192,12 @@ export default function App() {
             </div>
 
             <div className="bg-white rounded-2xl p-3.5 shadow-sm space-y-2">
-              <h3 className="font-black">Delivery Address & Slot</h3>
-              {addresses.map((a) => (
-                <label key={a.id} className={`block p-2 rounded-xl border ${activeAddrId === a.id ? 'border-[#558B2F] bg-[#F1F8E9]' : 'border-gray-200'}`}>
-                  <input type="radio" checked={activeAddrId === a.id} onChange={() => setActiveAddrId(a.id)} className="mr-2 accent-[#558B2F]" />
-                  <strong>{a.tag}:</strong> {a.text}
-                </label>
-              ))}
+              <div className="flex justify-between items-center">
+                <h3 className="font-black">Delivering To: {activeAddr.tag}</h3>
+                <button onClick={() => setShowAddressDropdown(true)} className="text-[#2E7D32] font-extrabold underline">Change</button>
+              </div>
+              <p className="text-gray-600">{activeAddr.text}</p>
+
               <select value={deliverySlot} onChange={(e) => setDeliverySlot(e.target.value)} className="w-full bg-gray-50 border rounded-xl px-3 py-2 font-bold">
                 <option>Today, 6:00 PM - 8:00 PM</option>
                 <option>Tomorrow, 7:00 AM - 9:00 AM</option>
@@ -965,7 +1209,7 @@ export default function App() {
               </div>
             </div>
 
-{/* PAYMENT OPTIONS */}
+            {/* PAYMENT OPTIONS */}
             <div className="bg-white rounded-2xl p-3.5 shadow-sm space-y-2.5">
               <h3 className="font-black text-sm">Select Payment Option (Pay ₹{grandTotal})</h3>
 
@@ -975,12 +1219,6 @@ export default function App() {
                   <div className="flex items-center space-x-3"><PhonePeLogo /><span className="font-black">PhonePe</span></div>
                   <input type="radio" checked={payMethod === 'phonepe'} onChange={() => setPayMethod('phonepe')} />
                 </label>
-                {payMethod === 'phonepe' && (
-                  <div className="mt-2 pt-2 border-t space-y-2">
-                    <a href={phonePeLink} className="block w-full bg-[#5F259F] text-white text-center font-extrabold py-2 rounded-xl">Open PhonePe & Pay ₹{grandTotal} ↗</a>
-                    <input type="text" value={utrNumber} onChange={(e) => setUtrNumber(e.target.value)} placeholder="Enter PhonePe UTR (Optional)" className="w-full bg-white border rounded-xl px-3 py-1.5 text-center font-bold" />
-                  </div>
-                )}
               </div>
 
               {/* Google Pay */}
@@ -989,12 +1227,6 @@ export default function App() {
                   <div className="flex items-center space-x-3"><GooglePayLogo /><span className="font-black">Google Pay (GPay)</span></div>
                   <input type="radio" checked={payMethod === 'gpay'} onChange={() => setPayMethod('gpay')} />
                 </label>
-                {payMethod === 'gpay' && (
-                  <div className="mt-2 pt-2 border-t space-y-2">
-                    <a href={gpayLink} className="block w-full bg-[#1A73E8] text-white text-center font-extrabold py-2 rounded-xl">Open Google Pay & Pay ₹{grandTotal} ↗</a>
-                    <input type="text" value={utrNumber} onChange={(e) => setUtrNumber(e.target.value)} placeholder="Enter GPay Ref ID (Optional)" className="w-full bg-white border rounded-xl px-3 py-1.5 text-center font-bold" />
-                  </div>
-                )}
               </div>
 
               {/* Paytm */}
@@ -1003,12 +1235,6 @@ export default function App() {
                   <div className="flex items-center space-x-3"><PaytmLogo /><span className="font-black">Paytm</span></div>
                   <input type="radio" checked={payMethod === 'paytm'} onChange={() => setPayMethod('paytm')} />
                 </label>
-                {payMethod === 'paytm' && (
-                  <div className="mt-2 pt-2 border-t space-y-2">
-                    <a href={paytmLink} className="block w-full bg-[#00BAF2] text-[#002970] text-center font-black py-2 rounded-xl">Open Paytm & Pay ₹{grandTotal} ↗</a>
-                    <input type="text" value={utrNumber} onChange={(e) => setUtrNumber(e.target.value)} placeholder="Enter Paytm Ref ID (Optional)" className="w-full bg-white border rounded-xl px-3 py-1.5 text-center font-bold" />
-                  </div>
-                )}
               </div>
 
               {/* QR Code */}
@@ -1061,27 +1287,172 @@ export default function App() {
               {payError && <p className="text-red-600 font-bold">{payError}</p>}
             </div>
 
-            <button onClick={handlePlaceOrder} className="w-full bg-[#E53935] text-white font-black py-3.5 rounded-2xl shadow-lg text-sm">
+            <button onClick={handlePayAndPlaceOrderClick} className="w-full bg-[#E53935] text-white font-black py-3.5 rounded-2xl shadow-lg text-sm">
               Pay & Place Order • ₹{grandTotal}
             </button>
           </main>
         )}
 
-        {/* TRACKING & ORDERS */}
-        {(subScreen === 'tracking' || subScreen === 'orders') && (
+        {/* UPI PAYMENT LAUNCH & VERIFICATION SCREEN (WHEN PHONEPE / GPAY / PAYTM SELECTED) */}
+        {subScreen === 'upiProcessing' && (
+          <main className="p-4 space-y-4 text-xs">
+            <div className="bg-white rounded-3xl p-5 shadow-md border border-emerald-200 text-center space-y-3">
+              <div className="flex justify-center">
+                {payMethod === 'phonepe' && <PhonePeLogo />}
+                {payMethod === 'gpay' && <GooglePayLogo />}
+                {payMethod === 'paytm' && <PaytmLogo />}
+                {payMethod === 'qr' && <QrCode className="h-8 w-8 text-[#2E7D32]" />}
+              </div>
+              <h2 className="text-base font-black text-gray-900">
+                Complete Payment of ₹{grandTotal}
+              </h2>
+              <p className="text-gray-500">
+                Opening <strong>{payMethod.toUpperCase()}</strong> app on your phone... If it didn't open automatically, tap below or scan QR:
+              </p>
+
+              <a
+                href={payMethod === 'phonepe' ? phonePeLink : payMethod === 'gpay' ? gpayLink : payMethod === 'paytm' ? paytmLink : genericUpi}
+                className="block w-full bg-[#2E7D32] text-white font-black py-3 rounded-xl shadow"
+              >
+                Launch {payMethod.toUpperCase()} App Now ↗
+              </a>
+
+              <img src={qrUrl} alt="UPI QR" className="w-32 h-32 mx-auto rounded-xl border p-1 bg-white" />
+
+              <input
+                type="text"
+                value={utrNumber}
+                onChange={(e) => setUtrNumber(e.target.value)}
+                placeholder="Enter 12-Digit UPI Ref / UTR Number (Optional)"
+                className="w-full bg-gray-50 border rounded-xl px-3 py-2.5 text-center font-bold"
+              />
+
+              <button
+                onClick={finalizeAndOpenLiveTracking}
+                className="w-full bg-[#E53935] text-white font-black py-3.5 rounded-xl shadow-lg text-sm"
+              >
+                ✓ Payment Done — View Live Order Tracking ➔
+              </button>
+            </div>
+          </main>
+        )}
+
+        {/* DEDICATED LIVE ORDER TRACKING & STATUS SCREEN */}
+        {subScreen === 'tracking' && currentTrackingOrder && (
           <main className="p-4 space-y-3 text-xs">
-            <h2 className="text-base font-black">My Orders & Live Tracking</h2>
+            <div className="flex items-center justify-between">
+              <button onClick={() => setSubScreen('orders')} className="p-2 bg-white rounded-full shadow-sm">
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+              <h2 className="text-base font-black">Live Order Tracking</h2>
+              <span className="bg-emerald-100 text-[#1B5E20] font-black px-2.5 py-1 rounded-full">
+                OTP: {currentTrackingOrder.otp}
+              </span>
+            </div>
+
+            {/* Live Status Header Banner */}
+            <div className="bg-gradient-to-r from-[#1B5E20] to-[#43A047] text-white rounded-3xl p-4 shadow-md space-y-1">
+              <div className="flex justify-between items-center">
+                <span className="bg-white/20 text-[10px] font-black px-2 py-0.5 rounded uppercase">
+                  {currentTrackingOrder.status}
+                </span>
+                <span className="font-black text-sm">₹{currentTrackingOrder.total}</span>
+              </div>
+              <h3 className="text-lg font-black pt-1">Order {currentTrackingOrder.id}</h3>
+              <p className="text-emerald-100">Arriving in ~15-25 mins • {currentTrackingOrder.slot}</p>
+            </div>
+
+            {/* Embedded Live Delivery Map */}
+            <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-200">
+              <div className="h-40 w-full">
+                <iframe
+                  title="Live Tracking Map"
+                  width="100%"
+                  height="100%"
+                  frameBorder="0"
+                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${(currentTrackingOrder.lng || 79.9865) - 0.015}%2C${(currentTrackingOrder.lat || 14.4426) - 0.015}%2C${(currentTrackingOrder.lng || 79.9865) + 0.015}%2C${(currentTrackingOrder.lat || 14.4426) + 0.015}&layer=mapnik&marker=${currentTrackingOrder.lat || 14.4426}%2C${currentTrackingOrder.lng || 79.9865}`}
+                />
+              </div>
+              <div className="p-3 flex items-center justify-between bg-gray-50">
+                <div>
+                  <p className="text-[10px] text-gray-400 font-bold">Delivery Partner</p>
+                  <p className="font-black text-gray-900">{currentTrackingOrder.driver}</p>
+                </div>
+                <div className="flex space-x-2">
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${currentTrackingOrder.lat || 14.4426},${currentTrackingOrder.lng || 79.9865}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="bg-blue-600 text-white font-extrabold px-3 py-2 rounded-xl flex items-center space-x-1"
+                  >
+                    <Navigation className="h-3.5 w-3.5" />
+                    <span>Maps ↗</span>
+                  </a>
+                  <a href={`tel:${currentTrackingOrder.driverPhone || '9848012345'}`} className="bg-[#2E7D32] text-white p-2 rounded-xl">
+                    <Phone className="h-4 w-4" />
+                  </a>
+                </div>
+              </div>
+            </div>
+
+{/* Step-by-Step Live Status Timeline */}
+            <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
+              <h4 className="font-black text-gray-900">Order Progress</h4>
+              {[
+                { title: 'Order Placed', desc: 'Your order has been received by Rythu Basket' },
+                { title: 'Confirmed by Seller', desc: 'Fresh items verified & accepted' },
+                { title: 'Packed at Nellore Hub', desc: 'Hygienically packed & ready for pickup' },
+                { title: 'Out for Delivery', desc: `${currentTrackingOrder.driver} is on the way` },
+                { title: 'Delivered', desc: 'Handed over with OTP verification' },
+              ].map((st, idx) => {
+                const done = idx <= (currentTrackingOrder.stepIndex ?? 1);
+                return (
+                  <div key={st.title} className="flex items-start space-x-3">
+                    <span className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0 mt-0.5 ${done ? 'bg-[#2E7D32] text-white' : 'bg-gray-200 text-gray-500'}`}>
+                      {done ? '✓' : idx + 1}
+                    </span>
+                    <div>
+                      <p className={`font-extrabold ${done ? 'text-gray-900' : 'text-gray-400'}`}>{st.title}</p>
+                      <p className="text-[10px] text-gray-500">{st.desc}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={() => sendWhatsAppInvoice(currentTrackingOrder)}
+              className="w-full bg-[#25D366] text-white font-black py-3 rounded-2xl shadow"
+            >
+              📲 Share Invoice on WhatsApp
+            </button>
+          </main>
+        )}
+
+        {/* MY ORDERS LIST (WITH TRACK LIVE BUTTON) */}
+        {subScreen === 'orders' && (
+          <main className="p-4 space-y-3 text-xs">
+            <h2 className="text-base font-black">My Orders ({orders.length})</h2>
             {orders.map((ord) => (
               <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm space-y-2">
                 <div className="flex justify-between font-black">
-                  <span>{ord.id} • {ord.status}</span>
-                  <span className="text-[#2E7D32]">₹{ord.total}</span>
+                  <span>{ord.id} • <span className="text-[#2E7D32]">{ord.status}</span></span>
+                  <span>₹{ord.total}</span>
                 </div>
                 <p className="text-gray-600">{ord.items.join(', ')}</p>
                 <p className="text-[10px] text-gray-400 font-bold">{ord.payment} • Delivery OTP: {ord.otp}</p>
-                <div className="flex space-x-2">
-                  <button onClick={() => sendWhatsAppOrSmsInvoice(ord)} className="flex-1 bg-[#25D366] text-white font-extrabold py-2 rounded-xl">
-                    WhatsApp Invoice
+                <div className="grid grid-cols-3 gap-1.5 pt-1">
+                  <button
+                    onClick={() => {
+                      setTrackingOrderId(ord.id);
+                      setSubScreen('tracking');
+                    }}
+                    className="bg-[#2E7D32] text-white font-extrabold py-2 rounded-xl"
+                  >
+                    📍 Track Live
+                  </button>
+                  <button onClick={() => sendWhatsAppInvoice(ord)} className="bg-[#25D366] text-white font-extrabold py-2 rounded-xl">
+                    WhatsApp Bill
                   </button>
                   <button
                     onClick={() => {
@@ -1089,7 +1460,7 @@ export default function App() {
                       setSubScreen('cart');
                       showToast('Items added to Basket!');
                     }}
-                    className="flex-1 bg-[#558B2F] text-white font-extrabold py-2 rounded-xl"
+                    className="bg-gray-100 text-gray-800 font-extrabold py-2 rounded-xl"
                   >
                     Reorder
                   </button>
@@ -1099,7 +1470,7 @@ export default function App() {
           </main>
         )}
 
-{/* Floating Cart Bar */}
+        {/* Floating Cart Bar */}
         {totalUnits > 0 && subScreen === 'home' && (
           <div className="fixed bottom-16 left-0 right-0 max-w-md mx-auto px-3.5 z-40">
             <button onClick={() => setSubScreen('cart')} className="w-full bg-[#33691E] text-white px-4 py-3 rounded-2xl flex items-center justify-between shadow-xl">
@@ -1116,6 +1487,7 @@ export default function App() {
           {[
             { id: 'home', icon: Home, label: 'Home' },
             { id: 'cart', icon: ShoppingCart, label: 'Basket', badge: totalUnits },
+            { id: 'tracking', icon: Navigation, label: 'Live Track' },
             { id: 'orders', icon: ClipboardList, label: 'My Orders' },
           ].map((item) => {
             const Icon = item.icon;
@@ -1136,12 +1508,12 @@ export default function App() {
     );
   }
 
-  // =========================================================================
-  // 4. FARMER, RETAIL & WHOLESALE SHOPKEEPER FULL DASHBOARD
+// =========================================================================
+  // 4. FARMER, RETAIL & WHOLESALE SHOPKEEPER DASHBOARD
   // =========================================================================
   if (activeRole === 'farmer' || activeRole === 'retail' || activeRole === 'wholesale') {
     const myProducts = catalog.filter((p) => p.sellerId === loggedInUser?.shopId || p.sellerType === activeRole);
-    const myOrders = orders.filter((o) => o.sellerId === loggedInUser?.shopId || true);
+    const myOrders = orders;
     const periodOrders = myOrders.filter((o) => o.period === payPeriod);
     const periodSum = periodOrders.reduce((s, o) => s + o.total, 0);
 
@@ -1156,7 +1528,6 @@ export default function App() {
           <button onClick={() => setActiveRole(null)} className="p-2 bg-white/20 rounded-full"><LogOut className="h-4 w-4" /></button>
         </div>
 
-        {/* Sub-Tabs */}
         <div className="px-4 pt-3 flex space-x-1.5 overflow-x-auto pb-1 text-xs">
           {[
             { id: 'orders', label: `📋 Today's Orders (${myOrders.length})` },
@@ -1174,7 +1545,6 @@ export default function App() {
           ))}
         </div>
 
-        {/* TAB 1: ORDERS ACCEPT / REJECT / DELIVERED */}
         {dashTab === 'orders' && (
           <div className="p-4 space-y-2.5 text-xs">
             {myOrders.map((ord) => (
@@ -1186,28 +1556,29 @@ export default function App() {
                 <p className="font-bold">{ord.customerName}</p>
                 <p className="text-gray-500">{ord.items.join(', ')}</p>
                 <div className="flex space-x-2 pt-1">
-                  {ord.status === 'Pending' && (
+                  {ord.status !== 'Delivered' && (
                     <>
-                      <button onClick={() => { setOrders((p) => p.map((x) => (x.id === ord.id ? { ...x, status: 'Accepted' } : x))); showToast('Order Accepted'); }} className="flex-1 bg-[#2E7D32] text-white font-extrabold py-2 rounded-xl">
-                        ✓ Accept
+                      <button
+                        onClick={() => {
+                          setOrders((p) => p.map((x) => (x.id === ord.id ? { ...x, status: 'Out for Delivery', stepIndex: 3 } : x)));
+                          showToast('Order Accepted & Out for Delivery!');
+                        }}
+                        className="flex-1 bg-[#2E7D32] text-white font-extrabold py-2 rounded-xl"
+                      >
+                        ✓ Accept & Dispatch
                       </button>
-                      <button onClick={() => { setOrders((p) => p.map((x) => (x.id === ord.id ? { ...x, status: 'Rejected' } : x))); showToast('Order Rejected'); }} className="flex-1 bg-red-50 text-red-600 font-extrabold py-2 rounded-xl">
-                        ✕ Reject
+                      <button
+                        onClick={() => {
+                          const done = { ...ord, status: 'Delivered', stepIndex: 4 };
+                          setOrders((p) => p.map((x) => (x.id === ord.id ? done : x)));
+                          sendWhatsAppInvoice(done);
+                          showToast('Delivered & WhatsApp Invoice Sent!');
+                        }}
+                        className="flex-1 bg-blue-600 text-white font-extrabold py-2 rounded-xl"
+                      >
+                        Mark Delivered
                       </button>
                     </>
-                  )}
-                  {ord.status !== 'Delivered' && ord.status !== 'Rejected' && (
-                    <button
-                      onClick={() => {
-                        const done = { ...ord, status: 'Delivered' };
-                        setOrders((p) => p.map((x) => (x.id === ord.id ? done : x)));
-                        sendWhatsAppOrSmsInvoice(done);
-                        showToast('Delivered & WhatsApp Invoice Sent!');
-                      }}
-                      className="flex-1 bg-blue-600 text-white font-extrabold py-2 rounded-xl"
-                    >
-                      Mark Delivered + Send Bill
-                    </button>
                   )}
                 </div>
               </div>
@@ -1215,7 +1586,6 @@ export default function App() {
           </div>
         )}
 
-        {/* TAB 2: STOCK & PRICE UPDATE + WHOLESALE MIN QTY */}
         {dashTab === 'stock' && (
           <div className="p-4 space-y-3 text-xs">
             <form
@@ -1311,7 +1681,6 @@ export default function App() {
           </div>
         )}
 
-{/* TAB 3: TODAY / WEEKLY / MONTHLY PAYMENTS HISTORY */}
         {dashTab === 'payments' && (
           <div className="p-4 space-y-3 text-xs">
             <div className="grid grid-cols-3 gap-2">
@@ -1334,7 +1703,6 @@ export default function App() {
           </div>
         )}
 
-        {/* TAB 4: BANK & UPI UPDATE */}
         {dashTab === 'bank' && (
           <div className="p-4 space-y-3 text-xs">
             <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
@@ -1357,12 +1725,12 @@ export default function App() {
     );
   }
 
-  // =========================================================================
-  // 5. DELIVERY PARTNER FULL DASHBOARD
+// =========================================================================
+  // 5. DELIVERY PARTNER DASHBOARD
   // =========================================================================
   if (activeRole === 'delivery') {
-    const newCount = orders.filter((o) => o.status === 'Pending' || o.status === 'Confirmed').length;
-    const accCount = orders.filter((o) => o.status === 'Accepted' || o.status === 'Out for Delivery').length;
+    const newCount = orders.filter((o) => o.status === 'Order Placed' || o.status === 'Confirmed').length;
+    const accCount = orders.filter((o) => o.status === 'Out for Delivery').length;
     const doneCount = orders.filter((o) => o.status === 'Delivered').length;
 
     return (
@@ -1404,17 +1772,17 @@ export default function App() {
               </div>
               <p className="font-bold">{ord.customerName} • {ord.address}</p>
               <div className="flex space-x-2">
-                <a href="https://www.google.com/maps/dir/?api=1&destination=14.4426,79.9865" target="_blank" rel="noreferrer" className="flex-1 bg-blue-600 text-white font-extrabold py-2 rounded-xl text-center">
+                <a href={`https://www.google.com/maps/dir/?api=1&destination=${ord.lat || 14.4426},${ord.lng || 79.9865}`} target="_blank" rel="noreferrer" className="flex-1 bg-blue-600 text-white font-extrabold py-2 rounded-xl text-center">
                   🗺️ Google Maps
                 </a>
                 {ord.status !== 'Delivered' && (
                   <button
                     onClick={() => {
-                      const done = { ...ord, status: 'Delivered' };
+                      const done = { ...ord, status: 'Delivered', stepIndex: 4 };
                       setOrders((p) => p.map((x) => (x.id === ord.id ? done : x)));
                       setDriverWallet((w) => w + 35);
-                      sendWhatsAppOrSmsInvoice(done);
-                      showToast('✅ Delivered! +₹35 Earned & Invoice Sent');
+                      sendWhatsAppInvoice(done);
+                      showToast('✅ Delivered! +₹35 Earned');
                     }}
                     className="flex-1 bg-[#2E7D32] text-white font-extrabold py-2 rounded-xl"
                   >
@@ -1429,7 +1797,7 @@ export default function App() {
     );
   }
 
-// =========================================================================
+  // =========================================================================
   // 6. MASTER ADMIN CONTROL PANEL
   // =========================================================================
   return (
