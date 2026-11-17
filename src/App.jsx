@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import {
   Search, ShoppingCart, Plus, Minus, Home, ClipboardList, User, MapPin,
   Phone, MessageSquare, Sprout, Store, Truck, ShieldCheck, ChevronRight,
-  ArrowLeft, CheckCircle2, Wallet, Gift, Sparkles,
-  LocateFixed, LogOut, Printer, Warehouse,
-  Heart, Clock, ChevronDown, Briefcase
+  ArrowLeft, CheckCircle2, Wallet, Gift, Sparkles, Bell, Globe,
+  LocateFixed, LogOut, Printer, Warehouse, Heart, Clock, ChevronDown,
+  Briefcase, Leaf, Shield, Zap, Grid, Star, Trash2, Check, Mail
 } from 'lucide-react';
-import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
-import { auth } from './firebase';
+
+// EmailJS Credentials for Direct Free 6-Digit Email OTP
+const EMAILJS_SERVICE_ID = 'service_auf6gch';
+const EMAILJS_TEMPLATE_ID = 'template_z42k41l';
+const EMAILJS_PUBLIC_KEY = 'Y1UQmUcSoEzEtFR1m';
 
 const EN_TO_TE = {
   tomato: 'టమాటా',
@@ -30,12 +33,18 @@ const TE_TO_EN = Object.fromEntries(
   Object.entries(EN_TO_TE).map(([en, te]) => [te, en.charAt(0).toUpperCase() + en.slice(1)])
 );
 
-const CATEGORIES = [
-  { id: 'All', labelEn: 'All Items', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=160&q=80' },
-  { id: 'Vegetables', labelEn: 'Vegetables', img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=160&q=80' },
-  { id: 'Fruits', labelEn: 'Fruits', img: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=160&q=80' },
-  { id: 'Leafy Greens', labelEn: 'Leafy Greens', img: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=160&q=80' },
-  { id: 'Staples', labelEn: 'Staples', img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=160&q=80' },
+const TOP_CATEGORIES = [
+  { id: 'Vegetables', labelEn: 'Vegetables', labelTe: 'కూరగాయలు', bg: 'bg-emerald-50', img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=160&q=80' },
+  { id: 'Fruits', labelEn: 'Fruits', labelTe: 'పండ్లు', bg: 'bg-amber-50', img: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=160&q=80' },
+  { id: 'Staples', labelEn: 'Groceries', labelTe: 'కిరాణా', bg: 'bg-orange-50', img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=160&q=80' },
+  { id: 'Leafy Greens', labelEn: 'Farm Fresh', labelTe: 'ఆకుకూరలు', bg: 'bg-lime-50', img: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=160&q=80' },
+];
+
+const POPULAR_CIRCLES = [
+  { id: 'p1', name: 'Tomatoes', nameTe: 'టమాటా', img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=160&q=80' },
+  { id: 'p2', name: 'Onions', nameTe: 'ఉల్లి', img: 'https://images.unsplash.com/photo-1508747705729-e0613307ab6e?auto=format&fit=crop&w=160&q=80' },
+  { id: 'p5', name: 'Sona Rice', nameTe: 'బియ్యం', img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=160&q=80' },
+  { id: 'p4', name: 'Green Leafy', nameTe: 'ఆకుకూరలు', img: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=160&q=80' },
 ];
 
 const INITIAL_PRODUCTS = [
@@ -44,7 +53,7 @@ const INITIAL_PRODUCTS = [
     farmerId: 'u_farm_1',
     farmerName: 'Ramaiah Farm • Kovur',
     distanceKm: 12,
-    nameEn: 'Fresh Country Tomato',
+    nameEn: 'Fresh Tomato (Grade A)',
     nameTe: 'టమాటా',
     cat: 'Vegetables',
     packLabel: '1 kg',
@@ -55,15 +64,18 @@ const INITIAL_PRODUCTS = [
     minWholesaleQty: 25,
     stockKg: 500,
     inStock: true,
+    rating: 4.5,
+    reviews: 128,
+    desc: 'Fresh and juicy country tomatoes harvested this morning from Kovur farms, Nellore.',
     availableFrom: 'Today, 5:00 PM',
-    img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=400&q=80',
+    img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=500&q=80',
   },
   {
     id: 'p2',
     farmerId: 'u_farm_1',
     farmerName: 'Subba Rao Farm • Buchi',
     distanceKm: 18,
-    nameEn: 'Red Onion',
+    nameEn: 'Red Onion (Grade A)',
     nameTe: 'ఉల్లిపాయలు',
     cat: 'Vegetables',
     packLabel: '1 kg',
@@ -74,8 +86,11 @@ const INITIAL_PRODUCTS = [
     minWholesaleQty: 50,
     stockKg: 800,
     inStock: true,
+    rating: 4.6,
+    reviews: 94,
+    desc: 'Farm-cured crisp red onions sourced directly from Buchireddypalem growers.',
     availableFrom: 'Tomorrow, 6:00 AM',
-    img: 'https://images.unsplash.com/photo-1508747705729-e0613307ab6e?auto=format&fit=crop&w=400&q=80',
+    img: 'https://images.unsplash.com/photo-1508747705729-e0613307ab6e?auto=format&fit=crop&w=500&q=80',
   },
   {
     id: 'p3',
@@ -93,11 +108,14 @@ const INITIAL_PRODUCTS = [
     minWholesaleQty: 20,
     stockKg: 300,
     inStock: true,
+    rating: 4.8,
+    reviews: 210,
+    desc: 'Naturally ripened carbide-free Banganapalli mangoes from Rapur orchards.',
     availableFrom: 'Available Now',
-    img: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=400&q=80',
+    img: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=500&q=80',
   },
   {
-    id: 'p4',
+id: 'p4',
     farmerId: 'u_farm_1',
     farmerName: 'Padma Organic • Nellore',
     distanceKm: 6,
@@ -112,15 +130,18 @@ const INITIAL_PRODUCTS = [
     minWholesaleQty: 15,
     stockKg: 150,
     inStock: true,
+    rating: 4.7,
+    reviews: 76,
+    desc: 'Pesticide-free tender green spinach bundles harvested at dawn.',
     availableFrom: 'Today, 6:00 AM',
-    img: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=400&q=80',
+    img: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=500&q=80',
   },
   {
     id: 'p5',
     farmerId: 'u_farm_1',
     farmerName: 'Nellore Heritage Mills',
     distanceKm: 8,
-    nameEn: 'Sona Masuri Rice',
+    nameEn: 'Nellore Sona Masuri Rice',
     nameTe: 'సోనా మసూరి బియ్యం',
     cat: 'Staples',
     packLabel: '5 kg',
@@ -131,8 +152,11 @@ const INITIAL_PRODUCTS = [
     minWholesaleQty: 10,
     stockKg: 1200,
     inStock: true,
+    rating: 4.9,
+    reviews: 315,
+    desc: 'Authentic aged Nellore Sona Masuri steam rice direct from local rice mills.',
     availableFrom: 'Available Now',
-    img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=400&q=80',
+    img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=500&q=80',
   },
 ];
 
@@ -150,25 +174,17 @@ const PaymentBadge = ({ type }) => {
 };
 
 const isValidIndianMobile = (num) => /^[6-9]\d{9}$/.test(num);
+const isValidEmail = (em) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em.trim());
 
-// Build Android Intent + UPI Deep Link so PhonePe / GPay / Paytm launch reliably on mobile Chrome
 const buildPaymentLaunchUrl = (mode, upiId, amount) => {
   const pa = encodeURIComponent(upiId);
   const pn = encodeURIComponent('Rythu Basket Nellore');
   const am = Number(amount || 1).toFixed(2);
   const query = `pa=${pa}&pn=${pn}&am=${am}&cu=INR`;
 
-  const isAndroid = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent);
-  const pkgMap = {
-    phonepe: 'com.phonepe.app',
-    gpay: 'com.google.android.apps.nbu.paisa.user',
-    paytm: 'net.one97.paytm',
-    cred: 'com.dreamplug.androidapp',
-  };
-
-  if (isAndroid && pkgMap[mode]) {
-    return `intent://pay?${query}#Intent;scheme=upi;package=${pkgMap[mode]};end`;
-  }
+  if (mode === 'phonepe') return `phonepe://pay?${query}`;
+  if (mode === 'gpay') return `tez://upi/pay?${query}`;
+  if (mode === 'paytm') return `paytmmp://pay?${query}`;
   return `upi://pay?${query}`;
 };
 
@@ -184,6 +200,7 @@ export default function App() {
     }
   }, []);
 
+  const [lang, setLang] = useState('te');
   const [selectedRole, setSelectedRole] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [users, setUsers] = useState(() => {
@@ -204,42 +221,59 @@ export default function App() {
     }
   }, [users]);
 
-  // Real Firebase SMS OTP States
+  // Direct Email 6-Digit OTP States (₹0 Cost via EmailJS)
   const [authScreen, setAuthScreen] = useState('login');
-  const [loginMobile, setLoginMobile] = useState('');
+  const [loginEmail, setLoginEmail] = useState('');
   const [loginOtpSent, setLoginOtpSent] = useState(false);
   const [loginOtp, setLoginOtp] = useState('');
-  const [confirmationResult, setConfirmationResult] = useState(null);
-  const [sendingSms, setSendingSms] = useState(false);
-  const [verifyingSms, setVerifyingSms] = useState(false);
+  const [generatedEmailOtp, setGeneratedEmailOtp] = useState('');
+  const [emailOtpExpiry, setEmailOtpExpiry] = useState(0);
+  const [sendingEmail, setSendingEmail] = useState(false);
   const [authMsg, setAuthMsg] = useState('');
 
   // Registration Form States
   const [regName, setRegName] = useState('');
   const [regMobile, setRegMobile] = useState('');
+  const [regEmail, setRegEmail] = useState('');
   const [regAddress, setRegAddress] = useState('');
   const [regReferralCode, setRegReferralCode] = useState('');
   const [regOtpSent, setRegOtpSent] = useState(false);
   const [regOtpInput, setRegOtpInput] = useState('');
   const [showWelcomeSmile, setShowWelcomeSmile] = useState(false);
 
-  // Navigation & Store States
+  // Navigation & Customer Reference Screens
   const [activeTab, setActiveTab] = useState('home');
+  const [detailProduct, setDetailProduct] = useState(null);
+  const [detailQty, setDetailQty] = useState(1);
+  const [lastPlacedOrder, setLastPlacedOrder] = useState(null);
+  const [trackingOrder, setTrackingOrder] = useState(null);
+  const [deliverySlot, setDeliverySlot] = useState('Today, 6:00 PM – 8:00 PM');
+  const [orderListFilter, setOrderListFilter] = useState('All');
+
   const [toast, setToast] = useState('');
   const [selectedCat, setSelectedCat] = useState('All');
   const [search, setSearch] = useState('');
   const [wishlist, setWishlist] = useState(['p1', 'p3']);
 
-  // Location & Map Pin States
+// Location & Map Pin States
   const [savedAddresses, setSavedAddresses] = useState([
     {
       id: 'addr1',
       tag: 'Home',
       title: 'Vedayapalem Main Road',
-      full: 'Vedayapalem, Nellore, Andhra Pradesh',
+      full: 'Vedayapalem, Nellore, Andhra Pradesh - 524004',
       distance: '57 m',
       lat: 14.4285,
       lng: 79.9692,
+    },
+    {
+      id: 'addr2',
+      tag: 'Office',
+      title: 'Magunta Layout, Nellore',
+      full: 'Magunta Layout Main Road, Dargamitta, Nellore - 524003',
+      distance: '2.5 kms',
+      lat: 14.4426,
+      lng: 79.9865,
     },
   ]);
   const [activeAddrId, setActiveAddrId] = useState('addr1');
@@ -251,7 +285,7 @@ export default function App() {
   const [isEditingPinText, setIsEditingPinText] = useState(false);
   const [isLocatingGps, setIsLocatingGps] = useState(false);
 
-// Cart & Payments
+  // Cart & Payments — ALL PAYMENTS GO TO madhavam.com@ybl
   const [cart, setCart] = useState({ p1: 2, p3: 1 });
   const [useWalletBalance, setUseWalletBalance] = useState(false);
   const [promoInput, setPromoInput] = useState('');
@@ -262,7 +296,7 @@ export default function App() {
   const [cardExp, setCardExp] = useState('');
   const [cardCvv, setCardCvv] = useState('');
   const [cardError, setCardError] = useState('');
-  const [merchantUpiId] = useState('8328261103@ybl');
+  const [merchantUpiId] = useState('madhavam.com@ybl');
 
   // B2B States
   const [b2bSource, setB2bSource] = useState('farmer');
@@ -294,118 +328,133 @@ export default function App() {
     setTimeout(() => setToast(''), 3500);
   };
 
-  const setupRecaptcha = () => {
-    if (!window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        size: 'invisible',
-      });
-    }
-  };
-
-  const triggerFirebaseSmsOtp = async (tenDigitMobile) => {
-    setSendingSms(true);
+  // SEND REAL 6-DIGIT OTP TO USER EMAIL INBOX VIA EMAILJS (₹0 COST)
+  const triggerEmailOtp = async (targetEmail, userName) => {
+    setSendingEmail(true);
     setAuthMsg('');
+    const code = String(Math.floor(100000 + Math.random() * 900000));
     try {
-      setupRecaptcha();
-      const appVerifier = window.recaptchaVerifier;
-      const formattedPhone = `+91${tenDigitMobile}`;
-      const result = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
-      setConfirmationResult(result);
-      notify(`SMS OTP sent to +91 ${tenDigitMobile}! Check your phone SMS inbox.`);
+      const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          service_id: EMAILJS_SERVICE_ID,
+          template_id: EMAILJS_TEMPLATE_ID,
+          user_id: EMAILJS_PUBLIC_KEY,
+          template_params: {
+            to_email: targetEmail.trim(),
+            to_name: userName || 'Rythu Basket Member',
+            otp_code: code,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(errText || 'Failed to send email');
+      }
+
+      setGeneratedEmailOtp(code);
+      setEmailOtpExpiry(Date.now() + 5 * 60 * 1000); // 5 mins validity
+      notify(`6-Digit OTP sent to ${targetEmail}! Check your Inbox/Spam folder.`);
       return true;
     } catch (err) {
-      setAuthMsg(`SMS Failed: ${err.message}`);
-      if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear();
-        window.recaptchaVerifier = null;
-      }
+      setAuthMsg(`Email OTP Error: ${err.message}`);
       return false;
     } finally {
-      setSendingSms(false);
+      setSendingEmail(false);
     }
   };
 
-  const verifyFirebaseSmsOtp = async (sixDigitCode) => {
-    if (!confirmationResult) {
-      setAuthMsg('Please tap Send OTP first.');
+  const verifyEmailOtpCode = (enteredCode) => {
+    if (!generatedEmailOtp || Date.now() > emailOtpExpiry) {
+      setAuthMsg('OTP expired or not requested. Please tap Resend OTP.');
       return false;
     }
-    setVerifyingSms(true);
-    try {
-      await confirmationResult.confirm(sixDigitCode);
-      return true;
-    } catch {
-      setAuthMsg('Incorrect 6-digit OTP! Check your SMS inbox and try again.');
+    if (enteredCode.trim() !== generatedEmailOtp) {
+      setAuthMsg('Incorrect 6-digit OTP! Please enter the exact code sent to your Email.');
       return false;
-    } finally {
-      setVerifyingSms(false);
     }
+    return true;
   };
 
+// STEP 1: Login Email OTP Request
   const handleSendLoginOtp = async () => {
-    const clean = loginMobile.replace(/\D/g, '');
-    if (!isValidIndianMobile(clean)) {
-      setAuthMsg('Please enter a valid 10-digit Indian mobile number (starts with 6–9).');
+    const cleanEmail = loginEmail.trim().toLowerCase();
+    if (!isValidEmail(cleanEmail)) {
+      setAuthMsg('Please enter a valid Email address (e.g., name@gmail.com).');
       return;
     }
-    const existing = users.find((u) => u.mobile === clean && u.role === selectedRole);
+    const existing = users.find((u) => (u.email || '').toLowerCase() === cleanEmail && u.role === selectedRole);
     if (!existing) {
-      setAuthMsg('Mobile number not registered, please register.');
+      setAuthMsg('Email not registered for this role, please Sign Up.');
       setLoginOtpSent(false);
       return;
     }
     setLoginOtp('');
-    const ok = await triggerFirebaseSmsOtp(clean);
+    const ok = await triggerEmailOtp(cleanEmail, existing.name);
     if (ok) setLoginOtpSent(true);
   };
 
-  const handleVerifyLogin = async (e) => {
+  // STEP 2: Verify Email OTP & Login
+  const handleVerifyLogin = (e) => {
     e.preventDefault();
-    const clean = loginMobile.replace(/\D/g, '');
-    const existing = users.find((u) => u.mobile === clean && u.role === selectedRole);
+    const cleanEmail = loginEmail.trim().toLowerCase();
+    const existing = users.find((u) => (u.email || '').toLowerCase() === cleanEmail && u.role === selectedRole);
     if (!existing) {
-      setAuthMsg('Mobile number not registered, please register.');
+      setAuthMsg('Email not registered for this role, please Sign Up.');
       return;
     }
-    const verified = await verifyFirebaseSmsOtp(loginOtp.trim());
-    if (!verified) return;
+    if (!verifyEmailOtpCode(loginOtp)) return;
 
+    setGeneratedEmailOtp('');
     setCurrentUser(existing);
     setActiveTab('home');
   };
 
+  // Registration Step 1: Send Email OTP
   const handleSendRegisterOtp = async () => {
-    const clean = regMobile.replace(/\D/g, '');
+    const cleanMobile = regMobile.replace(/\D/g, '');
+    const cleanEmail = regEmail.trim().toLowerCase();
+
     if (!regName.trim() || !regAddress.trim()) {
-      setAuthMsg('Please fill Full Name / Store Name and Address first.');
+      setAuthMsg('Please enter Full Name / Store Name and Address first.');
       return;
     }
-    if (!isValidIndianMobile(clean)) {
-      setAuthMsg('Enter a valid 10-digit Indian mobile number (starts with 6–9).');
+    if (!isValidIndianMobile(cleanMobile)) {
+      setAuthMsg('Enter a valid 10-digit Indian mobile number (for delivery contact).');
       return;
     }
-    const already = users.find((u) => u.mobile === clean && u.role === selectedRole);
+    if (!isValidEmail(cleanEmail)) {
+      setAuthMsg('Enter a valid Email ID to receive your 6-digit OTP.');
+      return;
+    }
+    const already = users.find((u) => (u.email || '').toLowerCase() === cleanEmail && u.role === selectedRole);
     if (already) {
-      setAuthMsg('This mobile number is already registered for this role. Please Login.');
+      setAuthMsg('This Email is already registered for this role. Please Login.');
       return;
     }
+
     setRegOtpInput('');
-    const ok = await triggerFirebaseSmsOtp(clean);
+    const ok = await triggerEmailOtp(cleanEmail, regName.trim());
     if (ok) setRegOtpSent(true);
   };
 
-  const handleCompleteRegistration = async (e) => {
+  // Registration Step 2: Verify Email OTP & Create Account
+  const handleCompleteRegistration = (e) => {
     e.preventDefault();
-    const verified = await verifyFirebaseSmsOtp(regOtpInput.trim());
-    if (!verified) return;
+    if (!verifyEmailOtpCode(regOtpInput)) return;
 
-    const clean = regMobile.replace(/\D/g, '');
+    const cleanMobile = regMobile.replace(/\D/g, '');
+    const cleanEmail = regEmail.trim().toLowerCase();
     const needsApproval = selectedRole === 'farmer' || selectedRole === 'wholesale' || selectedRole === 'retail';
+
     const newUser = {
       id: 'u_' + Date.now(),
       role: selectedRole,
       name: regName.trim(),
-      mobile: clean,
+      mobile: cleanMobile,
+      email: cleanEmail,
       address: regAddress.trim(),
       approved: !needsApproval,
       wallet: 0,
@@ -417,10 +466,11 @@ export default function App() {
     setUsers([newUser, ...users]);
     if (needsApproval) {
       setNotifications((prev) => [
-        `New ${selectedRole.toUpperCase()} registration (${newUser.name} • ${clean}) awaiting Admin approval.`,
+        `New ${selectedRole.toUpperCase()} registration (${newUser.name} • ${cleanEmail}) awaiting Admin approval.`,
         ...prev,
       ]);
     }
+    setGeneratedEmailOtp('');
     setRegOtpSent(false);
     setCurrentUser(newUser);
     setShowWelcomeSmile(true);
@@ -431,14 +481,13 @@ export default function App() {
   const handleStrictLogout = () => {
     setCurrentUser(null);
     setSelectedRole(null);
-    setLoginMobile('');
+    setLoginEmail('');
     setLoginOtpSent(false);
-    setConfirmationResult(null);
+    setGeneratedEmailOtp('');
     setAuthMsg('');
     setActiveTab('home');
   };
 
-  // Reverse Geocoding + GPS Current Location
   const fetchAddressFromCoords = async (lat, lng) => {
     try {
       const res = await fetch(
@@ -454,7 +503,7 @@ export default function App() {
     } catch {
       // fallback
     }
-    setMapPinTitle(`Pinned Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
+    setMapPinTitle(`Nellore Pinned (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
     setMapPinFullAddress(`Lat ${lat.toFixed(5)}, Lng ${lng.toFixed(5)}, Nellore, Andhra Pradesh`);
   };
 
@@ -525,274 +574,480 @@ const handleUseCurrentLocationMap = () => {
   const fontStyle = { fontFamily: "'Plus Jakarta Sans', 'Noto Sans Telugu', sans-serif" };
 
   // =========================================================================
-  // 1. ROLE ENTRY GATE
+  // 1. REFERENCE IMAGE 1: ROLE ENTRY HOME PAGE
   // =========================================================================
   if (!selectedRole) {
-    const roles = [
-      { id: 'customer', title: 'Customer Store', te: 'వినియోగదారుడు', desc: 'Map pin location, tiered offers, wallet & live tracking', icon: ShoppingCart, accent: 'bg-emerald-50 text-[#15803D] border-emerald-200' },
-      { id: 'farmer', title: 'Farmer Portal', te: 'రైతు విభాగం', desc: 'Auto Telugu/English listing, 40km shop alerts & stock sync', icon: Sprout, accent: 'bg-lime-50 text-lime-800 border-lime-200' },
-      { id: 'wholesale', title: 'Wholesale Store', te: 'హోల్‌సేల్ వ్యాపారి', desc: 'Bulk orders, farm pickup vs delivery & GST PDF invoices', icon: Warehouse, accent: 'bg-amber-50 text-amber-800 border-amber-200' },
-      { id: 'retail', title: 'Retail Shopkeeper', te: 'రిటైల్ షాపు', desc: 'Farmer vs wholesale pricing, min qty & digital PDF bills', icon: Store, accent: 'bg-orange-50 text-orange-800 border-orange-200' },
-      { id: 'delivery', title: 'Delivery Partner', te: 'డెలివరీ పార్టనర్', desc: 'Weekly 100-order ₹1,500 bonus, live GPS & B2B OTP', icon: Truck, accent: 'bg-sky-50 text-sky-800 border-sky-200' },
-      { id: 'admin', title: 'Master Admin', te: 'మాస్టర్ అడ్మిన్', desc: 'Scratch card limits, offer toggles, stock & shop approvals', icon: ShieldCheck, accent: 'bg-purple-50 text-purple-800 border-purple-200' },
+    const roleCards = [
+      {
+        id: 'customer',
+        te: 'వినియోగదారులు',
+        en: 'Shop for Fresh Produce',
+        bg: 'bg-[#ECFDF5] border-[#BBF7D0]',
+        badgeBg: 'bg-[#DCFCE7] text-[#15803D]',
+        arrowBg: 'bg-[#D1FAE5] text-[#15803D]',
+        icon: ShoppingCart,
+      },
+      {
+        id: 'farmer',
+        te: 'రైతు విభాగం',
+        en: 'Farmers Section',
+        bg: 'bg-[#FFFBEB] border-[#FDE68A]',
+        badgeBg: 'bg-[#FEF3C7] text-[#B45309]',
+        arrowBg: 'bg-[#FDE68A] text-[#B45309]',
+        icon: Sprout,
+      },
+      {
+        id: 'retail',
+        te: 'రిటైల్ షాపులు',
+        en: 'Retail Shops',
+        bg: 'bg-[#FFF7ED] border-[#FED7AA]',
+        badgeBg: 'bg-[#FFEDD5] text-[#C2410C]',
+        arrowBg: 'bg-[#FED7AA] text-[#C2410C]',
+        icon: Store,
+      },
+      {
+        id: 'wholesale',
+        te: 'హోల్‌సేల్ మండీ',
+        en: 'Wholesale Market',
+        bg: 'bg-[#EFF6FF] border-[#BFDBFE]',
+        badgeBg: 'bg-[#DBEAFE] text-[#1D4ED8]',
+        arrowBg: 'bg-[#BFDBFE] text-[#1D4ED8]',
+        icon: Warehouse,
+      },
+      {
+        id: 'delivery',
+        te: 'డెలివరీ & ట్రాకింగ్',
+        en: 'Delivery Fleet',
+        bg: 'bg-[#F5F3FF] border-[#DDD6FE]',
+        badgeBg: 'bg-[#EDE9FE] text-[#6D28D9]',
+        arrowBg: 'bg-[#DDD6FE] text-[#6D28D9]',
+        icon: Truck,
+      },
+      {
+        id: 'admin',
+        te: 'అడ్మిన్ (Admin)',
+        en: 'Admin Login',
+        bg: 'bg-[#F0FDFA] border-[#99F6E4]',
+        badgeBg: 'bg-[#CCFBF1] text-[#0F766E]',
+        arrowBg: 'bg-[#99F6E4] text-[#0F766E]',
+        icon: ShieldCheck,
+      },
     ];
 
     return (
-      <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto text-slate-800 shadow-2xl pb-10">
-        <div id="recaptcha-container"></div>
-        <div className="bg-gradient-to-br from-[#0F5132] via-[#15803D] to-[#16A34A] text-white rounded-b-[36px] p-6 shadow-xl">
-          <div className="flex items-center space-x-3.5">
-            <div className="h-16 w-16 rounded-full bg-white p-0.5 shadow-lg border-2 border-[#EAB308] overflow-hidden flex-shrink-0">
-              <img src="/icon-512.png" alt="Rythu Basket" className="h-full w-full object-cover rounded-full" />
+      <div style={fontStyle} className="min-h-screen bg-[#F5F7F5] max-w-md mx-auto text-slate-800 shadow-2xl pb-24 relative overflow-x-hidden">
+        <div className="bg-gradient-to-b from-[#0E5A2B] via-[#15803D] to-[#4ADE80]/30 text-white rounded-b-[36px] px-4 pt-4 pb-6 shadow-lg relative overflow-hidden">
+          <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center space-x-2.5">
+              <div className="h-12 w-12 rounded-full bg-white p-0.5 border-2 border-[#EAB308] shadow overflow-hidden flex-shrink-0">
+                <img src="/icon-512.png" alt="Rythu Basket" className="h-full w-full object-cover rounded-full" />
+              </div>
+              <div>
+                <h1 className="text-lg font-extrabold leading-tight tracking-tight">రైతు బాస్కెట్</h1>
+                <p className="text-xs font-extrabold text-emerald-100 leading-tight">Rythu Basket</p>
+                <p className="text-[10px] text-emerald-200">రైతు నుండి వినియోగదారుడి వరకు...</p>
+              </div>
             </div>
-            <div>
-              <span className="bg-white/15 text-[#FDE047] text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                Nellore Agri-Commerce
-              </span>
-              <h1 className="text-2xl font-extrabold tracking-tight mt-1">రైతు బాస్కెట్</h1>
-              <p className="text-xs font-semibold text-emerald-100">Rythu Basket • Farm to Everyone</p>
+
+            <div className="flex items-center space-x-2">
+              <button
+                type="button"
+                onClick={() => setLang(lang === 'te' ? 'en' : 'te')}
+                className="bg-white text-[#15803D] px-3 py-1.5 rounded-full text-xs font-extrabold flex items-center space-x-1 shadow"
+              >
+                <Globe className="h-3.5 w-3.5" />
+                <span>{lang === 'te' ? 'తెలుగు ▾' : 'English ▾'}</span>
+              </button>
+              <div className="relative h-9 w-9 rounded-full bg-white/15 border border-white/25 flex items-center justify-center">
+                <Bell className="h-4 w-4 text-white" />
+                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-rose-500" />
+              </div>
             </div>
+          </div>
+
+<div className="mt-4 bg-gradient-to-r from-white/95 via-white/90 to-emerald-50/90 rounded-3xl p-3.5 shadow-md flex items-center justify-between relative z-10 text-slate-900">
+            <div className="space-y-2 max-w-[56%]">
+              <p className="text-xs font-extrabold text-[#15803D] leading-snug">
+                మా రైతు ఉత్పత్తులు
+              </p>
+              <h2 className="text-base font-extrabold text-slate-900 leading-tight border-b-2 border-[#EAB308] pb-1 inline-block">
+                మీ ఇంటి వద్దకు!
+              </h2>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedRole('customer');
+                  setAuthScreen('login');
+                }}
+                className="bg-[#15803D] hover:bg-[#0F5132] text-white text-[11px] font-extrabold px-3.5 py-2 rounded-full shadow flex items-center space-x-1 transition"
+              >
+                <span>ఇప్పుడే ఆర్డర్ చేయండి</span>
+                <span>→</span>
+              </button>
+            </div>
+
+            <div className="w-[42%] flex justify-end">
+              <img
+                src="https://images.unsplash.com/photo-1595855759920-86582396756a?auto=format&fit=crop&w=320&q=80"
+                alt="Farmer Harvest"
+                className="h-28 w-28 rounded-2xl object-cover border-2 border-[#15803D]/20 shadow-md"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-center space-x-1.5 mt-3">
+            <span className="h-2 w-2 rounded-full bg-[#15803D]" />
+            <span className="h-2 w-2 rounded-full bg-white/70" />
+            <span className="h-2 w-2 rounded-full bg-white/70" />
           </div>
         </div>
 
-        <div className="px-4 pt-5 space-y-3">
-          {roles.map((r) => {
+        <div className="px-3.5 pt-4 grid grid-cols-2 gap-2.5">
+          {roleCards.map((r) => {
             const Icon = r.icon;
             return (
               <button
                 key={r.id}
+                type="button"
                 onClick={() => {
                   setSelectedRole(r.id);
                   setAuthScreen('login');
-                  setLoginMobile('');
+                  setLoginEmail('');
                   setLoginOtpSent(false);
                   setRegOtpSent(false);
                   setAuthMsg('');
                 }}
-                className="w-full bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:border-[#15803D] hover:shadow-md flex items-center justify-between text-left transition-all"
+                className={`${r.bg} border rounded-2xl p-3 shadow-sm hover:shadow-md flex items-center justify-between text-left transition active:scale-[0.98]`}
               >
-                <div className="flex items-center space-x-3.5">
-                  <div className={`h-12 w-12 rounded-2xl border flex items-center justify-center flex-shrink-0 ${r.accent}`}>
-                    <Icon className="h-6 w-6" />
+                <div className="flex items-center space-x-2 min-w-0">
+                  <div className={`h-11 w-11 rounded-2xl ${r.badgeBg} flex items-center justify-center flex-shrink-0 shadow-inner`}>
+                    <Icon className="h-5 w-5" />
                   </div>
-                  <div>
-                    <div className="flex items-center space-x-2">
-                      <h2 className="text-sm font-extrabold text-slate-900">{r.title}</h2>
-                      <span className="text-[11px] font-bold text-[#15803D]">• {r.te}</span>
-                    </div>
-                    <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">{r.desc}</p>
+                  <div className="min-w-0">
+                    <h3 className="text-xs font-extrabold text-slate-900 truncate">{r.te}</h3>
+                    <p className="text-[10px] font-semibold text-slate-600 leading-tight mt-0.5">{r.en}</p>
                   </div>
                 </div>
-                <ChevronRight className="h-4 w-4 text-slate-400" />
+                <span className={`h-6 w-6 rounded-full ${r.arrowBg} flex items-center justify-center flex-shrink-0 ml-1`}>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </span>
               </button>
             );
           })}
         </div>
+
+        <div className="px-3.5 pt-3.5">
+          <div className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white rounded-2xl p-3.5 shadow-md flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="h-11 w-11 rounded-full bg-white/15 border border-white/25 flex items-center justify-center flex-shrink-0">
+                <Phone className="h-5 w-5 text-[#FDE047]" />
+              </div>
+              <div>
+                <h3 className="text-sm font-extrabold leading-tight">సహాయం కావాలా?</h3>
+                <p className="text-[11px] text-emerald-100">Contact Support</p>
+              </div>
+            </div>
+            <a
+              href="tel:8328261103"
+              className="bg-[#FEF9C3] text-[#0F5132] font-extrabold text-xs px-4 py-2.5 rounded-full shadow flex items-center space-x-1.5"
+            >
+              <Phone className="h-3.5 w-3.5" />
+              <span>Call Us</span>
+            </a>
+          </div>
+        </div>
+
+        <div className="px-3.5 pt-3.5">
+          <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2.5">
+            <div className="flex items-center space-x-1.5 text-xs font-extrabold text-slate-800">
+              <Leaf className="h-4 w-4 text-[#15803D]" />
+              <span>Rythu Basket Highlights</span>
+            </div>
+            <div className="grid grid-cols-4 gap-1.5 text-center">
+              <div className="space-y-1">
+                <div className="h-8 w-8 rounded-full bg-emerald-50 text-[#15803D] flex items-center justify-center mx-auto">
+                  <Leaf className="h-4 w-4" />
+                </div>
+                <p className="text-[9px] font-bold text-slate-600 leading-tight">100% Fresh Produce</p>
+              </div>
+              <div className="space-y-1">
+                <div className="h-8 w-8 rounded-full bg-emerald-50 text-[#15803D] flex items-center justify-center mx-auto">
+                  <Sprout className="h-4 w-4" />
+                </div>
+                <p className="text-[9px] font-bold text-slate-600 leading-tight">Direct from Farmers</p>
+              </div>
+              <div className="space-y-1">
+                <div className="h-8 w-8 rounded-full bg-emerald-50 text-[#15803D] flex items-center justify-center mx-auto">
+                  <Shield className="h-4 w-4" />
+                </div>
+                <p className="text-[9px] font-bold text-slate-600 leading-tight">Safe & Secure Payments</p>
+              </div>
+              <div className="space-y-1">
+                <div className="h-8 w-8 rounded-full bg-emerald-50 text-[#15803D] flex items-center justify-center mx-auto">
+                  <Zap className="h-4 w-4" />
+                </div>
+                <p className="text-[9px] font-bold text-slate-600 leading-tight">Fast Delivery</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+ <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0D4A24] text-white px-5 py-2.5 rounded-t-3xl flex justify-between items-center z-40 shadow-2xl">
+          <button
+            type="button"
+            onClick={() => setSelectedRole(null)}
+            className="bg-[#D9F99D] text-[#0D4A24] px-4 py-1.5 rounded-2xl flex flex-col items-center text-[10px] font-extrabold shadow"
+          >
+            <Home className="h-4 w-4 mb-0.5" />
+            <span>Home</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedRole('customer')}
+            className="flex flex-col items-center text-[10px] font-bold text-emerald-100"
+          >
+            <ShoppingCart className="h-4 w-4 mb-0.5" />
+            <span>Orders</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedRole('wholesale')}
+            className="flex flex-col items-center text-[10px] font-bold text-emerald-100"
+          >
+            <Grid className="h-4 w-4 mb-0.5" />
+            <span>More</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedRole('farmer')}
+            className="flex flex-col items-center text-[10px] font-bold text-emerald-100"
+          >
+            <User className="h-4 w-4 mb-0.5" />
+            <span>Profile</span>
+          </button>
+        </nav>
       </div>
     );
   }
 
-// =========================================================================
-  // 2. REAL SMS INBOX OTP LOGIN / REGISTRATION SCREEN
+  // =========================================================================
+  // 2. DIRECT EMAIL 6-DIGIT OTP LOGIN / SIGN UP SCREEN (₹0 COST)
   // =========================================================================
   if (!currentUser) {
     return (
-      <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto text-slate-800 shadow-2xl pb-10">
-        <div id="recaptcha-container"></div>
+      <div style={fontStyle} className="min-h-screen bg-white max-w-md mx-auto text-slate-800 shadow-2xl pb-10">
         {toast && (
-          <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-xl">
+          <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-xl text-center">
             {toast}
           </div>
         )}
 
-        <div className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white rounded-b-[32px] p-5 shadow-lg flex items-center space-x-3">
-          <button onClick={() => setSelectedRole(null)} className="p-2.5 bg-white/15 rounded-full">
+        <div className="p-4 flex items-center justify-between">
+          <button onClick={() => setSelectedRole(null)} className="p-2 rounded-full bg-slate-100 text-slate-700">
             <ArrowLeft className="h-4 w-4" />
           </button>
-          <div className="h-12 w-12 rounded-full bg-white p-0.5 border border-[#EAB308] overflow-hidden">
-            <img src="/icon-512.png" alt="Logo" className="h-full w-full object-cover rounded-full" />
-          </div>
-          <div>
-            <h2 className="text-base font-extrabold uppercase">{selectedRole} Portal</h2>
-            <p className="text-[11px] text-emerald-100">Direct Phone SMS OTP Authentication</p>
-          </div>
+          <span className="text-[11px] font-extrabold uppercase tracking-wider bg-emerald-50 text-[#15803D] px-3 py-1 rounded-full">
+            {selectedRole} Portal
+          </span>
         </div>
 
-        <div className="p-4">
-          <div className="bg-white rounded-3xl p-5 shadow-md border border-slate-100 space-y-4 text-xs">
-            <div className="grid grid-cols-2 gap-1.5 bg-slate-100 p-1 rounded-2xl font-extrabold">
-              <button
-                type="button"
-                onClick={() => { setAuthScreen('login'); setAuthMsg(''); }}
-                className={`py-2.5 rounded-xl ${authScreen === 'login' ? 'bg-[#15803D] text-white' : 'text-slate-600'}`}
-              >
-                Existing Login
-              </button>
-              <button
-                type="button"
-                onClick={() => { setAuthScreen('register'); setAuthMsg(''); }}
-                className={`py-2.5 rounded-xl ${authScreen === 'register' ? 'bg-[#15803D] text-white' : 'text-slate-600'}`}
-              >
-                New Registration
-              </button>
-            </div>
+        <div className="px-6 pt-2 text-center space-y-2">
+          <div className="h-16 w-16 rounded-full bg-white p-0.5 border-2 border-[#15803D] shadow mx-auto overflow-hidden">
+            <img src="/icon-512.png" alt="Rythu Basket" className="h-full w-full object-cover rounded-full" />
+          </div>
+          <h1 className="text-xl font-extrabold text-[#15803D]">Rythu Basket</h1>
+          <h2 className="text-lg font-extrabold text-slate-900">
+            {authScreen === 'login' ? 'Welcome Back!' : 'Create Account'}
+          </h2>
+          <p className="text-xs text-slate-500">
+            {authScreen === 'login'
+              ? 'Sign in with 6-digit OTP sent directly to your Email'
+              : 'Verify your Email inbox with 6-digit OTP to join'}
+          </p>
+        </div>
 
-            {authScreen === 'login' ? (
-              <form onSubmit={handleVerifyLogin} className="space-y-3.5">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-500 mb-1">Registered 10-Digit Mobile Number</label>
-                  <div className="flex items-center border border-slate-200 rounded-2xl px-3.5 py-3 bg-slate-50">
-                    <span className="font-extrabold text-slate-500 pr-2.5 border-r">+91</span>
-                    <input
-                      type="tel"
-                      maxLength={10}
-                      value={loginMobile}
-                      onChange={(e) => {
-                        setLoginMobile(e.target.value.replace(/\D/g, ''));
-                        setAuthMsg('');
-                        setLoginOtpSent(false);
-                      }}
-                      placeholder="Enter your 10-digit mobile"
-                      className="w-full bg-transparent pl-3 font-bold text-sm focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                {authMsg && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-2xl font-bold flex items-center justify-between">
-                    <span>{authMsg}</span>
-                    {authMsg.includes('not registered') && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setRegMobile(loginMobile);
-                          setAuthScreen('register');
-                          setAuthMsg('');
-                        }}
-                        className="bg-red-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-extrabold ml-2 flex-shrink-0"
-                      >
-                        Register Now
-                      </button>
-                    )}
-                  </div>
-                )}
-
-                {!loginOtpSent ? (
-                  <button
-                    type="button"
-                    disabled={sendingSms}
-                    onClick={handleSendLoginOtp}
-                    className="w-full bg-[#15803D] disabled:opacity-60 text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
-                  >
-                    {sendingSms ? 'Sending SMS OTP...' : 'Send SMS OTP to Phone'}
-                  </button>
-                ) : (
-                  <>
-                    <div>
-                      <div className="flex justify-between items-center mb-1">
-                        <label className="text-[11px] font-bold text-slate-500">Enter 6-Digit SMS OTP</label>
-                        <button type="button" onClick={handleSendLoginOtp} className="text-[11px] font-extrabold text-[#15803D] underline">
-                          Resend SMS
-                        </button>
-                      </div>
-                      <input
-                        type="tel"
-                        maxLength={6}
-                        required
-                        value={loginOtp}
-                        onChange={(e) => setLoginOtp(e.target.value.replace(/\D/g, ''))}
-                        placeholder="• • • • • •"
-                        className="w-full bg-slate-50 border border-emerald-300 rounded-2xl py-3 text-center text-base font-extrabold tracking-[0.4em]"
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      disabled={verifyingSms}
-                      className="w-full bg-[#15803D] disabled:opacity-60 text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
-                    >
-                      {verifyingSms ? 'Verifying...' : 'Verify SMS OTP & Login'}
-                    </button>
-                  </>
-                )}
-              </form>
-            ) : (
-              <form onSubmit={handleCompleteRegistration} className="space-y-3">
+        <div className="p-6 space-y-4 text-xs">
+          {authScreen === 'login' ? (
+            <form onSubmit={handleVerifyLogin} className="space-y-3.5">
+              <div className="flex items-center border border-slate-200 rounded-2xl px-3.5 py-3.5 bg-slate-50">
+                <Mail className="h-4 w-4 text-slate-400 mr-2.5 flex-shrink-0" />
                 <input
-                  type="text"
-                  required
-                  value={regName}
-                  onChange={(e) => setRegName(e.target.value)}
-                  placeholder="Full Name / Store Name *"
-                  className="w-full bg-slate-50 border rounded-2xl px-3.5 py-3 font-bold"
+                  type="email"
+                  value={loginEmail}
+                  onChange={(e) => {
+                    setLoginEmail(e.target.value);
+                    setAuthMsg('');
+                    setLoginOtpSent(false);
+                  }}
+                  placeholder="Enter your registered Email ID"
+                  className="w-full bg-transparent font-bold text-sm focus:outline-none"
                 />
-                <div className="flex items-center border border-slate-200 rounded-2xl px-3.5 py-3 bg-slate-50">
-                  <span className="font-extrabold text-slate-500 pr-2.5 border-r">+91</span>
+              </div>
+
+              {authMsg && (
+                <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-2xl font-bold flex items-center justify-between">
+                  <span>{authMsg}</span>
+                  {authMsg.includes('not registered') && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRegEmail(loginEmail);
+                        setAuthScreen('register');
+                        setAuthMsg('');
+                      }}
+                      className="bg-red-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-extrabold ml-2 flex-shrink-0"
+                    >
+                      Sign Up
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {!loginOtpSent ? (
+                <button
+                  type="button"
+                  disabled={sendingEmail}
+                  onClick={handleSendLoginOtp}
+                  className="w-full bg-[#15803D] disabled:opacity-60 text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
+                >
+                  {sendingEmail ? 'Sending OTP to Email...' : 'Send Email OTP'}
+                </button>
+              ) : (
+                <>
+                  <div className="flex justify-between items-center text-[11px] font-bold text-slate-500">
+                    <span>Check your Email Inbox / Spam</span>
+                    <button type="button" onClick={handleSendLoginOtp} className="text-[#15803D] font-extrabold underline">
+                      Resend OTP
+                    </button>
+                  </div>
                   <input
                     type="tel"
-                    maxLength={10}
+                    maxLength={6}
                     required
-                    value={regMobile}
-                    onChange={(e) => {
-                      setRegMobile(e.target.value.replace(/\D/g, ''));
-                      setRegOtpSent(false);
-                      setAuthMsg('');
-                    }}
-                    placeholder="Valid 10-Digit Mobile Number *"
-                    className="w-full bg-transparent pl-3 font-bold text-sm focus:outline-none"
+                    value={loginOtp}
+                    onChange={(e) => setLoginOtp(e.target.value.replace(/\D/g, ''))}
+                    placeholder="Enter 6-Digit Email OTP"
+                    className="w-full bg-slate-50 border border-emerald-400 rounded-2xl py-3.5 text-center text-base font-extrabold tracking-[0.4em]"
                   />
-                </div>
+                  <button
+                    type="submit"
+                    className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
+                  >
+                    Verify Email OTP & Login
+                  </button>
+                </>
+              )}
+
+              <div className="pt-2 text-center">
+                <button
+                  type="button"
+                  onClick={() => { setAuthScreen('register'); setAuthMsg(''); }}
+                  className="w-full border border-slate-200 text-slate-800 font-extrabold py-3.5 rounded-2xl"
+                >
+                  Create New Account
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleCompleteRegistration} className="space-y-3">
+              <input
+                type="text"
+                required
+                value={regName}
+                onChange={(e) => setRegName(e.target.value)}
+                placeholder="Full Name / Store Name *"
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 font-bold"
+              />
+              <div className="flex items-center border border-slate-200 rounded-2xl px-3.5 py-3.5 bg-slate-50">
+                <Mail className="h-4 w-4 text-slate-400 mr-2.5 flex-shrink-0" />
+                <input
+                  type="email"
+                  required
+                  value={regEmail}
+                  onChange={(e) => {
+                    setRegEmail(e.target.value);
+                    setRegOtpSent(false);
+                    setAuthMsg('');
+                  }}
+                  placeholder="Email ID (for 6-Digit OTP) *"
+                  className="w-full bg-transparent font-bold text-sm focus:outline-none"
+                />
+              </div>
+ <div className="flex items-center border border-slate-200 rounded-2xl px-3.5 py-3.5 bg-slate-50">
+                <span className="font-extrabold text-slate-500 pr-2 border-r">+91</span>
+                <input
+                  type="tel"
+                  maxLength={10}
+                  required
+                  value={regMobile}
+                  onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, ''))}
+                  placeholder="Mobile Number (for Delivery) *"
+                  className="w-full bg-transparent pl-2.5 font-bold text-sm focus:outline-none"
+                />
+              </div>
+              <input
+                type="text"
+                required
+                value={regAddress}
+                onChange={(e) => setRegAddress(e.target.value)}
+                placeholder="Address in Nellore *"
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 font-bold"
+              />
+              {selectedRole === 'customer' && (
                 <input
                   type="text"
-                  required
-                  value={regAddress}
-                  onChange={(e) => setRegAddress(e.target.value)}
-                  placeholder="Complete Address in Nellore *"
-                  className="w-full bg-slate-50 border rounded-2xl px-3.5 py-3 font-bold"
+                  value={regReferralCode}
+                  onChange={(e) => setRegReferralCode(e.target.value.toUpperCase())}
+                  placeholder="Referral Code (Optional • ₹50 Bonus)"
+                  className="w-full bg-amber-50/70 border border-amber-200 rounded-2xl px-4 py-3 font-bold"
                 />
-                {selectedRole === 'customer' && (
-                  <input
-                    type="text"
-                    value={regReferralCode}
-                    onChange={(e) => setRegReferralCode(e.target.value.toUpperCase())}
-                    placeholder="Referral Code (Optional • ₹50 Bonus)"
-                    className="w-full bg-amber-50/70 border border-amber-200 rounded-2xl px-3.5 py-3 font-bold"
-                  />
-                )}
+              )}
 
-                {authMsg && <p className="text-red-600 font-bold">{authMsg}</p>}
+              {authMsg && <p className="text-red-600 font-bold">{authMsg}</p>}
 
-                {!regOtpSent ? (
-                  <button
-                    type="button"
-                    disabled={sendingSms}
-                    onClick={handleSendRegisterOtp}
-                    className="w-full bg-[#15803D] disabled:opacity-60 text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
-                  >
-                    {sendingSms ? 'Sending SMS OTP...' : 'Send SMS OTP to Verify Mobile'}
-                  </button>
-                ) : (
-                  <>
-                    <input
-                      type="tel"
-                      maxLength={6}
-                      required
-                      value={regOtpInput}
-                      onChange={(e) => setRegOtpInput(e.target.value.replace(/\D/g, ''))}
-                      placeholder="Enter 6-Digit SMS OTP"
-                      className="w-full bg-slate-50 border border-emerald-300 rounded-2xl py-3 text-center text-base font-extrabold tracking-[0.4em]"
-                    />
-                    <button
-                      type="submit"
-                      disabled={verifyingSms}
-                      className="w-full bg-[#EA580C] disabled:opacity-60 text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
-                    >
-                      {verifyingSms ? 'Verifying...' : 'Verify SMS OTP & Register'}
+              {!regOtpSent ? (
+                <button
+                  type="button"
+                  disabled={sendingEmail}
+                  onClick={handleSendRegisterOtp}
+                  className="w-full bg-[#15803D] disabled:opacity-60 text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
+                >
+                  {sendingEmail ? 'Sending OTP to Email...' : 'Send 6-Digit Email OTP'}
+                </button>
+              ) : (
+                <>
+                  <div className="flex justify-between items-center text-[11px] font-bold text-slate-500">
+                    <span>Sent to {regEmail}</span>
+                    <button type="button" onClick={handleSendRegisterOtp} className="text-[#15803D] font-extrabold underline">
+                      Resend OTP
                     </button>
-                  </>
-                )}
-              </form>
-            )}
-          </div>
+                  </div>
+                  <input
+                    type="tel"
+                    maxLength={6}
+                    required
+                    value={regOtpInput}
+                    onChange={(e) => setRegOtpInput(e.target.value.replace(/\D/g, ''))}
+                    placeholder="Enter 6-Digit Email OTP"
+                    className="w-full bg-slate-50 border border-emerald-400 rounded-2xl py-3.5 text-center text-base font-extrabold tracking-[0.4em]"
+                  />
+                  <button
+                    type="submit"
+                    className="w-full bg-[#EA580C] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
+                  >
+                    Verify Email OTP & Complete Sign Up
+                  </button>
+                </>
+              )}
+
+              <p className="text-center text-slate-500 pt-2">
+                Already have an account?{' '}
+                <button type="button" onClick={() => setAuthScreen('login')} className="text-[#15803D] font-extrabold">
+                  Login
+                </button>
+              </p>
+            </form>
+          )}
         </div>
       </div>
     );
@@ -817,11 +1072,12 @@ const WelcomeSmileModal = () =>
         <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-[#15803D] to-[#22C55E] text-white font-extrabold text-xl flex items-center justify-center shadow">
           {currentUser.name.charAt(0)}
         </div>
-        <div>
+        <div className="min-w-0">
           <span className="text-[10px] font-extrabold uppercase bg-emerald-50 text-[#15803D] px-2 py-0.5 rounded-md">
             {currentUser.role}
           </span>
-          <h2 className="text-base font-extrabold text-slate-900 mt-0.5">{currentUser.name}</h2>
+          <h2 className="text-base font-extrabold text-slate-900 mt-0.5 truncate">{currentUser.name}</h2>
+          <p className="text-slate-500 font-semibold truncate">{currentUser.email}</p>
           <p className="text-slate-500 font-semibold">+91 {currentUser.mobile} • {currentUser.address}</p>
         </div>
       </div>
@@ -877,202 +1133,11 @@ const WelcomeSmileModal = () =>
   );
 
 // =========================================================================
-  // 3. CUSTOMER STOREFRONT (FIXED LOCATION PICKER + ANDROID UPI INTENT LAUNCH)
+  // 3. CUSTOMER STOREFRONT & TRACKING
   // =========================================================================
   if (currentUser.role === 'customer') {
     const activeAddr = savedAddresses.find((a) => a.id === activeAddrId) || savedAddresses[0];
-
-    if (activeTab === 'selectLocation') {
-      const filteredAddrs = savedAddresses.filter(
-        (a) =>
-          a.title.toLowerCase().includes(locSearch.toLowerCase()) ||
-          a.full.toLowerCase().includes(locSearch.toLowerCase())
-      );
-
-      return (
-        <div style={fontStyle} className="min-h-screen bg-[#0F5132] max-w-md mx-auto text-slate-800 shadow-2xl flex flex-col">
-          <div className="px-4 py-4 text-white flex items-center space-x-3">
-            <button type="button" onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white/15">
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            <h1 className="text-sm font-extrabold tracking-wide uppercase">SELECT DELIVERY LOCATION</h1>
-          </div>
-
-          <div className="flex-1 bg-white rounded-t-[30px] p-4 space-y-4">
-            <div className="flex items-center border border-slate-200 rounded-2xl px-3.5 py-3 bg-slate-50">
-              <Search className="h-4 w-4 text-slate-400 mr-2.5" />
-              <input
-                type="text"
-                value={locSearch}
-                onChange={(e) => setLocSearch(e.target.value)}
-                placeholder="Search for location in Nellore..."
-                className="w-full bg-transparent text-xs font-semibold focus:outline-none"
-              />
-            </div>
-
-            <button
-              type="button"
-              onClick={handleUseCurrentLocationMap}
-              className="w-full border-2 border-[#15803D] bg-emerald-50 rounded-2xl py-3.5 px-4 flex items-center justify-center space-x-2 text-[#15803D] font-extrabold text-xs shadow-sm active:scale-[0.99]"
-            >
-              <LocateFixed className="h-4 w-4" />
-              <span>Use current location (Open GPS Map)</span>
-            </button>
-
-            <div className="flex items-center justify-between pt-1">
-              <span className="text-xs font-extrabold text-slate-500">Saved addresses</span>
-              <button
-                type="button"
-                onClick={handleUseCurrentLocationMap}
-                className="text-xs font-extrabold text-[#15803D] flex items-center space-x-1"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                <span>ADD NEW ADDRESS</span>
-              </button>
-            </div>
-
-            <div className="space-y-2.5">
-              {filteredAddrs.map((addr) => (
-                <button
-                  key={addr.id}
-                  type="button"
-                  onClick={() => {
-                    setActiveAddrId(addr.id);
-                    setCurrentUser((prev) => ({ ...prev, address: addr.title }));
-                    setActiveTab('home');
-                    notify(`Selected Location - ${addr.title}`);
-                  }}
-                  className={`w-full text-left rounded-2xl p-3.5 border flex items-start space-x-3 transition ${
-                    activeAddrId === addr.id ? 'border-[#15803D] bg-emerald-50/40' : 'border-slate-100 bg-white shadow-sm'
-                  }`}
-                >
-                  <div className="flex flex-col items-center space-y-1 flex-shrink-0">
-                    <div className="h-9 w-9 rounded-xl bg-emerald-50 text-[#15803D] flex items-center justify-center">
-                      {addr.tag === 'Office' ? <Briefcase className="h-4 w-4" /> : <Home className="h-4 w-4" />}
-                    </div>
-                    <span className="text-[10px] font-extrabold text-[#15803D]">{addr.distance}</span>
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-xs font-extrabold text-slate-900">{addr.tag}</h3>
-                      {activeAddrId === addr.id && <Check className="h-4 w-4 text-[#15803D]" />}
-                    </div>
-                    <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-2">{addr.full}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    if (activeTab === 'mapPin') {
-      return (
-        <div style={fontStyle} className="min-h-screen bg-[#0F5132] max-w-md mx-auto text-slate-800 shadow-2xl flex flex-col">
-          <div className="px-4 py-4 text-white flex items-center space-x-3">
-            <button type="button" onClick={() => setActiveTab('selectLocation')} className="p-2 rounded-full bg-white/15">
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            <h1 className="text-sm font-extrabold tracking-wide uppercase">PIN DELIVERY LOCATION</h1>
-          </div>
-
-          <div className="flex-1 bg-white rounded-t-[30px] overflow-hidden flex flex-col justify-between relative">
-            <div className="relative flex-1 min-h-[340px] bg-slate-100">
-              <div className="absolute top-3 left-3 right-3 z-20 bg-white rounded-2xl px-3.5 py-2.5 shadow-md flex items-center border border-slate-100">
-                <Search className="h-4 w-4 text-slate-400 mr-2" />
-                <input
-                  type="text"
-                  value={mapPinTitle}
-                  onChange={(e) => setMapPinTitle(e.target.value)}
-                  placeholder="Enter area / street name"
-                  className="w-full text-xs font-bold focus:outline-none"
-                />
-              </div>
-
-              <iframe
-                title="Adjust Pin Map"
-                width="100%"
-                height="100%"
-                frameBorder="0"
-                className="w-full h-full min-h-[340px]"
-                src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapPinCoords.lng - 0.008}%2C${mapPinCoords.lat - 0.008}%2C${mapPinCoords.lng + 0.008}%2C${mapPinCoords.lat + 0.008}&layer=mapnik&marker=${mapPinCoords.lat}%2C${mapPinCoords.lng}`}
-              />
-
-              <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center z-10 pb-8">
-                <div className="bg-slate-900 text-white px-3.5 py-2 rounded-xl shadow-lg text-center mb-1.5">
-                  <p className="text-[11px] font-extrabold leading-tight">Your order will be delivered here</p>
-                  <p className="text-[9px] text-slate-300">Use N/S/E/W buttons to fine-tune pin</p>
-                </div>
-                <div className="h-10 w-10 rounded-full bg-[#15803D]/25 flex items-center justify-center">
-                  <div className="h-5 w-5 rounded-full bg-[#15803D] border-2 border-white shadow-md" />
-                </div>
-              </div>
-
-              <div className="absolute right-3 top-20 z-20 flex flex-col space-y-1 bg-white/95 p-1.5 rounded-xl shadow border text-[10px] font-extrabold">
-                <button type="button" onClick={() => handleAdjustPin(0.0015, 0)} className="px-2 py-1 bg-slate-100 rounded">↑ N</button>
-                <button type="button" onClick={() => handleAdjustPin(-0.0015, 0)} className="px-2 py-1 bg-slate-100 rounded">↓ S</button>
-                <button type="button" onClick={() => handleAdjustPin(0, 0.0015)} className="px-2 py-1 bg-slate-100 rounded">→ E</button>
-                <button type="button" onClick={() => handleAdjustPin(0, -0.0015)} className="px-2 py-1 bg-slate-100 rounded">← W</button>
-              </div>
-
-              <div className="absolute bottom-3 left-0 right-0 flex justify-center z-20">
-                <button
-                  type="button"
-                  onClick={handleUseCurrentLocationMap}
-                  className="bg-white text-[#15803D] border border-slate-200 text-xs font-extrabold px-4 py-2 rounded-xl shadow-md flex items-center space-x-1.5"
-                >
-                  <LocateFixed className="h-4 w-4" />
-                  <span>{isLocatingGps ? 'Detecting GPS...' : 'Go to current location'}</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="bg-white p-4 border-t shadow-lg space-y-3 z-20">
-              <div className="flex items-start justify-between space-x-2">
-                <div className="flex items-start space-x-2 flex-1">
-                  <MapPin className="h-5 w-5 text-slate-900 flex-shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    {isEditingPinText ? (
-                      <div className="space-y-1.5">
-                        <input type="text" value={mapPinTitle} onChange={(e) => setMapPinTitle(e.target.value)} className="w-full border rounded-lg px-2.5 py-1 text-xs font-extrabold" />
-                        <input type="text" value={mapPinFullAddress} onChange={(e) => setMapPinFullAddress(e.target.value)} className="w-full border rounded-lg px-2.5 py-1 text-[11px]" />
-                      </div>
-                    ) : (
-                      <>
-                        <h3 className="text-sm font-extrabold text-slate-900 leading-tight">
-                          {isLocatingGps ? 'Fetching current address...' : mapPinTitle}
-                        </h3>
-                        <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-2">{mapPinFullAddress}</p>
-                      </>
-                    )}
-                  </div>
-                </div>
-                <button type="button" onClick={() => setIsEditingPinText(!isEditingPinText)} className="border border-slate-200 text-[#15803D] text-xs font-extrabold px-3 py-1 rounded-lg">
-                  {isEditingPinText ? 'Done' : 'Change'}
-                </button>
-              </div>
-
-              <div className="flex items-center space-x-2 text-[11px]">
-                <span className="font-bold text-slate-400">Save as:</span>
-                {['Home', 'Office', 'Others'].map((t) => (
-                  <button key={t} type="button" onClick={() => setMapPinTag(t)} className={`px-3 py-1 rounded-full font-extrabold border ${mapPinTag === t ? 'bg-emerald-50 border-[#15803D] text-[#15803D]' : 'bg-slate-50 text-slate-600'}`}>
-                    {t}
-                  </button>
-                ))}
-              </div>
-
-              <button type="button" onClick={handleConfirmSetLocation} className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-xl text-sm shadow-md">
-                Set Location
-              </button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-const orderNum = (currentUser.ordersCompleted || 0) + 1;
+    const orderNum = (currentUser.ordersCompleted || 0) + 1;
     const totalUnits = Object.values(cart).reduce((a, b) => a + b, 0);
     const subtotal = Object.entries(cart).reduce((sum, [id, qty]) => {
       const p = products.find((x) => x.id === id);
@@ -1114,27 +1179,28 @@ const orderNum = (currentUser.ordersCompleted || 0) + 1;
       const itemsArr = Object.entries(cart)
         .map(([id, qty]) => {
           const p = products.find((x) => x.id === id);
-          return p ? { id: p.id, name: p.nameEn, qty, price: p.retailPrice } : null;
+          return p ? { id: p.id, name: p.nameEn, qty, price: p.retailPrice, img: p.img } : null;
         })
         .filter(Boolean);
 
       if (itemsArr.length === 0) return;
 
       const newOrd = {
-        id: 'RB-' + Math.floor(600 + Math.random() * 390),
+        id: 'RB' + Math.floor(123450 + Math.random() * 800000),
         buyerRole: 'customer',
         buyerName: currentUser.name,
         buyerMobile: currentUser.mobile,
         buyerAddress: activeAddr.full,
+        deliverySlot,
         items: itemsArr,
         total: payableTotal,
         cashback: estimatedCashback,
         status: 'Order Placed',
-        driverName: null,
-        driverMobile: null,
-        driverCoords: null,
+        driverName: 'Ramesh Kumar',
+        driverMobile: '9000334455',
+        driverCoords: '14.4350, 79.9780',
         b2bOtp: null,
-        date: 'Just now',
+        date: 'Today, ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
 
       const updatedUser = {
@@ -1145,10 +1211,10 @@ const orderNum = (currentUser.ordersCompleted || 0) + 1;
       setCurrentUser(updatedUser);
       setUsers((prev) => prev.map((u) => (u.id === updatedUser.id ? updatedUser : u)));
       setOrders([newOrd, ...orders]);
+      setLastPlacedOrder(newOrd);
       setCart({});
       setUtrRefInput('');
-      setActiveTab('orders');
-      notify(`Order ${newOrd.id} Placed! ₹${estimatedCashback} Cashback credits on delivery.`);
+      setActiveTab('orderPlaced');
     };
 
     const handlePayAndPlaceOrderTrigger = () => {
@@ -1166,35 +1232,202 @@ const orderNum = (currentUser.ordersCompleted || 0) + 1;
         finalizeCustomerOrder();
         return;
       }
-
-      // Launch PhonePe / GPay / Paytm / CRED via Android Intent URL first, then show confirmation screen
-      window.location.assign(paymentAppLaunchUrl);
+      window.location.href = paymentAppLaunchUrl;
       setTimeout(() => {
         setActiveTab('upiProcessing');
-      }, 300);
+      }, 350);
     };
 
-    const handleSimulateCustomerDelivery = (ord) => {
+const handleSimulateCustomerDelivery = (ord) => {
       const isLucky = Math.random() > 0.2;
       const reward = isLucky ? Math.floor(scratchMin + Math.random() * (scratchMax - scratchMin + 1)) : 0;
-
       const updatedUser = {
         ...currentUser,
         wallet: (currentUser.wallet || 0) + (ord.cashback || 0) + reward,
       };
       setCurrentUser(updatedUser);
       setOrders((prev) => prev.map((o) => (o.id === ord.id ? { ...o, status: 'Delivered' } : o)));
+      if (trackingOrder && trackingOrder.id === ord.id) {
+        setTrackingOrder({ ...ord, status: 'Delivered' });
+      }
       setScratchCard({ orderId: ord.id, reward, scratched: false });
     };
 
-    const visibleProducts = products.filter((p) => {
+    if (activeTab === 'selectLocation') {
+      const filteredAddrs = savedAddresses.filter(
+        (a) =>
+          a.title.toLowerCase().includes(locSearch.toLowerCase()) ||
+          a.full.toLowerCase().includes(locSearch.toLowerCase())
+      );
+
+      return (
+        <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto text-slate-800 shadow-2xl pb-10">
+          <div className="bg-[#0F5132] px-4 py-4 text-white flex items-center space-x-3 rounded-b-3xl shadow">
+            <button type="button" onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white/15">
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <h1 className="text-sm font-extrabold tracking-wide uppercase">SELECT DELIVERY LOCATION</h1>
+          </div>
+
+          <div className="p-4 space-y-4">
+            <div className="flex items-center border border-slate-200 rounded-2xl px-3.5 py-3 bg-white shadow-sm">
+              <Search className="h-4 w-4 text-slate-400 mr-2.5" />
+              <input
+                type="text"
+                value={locSearch}
+                onChange={(e) => setLocSearch(e.target.value)}
+                placeholder="Search area in Nellore..."
+                className="w-full bg-transparent text-xs font-semibold focus:outline-none"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={handleUseCurrentLocationMap}
+              className="w-full border-2 border-[#15803D] bg-emerald-50 rounded-2xl py-3.5 px-4 flex items-center justify-center space-x-2 text-[#15803D] font-extrabold text-xs shadow-sm"
+            >
+              <LocateFixed className="h-4 w-4" />
+              <span>Use current location (Capture GPS & Pin Map)</span>
+            </button>
+
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-xs font-extrabold text-slate-500">Saved addresses</span>
+              <button type="button" onClick={handleUseCurrentLocationMap} className="text-xs font-extrabold text-[#15803D] flex items-center space-x-1">
+                <Plus className="h-3.5 w-3.5" />
+                <span>ADD NEW ADDRESS</span>
+              </button>
+            </div>
+
+            <div className="space-y-2.5">
+              {filteredAddrs.map((addr) => (
+                <button
+                  key={addr.id}
+                  type="button"
+                  onClick={() => {
+                    setActiveAddrId(addr.id);
+                    setCurrentUser((prev) => ({ ...prev, address: addr.title }));
+                    setActiveTab('home');
+                    notify(`Selected Location - ${addr.title}`);
+                  }}
+                  className={`w-full text-left rounded-2xl p-3.5 border flex items-start space-x-3 transition ${
+                    activeAddrId === addr.id ? 'border-[#15803D] bg-emerald-50/60' : 'border-slate-200 bg-white shadow-sm'
+                  }`}
+                >
+                  <div className="flex flex-col items-center space-y-1 flex-shrink-0">
+                    <div className="h-9 w-9 rounded-xl bg-emerald-100 text-[#15803D] flex items-center justify-center">
+                      {addr.tag === 'Office' ? <Briefcase className="h-4 w-4" /> : <Home className="h-4 w-4" />}
+                    </div>
+                    <span className="text-[10px] font-extrabold text-[#15803D]">{addr.distance}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-extrabold text-slate-900">{addr.tag}</h3>
+                      {activeAddrId === addr.id && <Check className="h-4 w-4 text-[#15803D]" />}
+                    </div>
+                    <p className="text-[11px] text-slate-500 mt-0.5">{addr.full}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (activeTab === 'mapPin') {
+      return (
+        <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto text-slate-800 shadow-2xl pb-10">
+          <div className="bg-[#0F5132] px-4 py-4 text-white flex items-center space-x-3 rounded-b-3xl shadow">
+            <button type="button" onClick={() => setActiveTab('selectLocation')} className="p-2 rounded-full bg-white/15">
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <h1 className="text-sm font-extrabold tracking-wide uppercase">PIN DELIVERY LOCATION</h1>
+          </div>
+
+          <div className="p-4 space-y-3.5">
+            <div className="relative h-72 w-full rounded-3xl overflow-hidden border-2 border-emerald-200 bg-emerald-50 shadow-md">
+              <iframe
+                title="Nellore Location Map"
+                width="100%"
+                height="288"
+                style={{ border: 0, display: 'block' }}
+                src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapPinCoords.lng - 0.008}%2C${mapPinCoords.lat - 0.008}%2C${mapPinCoords.lng + 0.008}%2C${mapPinCoords.lat + 0.008}&layer=mapnik&marker=${mapPinCoords.lat}%2C${mapPinCoords.lng}`}
+              />
+              <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center pb-6">
+                <div className="bg-slate-900/90 text-white px-3 py-1.5 rounded-xl shadow text-center mb-1">
+                  <p className="text-[10px] font-extrabold">Your order will be delivered here</p>
+                </div>
+                <div className="h-9 w-9 rounded-full bg-[#15803D]/30 flex items-center justify-center">
+                  <div className="h-4 w-4 rounded-full bg-[#15803D] border-2 border-white shadow" />
+                </div>
+              </div>
+              <div className="absolute right-2.5 top-2.5 flex flex-col space-y-1 bg-white/95 p-1.5 rounded-xl shadow border text-[10px] font-extrabold">
+                <button type="button" onClick={() => handleAdjustPin(0.0015, 0)} className="px-2 py-1 bg-slate-100 rounded">↑ N</button>
+                <button type="button" onClick={() => handleAdjustPin(-0.0015, 0)} className="px-2 py-1 bg-slate-100 rounded">↓ S</button>
+                <button type="button" onClick={() => handleAdjustPin(0, 0.0015)} className="px-2 py-1 bg-slate-100 rounded">→ E</button>
+                <button type="button" onClick={() => handleAdjustPin(0, -0.0015)} className="px-2 py-1 bg-slate-100 rounded">← W</button>
+              </div>
+              <div className="absolute bottom-2.5 left-0 right-0 flex justify-center">
+                <button
+                  type="button"
+                  onClick={handleUseCurrentLocationMap}
+                  className="bg-white text-[#15803D] border border-emerald-200 text-xs font-extrabold px-3.5 py-1.5 rounded-full shadow flex items-center space-x-1.5"
+                >
+                  <LocateFixed className="h-3.5 w-3.5" />
+                  <span>{isLocatingGps ? 'Detecting GPS...' : 'Go to current location'}</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+              <div className="flex items-start justify-between space-x-2">
+                <div className="flex items-start space-x-2 flex-1">
+                  <MapPin className="h-5 w-5 text-[#15803D] flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    {isEditingPinText ? (
+                      <div className="space-y-1.5">
+                        <input type="text" value={mapPinTitle} onChange={(e) => setMapPinTitle(e.target.value)} className="w-full border rounded-lg px-2.5 py-1.5 text-xs font-extrabold" />
+                        <input type="text" value={mapPinFullAddress} onChange={(e) => setMapPinFullAddress(e.target.value)} className="w-full border rounded-lg px-2.5 py-1.5 text-[11px]" />
+                      </div>
+                    ) : (
+                      <>
+                        <h3 className="text-sm font-extrabold text-slate-900">{isLocatingGps ? 'Fetching current address...' : mapPinTitle}</h3>
+                        <p className="text-[11px] text-slate-500 mt-0.5">{mapPinFullAddress}</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <button type="button" onClick={() => setIsEditingPinText(!isEditingPinText)} className="border border-slate-200 text-[#15803D] text-xs font-extrabold px-3 py-1 rounded-lg">
+                  {isEditingPinText ? 'Done' : 'Change'}
+                </button>
+              </div>
+
+              <div className="flex items-center space-x-2 text-[11px]">
+                <span className="font-bold text-slate-400">Save as:</span>
+                {['Home', 'Office', 'Others'].map((t) => (
+                  <button key={t} type="button" onClick={() => setMapPinTag(t)} className={`px-3 py-1 rounded-full font-extrabold border ${mapPinTag === t ? 'bg-emerald-50 border-[#15803D] text-[#15803D]' : 'bg-slate-50 text-slate-600'}`}>
+                    {t}
+                  </button>
+                ))}
+              </div>
+
+              <button type="button" onClick={handleConfirmSetLocation} className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl text-sm shadow-md">
+                Set Location
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+const visibleProducts = products.filter((p) => {
       const catOk = selectedCat === 'All' || p.cat === selectedCat;
       const q = search.toLowerCase();
       return catOk && (p.nameEn.toLowerCase().includes(q) || p.nameTe.includes(search));
     });
 
     return (
-      <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto relative pb-28 text-slate-800 shadow-2xl">
+      <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
         <WelcomeSmileModal />
         {toast && (
           <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-extrabold px-4 py-2.5 rounded-full shadow-xl whitespace-nowrap">
@@ -1234,149 +1467,181 @@ const orderNum = (currentUser.ordersCompleted || 0) + 1;
           </div>
         )}
 
-        {/* TOP HEADER WITH HIGH-PRIORITY CLICKABLE LOCATION SELECTOR */}
-        <header className="bg-gradient-to-b from-[#0F5132] to-[#15803D] text-white sticky top-0 z-40 px-4 pt-3.5 pb-4 rounded-b-[28px] shadow-lg space-y-2.5">
-          <div className="flex items-center justify-between gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setLocSearch('');
-                setActiveTab('selectLocation');
-              }}
-              className="flex items-center space-x-2.5 flex-1 min-w-0 text-left bg-white/10 hover:bg-white/15 active:scale-[0.99] px-2.5 py-1.5 rounded-2xl transition cursor-pointer"
-            >
-              <div className="h-9 w-9 rounded-full bg-white p-0.5 border border-[#EAB308] overflow-hidden shadow flex-shrink-0">
-                <img src="/icon-512.png" alt="Logo" className="h-full w-full object-cover rounded-full" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center space-x-1 text-[10px] font-bold text-[#FDE047]">
-                  <MapPin className="h-3 w-3 flex-shrink-0" />
-                  <span>SELECTED LOCATION</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <p className="text-xs font-extrabold truncate">{activeAddr.title}</p>
-                  <ChevronDown className="h-3.5 w-3.5 text-emerald-200 flex-shrink-0" />
-                </div>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('profile')}
-              className="bg-white/15 backdrop-blur-md border border-white/20 text-white px-3 py-2 rounded-full text-xs font-extrabold flex items-center space-x-1.5 shadow-sm flex-shrink-0"
-            >
-              <Wallet className="h-3.5 w-3.5 text-[#FDE047]" />
-              <span>₹{currentUser.wallet || 0}</span>
-            </button>
-          </div>
-
-          <div className="bg-white/95 text-slate-800 rounded-2xl px-3.5 py-2.5 flex items-center shadow-sm">
-            <Search className="h-4 w-4 text-slate-400 mr-2.5" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); if (activeTab !== 'home') setActiveTab('home'); }}
-              placeholder="Search 'Nellore Sona Masuri' or 'Tomato'..."
-              className="w-full bg-transparent text-xs font-semibold focus:outline-none"
-            />
-          </div>
-
-          {offersEnabled && (
-            <div className="bg-black/20 rounded-xl px-3 py-1.5 text-[10px] font-bold text-[#FDE047] flex items-center justify-between">
-              <span>FREE Delivery above ₹99 • 1st 2 Orders 50% OFF</span>
-              <span className="bg-[#EA580C] text-white px-1.5 py-0.5 rounded text-[9px] font-extrabold">RYTHU30</span>
-            </div>
-          )}
-        </header>
-
         {activeTab === 'home' && (
-          <main className="px-4 pt-4 space-y-4 text-xs">
-            <div className="flex space-x-3 overflow-x-auto pb-1">
-              {CATEGORIES.map((c) => {
+          <main className="px-4 pt-3.5 space-y-4 text-xs">
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => {
+                  setLocSearch('');
+                  setActiveTab('selectLocation');
+                }}
+                className="flex items-center space-x-2 text-left"
+              >
+                <div className="h-9 w-9 rounded-full bg-emerald-50 text-[#15803D] flex items-center justify-center">
+                  <MapPin className="h-4 w-4" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 block">Deliver to</span>
+                  <div className="flex items-center space-x-1">
+                    <span className="text-sm font-extrabold text-slate-900 truncate max-w-[175px]">{activeAddr.title}</span>
+                    <ChevronDown className="h-4 w-4 text-slate-600" />
+                  </div>
+                </div>
+              </button>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setActiveTab('profile')}
+                  className="bg-emerald-50 text-[#15803D] border border-emerald-200 px-3 py-1.5 rounded-full font-extrabold flex items-center space-x-1"
+                >
+                  <Wallet className="h-3.5 w-3.5" />
+                  <span>₹{currentUser.wallet || 0}</span>
+                </button>
+                <button onClick={() => setActiveTab('orders')} className="h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center relative">
+                  <Bell className="h-4 w-4 text-slate-700" />
+                  <span className="absolute top-1.5 right-2 h-2 w-2 rounded-full bg-rose-500" />
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-r from-[#DCFCE7] via-[#BBF7D0] to-[#86EFAC] rounded-3xl p-4 shadow-sm flex items-center justify-between overflow-hidden">
+              <div className="space-y-2 max-w-[58%]">
+                <h2 className="text-base font-extrabold text-[#0F5132] leading-snug">
+                  Fresh Vegetables Direct from Farmers
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setSelectedCat('All')}
+                  className="bg-[#15803D] text-white font-extrabold px-4 py-2 rounded-xl shadow text-xs"
+                >
+                  Shop Now
+                </button>
+              </div>
+              <img
+                src="https://images.unsplash.com/photo-1595855759920-86582396756a?auto=format&fit=crop&w=260&q=80"
+                alt="Farmer"
+                className="h-24 w-24 rounded-2xl object-cover shadow"
+              />
+            </div>
+
+            <div className="grid grid-cols-4 gap-2 text-center">
+              {TOP_CATEGORIES.map((c) => {
                 const active = selectedCat === c.id;
                 return (
-                  <button key={c.id} onClick={() => setSelectedCat(c.id)} className="flex-shrink-0 flex flex-col items-center space-y-1.5">
-                    <div className={`h-14 w-14 rounded-full p-0.5 border-2 transition ${active ? 'border-[#15803D] scale-105 shadow-md' : 'border-slate-200'}`}>
-                      <img src={c.img} alt={c.labelEn} className="h-full w-full object-cover rounded-full" />
-                    </div>
-                    <span className={`text-[10px] font-extrabold ${active ? 'text-[#15803D]' : 'text-slate-600'}`}>{c.labelEn}</span>
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setSelectedCat(active ? 'All' : c.id)}
+                    className={`rounded-2xl p-2 border transition ${active ? 'border-[#15803D] bg-emerald-50 shadow-sm' : 'border-slate-100 bg-white'}`}
+                  >
+                    <img src={c.img} alt={c.labelEn} className="h-12 w-12 rounded-xl object-cover mx-auto mb-1" />
+                    <p className="text-[10px] font-extrabold text-slate-800 truncate">{c.labelEn}</p>
                   </button>
                 );
               })}
             </div>
 
-            {offersEnabled && (
-              <div className="bg-gradient-to-r from-[#FEF9C3] to-[#DCFCE7] border border-emerald-200/80 rounded-2xl p-3.5 flex items-center justify-between shadow-sm">
-                <div>
-                  <span className="bg-[#15803D] text-white text-[9px] font-extrabold px-2 py-0.5 rounded-md uppercase">
-                    Order #{orderNum} Reward
-                  </span>
-                  <h3 className="text-sm font-extrabold text-slate-900 mt-1">
-                    {orderNum <= 2 ? '50% OFF Unlocked!' : orderNum <= 5 ? '25% OFF Unlocked!' : '₹20 Cashback Unlocked!'}
-                  </h3>
-                  <p className="text-[10px] text-slate-600">Applied automatically at checkout</p>
-                </div>
-                <button onClick={() => setActiveTab('cart')} className="bg-[#EA580C] text-white font-extrabold px-3.5 py-2 rounded-xl shadow-sm">
-                  View Cart
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-extrabold text-slate-900">Popular Categories</h3>
+                <button type="button" onClick={() => setActiveTab('categories')} className="text-xs font-extrabold text-[#15803D]">
+                  See All &gt;
                 </button>
+              </div>
+              <div className="grid grid-cols-4 gap-2 text-center">
+                {POPULAR_CIRCLES.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      const found = products.find((p) => p.id === item.id);
+                      if (found) {
+                        setDetailProduct(found);
+                        setDetailQty(cart[found.id] || 1);
+                        setActiveTab('productDetail');
+                      }
+                    }}
+                    className="space-y-1"
+                  >
+                    <div className="h-14 w-14 rounded-full bg-white p-1 border border-slate-200 shadow-sm mx-auto overflow-hidden">
+                      <img src={item.img} alt={item.name} className="h-full w-full object-cover rounded-full" />
+                    </div>
+                    <p className="text-[10px] font-bold text-slate-700 truncate">{item.name}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+{offersEnabled && (
+              <div className="bg-gradient-to-r from-[#86EFAC] to-[#FEF08A] rounded-2xl p-3.5 flex items-center justify-between shadow-sm">
+                <div>
+                  <span className="bg-[#15803D] text-white text-[9px] font-extrabold px-2 py-0.5 rounded">
+                    Special Offer • Order #{orderNum}
+                  </span>
+                  <h4 className="text-sm font-extrabold text-slate-900 mt-1">
+                    {orderNum <= 2 ? 'Get 50% OFF on Fresh Produce' : 'Get 25% OFF + Free Delivery ₹99+'}
+                  </h4>
+                </div>
+                <img
+                  src="https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=140&q=80"
+                  alt="Offer"
+                  className="h-14 w-14 rounded-xl object-cover"
+                />
               </div>
             )}
 
-  <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-extrabold text-slate-900">
+                  {selectedCat === 'All' ? 'Fresh Harvest in Nellore' : selectedCat}
+                </h3>
+                {selectedCat !== 'All' && (
+                  <button onClick={() => setSelectedCat('All')} className="text-[11px] font-extrabold text-[#15803D]">
+                    Show All
+                  </button>
+                )}
+              </div>
+
               {visibleProducts.map((p) => {
                 const q = cart[p.id] || 0;
-                const offPct = Math.round(((p.mrp - p.retailPrice) / p.mrp) * 100);
-                const wished = wishlist.includes(p.id);
-
                 return (
-                  <div key={p.id} className="bg-white rounded-2xl p-2.5 shadow-sm border border-slate-100 flex flex-col justify-between">
-                    <div>
-                      <div className="relative h-28 w-full rounded-xl bg-slate-50 overflow-hidden mb-2">
-                        <img src={p.img} alt={p.nameEn} className="h-full w-full object-cover" />
-                        <span className="absolute top-0 left-0 bg-[#15803D] text-white text-[9px] font-extrabold px-2 py-0.5 rounded-br-xl">
-                          {offPct}% OFF
-                        </span>
-                        <button
-                          onClick={() => setWishlist((w) => (w.includes(p.id) ? w.filter((x) => x !== p.id) : [...w, p.id]))}
-                          className="absolute top-1.5 right-1.5 h-7 w-7 rounded-full bg-white/90 flex items-center justify-center shadow-sm"
-                        >
-                          <Heart className={`h-3.5 w-3.5 ${wished ? 'fill-rose-500 text-rose-500' : 'text-slate-400'}`} />
-                        </button>
-                      </div>
-
-                      <p className="text-[10px] font-bold text-slate-400 truncate">{p.farmerName} • {p.distanceKm} km</p>
-                      <h4 className="text-xs font-extrabold text-slate-900 leading-snug mt-0.5">{p.nameEn}</h4>
-                      <p className="text-[11px] font-bold text-[#15803D]">{p.nameTe}</p>
-                    </div>
-
-                    <div className="mt-2.5 pt-2 border-t border-slate-50 flex items-center justify-between">
+                  <div key={p.id} className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex items-center justify-between">
+                    <div
+                      onClick={() => {
+                        setDetailProduct(p);
+                        setDetailQty(q || 1);
+                        setActiveTab('productDetail');
+                      }}
+                      className="flex items-center space-x-3 flex-1 cursor-pointer"
+                    >
+                      <img src={p.img} alt={p.nameEn} className="h-16 w-16 rounded-2xl object-cover bg-slate-50" />
                       <div>
-                        <span className="text-[10px] font-bold text-slate-400 block">{p.packLabel}</span>
-                        <span className="text-sm font-extrabold text-slate-900">₹{p.retailPrice}</span>
-                        <span className="text-[10px] text-slate-400 line-through ml-1">₹{p.mrp}</span>
-                      </div>
-
-                      {!p.inStock ? (
-                        <span className="text-[10px] font-extrabold text-rose-500 bg-rose-50 px-2 py-1 rounded-lg">Sold Out</span>
-                      ) : q === 0 ? (
-                        <button
-                          onClick={() => setCart({ ...cart, [p.id]: 1 })}
-                          className="bg-[#EA580C] text-white text-[11px] font-extrabold px-3.5 py-1.5 rounded-xl shadow-sm"
-                        >
-                          ADD
-                        </button>
-                      ) : (
-                        <div className="flex items-center bg-[#15803D] text-white rounded-xl px-2 py-1 space-x-2 font-extrabold shadow-sm">
-                          <button onClick={() => setCart((c) => { const n = { ...c }; if (n[p.id] <= 1) delete n[p.id]; else n[p.id]--; return n; })}>
-                            <Minus className="h-3 w-3" />
-                          </button>
-                          <span>{q}</span>
-                          <button onClick={() => setCart({ ...cart, [p.id]: q + 1 })}>
-                            <Plus className="h-3 w-3" />
-                          </button>
+                        <h4 className="text-xs font-extrabold text-slate-900">{p.nameEn}</h4>
+                        <p className="text-[11px] font-bold text-[#15803D]">{p.nameTe} • {p.packLabel}</p>
+                        <div className="mt-1">
+                          <span className="text-sm font-extrabold text-slate-900">₹{p.retailPrice}</span>
+                          <span className="text-[10px] text-slate-400 line-through ml-1.5">₹{p.mrp}</span>
                         </div>
-                      )}
+                      </div>
                     </div>
+
+                    {!p.inStock ? (
+                      <span className="text-[10px] font-extrabold text-rose-500 bg-rose-50 px-2.5 py-1.5 rounded-xl">Sold Out</span>
+                    ) : q === 0 ? (
+                      <button
+                        onClick={() => setCart({ ...cart, [p.id]: 1 })}
+                        className="bg-[#15803D] text-white font-extrabold px-4 py-2 rounded-xl shadow-sm"
+                      >
+                        Add +
+                      </button>
+                    ) : (
+                      <div className="flex items-center bg-[#15803D] text-white rounded-xl px-2.5 py-1.5 space-x-2.5 font-extrabold">
+                        <button onClick={() => setCart((c) => { const n = { ...c }; if (n[p.id] <= 1) delete n[p.id]; else n[p.id]--; return n; })}>-</button>
+                        <span>{q}</span>
+                        <button onClick={() => setCart({ ...cart, [p.id]: q + 1 })}>+</button>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -1384,132 +1649,287 @@ const orderNum = (currentUser.ordersCompleted || 0) + 1;
           </main>
         )}
 
-        {activeTab === 'cart' && (
-          <main className="p-4 space-y-3.5 text-xs">
-            <h2 className="text-base font-extrabold text-slate-900">Checkout & Payment</h2>
+        {activeTab === 'categories' && (
+          <main className="p-4 space-y-4 text-xs">
+            <div className="flex items-center space-x-3">
+              <button onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white shadow-sm">
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+              <h2 className="text-base font-extrabold text-slate-900">Categories</h2>
+            </div>
 
-            <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex items-center justify-between">
-              <div>
-                <p className="text-[10px] font-bold text-slate-400">Delivering to ({activeAddr.tag})</p>
-                <p className="font-extrabold text-slate-900 truncate max-w-[215px]">{activeAddr.full}</p>
-              </div>
-              <button type="button" onClick={() => setActiveTab('selectLocation')} className="text-[#15803D] font-extrabold underline">
-                Change
+            <div className="bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 flex items-center shadow-sm">
+              <Search className="h-4 w-4 text-slate-400 mr-2" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setActiveTab('home'); }}
+                placeholder="Search for products..."
+                className="w-full bg-transparent font-semibold focus:outline-none"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { id: 'Vegetables', title: 'Vegetables', te: 'కూరగాయలు', img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=300&q=80' },
+                { id: 'Fruits', title: 'Fruits', te: 'పండ్లు', img: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=300&q=80' },
+                { id: 'Staples', title: 'Groceries & Rice', te: 'బియ్యం & కిరాణా', img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=300&q=80' },
+                { id: 'Leafy Greens', title: 'Leafy Greens', te: 'ఆకుకూరలు', img: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=300&q=80' },
+              ].map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => {
+                    setSelectedCat(cat.id);
+                    setActiveTab('home');
+                  }}
+                  className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 text-center space-y-2 hover:border-[#15803D] transition"
+                >
+                  <img src={cat.img} alt={cat.title} className="h-24 w-24 rounded-2xl object-cover mx-auto" />
+                  <h3 className="text-sm font-extrabold text-slate-900">{cat.title}</h3>
+                  <p className="text-[11px] font-bold text-[#15803D]">{cat.te}</p>
+                </button>
+              ))}
+            </div>
+          </main>
+        )}
+
+  {activeTab === 'productDetail' && detailProduct && (
+          <main className="bg-white min-h-screen pb-24 text-xs">
+            <div className="relative h-64 w-full bg-slate-100">
+              <img src={detailProduct.img} alt={detailProduct.nameEn} className="h-full w-full object-cover" />
+              <button onClick={() => setActiveTab('home')} className="absolute top-4 left-4 h-9 w-9 rounded-full bg-white/90 flex items-center justify-center shadow">
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setWishlist((w) => (w.includes(detailProduct.id) ? w.filter((x) => x !== detailProduct.id) : [...w, detailProduct.id]))}
+                className="absolute top-4 right-4 h-9 w-9 rounded-full bg-white/90 flex items-center justify-center shadow"
+              >
+                <Heart className={`h-4 w-4 ${wishlist.includes(detailProduct.id) ? 'fill-rose-500 text-rose-500' : 'text-slate-600'}`} />
               </button>
             </div>
 
+            <div className="p-5 space-y-4">
+              <div>
+                <span className="text-[10px] font-extrabold bg-emerald-50 text-[#15803D] px-2.5 py-1 rounded-full">
+                  {detailProduct.farmerName} ({detailProduct.distanceKm} km)
+                </span>
+                <h2 className="text-xl font-extrabold text-slate-900 mt-2">{detailProduct.nameEn}</h2>
+                <p className="text-sm font-bold text-[#15803D]">{detailProduct.nameTe}</p>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-2xl font-extrabold text-slate-900">₹{detailProduct.retailPrice}</span>
+                  <span className="text-xs text-slate-400 font-bold"> / {detailProduct.packLabel}</span>
+                </div>
+                <div className="flex items-center space-x-1 bg-amber-50 px-2.5 py-1 rounded-full font-extrabold text-amber-800">
+                  <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                  <span>{detailProduct.rating} ({detailProduct.reviews} reviews)</span>
+                </div>
+              </div>
+
+              <p className="text-slate-600 leading-relaxed">{detailProduct.desc}</p>
+
+              <div className="flex items-center justify-between pt-3 border-t">
+                <div className="flex items-center border border-slate-200 rounded-2xl px-3 py-2 space-x-4 font-extrabold text-base">
+                  <button onClick={() => setDetailQty(Math.max(1, detailQty - 1))}>-</button>
+                  <span>{detailQty}</span>
+                  <button onClick={() => setDetailQty(detailQty + 1)}>+</button>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setCart({ ...cart, [detailProduct.id]: detailQty });
+                    notify('Added to Cart!');
+                    setActiveTab('cart');
+                  }}
+                  className="flex-1 ml-3 bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
+                >
+                  Add to Cart • ₹{detailProduct.retailPrice * detailQty}
+                </button>
+              </div>
+            </div>
+          </main>
+        )}
+
+        {activeTab === 'cart' && (
+          <main className="p-4 space-y-3.5 text-xs">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-extrabold text-slate-900">My Cart</h2>
+              {Object.keys(cart).length > 0 && (
+                <button onClick={() => setCart({})} className="text-rose-600 font-extrabold">Clear All</button>
+              )}
+            </div>
+
             {Object.keys(cart).length === 0 ? (
-              <div className="bg-white rounded-3xl p-8 text-center font-bold text-slate-400 shadow-sm">Your basket is empty.</div>
+              <div className="bg-white rounded-3xl p-8 text-center font-bold text-slate-400 shadow-sm">Your cart is empty.</div>
             ) : (
               <>
                 {Object.entries(cart).map(([id, qty]) => {
                   const p = products.find((x) => x.id === id);
                   if (!p) return null;
                   return (
-                    <div key={id} className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex justify-between items-center">
-                      <div className="flex items-center space-x-2.5">
-                        <img src={p.img} alt={p.nameEn} className="h-12 w-12 rounded-xl object-cover" />
+                    <div key={id} className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <img src={p.img} alt={p.nameEn} className="h-14 w-14 rounded-xl object-cover" />
                         <div>
-                          <h4 className="font-extrabold text-slate-900">{p.nameEn} ({p.nameTe})</h4>
-                          <p className="text-[#15803D] font-extrabold">₹{p.retailPrice} × {qty} = ₹{p.retailPrice * qty}</p>
+                          <h4 className="font-extrabold text-slate-900">{p.nameEn}</h4>
+                          <p className="text-[#15803D] font-extrabold">₹{p.retailPrice} / {p.packLabel}</p>
                         </div>
                       </div>
-                      <div className="flex items-center bg-[#15803D] text-white rounded-xl px-2 py-1 space-x-2 font-extrabold">
-                        <button onClick={() => setCart((c) => { const n = { ...c }; if (n[id] <= 1) delete n[id]; else n[id]--; return n; })}>-</button>
-                        <span>{qty}</span>
-                        <button onClick={() => setCart({ ...cart, [id]: qty + 1 })}>+</button>
+                      <div className="flex items-center space-x-2">
+                        <div className="flex items-center border border-slate-200 rounded-xl px-2.5 py-1 space-x-2.5 font-extrabold">
+                          <button onClick={() => setCart((c) => { const n = { ...c }; if (n[id] <= 1) delete n[id]; else n[id]--; return n; })}>-</button>
+                          <span>{qty}</span>
+                          <button onClick={() => setCart({ ...cart, [id]: qty + 1 })}>+</button>
+                        </div>
+                        <button onClick={() => setCart((c) => { const n = { ...c }; delete n[id]; return n; })} className="p-1.5 text-slate-400 hover:text-rose-500">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                       </div>
                     </div>
                   );
                 })}
 
-                <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2.5">
-                  <div className="flex space-x-2">
-                    <input type="text" value={promoInput} onChange={(e) => setPromoInput(e.target.value.toUpperCase())} placeholder="Promo Code: RYTHU30" className="flex-1 bg-slate-50 border rounded-xl px-3 py-2 font-extrabold" />
-                    <button onClick={() => { setAppliedPromo('RYTHU30'); notify('RYTHU30 Applied (-₹30)'); }} className="bg-[#15803D] text-white font-extrabold px-4 rounded-xl">
-                      Apply
-                    </button>
+                <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-2">
+                  <div className="flex justify-between text-sm font-extrabold">
+                    <span>Subtotal</span>
+                    <span>₹{subtotal}</span>
                   </div>
-
-                  {(currentUser.wallet || 0) > 0 && (
-                    <label className="flex items-center justify-between p-2.5 bg-amber-50 border border-amber-200 rounded-xl font-extrabold text-amber-950">
-                      <span>Use Rythu Wallet (Available: ₹{currentUser.wallet})</span>
-                      <input type="checkbox" checked={useWalletBalance} onChange={(e) => setUseWalletBalance(e.target.checked)} className="accent-[#15803D] h-4 w-4" />
-                    </label>
-                  )}
-                </div>
-
-                <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
-                  <h3 className="font-extrabold text-slate-900">Select Payment Mode</h3>
-                  {[
-                    { id: 'phonepe', label: 'PhonePe UPI' },
-                    { id: 'gpay', label: 'Google Pay (GPay)' },
-                    { id: 'paytm', label: `Paytm (₹${Math.max(5, Math.round(payableTotal * 0.05))} Cashback)` },
-                    { id: 'cred', label: `CRED UPI (₹${Math.max(10, Math.round(payableTotal * 0.08))} Cashback)` },
-                    { id: 'card', label: `Credit / Debit Card (₹${Math.max(5, Math.round(payableTotal * 0.05))} Cashback)` },
-                    { id: 'cod', label: 'Cash on Delivery (COD)' },
-                  ].map((pm) => (
-                    <div key={pm.id} className={`rounded-xl border-2 p-2.5 transition ${payMode === pm.id ? 'border-[#15803D] bg-emerald-50/40' : 'border-slate-100'}`}>
-                      <label onClick={() => setPayMode(pm.id)} className="flex items-center justify-between cursor-pointer">
-                        <div className="flex items-center space-x-2.5">
-                          <PaymentBadge type={pm.id} />
-                          <span className="font-extrabold text-slate-800">{pm.label}</span>
-                        </div>
-                        <input type="radio" checked={payMode === pm.id} onChange={() => setPayMode(pm.id)} className="accent-[#15803D]" />
-                      </label>
-
-                      {payMode === pm.id && (pm.id === 'phonepe' || pm.id === 'gpay' || pm.id === 'paytm' || pm.id === 'cred') && (
-                        <div className="mt-2.5 pt-2 border-t border-emerald-200/70">
-                          <a
-                            href={buildPaymentLaunchUrl(pm.id, merchantUpiId, payableTotal)}
-                            onClick={() => setTimeout(() => setActiveTab('upiProcessing'), 400)}
-                            className="block w-full bg-[#15803D] text-white text-center font-extrabold py-2.5 rounded-xl shadow-sm"
-                          >
-                            Launch {pm.label.split(' (')[0]} & Pay ₹{payableTotal} ↗
-                          </a>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-
-                  {payMode === 'card' && (
-                    <div className="pt-2 space-y-2">
-                      <input type="text" maxLength={19} value={cardNo} onChange={(e) => setCardNo(e.target.value)} placeholder="16-Digit Card Number" className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
-                      <div className="grid grid-cols-2 gap-2">
-                        <input type="text" maxLength={5} value={cardExp} onChange={(e) => setCardExp(e.target.value)} placeholder="MM/YY" className="bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
-                        <input type="password" maxLength={4} value={cardCvv} onChange={(e) => setCardCvv(e.target.value)} placeholder="CVV" className="bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
-                      </div>
-                    </div>
-                  )}
-
-                  {cardError && <p className="text-rose-600 font-bold">{cardError}</p>}
-                </div>
-
-                <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-1.5">
-                  <div className="flex justify-between"><span>Item Subtotal</span><span className="font-bold">₹{subtotal}</span></div>
-                  {autoTierDiscount > 0 && <div className="flex justify-between text-[#15803D] font-extrabold"><span>{autoTierLabel}</span><span>-₹{autoTierDiscount}</span></div>}
-                  {promoDeduction > 0 && <div className="flex justify-between text-[#15803D] font-extrabold"><span>Promo RYTHU30</span><span>-₹{promoDeduction}</span></div>}
-                  {walletDeduction > 0 && <div className="flex justify-between text-amber-700 font-extrabold"><span>Wallet Used</span><span>-₹{walletDeduction}</span></div>}
-                  <div className="flex justify-between"><span>Delivery Fee (Free ₹99+)</span><span className="font-bold">{deliveryFee === 0 ? 'FREE' : `₹${deliveryFee}`}</span></div>
-                  <div className="border-t pt-2 flex justify-between text-sm font-extrabold text-slate-900"><span>Grand Total</span><span>₹{payableTotal}</span></div>
-                  <p className="text-[10px] font-extrabold text-[#EA580C]">₹{estimatedCashback} Cashback + Scratch Card unlocks on delivery!</p>
-
-                  {payMode === 'card' || payMode === 'cod' ? (
-                    <button type="button" onClick={handlePayAndPlaceOrderTrigger} className="w-full mt-2 bg-[#EA580C] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm">
-                      Pay & Place Order • ₹{payableTotal}
-                    </button>
-                  ) : (
-                    <a
-                      href={paymentAppLaunchUrl}
-                      onClick={() => setTimeout(() => setActiveTab('upiProcessing'), 400)}
-                      className="block w-full mt-2 bg-[#EA580C] text-white text-center font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
-                    >
-                      Pay & Place Order • ₹{payableTotal}
-                    </a>
-                  )}
+                  <button
+                    onClick={() => setActiveTab('checkout')}
+                    className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
+                  >
+                    Proceed to Checkout
+                  </button>
                 </div>
               </>
             )}
+          </main>
+        )}
+
+        {activeTab === 'checkout' && (
+          <main className="p-4 space-y-3.5 text-xs">
+            <div className="flex items-center space-x-3">
+              <button onClick={() => setActiveTab('cart')} className="p-2 rounded-full bg-white shadow-sm">
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+              <h2 className="text-base font-extrabold text-slate-900">Checkout</h2>
+            </div>
+
+            <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 grid grid-cols-3 text-center font-extrabold text-[10px]">
+              <div className="text-[#15803D]">● Address</div>
+              <div className="text-[#15803D]">● Payment</div>
+              <div className="text-[#15803D]">● Review</div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-start justify-between">
+              <div>
+                <p className="font-extrabold text-slate-900">Delivery Address ({activeAddr.tag})</p>
+                <p className="text-slate-500 mt-0.5">{activeAddr.full}</p>
+              </div>
+              <button onClick={() => setActiveTab('selectLocation')} className="text-[#15803D] font-extrabold">Change</button>
+            </div>
+
+            <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
+              <div>
+                <p className="font-extrabold text-slate-900">Delivery Slot</p>
+                <p className="text-slate-500 mt-0.5">{deliverySlot}</p>
+              </div>
+              <button
+                onClick={() => setDeliverySlot(deliverySlot.includes('Today') ? 'Tomorrow, 7:00 AM – 9:00 AM' : 'Today, 6:00 PM – 8:00 PM')}
+                className="text-[#15803D] font-extrabold"
+              >
+                Change
+              </button>
+            </div>
+
+            <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
+              <div className="flex space-x-2">
+                <input type="text" value={promoInput} onChange={(e) => setPromoInput(e.target.value.toUpperCase())} placeholder="Promo Code: RYTHU30" className="flex-1 bg-slate-50 border rounded-xl px-3 py-2 font-extrabold" />
+                <button onClick={() => { setAppliedPromo('RYTHU30'); notify('RYTHU30 Applied (-₹30)'); }} className="bg-[#15803D] text-white font-extrabold px-4 rounded-xl">
+                  Apply
+                </button>
+              </div>
+              {(currentUser.wallet || 0) > 0 && (
+                <label className="flex items-center justify-between p-2.5 bg-amber-50 border border-amber-200 rounded-xl font-extrabold text-amber-950">
+                  <span>Use Rythu Wallet (Available: ₹{currentUser.wallet})</span>
+                  <input type="checkbox" checked={useWalletBalance} onChange={(e) => setUseWalletBalance(e.target.checked)} className="accent-[#15803D] h-4 w-4" />
+                </label>
+              )}
+            </div>
+
+<div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
+              <div className="flex items-center justify-between">
+                <h3 className="font-extrabold text-slate-900">Payment Method</h3>
+                <span className="text-[10px] font-bold text-[#15803D]">{merchantUpiId}</span>
+              </div>
+
+              {[
+                { id: 'phonepe', label: 'PhonePe UPI' },
+                { id: 'gpay', label: 'Google Pay (GPay)' },
+                { id: 'paytm', label: `Paytm (₹${Math.max(5, Math.round(payableTotal * 0.05))} Cashback)` },
+                { id: 'cred', label: `CRED UPI (₹${Math.max(10, Math.round(payableTotal * 0.08))} Cashback)` },
+                { id: 'card', label: `Credit / Debit Card (₹${Math.max(5, Math.round(payableTotal * 0.05))} Cashback)` },
+                { id: 'cod', label: 'Cash on Delivery (COD)' },
+              ].map((pm) => (
+                <div key={pm.id} className={`rounded-xl border-2 p-2.5 transition ${payMode === pm.id ? 'border-[#15803D] bg-emerald-50/40' : 'border-slate-100'}`}>
+                  <label onClick={() => setPayMode(pm.id)} className="flex items-center justify-between cursor-pointer">
+                    <div className="flex items-center space-x-2.5">
+                      <PaymentBadge type={pm.id} />
+                      <span className="font-extrabold text-slate-800">{pm.label}</span>
+                    </div>
+                    <input type="radio" checked={payMode === pm.id} onChange={() => setPayMode(pm.id)} className="accent-[#15803D]" />
+                  </label>
+
+                  {payMode === pm.id && (pm.id === 'phonepe' || pm.id === 'gpay' || pm.id === 'paytm' || pm.id === 'cred') && (
+                    <div className="mt-2 pt-2 border-t border-emerald-200/70">
+                      <a
+                        href={buildPaymentLaunchUrl(pm.id, merchantUpiId, payableTotal)}
+                        onClick={() => setTimeout(() => setActiveTab('upiProcessing'), 400)}
+                        className="block w-full bg-[#15803D] text-white text-center font-extrabold py-2 rounded-xl shadow-sm"
+                      >
+                        Open {pm.label.split(' (')[0]} & Pay ₹{payableTotal} ↗
+                      </a>
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {payMode === 'card' && (
+                <div className="pt-2 space-y-2">
+                  <input type="text" maxLength={19} value={cardNo} onChange={(e) => setCardNo(e.target.value)} placeholder="16-Digit Card Number" className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input type="text" maxLength={5} value={cardExp} onChange={(e) => setCardExp(e.target.value)} placeholder="MM/YY" className="bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
+                    <input type="password" maxLength={4} value={cardCvv} onChange={(e) => setCardCvv(e.target.value)} placeholder="CVV" className="bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
+                  </div>
+                </div>
+              )}
+              {cardError && <p className="text-rose-600 font-bold">{cardError}</p>}
+            </div>
+
+            <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-1.5">
+              <div className="flex justify-between"><span>Subtotal</span><span className="font-bold">₹{subtotal}</span></div>
+              {autoTierDiscount > 0 && <div className="flex justify-between text-[#15803D] font-extrabold"><span>{autoTierLabel}</span><span>-₹{autoTierDiscount}</span></div>}
+              {promoDeduction > 0 && <div className="flex justify-between text-[#15803D] font-extrabold"><span>Promo RYTHU30</span><span>-₹{promoDeduction}</span></div>}
+              {walletDeduction > 0 && <div className="flex justify-between text-amber-700 font-extrabold"><span>Wallet Used</span><span>-₹{walletDeduction}</span></div>}
+              <div className="flex justify-between"><span>Delivery (Free ₹99+)</span><span className="font-bold">{deliveryFee === 0 ? 'FREE' : `₹${deliveryFee}`}</span></div>
+              <div className="border-t pt-2 flex justify-between text-sm font-extrabold text-slate-900"><span>Payable Total</span><span>₹{payableTotal}</span></div>
+
+              {payMode === 'card' || payMode === 'cod' ? (
+                <button type="button" onClick={handlePayAndPlaceOrderTrigger} className="w-full mt-2 bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm">
+                  Place Order • ₹{payableTotal}
+                </button>
+              ) : (
+                <a
+                  href={paymentAppLaunchUrl}
+                  onClick={() => setTimeout(() => setActiveTab('upiProcessing'), 400)}
+                  className="block w-full mt-2 bg-[#15803D] text-white text-center font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
+                >
+                  Place Order & Pay ₹{payableTotal}
+                </a>
+              )}
+            </div>
           </main>
         )}
 
@@ -1519,20 +1939,11 @@ const orderNum = (currentUser.ordersCompleted || 0) + 1;
               <div className="flex justify-center">
                 <PaymentBadge type={payMode} />
               </div>
-              <h2 className="text-base font-extrabold text-slate-900">Complete Payment of ₹{payableTotal}</h2>
-              <p className="text-slate-500">
-                Opening <strong>{payMode.toUpperCase()}</strong> on your phone... If it didn't open automatically, tap below or scan QR:
-              </p>
-
-              <a
-                href={paymentAppLaunchUrl}
-                className="block w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow"
-              >
+              <h2 className="text-base font-extrabold text-slate-900">Pay ₹{payableTotal} to {merchantUpiId}</h2>
+              <a href={paymentAppLaunchUrl} className="block w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow">
                 Open {payMode.toUpperCase()} App Now ↗
               </a>
-
               <img src={genericUpiQr} alt="UPI QR" className="w-32 h-32 mx-auto rounded-xl border p-1 bg-white" />
-
               <input
                 type="text"
                 value={utrRefInput}
@@ -1540,130 +1951,208 @@ const orderNum = (currentUser.ordersCompleted || 0) + 1;
                 placeholder="Enter 12-Digit UPI UTR / Ref ID (Optional)"
                 className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 text-center font-bold"
               />
-
-              <button
-                type="button"
-                onClick={finalizeCustomerOrder}
-                className="w-full bg-[#EA580C] text-white font-extrabold py-3.5 rounded-2xl shadow-lg text-sm"
-              >
+              <button type="button" onClick={finalizeCustomerOrder} className="w-full bg-[#EA580C] text-white font-extrabold py-3.5 rounded-2xl shadow-lg text-sm">
                 Payment Completed — Confirm Order ➔
               </button>
             </div>
           </main>
         )}
 
-{activeTab === 'orders' && (
+        {activeTab === 'orderPlaced' && lastPlacedOrder && (
+          <main className="p-6 text-center space-y-5 flex flex-col items-center justify-center min-h-[75vh]">
+            <div className="h-20 w-20 rounded-full bg-[#15803D] text-white flex items-center justify-center shadow-lg">
+              <Check className="h-10 w-10 stroke-[3]" />
+            </div>
+            <div className="space-y-1">
+              <h2 className="text-xl font-extrabold text-slate-900">Order Placed Successfully!</h2>
+              <p className="text-xs font-extrabold text-[#15803D]">Order ID: {lastPlacedOrder.id}</p>
+              <p className="text-xs text-slate-500 pt-1">You will receive live updates on your order status</p>
+            </div>
+            <div className="w-full space-y-2.5 pt-2">
+              <button
+                onClick={() => {
+                  setTrackingOrder(lastPlacedOrder);
+                  setActiveTab('trackOrder');
+                }}
+                className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
+              >
+                Track Order
+              </button>
+              <button
+                onClick={() => setActiveTab('home')}
+                className="w-full border border-slate-300 text-slate-800 font-extrabold py-3.5 rounded-2xl text-sm"
+              >
+                Continue Shopping
+              </button>
+            </div>
+          </main>
+        )}
+
+        {activeTab === 'trackOrder' && trackingOrder && (
+          <main className="pb-10 text-xs">
+            <div className="bg-gradient-to-b from-[#15803D] to-[#22C55E] text-white p-5 rounded-b-[32px] shadow-md space-y-3">
+              <div className="flex items-center space-x-3">
+                <button onClick={() => setActiveTab('orders')} className="p-2 rounded-full bg-white/15">
+                  <ArrowLeft className="h-4 w-4" />
+                </button>
+                <div>
+                  <h2 className="text-base font-extrabold">{trackingOrder.status}</h2>
+                  <p className="text-[11px] text-emerald-100">Arriving in ~30 mins • {trackingOrder.id}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 space-y-3.5">
+              <div className="relative h-44 w-full rounded-3xl overflow-hidden border border-emerald-200 shadow-sm">
+                <iframe
+                  title="Live Scooter Route"
+                  width="100%"
+                  height="176"
+                  style={{ border: 0 }}
+                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapPinCoords.lng - 0.01}%2C${mapPinCoords.lat - 0.01}%2C${mapPinCoords.lng + 0.01}%2C${mapPinCoords.lat + 0.01}&layer=mapnik&marker=${mapPinCoords.lat}%2C${mapPinCoords.lng}`}
+                />
+              </div>
+
+<div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-3">
+                {['Order Placed', 'Order Confirmed', 'Out for Delivery', 'Delivered'].map((step, idx) => (
+                  <div key={step} className="flex items-center space-x-3">
+                    <div className={`h-6 w-6 rounded-full flex items-center justify-center text-white font-bold ${idx < 3 || trackingOrder.status === 'Delivered' ? 'bg-[#15803D]' : 'bg-slate-200'}`}>
+                      ✓
+                    </div>
+                    <div>
+                      <p className="font-extrabold text-slate-900">{step}</p>
+                      <p className="text-[10px] text-slate-400">{trackingOrder.date}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="h-11 w-11 rounded-full bg-emerald-100 text-[#15803D] font-extrabold flex items-center justify-center">
+                    RK
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-slate-400 font-bold">Delivery Partner</p>
+                    <h4 className="font-extrabold text-slate-900">{trackingOrder.driverName || 'Ramesh Kumar'}</h4>
+                  </div>
+                </div>
+                <div className="flex space-x-2">
+                  <a href={`tel:${trackingOrder.driverMobile || '9000334455'}`} className="p-2.5 bg-emerald-50 text-[#15803D] rounded-full">
+                    <Phone className="h-4 w-4" />
+                  </a>
+                  <a href={`sms:${trackingOrder.driverMobile || '9000334455'}`} className="p-2.5 bg-sky-50 text-sky-600 rounded-full">
+                    <MessageSquare className="h-4 w-4" />
+                  </a>
+                </div>
+              </div>
+
+              {trackingOrder.status !== 'Delivered' && (
+                <button
+                  onClick={() => handleSimulateCustomerDelivery(trackingOrder)}
+                  className="w-full bg-[#EA580C] text-white font-extrabold py-3.5 rounded-2xl shadow"
+                >
+                  Complete Delivery (Unlock ₹{trackingOrder.cashback} Cashback & Scratch Card)
+                </button>
+              )}
+            </div>
+          </main>
+        )}
+
+        {activeTab === 'orders' && (
           <main className="p-4 space-y-3.5 text-xs">
-            <h2 className="text-base font-extrabold text-slate-900">My Orders & Live Tracking</h2>
+            <h2 className="text-base font-extrabold text-slate-900">My Orders</h2>
+
+            <div className="flex space-x-2">
+              {['All', 'Ongoing', 'Delivered'].map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setOrderListFilter(f)}
+                  className={`px-4 py-1.5 rounded-full font-extrabold ${orderListFilter === f ? 'bg-[#15803D] text-white' : 'bg-white text-slate-600 border'}`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
 
             {orders.filter((o) => o.buyerRole === 'customer').length === 0 ? (
               <div className="bg-white rounded-3xl p-8 text-center font-bold text-slate-400">No orders placed yet.</div>
             ) : (
               orders
                 .filter((o) => o.buyerRole === 'customer')
-                .map((ord) => {
-                  const isDelivered = ord.status === 'Delivered';
-                  const steps = ['Order Placed', 'Order Accepted', 'Partner Assigned', 'Out for Delivery', 'Delivered'];
-                  const currentStepIdx = steps.indexOf(ord.status);
-
-                  return (
-                    <div key={ord.id} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="font-extrabold text-sm">{ord.id} • <span className="text-[#15803D]">{ord.status}</span></span>
-                        <span className="font-extrabold text-sm">₹{ord.total}</span>
+                .filter((o) => (orderListFilter === 'All' ? true : orderListFilter === 'Delivered' ? o.status === 'Delivered' : o.status !== 'Delivered'))
+                .map((ord) => (
+                  <div key={ord.id} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2.5">
+                        <div className="h-10 w-10 rounded-full bg-emerald-50 text-[#15803D] flex items-center justify-center">
+                          <Truck className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-extrabold text-slate-900">{ord.id}</h4>
+                          <p className="text-[10px] text-slate-400">{ord.date}</p>
+                        </div>
                       </div>
-                      <p className="text-slate-500">{ord.items.map((i) => `${i.qty}kg ${i.name}`).join(', ')} • {ord.date}</p>
+                      <span className="font-extrabold text-sm">₹{ord.total}</span>
+                    </div>
 
-                      {isDelivered ? (
-                        <div className="pt-2.5 border-t flex items-center justify-between">
-                          <span className="text-[11px] font-extrabold text-[#15803D]">Delivered on {ord.date}</span>
-                          <button
-                            onClick={() => {
-                              const updatedCart = {};
-                              ord.items.forEach((it) => { updatedCart[it.id] = it.qty; });
-                              setCart(updatedCart);
-                              setActiveTab('cart');
-                              notify('Cart updated with present day rates!');
-                            }}
-                            className="bg-[#15803D] text-white font-extrabold px-4 py-2 rounded-xl"
-                          >
-                            Reorder (Today's Rates)
-                          </button>
-                        </div>
+                    <div className="flex items-center justify-between pt-2 border-t">
+                      <span className="font-extrabold text-[#15803D]">{ord.status}</span>
+                      {ord.status === 'Delivered' ? (
+                        <button
+                          onClick={() => {
+                            const updatedCart = {};
+                            ord.items.forEach((it) => { updatedCart[it.id] = it.qty; });
+                            setCart(updatedCart);
+                            setActiveTab('cart');
+                            notify('Cart updated with present day rates!');
+                          }}
+                          className="bg-[#15803D] text-white font-extrabold px-3.5 py-1.5 rounded-xl"
+                        >
+                          Reorder (Today's Rates)
+                        </button>
                       ) : (
-                        <div className="space-y-3 pt-2.5 border-t">
-                          <div className="grid grid-cols-4 gap-1 text-center">
-                            {['Order Placed', 'Order Accepted', 'Partner Assigned', 'Out for Delivery'].map((st, idx) => {
-                              const active = idx <= currentStepIdx;
-                              return (
-                                <div key={st} className="space-y-1">
-                                  <div className={`h-2 rounded-full transition-all duration-500 ${active ? 'bg-[#15803D] animate-pulse' : 'bg-slate-200'}`} />
-                                  <p className={`text-[9px] font-extrabold leading-tight ${active ? 'text-[#15803D]' : 'text-slate-400'}`}>{st}</p>
-                                </div>
-                              );
-                            })}
-                          </div>
-
-                          {ord.driverName ? (
-                            <div className="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-3 space-y-2.5">
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <span className="text-[9px] font-extrabold uppercase bg-[#15803D] text-white px-2 py-0.5 rounded">Live Partner Assigned</span>
-                                  <p className="font-extrabold text-slate-900 mt-1">{ord.driverName}</p>
-                                  <p className="text-[10px] text-slate-600">GPS: {ord.driverCoords || 'Nellore Live Tracking'}</p>
-                                </div>
-                                <div className="flex space-x-2">
-                                  <a href={`tel:${ord.driverMobile}`} className="p-2.5 bg-[#15803D] text-white rounded-full shadow">
-                                    <Phone className="h-4 w-4" />
-                                  </a>
-                                  <a href={`sms:${ord.driverMobile}`} className="p-2.5 bg-sky-600 text-white rounded-full shadow">
-                                    <MessageSquare className="h-4 w-4" />
-                                  </a>
-                                </div>
-                              </div>
-
-                              <button
-                                onClick={() => handleSimulateCustomerDelivery(ord)}
-                                className="w-full bg-[#EA580C] text-white font-extrabold py-2.5 rounded-xl shadow-sm"
-                              >
-                                Complete Delivery (Unlock Cashback & Scratch Card)
-                              </button>
-                            </div>
-                          ) : (
-                            <p className="text-[11px] font-bold text-amber-800 bg-amber-50 p-2.5 rounded-xl text-center">
-                              Live map activates automatically once a Delivery Partner is assigned.
-                            </p>
-                          )}
-                        </div>
+                        <button
+                          onClick={() => {
+                            setTrackingOrder(ord);
+                            setActiveTab('trackOrder');
+                          }}
+                          className="text-[#15803D] font-extrabold"
+                        >
+                          Track Order &gt;
+                        </button>
                       )}
                     </div>
-                  );
-                })
+                  </div>
+                ))
             )}
           </main>
         )}
 
         {activeTab === 'profile' && renderSharedProfileTab()}
 
-        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t border-slate-200 px-6 py-2 flex justify-between items-center z-40 shadow-lg">
+        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-slate-200 px-4 py-2 flex justify-between items-center z-40 shadow-lg">
           <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'home' ? 'text-[#15803D]' : 'text-slate-400'}`}>
             <Home className="h-5 w-5 mb-0.5" />
             <span>Home</span>
           </button>
 
-          <button
-            onClick={() => setActiveTab('cart')}
-            className="relative -mt-7 h-14 w-14 rounded-full bg-gradient-to-br from-[#15803D] to-[#22C55E] text-white shadow-xl border-4 border-[#F8FAFC] flex items-center justify-center active:scale-95 transition"
-          >
-            <ShoppingCart className="h-6 w-6" />
+          <button onClick={() => setActiveTab('categories')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'categories' ? 'text-[#15803D]' : 'text-slate-400'}`}>
+            <Grid className="h-5 w-5 mb-0.5" />
+            <span>Categories</span>
+          </button>
+
+          <button onClick={() => setActiveTab('cart')} className={`relative flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'cart' || activeTab === 'checkout' ? 'text-[#15803D]' : 'text-slate-400'}`}>
+            <ShoppingCart className="h-5 w-5 mb-0.5" />
+            <span>Cart</span>
             {totalUnits > 0 && (
-              <span className="absolute -top-1 -right-1 h-5 min-w-[20px] px-1 rounded-full bg-[#EA580C] text-white text-[10px] font-extrabold flex items-center justify-center shadow">
+              <span className="absolute -top-1.5 right-0 h-4 min-w-[16px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-extrabold flex items-center justify-center">
                 {totalUnits}
               </span>
             )}
           </button>
 
-          <button onClick={() => setActiveTab('orders')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'orders' ? 'text-[#15803D]' : 'text-slate-400'}`}>
+          <button onClick={() => setActiveTab('orders')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'orders' || activeTab === 'trackOrder' ? 'text-[#15803D]' : 'text-slate-400'}`}>
             <ClipboardList className="h-5 w-5 mb-0.5" />
             <span>Orders</span>
           </button>
@@ -1700,6 +2189,9 @@ const orderNum = (currentUser.ordersCompleted || 0) + 1;
         minWholesaleQty: 25,
         stockKg: Number(fQty),
         inStock: true,
+        rating: 4.8,
+        reviews: 12,
+        desc: 'Fresh harvest directly from Nellore farmer.',
         availableFrom: fAvailTime,
         img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=400&q=80',
       };
@@ -1992,7 +2484,6 @@ const orderNum = (currentUser.ordersCompleted || 0) + 1;
           return { ...p, stockKg: Math.max(0, p.stockKg - orderedItem.qty) };
         })
       );
-
       setOrders((prev) => prev.map((o) => (o.id === ord.id ? { ...o, status: 'Delivered' } : o)));
       setCurrentUser({ ...currentUser, wallet: (currentUser.wallet || 0) + 40, weeklyOrders: weeklyCompleted + 1 });
       notify('Delivered! Farmer stock reduced & ₹40 credited.');
@@ -2161,7 +2652,7 @@ const orderNum = (currentUser.ordersCompleted || 0) + 1;
                     <div>
                       <span className="text-[10px] font-extrabold uppercase bg-emerald-50 text-[#15803D] px-2 py-0.5 rounded">{u.role}</span>
                       <h4 className="font-extrabold text-sm mt-1">{u.name}</h4>
-                      <p className="text-slate-500">{u.mobile} • {u.address}</p>
+                      <p className="text-slate-500">{u.email} • +91 {u.mobile}</p>
                     </div>
                     <button
                       onClick={() => {
