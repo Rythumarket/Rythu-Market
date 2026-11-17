@@ -386,16 +386,77 @@ const [lang, setLang] = useState('te');
     }
   };
 
-  // AUTOMATIC EMAIL INVOICE PDF DISPATCH UPON ORDER DELIVERY
+    // AUTOMATIC EMAIL INVOICE DISPATCH UPON ORDER DELIVERY
   const sendAutomaticInvoiceEmail = async (ord) => {
     const recipientEmail = ord.buyerEmail || currentUser?.email;
     if (!recipientEmail) return;
 
-    const itemLines = ord.items
-      .map((i, idx) => `${idx + 1}. ${i.name} (${i.qty} ${i.unit || 'Kg'}) - Rs.${i.price * i.qty}`)
-      .join(' | ');
+    const invoiceDate = new Date().toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
 
-    const invoiceSummary = `TAX INVOICE #${ord.id} | Status: DELIVERED | Items: ${itemLines} | Grand Total Paid: Rs.${ord.total} (Paid via ${merchantUpiId}) | Delivered to: ${ord.buyerAddress}`;
+    const rowsHtml = ord.items
+      .map(
+        (i, idx) => `
+        <tr>
+          <td style="border:1px solid #cbd5e1;padding:6px;text-align:center;">${idx + 1}</td>
+          <td style="border:1px solid #cbd5e1;padding:6px;">${i.name}</td>
+          <td style="border:1px solid #cbd5e1;padding:6px;text-align:center;">${i.qty}</td>
+          <td style="border:1px solid #cbd5e1;padding:6px;text-align:center;">${i.unit || 'Kg'}</td>
+          <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;">${Number(i.price).toFixed(2)}</td>
+          <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;">${(i.price * i.qty).toFixed(2)}</td>
+        </tr>`
+      )
+      .join('');
+
+    const invoiceHtml = `
+      <div style="border:1px solid #cbd5e1;padding:16px;border-radius:10px;background:#ffffff;font-family:Arial,sans-serif;font-size:12px;color:#1e293b;">
+        <div style="text-align:center;margin-bottom:12px;">
+          <img src="https://rythu-market.vercel.app/icon-512.png" width="56" height="56" style="border-radius:50%;border:2px solid #EAB308;" />
+          <h3 style="margin:6px 0 0;color:#15803D;">రైతు బాస్కెట్ • Rythu Basket</h3>
+        </div>
+        <div style="background:#ecfdf5;border:1px solid #15803D;padding:10px;display:flex;justify-content:space-between;margin-bottom:12px;">
+          <strong style="color:#0f5132;font-size:14px;">TAX INVOICE / SALES INVOICE</strong>
+          <span><strong>INVOICE NO:</strong> ${ord.id} | <strong>DATE:</strong> ${invoiceDate}</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:12px;">
+          <tr>
+            <td style="border:1px solid #cbd5e1;padding:8px;vertical-align:top;width:33%;">
+              <strong>FROM / SELLER</strong><br/>Rythu Basket Nellore<br/>Phone: 8328261103
+            </td>
+            <td style="border:1px solid #cbd5e1;padding:8px;vertical-align:top;width:33%;">
+              <strong>BILL TO</strong><br/>${ord.buyerName}<br/>Phone: ${ord.buyerMobile}
+            </td>
+            <td style="border:1px solid #cbd5e1;padding:8px;vertical-align:top;width:34%;">
+              <strong>DELIVER TO</strong><br/>${ord.buyerName}<br/>${ord.buyerAddress}
+            </td>
+          </tr>
+        </table>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:12px;">
+          <thead>
+            <tr style="background:#15803D;color:#ffffff;">
+              <th style="border:1px solid #15803D;padding:6px;">#</th>
+              <th style="border:1px solid #15803D;padding:6px;text-align:left;">Product / Description</th>
+              <th style="border:1px solid #15803D;padding:6px;">Qty</th>
+              <th style="border:1px solid #15803D;padding:6px;">Unit</th>
+              <th style="border:1px solid #15803D;padding:6px;text-align:right;">Rate (₹)</th>
+              <th style="border:1px solid #15803D;padding:6px;text-align:right;">Amount (₹)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+            <tr style="background:#ecfdf5;font-weight:bold;">
+              <td colspan="5" style="border:1px solid #cbd5e1;padding:6px;text-align:right;">Grand Total</td>
+              <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;">₹${Number(ord.total).toFixed(2)}</td>
+            </tr>
+          </tbody>
+        </table>
+        <p style="margin:4px 0;"><strong>Payment status:</strong> PAID &nbsp;|&nbsp; <strong>UPI ID:</strong> ${merchantUpiId}</p>
+        <p style="text-align:right;margin-top:18px;">Authorized Signatory: <strong>Rythu Basket</strong></p>
+      </div>
+    `;
 
     try {
       await fetch('https://api.emailjs.com/api/v1.0/email/send', {
@@ -403,16 +464,17 @@ const [lang, setLang] = useState('te');
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           service_id: EMAILJS_SERVICE_ID,
-          template_id: EMAILJS_TEMPLATE_ID,
+          template_id: EMAILJS_INVOICE_TEMPLATE_ID,
           user_id: EMAILJS_PUBLIC_KEY,
           template_params: {
             to_email: recipientEmail,
-            to_name: `${ord.buyerName} — Official PDF Invoice (${ord.id})`,
-            otp_code: invoiceSummary,
+            order_id: ord.id,
+            invoice_html: invoiceHtml,
+            invoice_pdf_link: `https://rythu-market.vercel.app/?invoice=${encodeURIComponent(ord.id)}`,
           },
         }),
       });
-      notify(`Official Invoice PDF sent automatically to ${recipientEmail}!`);
+      notify(`Official Tax Invoice sent to ${recipientEmail}!`);
     } catch {
       // silent fallback
     }
