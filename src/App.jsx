@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Search, ShoppingCart, Plus, Home, ClipboardList, User, MapPin,
   Phone, MessageSquare, Sprout, Store, Truck, ShieldCheck, ChevronRight,
   ArrowLeft, CheckCircle2, Wallet, Gift, Sparkles, Bell, Globe,
   LocateFixed, LogOut, Printer, Warehouse, Heart, Clock, ChevronDown,
   Briefcase, Leaf, Shield, Zap, Grid, Star, Trash2, Check, Mail,
-  TrendingUp, Package, HelpCircle, Navigation
+  TrendingUp, Package, HelpCircle, Navigation, Camera, Landmark, CreditCard
 } from 'lucide-react';
 import { db } from './firebase';
 import { collection, doc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
@@ -16,8 +16,11 @@ const EMAILJS_TEMPLATE_ID = 'template_z42k41l';
 const EMAILJS_INVOICE_TEMPLATE_ID = 'template_fhx6p4e';
 const EMAILJS_PUBLIC_KEY = 'Y1UQmUcSoEzEtFR1m';
 
-// Guaranteed Indian Farmer Photo
-const FARMER_HERO_IMG = 'https://images.pexels.com/photos/2889440/pexels-photo-2889440.jpeg?auto=compress&cs=tinysrgb&w=400';
+// Role Hero Images
+const FARMER_HERO_IMG = 'https://images.pexels.com/photos/2889440/pexels-photo-2889440.jpeg?auto=compress&cs=tinysrgb&w=500';
+const WHOLESALE_HERO_IMG = 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=600&q=80';
+const RETAIL_HERO_IMG = 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80';
+const DELIVERY_HERO_IMG = 'https://images.unsplash.com/photo-1617347454431-f49d7ff5c3b1?auto=format&fit=crop&w=600&q=80';
 
 const EN_TO_TE = {
   tomato: 'టమాటా',
@@ -66,6 +69,7 @@ const AVAILABILITY_SLOTS = [
 const INITIAL_PRODUCTS = [
   {
     id: 'p1',
+    postedByRole: 'farmer',
     farmerId: 'u_farm_1',
     farmerName: 'Ramaiah Farm • Kovur',
     distanceKm: 12,
@@ -89,6 +93,7 @@ const INITIAL_PRODUCTS = [
   },
   {
     id: 'p2',
+    postedByRole: 'farmer',
     farmerId: 'u_farm_1',
     farmerName: 'Subba Rao Farm • Buchi',
     distanceKm: 18,
@@ -112,6 +117,7 @@ const INITIAL_PRODUCTS = [
   },
   {
     id: 'p3',
+    postedByRole: 'farmer',
     farmerId: 'u_farm_1',
     farmerName: 'Rapur Orchards • Nellore',
     distanceKm: 32,
@@ -135,8 +141,9 @@ const INITIAL_PRODUCTS = [
   },
   {
 id: 'p4',
-    farmerId: 'u_farm_1',
-    farmerName: 'Padma Organic • Nellore',
+    postedByRole: 'retail',
+    farmerId: 'u_ret_1',
+    farmerName: 'Sri Lakshmi Fresh Mart • Nellore',
     distanceKm: 6,
     nameEn: 'Fresh Spinach (Palakura)',
     nameTe: 'పాలకూర',
@@ -158,8 +165,9 @@ id: 'p4',
   },
   {
     id: 'p5',
-    farmerId: 'u_farm_1',
-    farmerName: 'Nellore Heritage Mills',
+    postedByRole: 'wholesale',
+    farmerId: 'u_ws_1',
+    farmerName: 'Nellore Heritage Wholesale Mills',
     distanceKm: 8,
     nameEn: 'Nellore Sona Masuri Rice',
     nameTe: 'సోనా మసూరి బియ్యం',
@@ -233,12 +241,21 @@ export default function App() {
         setSharedInvoiceData(parsed);
         setTimeout(() => window.print(), 800);
       } catch {
-        // ignore invalid link
+        // ignore
       }
     }
   }, []);
 
-const [lang, setLang] = useState('te');
+ // 2. One-Time Device Permissions Modal (Location, SMS/Notifications, Phone)
+  const [showPermissionPrompt, setShowPermissionPrompt] = useState(() => {
+    try {
+      return localStorage.getItem('rythu_permissions_granted') !== 'true';
+    } catch {
+      return true;
+    }
+  });
+
+  const [lang, setLang] = useState('te');
   const [selectedRole, setSelectedRole] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [users, setUsers] = useState(() => {
@@ -259,21 +276,37 @@ const [lang, setLang] = useState('te');
     }
   }, [users]);
 
-  // Direct Email 6-Digit OTP States
+  // Auth States: Direct Phone/Email Login (No OTP) + Email OTP Mandatory for Registration
   const [authScreen, setAuthScreen] = useState('login');
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginOtpSent, setLoginOtpSent] = useState(false);
-  const [loginOtp, setLoginOtp] = useState('');
+  const [loginIdentifier, setLoginIdentifier] = useState(''); // Phone or Email
   const [generatedEmailOtp, setGeneratedEmailOtp] = useState('');
   const [emailOtpExpiry, setEmailOtpExpiry] = useState(0);
   const [sendingEmail, setSendingEmail] = useState(false);
   const [authMsg, setAuthMsg] = useState('');
 
-  // Registration Form States
-  const [regName, setRegName] = useState('');
+  // Role-Specific Registration Form States (Matching Reference 1000044292.png)
+  const [regName, setRegName] = useState(''); // Full Name / Business Name / Store Name
+  const [regOwnerName, setRegOwnerName] = useState(''); // Owner Name for Wholesale/Retail
   const [regMobile, setRegMobile] = useState('');
   const [regEmail, setRegEmail] = useState('');
+  const [regAadhaar, setRegAadhaar] = useState(''); // Optional for Farmer
   const [regAddress, setRegAddress] = useState('');
+  const [regVillage, setRegVillage] = useState('');
+  const [regMandal, setRegMandal] = useState('');
+  const [regDistrict, setRegDistrict] = useState('Nellore');
+  const [regState, setRegState] = useState('Andhra Pradesh');
+  const [regGstNumber, setRegGstNumber] = useState('');
+  const [regStoreType, setRegStoreType] = useState('Distributor'); // Wholesale: Distributor/Wholesaler/Trader | Retail: Grocery Store/Supermarket/Others
+  const [regLandAcres, setRegLandAcres] = useState('');
+  const [regMajorCrops, setRegMajorCrops] = useState('Tomato, Paddy, Chillies');
+  const [regVehicleType, setRegVehicleType] = useState('Bike / Scooter');
+  const [regVehicleNumber, setRegVehicleNumber] = useState('');
+  const [regBankAccount, setRegBankAccount] = useState('');
+  const [regIfscCode, setRegIfscCode] = useState('');
+  const [regUpiId, setRegUpiId] = useState('');
+  const [regPhotoName, setRegPhotoName] = useState('');
+  const [regDocName, setRegDocName] = useState('');
+  const [regTermsAccepted, setRegTermsAccepted] = useState(true);
   const [regReferralCode, setRegReferralCode] = useState('');
   const [regOtpSent, setRegOtpSent] = useState(false);
   const [regOtpInput, setRegOtpInput] = useState('');
@@ -293,7 +326,7 @@ const [lang, setLang] = useState('te');
   const [search, setSearch] = useState('');
   const [wishlist, setWishlist] = useState(['p1', 'p3']);
 
-  // Location & Map Pin States
+ // Location & Map Pin States
   const [savedAddresses, setSavedAddresses] = useState([
     {
       id: 'addr1',
@@ -347,9 +380,96 @@ const [lang, setLang] = useState('te');
   ]);
   const [orders, setOrders] = useState([]);
 
-// 2. Real-Time Cross-Device Sync for Orders (Customer Phone <-> Friend Delivery Phone)
+  // Seller Post Product States (Used by Farmer, Wholesale, Retail)
+  const [fNameEn, setFNameEn] = useState('');
+  const [fNameTe, setFNameTe] = useState('');
+  const [fQty, setFQty] = useState('100');
+  const [fUnit, setFUnit] = useState('Kg');
+  const [fPrice, setFPrice] = useState('22');
+  const [fAvailTime, setFAvailTime] = useState('Available Now');
+
+  // Delivery & Admin States
+  const [delivFilter, setDelivFilter] = useState('available');
+  const [scratchMin, setScratchMin] = useState(4);
+  const [scratchMax, setScratchMax] = useState(25);
+  const [offersEnabled, setOffersEnabled] = useState(true);
+  const [adminTab, setAdminTab] = useState('approvals');
+
+  const notify = (m) => {
+    setToast(m);
+    setTimeout(() => setToast(''), 3500);
+  };
+
+  // 3. Hardware Back Button Handler (Prevents accidental app close)
+  const handleHardwareBack = useCallback(() => {
+    if (sharedInvoiceData) {
+      window.history.replaceState({}, '', '/');
+      setSharedInvoiceData(null);
+      return;
+    }
+    if (currentUser) {
+      if (activeTab !== 'home') {
+        setActiveTab('home');
+        window.history.pushState({ rythuNav: true }, '');
+        return;
+      }
+      setCurrentUser(null);
+      setSelectedRole(null);
+      window.history.pushState({ rythuNav: true }, '');
+      return;
+    }
+    if (selectedRole) {
+      if (authScreen === 'register') {
+        setAuthScreen('login');
+        window.history.pushState({ rythuNav: true }, '');
+        return;
+      }
+      setSelectedRole(null);
+      window.history.pushState({ rythuNav: true }, '');
+    }
+  }, [sharedInvoiceData, currentUser, activeTab, selectedRole, authScreen]);
+
   useEffect(() => {
-    const unsub = onSnapshot(
+    window.history.pushState({ rythuNav: true }, '');
+    const onPopState = () => {
+      handleHardwareBack();
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [handleHardwareBack]);
+
+// Grant One-Time Permissions (Location + Notifications + Phone Ready)
+  const handleGrantDevicePermissions = () => {
+    try {
+      localStorage.setItem('rythu_permissions_granted', 'true');
+    } catch {
+      // ignore
+    }
+    setShowPermissionPrompt(false);
+
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission().catch(() => {});
+    }
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const lat = Number(pos.coords.latitude.toFixed(5));
+          const lng = Number(pos.coords.longitude.toFixed(5));
+          setMapPinCoords({ lat, lng });
+          await fetchAddressFromCoords(lat, lng);
+          notify('Location, Message & Phone permissions enabled!');
+        },
+        () => {
+          notify('Permissions saved!');
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    }
+  };
+
+  // 4. Real-Time Cloud Firestore Sync for Orders, Products & Users
+  useEffect(() => {
+    const unsubOrders = onSnapshot(
       collection(db, 'orders'),
       (snapshot) => {
         const liveOrders = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
@@ -357,14 +477,45 @@ const [lang, setLang] = useState('te');
         setOrders(liveOrders);
         setTrackingOrder((prev) => (prev ? liveOrders.find((o) => o.id === prev.id) || prev : null));
       },
-      () => {
-        // fallback if offline
-      }
+      () => {}
     );
-    return () => unsub();
+
+    const unsubProducts = onSnapshot(
+      collection(db, 'products'),
+      (snapshot) => {
+        if (!snapshot.empty) {
+          const liveProds = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+          setProducts((prev) => {
+            const ids = new Set(liveProds.map((p) => p.id));
+            return [...liveProds, ...prev.filter((p) => !ids.has(p.id))];
+          });
+        }
+      },
+      () => {}
+    );
+
+    const unsubUsers = onSnapshot(
+      collection(db, 'users'),
+      (snapshot) => {
+        if (!snapshot.empty) {
+          const liveUsers = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+          setUsers((prev) => {
+            const ids = new Set(liveUsers.map((u) => u.id));
+            return [...liveUsers, ...prev.filter((u) => !ids.has(u.id))];
+          });
+        }
+      },
+      () => {}
+    );
+
+    return () => {
+      unsubOrders();
+      unsubProducts();
+      unsubUsers();
+    };
   }, []);
 
-  // 3. Continuous Live GPS Broadcast while Friend is Delivering an Active Order
+  // 5. Continuous Live GPS Broadcast while Delivery Partner is Active
   useEffect(() => {
     if (!currentUser || currentUser.role !== 'delivery' || !navigator.geolocation) return;
     const activeAssigned = orders.filter(
@@ -390,27 +541,7 @@ const [lang, setLang] = useState('te');
     return () => navigator.geolocation.clearWatch(watchId);
   }, [currentUser, orders]);
 
-  // Farmer Form States
-  const [fNameEn, setFNameEn] = useState('');
-  const [fNameTe, setFNameTe] = useState('');
-  const [fQty, setFQty] = useState('100');
-  const [fUnit, setFUnit] = useState('Kg');
-  const [fPrice, setFPrice] = useState('22');
-  const [fAvailTime, setFAvailTime] = useState('Available Now');
-
-  // Delivery & Admin States
-  const [delivFilter, setDelivFilter] = useState('available');
-  const [scratchMin, setScratchMin] = useState(4);
-  const [scratchMax, setScratchMax] = useState(25);
-  const [offersEnabled, setOffersEnabled] = useState(true);
-  const [adminTab, setAdminTab] = useState('approvals');
-
-  const notify = (m) => {
-    setToast(m);
-    setTimeout(() => setToast(''), 3500);
-  };
-
-  // SEND REAL 6-DIGIT OTP TO USER EMAIL INBOX VIA EMAILJS
+ // SEND REAL 6-DIGIT OTP TO USER EMAIL INBOX (FOR REGISTRATION ONLY)
   const triggerEmailOtp = async (targetEmail, userName) => {
     setSendingEmail(true);
     setAuthMsg('');
@@ -448,7 +579,7 @@ const [lang, setLang] = useState('te');
     }
   };
 
- // AUTOMATIC EMAIL INVOICE DISPATCH UPON ORDER DELIVERY
+  // AUTOMATIC EMAIL INVOICE DISPATCH UPON ORDER DELIVERY
   const sendAutomaticInvoiceEmail = async (ord) => {
     const recipientEmail = ord.buyerEmail || currentUser?.email;
     if (!recipientEmail) return;
@@ -520,7 +651,7 @@ const [lang, setLang] = useState('te');
       </div>
     `;
 
-    const invoicePayload = encodeURIComponent(
+const invoicePayload = encodeURIComponent(
       JSON.stringify({
         id: ord.id,
         date: invoiceDate,
@@ -550,7 +681,7 @@ const [lang, setLang] = useState('te');
       });
       notify(`Official Tax Invoice sent to ${recipientEmail}!`);
     } catch {
-      // silent fallback
+      // silent
     }
   };
 
@@ -566,57 +697,64 @@ const [lang, setLang] = useState('te');
     return true;
   };
 
-  const handleSendLoginOtp = async () => {
-    const cleanEmail = loginEmail.trim().toLowerCase();
-    if (!isValidEmail(cleanEmail)) {
-      setAuthMsg('Please enter a valid Email address (e.g., name@gmail.com).');
-      return;
-    }
-    const existing = users.find((u) => (u.email || '').toLowerCase() === cleanEmail && u.role === selectedRole);
-    if (!existing) {
-      setAuthMsg('Email not registered for this role, please Sign Up.');
-      setLoginOtpSent(false);
-      return;
-    }
-    setLoginOtp('');
-    const ok = await triggerEmailOtp(cleanEmail, existing.name);
-    if (ok) setLoginOtpSent(true);
-  };
-
-  const handleVerifyLogin = (e) => {
+  // DIRECT LOGIN WITH REGISTERED PHONE OR EMAIL (NO OTP NEEDED AFTER REGISTRATION)
+  const handleDirectLogin = (e) => {
     e.preventDefault();
-    const cleanEmail = loginEmail.trim().toLowerCase();
-    const existing = users.find((u) => (u.email || '').toLowerCase() === cleanEmail && u.role === selectedRole);
-    if (!existing) {
-      setAuthMsg('Email not registered for this role, please Sign Up.');
+    const raw = loginIdentifier.trim();
+    if (!raw) {
+      setAuthMsg('Enter your registered Mobile Number or Email ID.');
       return;
     }
-    if (!verifyEmailOtpCode(loginOtp)) return;
+    const digitsOnly = raw.replace(/\D/g, '');
+    const lowerEmail = raw.toLowerCase();
 
-    setGeneratedEmailOtp('');
+    const existing = users.find(
+      (u) =>
+        u.role === selectedRole &&
+        ((digitsOnly.length === 10 && u.mobile === digitsOnly) ||
+          (u.email && u.email.toLowerCase() === lowerEmail))
+    );
+
+    if (!existing) {
+      setAuthMsg('Account not found for this role. Please complete 1-time Registration with Email OTP.');
+      return;
+    }
+
+    setAuthMsg('');
     setCurrentUser(existing);
     setActiveTab('home');
+    window.history.pushState({ rythuNav: true }, '');
   };
 
-const handleSendRegisterOtp = async () => {
+  // REGISTRATION STEP 1: SEND MANDATORY EMAIL OTP
+  const handleSendRegisterOtp = async () => {
     const cleanMobile = regMobile.replace(/\D/g, '');
     const cleanEmail = regEmail.trim().toLowerCase();
 
-    if (!regName.trim() || !regAddress.trim()) {
-      setAuthMsg('Please enter Full Name / Store Name and Address first.');
+    if (!regName.trim()) {
+      setAuthMsg('Please enter Name / Store Name.');
       return;
     }
     if (!isValidIndianMobile(cleanMobile)) {
-      setAuthMsg('Enter a valid 10-digit Indian mobile number (for delivery contact).');
+      setAuthMsg('Enter a valid 10-digit Indian Mobile Number.');
       return;
     }
     if (!isValidEmail(cleanEmail)) {
-      setAuthMsg('Enter a valid Email ID to receive your 6-digit OTP.');
+      setAuthMsg('Valid Email ID is mandatory to receive 6-digit verification OTP.');
       return;
     }
-    const already = users.find((u) => (u.email || '').toLowerCase() === cleanEmail && u.role === selectedRole);
+    if (!regTermsAccepted) {
+      setAuthMsg('Please accept Terms & Conditions and Privacy Policy.');
+      return;
+    }
+
+    const already = users.find(
+      (u) =>
+        u.role === selectedRole &&
+        (u.mobile === cleanMobile || (u.email || '').toLowerCase() === cleanEmail)
+    );
     if (already) {
-      setAuthMsg('This Email is already registered for this role. Please Login.');
+      setAuthMsg('Mobile or Email already registered for this role. Please Login directly.');
       return;
     }
 
@@ -625,6 +763,7 @@ const handleSendRegisterOtp = async () => {
     if (ok) setRegOtpSent(true);
   };
 
+ // REGISTRATION STEP 2: VERIFY EMAIL OTP & SAVE USER
   const handleCompleteRegistration = (e) => {
     e.preventDefault();
     if (!verifyEmailOtpCode(regOtpInput)) return;
@@ -633,13 +772,33 @@ const handleSendRegisterOtp = async () => {
     const cleanEmail = regEmail.trim().toLowerCase();
     const needsApproval = selectedRole === 'farmer' || selectedRole === 'wholesale' || selectedRole === 'retail';
 
+    const fullLocation =
+      selectedRole === 'farmer'
+        ? `${regVillage || regAddress}, ${regMandal || ''}, ${regDistrict || 'Nellore'}`.replace(/,\s*,/g, ',')
+        : regAddress.trim() || `${regVillage || 'Nellore'}, ${regState}`;
+
     const newUser = {
       id: 'u_' + Date.now(),
       role: selectedRole,
       name: regName.trim(),
+      ownerName: regOwnerName.trim() || regName.trim(),
       mobile: cleanMobile,
       email: cleanEmail,
-      address: regAddress.trim(),
+      aadhaarOptional: regAadhaar.trim() || null,
+      address: fullLocation,
+      village: regVillage.trim(),
+      mandal: regMandal.trim(),
+      district: regDistrict.trim(),
+      state: regState,
+      gstNumber: regGstNumber.trim(),
+      storeType: regStoreType,
+      landAcres: regLandAcres.trim(),
+      majorCrops: regMajorCrops.trim(),
+      vehicleType: regVehicleType,
+      vehicleNumber: regVehicleNumber.trim().toUpperCase(),
+      bankAccount: regBankAccount.trim(),
+      ifscCode: regIfscCode.trim().toUpperCase(),
+      upiId: regUpiId.trim(),
       approved: !needsApproval,
       wallet: 0,
       referralsCount: 0,
@@ -648,6 +807,8 @@ const handleSendRegisterOtp = async () => {
     };
 
     setUsers([newUser, ...users]);
+    setDoc(doc(db, 'users', newUser.id), newUser).catch(() => {});
+
     if (needsApproval) {
       setNotifications((prev) => [
         `New ${selectedRole.toUpperCase()} registration (${newUser.name} • ${cleanEmail}) awaiting Admin approval.`,
@@ -659,14 +820,14 @@ const handleSendRegisterOtp = async () => {
     setCurrentUser(newUser);
     setShowWelcomeSmile(true);
     setActiveTab('home');
+    window.history.pushState({ rythuNav: true }, '');
     setTimeout(() => setShowWelcomeSmile(false), 3500);
   };
 
   const handleStrictLogout = () => {
     setCurrentUser(null);
     setSelectedRole(null);
-    setLoginEmail('');
-    setLoginOtpSent(false);
+    setLoginIdentifier('');
     setGeneratedEmailOtp('');
     setAuthMsg('');
     setActiveTab('home');
@@ -755,9 +916,45 @@ const handleAdjustPin = async (dLat, dLng) => {
     if (TE_TO_EN[val.trim()]) setFNameEn(TE_TO_EN[val.trim()]);
   };
 
+  // Publish Produce / Stock helper for Farmer, Wholesale, and Retail
+  const handlePublishRoleProduct = (e, roleSource) => {
+    e.preventDefault();
+    if (!fNameEn.trim() || !fPrice) return;
+    const baseRate = Number(fPrice);
+    const newProd = {
+      id: 'p_' + Date.now(),
+      postedByRole: roleSource, // 'farmer' | 'wholesale' | 'retail'
+      farmerId: currentUser.id,
+      farmerName: `${currentUser.name} • 12 km`,
+      distanceKm: 12,
+      nameEn: fNameEn.trim(),
+      nameTe: fNameTe.trim() || fNameEn.trim(),
+      cat: 'Vegetables',
+      unit: fUnit,
+      packLabel: `1 ${fUnit}`,
+      mrp: baseRate + 16,
+      retailPrice: roleSource === 'retail' ? baseRate : baseRate + 10,
+      farmerDirectPrice: baseRate,
+      wholesalePrice: roleSource === 'wholesale' ? baseRate : baseRate + 4,
+      minWholesaleQty: 25,
+      stockKg: Number(fQty),
+      inStock: true,
+      rating: 4.8,
+      reviews: 12,
+      desc: `Fresh produce listed by ${currentUser.name} (${roleSource.toUpperCase()}).`,
+      availableFrom: fAvailTime,
+      img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=400&q=80',
+    };
+    setProducts((prev) => [newProd, ...prev]);
+    setDoc(doc(db, 'products', newProd.id), newProd).catch(() => {});
+    setFNameEn('');
+    setFNameTe('');
+    notify(`Published! Visible to ${roleSource === 'farmer' ? 'Wholesale, Retail & Customers' : roleSource === 'wholesale' ? 'Retailers & Customers' : 'Customers'}.`);
+  };
+
   const fontStyle = { fontFamily: "'Plus Jakarta Sans', 'Noto Sans Telugu', sans-serif" };
 
-  // =========================================================================
+ // =========================================================================
   // 0. DIRECT INVOICE PDF PRINT VIEW (OPENED FROM EMAIL DOWNLOAD BUTTON)
   // =========================================================================
   if (sharedInvoiceData) {
@@ -836,8 +1033,8 @@ const handleAdjustPin = async (dLat, dLng) => {
     );
   }
 
- // =========================================================================
-  // 1. HOME / ROLE ENTRY PAGE (ONLY 'HOME' IN BOTTOM BAR + STRICT FARMER PHOTO)
+// =========================================================================
+  // 1. HOME / ROLE ENTRY PAGE + ONE-TIME DEVICE PERMISSIONS DIALOG
   // =========================================================================
   if (!selectedRole) {
     const roleCards = [
@@ -899,7 +1096,43 @@ const handleAdjustPin = async (dLat, dLng) => {
 
     return (
       <div style={fontStyle} className="min-h-screen bg-[#F5F7F5] max-w-md mx-auto text-slate-800 shadow-2xl pb-24 relative overflow-x-hidden">
-        <div className="bg-gradient-to-b from-[#0E5A2B] via-[#15803D] to-[#4ADE80]/30 text-white rounded-b-[36px] px-4 pt-4 pb-6 shadow-lg relative overflow-hidden">
+        {/* ONE-TIME PERMISSIONS PROMPT ON FIRST LAUNCH */}
+        {showPermissionPrompt && (
+          <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl p-5 max-w-xs w-full space-y-4 shadow-2xl border border-emerald-100">
+              <div className="flex items-center space-x-3">
+                <img src="/icon-512.png" alt="Logo" className="h-12 w-12 rounded-full border-2 border-[#15803D]" />
+                <div>
+                  <h3 className="text-sm font-extrabold text-slate-900">Allow Rythu Basket Permissions</h3>
+                  <p className="text-[10px] text-slate-500">One-time setup for accurate delivery & alerts</p>
+                </div>
+              </div>
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center space-x-2.5 bg-emerald-50/70 p-2.5 rounded-xl">
+                  <MapPin className="h-4 w-4 text-[#15803D] flex-shrink-0" />
+                  <span><strong>Precise Location:</strong> Accurate customer & live delivery tracking</span>
+                </div>
+                <div className="flex items-center space-x-2.5 bg-emerald-50/70 p-2.5 rounded-xl">
+                  <MessageSquare className="h-4 w-4 text-[#15803D] flex-shrink-0" />
+                  <span><strong>Messages & Alerts:</strong> Instant order & delivery notifications</span>
+                </div>
+                <div className="flex items-center space-x-2.5 bg-emerald-50/70 p-2.5 rounded-xl">
+                  <Phone className="h-4 w-4 text-[#15803D] flex-shrink-0" />
+                  <span><strong>Phone Calls:</strong> Direct rider-to-customer call support</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleGrantDevicePermissions}
+                className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow text-xs"
+              >
+                Allow All Permissions (One-Time)
+              </button>
+            </div>
+          </div>
+        )}
+
+<div className="bg-gradient-to-b from-[#0E5A2B] via-[#15803D] to-[#4ADE80]/30 text-white rounded-b-[36px] px-4 pt-4 pb-6 shadow-lg relative overflow-hidden">
           <div className="flex items-center justify-between relative z-10">
             <div className="flex items-center space-x-2.5">
               <div className="h-12 w-12 rounded-full bg-white p-0.5 border-2 border-[#EAB308] shadow overflow-hidden flex-shrink-0">
@@ -941,6 +1174,7 @@ const handleAdjustPin = async (dLat, dLng) => {
                 onClick={() => {
                   setSelectedRole('customer');
                   setAuthScreen('login');
+                  window.history.pushState({ rythuNav: true }, '');
                 }}
                 className="bg-[#15803D] hover:bg-[#0F5132] text-white text-[11px] font-extrabold px-3.5 py-2 rounded-full shadow flex items-center space-x-1 transition"
               >
@@ -979,10 +1213,10 @@ const handleAdjustPin = async (dLat, dLng) => {
                 onClick={() => {
                   setSelectedRole(r.id);
                   setAuthScreen('login');
-                  setLoginEmail('');
-                  setLoginOtpSent(false);
+                  setLoginIdentifier('');
                   setRegOtpSent(false);
                   setAuthMsg('');
+                  window.history.pushState({ rythuNav: true }, '');
                 }}
                 className={`${r.bg} border rounded-2xl p-3 shadow-sm hover:shadow-md flex items-center justify-between text-left transition active:scale-[0.98]`}
               >
@@ -1003,7 +1237,7 @@ const handleAdjustPin = async (dLat, dLng) => {
           })}
         </div>
 
-        <div className="px-3.5 pt-3.5">
+<div className="px-3.5 pt-3.5">
           <div className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white rounded-2xl p-3.5 shadow-md flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="h-11 w-11 rounded-full bg-white/15 border border-white/25 flex items-center justify-center flex-shrink-0">
@@ -1024,7 +1258,7 @@ const handleAdjustPin = async (dLat, dLng) => {
           </div>
         </div>
 
-  <div className="px-3.5 pt-3.5">
+        <div className="px-3.5 pt-3.5">
           <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2.5">
             <div className="flex items-center space-x-1.5 text-xs font-extrabold text-slate-800">
               <Leaf className="h-4 w-4 text-[#15803D]" />
@@ -1073,56 +1307,131 @@ const handleAdjustPin = async (dLat, dLng) => {
     );
   }
 
-// =========================================================================
-  // 2. DIRECT EMAIL 6-DIGIT OTP LOGIN / SIGN UP SCREEN
+ // =========================================================================
+  // 2. ROLE-SPECIFIC REGISTRATION (REF 1000044292.png) & DIRECT LOGIN (NO OTP ON LOGIN)
   // =========================================================================
   if (!currentUser) {
+    const roleMeta = {
+      farmer: {
+        title: 'Farmer Registration',
+        subtitle: 'Sell your fresh produce directly to buyers',
+        cta: 'Register as Farmer →',
+        hero: FARMER_HERO_IMG,
+        icon: Sprout,
+      },
+      wholesale: {
+        title: 'Wholesale Registration',
+        subtitle: 'Buy in bulk at the best prices',
+        cta: 'Register as Wholesale →',
+        hero: WHOLESALE_HERO_IMG,
+        icon: Warehouse,
+      },
+      retail: {
+        title: 'Retail Store Registration',
+        subtitle: 'Grow your store with Rythu Basket',
+        cta: 'Register as Retail Store →',
+        hero: RETAIL_HERO_IMG,
+        icon: Store,
+      },
+      delivery: {
+        title: 'Delivery Partner Registration',
+        subtitle: 'Deliver Freshness, Earn More',
+        cta: 'Register as Delivery Partner →',
+        hero: DELIVERY_HERO_IMG,
+        icon: Truck,
+      },
+      customer: {
+        title: 'Create Account',
+        subtitle: 'Verify your Email inbox with 6-digit OTP to join',
+        cta: 'Create Customer Account →',
+        hero: FARMER_HERO_IMG,
+        icon: ShoppingCart,
+      },
+      admin: {
+        title: 'Admin Registration',
+        subtitle: 'Master Marketplace Administration',
+        cta: 'Register as Admin →',
+        hero: FARMER_HERO_IMG,
+        icon: ShieldCheck,
+      },
+    }[selectedRole];
+
+    const RoleHeaderIcon = roleMeta.icon;
+
+    // Bank + UPI Optional/Flexible Section for Farmer, Wholesale, Retail, Delivery
+    const renderBankAndUpiBlock = () => (
+      <div className="space-y-2.5 pt-1">
+        <div className="flex items-center space-x-1.5 text-xs font-extrabold text-[#15803D]">
+          <Landmark className="h-4 w-4" />
+          <span>Bank / UPI Payout Details (Enter Bank or UPI)</span>
+        </div>
+        <input
+          type="text"
+          value={regBankAccount}
+          onChange={(e) => setRegBankAccount(e.target.value)}
+          placeholder="Bank Account Number (Optional if UPI entered)"
+          className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold"
+        />
+        <input
+          type="text"
+          value={regIfscCode}
+          onChange={(e) => setRegIfscCode(e.target.value.toUpperCase())}
+          placeholder="IFSC Code (e.g., SBIN0001234)"
+          className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold"
+        />
+        <input
+          type="text"
+          value={regUpiId}
+          onChange={(e) => setRegUpiId(e.target.value)}
+          placeholder="UPI ID (e.g., name@ybl / name@okicici)"
+          className="w-full bg-emerald-50/50 border border-emerald-200 rounded-xl px-3.5 py-2.5 font-bold"
+        />
+      </div>
+    );
+
     return (
-      <div style={fontStyle} className="min-h-screen bg-white max-w-md mx-auto text-slate-800 shadow-2xl pb-10">
+      <div style={fontStyle} className="min-h-screen bg-[#F4F8F4] max-w-md mx-auto text-slate-800 shadow-2xl pb-12">
         {toast && (
           <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-xl text-center">
             {toast}
           </div>
         )}
 
-        <div className="p-4 flex items-center justify-between">
-          <button onClick={() => setSelectedRole(null)} className="p-2 rounded-full bg-slate-100 text-slate-700">
-            <ArrowLeft className="h-4 w-4" />
-          </button>
-          <span className="text-[11px] font-extrabold uppercase tracking-wider bg-emerald-50 text-[#15803D] px-3 py-1 rounded-full">
-            {selectedRole} Portal
-          </span>
-        </div>
+{/* LOGIN SCREEN (DIRECT PHONE OR EMAIL LOGIN — NO OTP REQUIRED AFTER REGISTRATION) */}
+        {authScreen === 'login' ? (
+          <div className="bg-white min-h-screen">
+            <div className="p-4 flex items-center justify-between">
+              <button onClick={() => setSelectedRole(null)} className="p-2 rounded-full bg-slate-100 text-slate-700">
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+              <span className="text-[11px] font-extrabold uppercase tracking-wider bg-emerald-50 text-[#15803D] px-3 py-1 rounded-full">
+                {selectedRole} Login
+              </span>
+            </div>
 
-        <div className="px-6 pt-2 text-center space-y-2">
-          <div className="h-16 w-16 rounded-full bg-white p-0.5 border-2 border-[#15803D] shadow mx-auto overflow-hidden">
-            <img src="/icon-512.png" alt="Rythu Basket" className="h-full w-full object-cover rounded-full" />
-          </div>
-          <h1 className="text-xl font-extrabold text-[#15803D]">Rythu Basket</h1>
-          <h2 className="text-lg font-extrabold text-slate-900">
-            {authScreen === 'login' ? 'Welcome Back!' : 'Create Account'}
-          </h2>
-          <p className="text-xs text-slate-500">
-            {authScreen === 'login'
-              ? 'Sign in with 6-digit OTP sent directly to your Email'
-              : 'Verify your Email inbox with 6-digit OTP to join'}
-          </p>
-        </div>
+            <div className="px-6 pt-3 text-center space-y-2">
+              <div className="h-16 w-16 rounded-full bg-white p-0.5 border-2 border-[#15803D] shadow mx-auto overflow-hidden">
+                <img src="/icon-512.png" alt="Rythu Basket" className="h-full w-full object-cover rounded-full" />
+              </div>
+              <h1 className="text-xl font-extrabold text-[#15803D]">Rythu Basket</h1>
+              <h2 className="text-lg font-extrabold text-slate-900">Welcome Back!</h2>
+              <p className="text-xs text-slate-500">
+                Login directly with your registered <strong>Mobile Number</strong> or <strong>Email ID</strong> (No OTP needed)
+              </p>
+            </div>
 
-        <div className="p-6 space-y-4 text-xs">
-          {authScreen === 'login' ? (
-            <form onSubmit={handleVerifyLogin} className="space-y-3.5">
+            <form onSubmit={handleDirectLogin} className="p-6 space-y-3.5 text-xs">
               <div className="flex items-center border border-slate-200 rounded-2xl px-3.5 py-3.5 bg-slate-50">
-                <Mail className="h-4 w-4 text-slate-400 mr-2.5 flex-shrink-0" />
+                <User className="h-4 w-4 text-slate-400 mr-2.5 flex-shrink-0" />
                 <input
-                  type="email"
-                  value={loginEmail}
+                  type="text"
+                  required
+                  value={loginIdentifier}
                   onChange={(e) => {
-                    setLoginEmail(e.target.value);
+                    setLoginIdentifier(e.target.value);
                     setAuthMsg('');
-                    setLoginOtpSent(false);
                   }}
-                  placeholder="Enter your registered Email ID"
+                  placeholder="Registered Mobile Number or Email ID"
                   className="w-full bg-transparent font-bold text-sm focus:outline-none"
                 />
               </div>
@@ -1130,123 +1439,259 @@ const handleAdjustPin = async (dLat, dLng) => {
               {authMsg && (
                 <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-2xl font-bold flex items-center justify-between">
                   <span>{authMsg}</span>
-                  {authMsg.includes('not registered') && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setRegEmail(loginEmail);
-                        setAuthScreen('register');
-                        setAuthMsg('');
-                      }}
-                      className="bg-red-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-extrabold ml-2 flex-shrink-0"
-                    >
-                      Sign Up
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthScreen('register');
+                      setAuthMsg('');
+                    }}
+                    className="bg-red-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-extrabold ml-2 flex-shrink-0"
+                  >
+                    Register
+                  </button>
                 </div>
               )}
 
-              {!loginOtpSent ? (
-                <button
-                  type="button"
-                  disabled={sendingEmail}
-                  onClick={handleSendLoginOtp}
-                  className="w-full bg-[#15803D] disabled:opacity-60 text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
-                >
-                  {sendingEmail ? 'Sending OTP to Email...' : 'Send Email OTP'}
-                </button>
-              ) : (
-                <>
-                  <div className="flex justify-between items-center text-[11px] font-bold text-slate-500">
-                    <span>Check your Email Inbox / Spam</span>
-                    <button type="button" onClick={handleSendLoginOtp} className="text-[#15803D] font-extrabold underline">
-                      Resend OTP
-                    </button>
-                  </div>
-                  <input
-                    type="tel"
-                    maxLength={6}
-                    required
-                    value={loginOtp}
-                    onChange={(e) => setLoginOtp(e.target.value.replace(/\D/g, ''))}
-                    placeholder="Enter 6-Digit Email OTP"
-                    className="w-full bg-slate-50 border border-emerald-400 rounded-2xl py-3.5 text-center text-base font-extrabold tracking-[0.4em]"
-                  />
-                  <button
-                    type="submit"
-                    className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
-                  >
-                    Verify Email OTP & Login
-                  </button>
-                </>
-              )}
+              <button
+                type="submit"
+                className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
+              >
+                Login Now →
+              </button>
 
               <div className="pt-2 text-center">
                 <button
                   type="button"
-                  onClick={() => { setAuthScreen('register'); setAuthMsg(''); }}
-                  className="w-full border border-slate-200 text-slate-800 font-extrabold py-3.5 rounded-2xl"
-                >
-                  Create New Account
-                </button>
-              </div>
-            </form>
-          ) : (
-            <form onSubmit={handleCompleteRegistration} className="space-y-3">
-              <input
-                type="text"
-                required
-                value={regName}
-                onChange={(e) => setRegName(e.target.value)}
-                placeholder="Full Name / Store Name *"
-                className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 font-bold"
-              />
-              <div className="flex items-center border border-slate-200 rounded-2xl px-3.5 py-3.5 bg-slate-50">
-                <Mail className="h-4 w-4 text-slate-400 mr-2.5 flex-shrink-0" />
-                <input
-                  type="email"
-                  required
-                  value={regEmail}
-                  onChange={(e) => {
-                    setRegEmail(e.target.value);
+                  onClick={() => {
+                    setAuthScreen('register');
                     setRegOtpSent(false);
                     setAuthMsg('');
                   }}
-                  placeholder="Email ID (for 6-Digit OTP & Invoices) *"
-                  className="w-full bg-transparent font-bold text-sm focus:outline-none"
-                />
+                  className="w-full border-2 border-[#15803D]/30 bg-emerald-50/40 text-[#15803D] font-extrabold py-3.5 rounded-2xl"
+                >
+                  New {selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}? Create Account (1-Time Email OTP)
+                </button>
               </div>
-              <div className="flex items-center border border-slate-200 rounded-2xl px-3.5 py-3.5 bg-slate-50">
-                <span className="font-extrabold text-slate-500 pr-2 border-r">+91</span>
-                <input
-                  type="tel"
-                  maxLength={10}
-                  required
-                  value={regMobile}
-                  onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, ''))}
-                  placeholder="Mobile Number (for Delivery) *"
-                  className="w-full bg-transparent pl-2.5 font-bold text-sm focus:outline-none"
-                />
+            </form>
+          </div>
+        ) : (
+/* REGISTRATION SCREEN (MATCHING REFERENCE 1000044292.png THEME FOR ALL ROLES) */
+          <div>
+            {/* Illustrated Green-White Top Hero Header */}
+            <div className="relative bg-gradient-to-b from-[#DCFCE7] to-[#F4F8F4] pt-3 pb-2">
+              <div className="px-4 flex items-center justify-between">
+                <button onClick={() => setAuthScreen('login')} className="p-2 rounded-full bg-white/90 shadow text-slate-700">
+                  <ArrowLeft className="h-4 w-4" />
+                </button>
+                <div className="flex items-center space-x-2">
+                  <img src="/icon-512.png" alt="Logo" className="h-9 w-9 rounded-full border border-[#15803D]" />
+                  <div>
+                    <p className="text-sm font-extrabold text-[#15803D] leading-none">Rythu Basket™</p>
+                    <p className="text-[10px] font-bold text-slate-600">Grow Together...</p>
+                  </div>
+                </div>
+                <span className="w-8" />
               </div>
-              <input
-                type="text"
-                required
-                value={regAddress}
-                onChange={(e) => setRegAddress(e.target.value)}
-                placeholder="Village / Area Address in Nellore *"
-                className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 font-bold"
-              />
-              {selectedRole === 'customer' && (
-                <input
-                  type="text"
-                  value={regReferralCode}
-                  onChange={(e) => setRegReferralCode(e.target.value.toUpperCase())}
-                  placeholder="Referral Code (Optional • ₹50 Bonus)"
-                  className="w-full bg-amber-50/70 border border-amber-200 rounded-2xl px-4 py-3 font-bold"
-                />
+
+              {selectedRole !== 'customer' && (
+                <div className="px-4 pt-2">
+                  <img
+                    src={roleMeta.hero}
+                    alt={roleMeta.title}
+                    className="w-full h-32 object-cover rounded-2xl shadow-sm border border-emerald-200"
+                  />
+                </div>
               )}
 
-{authMsg && <p className="text-red-600 font-bold">{authMsg}</p>}
+              {/* Curved Dark Green Title Ribbon (Ref 1000044292.png) */}
+              <div className="mx-3 mt-2 bg-gradient-to-r from-[#0E5A2B] to-[#15803D] text-white rounded-2xl px-4 py-3 flex items-center space-x-3 shadow-md">
+                <div className="h-10 w-10 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
+                  <RoleHeaderIcon className="h-5 w-5 text-[#FDE047]" />
+                </div>
+                <div>
+                  <h2 className="text-base font-extrabold leading-tight">{roleMeta.title}</h2>
+                  <p className="text-[11px] text-emerald-100">{roleMeta.subtitle}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Role-Specific Registration Fields */}
+            <form onSubmit={handleCompleteRegistration} className="p-4 space-y-3 text-xs">
+              {/* CUSTOMER REGISTRATION (Kept clean as requested) */}
+              {selectedRole === 'customer' && (
+                <>
+                  <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Full Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-3 font-bold" />
+                  <input type="tel" maxLength={10} required value={regMobile} onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, ''))} placeholder="Mobile Number (10 Digits) *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-3 font-bold" />
+                  <input type="email" required value={regEmail} onChange={(e) => { setRegEmail(e.target.value); setRegOtpSent(false); }} placeholder="Email ID (Mandatory for 6-Digit OTP) *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-3 font-bold" />
+                  <input type="text" required value={regAddress} onChange={(e) => setRegAddress(e.target.value)} placeholder="Delivery Address in Nellore *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-3 font-bold" />
+                  <input type="text" value={regReferralCode} onChange={(e) => setRegReferralCode(e.target.value.toUpperCase())} placeholder="Referral Code (Optional • ₹50 Bonus)" className="w-full bg-amber-50 border border-amber-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                </>
+              )}
+
+              {/* FARMER REGISTRATION (Ref Card 1 — Aadhaar Optional as requested) */}
+              {selectedRole === 'farmer' && (
+                <>
+                  <p className="font-extrabold text-[#15803D]">— Personal Details</p>
+                  <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Full Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="tel" maxLength={10} required value={regMobile} onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, ''))} placeholder="Mobile Number *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="email" required value={regEmail} onChange={(e) => { setRegEmail(e.target.value); setRegOtpSent(false); }} placeholder="Email ID (Mandatory for OTP) *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="text" maxLength={12} value={regAadhaar} onChange={(e) => setRegAadhaar(e.target.value.replace(/\D/g, ''))} placeholder="Aadhaar Number (Optional)" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="text" required value={regAddress} onChange={(e) => setRegAddress(e.target.value)} placeholder="Address *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                  <div className="grid grid-cols-3 gap-2">
+                    <input type="text" required value={regVillage} onChange={(e) => setRegVillage(e.target.value)} placeholder="Village *" className="bg-white border border-slate-200 rounded-xl px-2.5 py-2.5 font-bold" />
+                    <input type="text" required value={regMandal} onChange={(e) => setRegMandal(e.target.value)} placeholder="Mandal *" className="bg-white border border-slate-200 rounded-xl px-2.5 py-2.5 font-bold" />
+                    <input type="text" required value={regDistrict} onChange={(e) => setRegDistrict(e.target.value)} placeholder="District *" className="bg-white border border-slate-200 rounded-xl px-2.5 py-2.5 font-bold" />
+                  </div>
+
+                  <p className="font-extrabold text-[#15803D] pt-1">— Farm Details</p>
+                  <input type="text" value={regLandAcres} onChange={(e) => setRegLandAcres(e.target.value)} placeholder="Land Holding (Acres)" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="text" value={regMajorCrops} onChange={(e) => setRegMajorCrops(e.target.value)} placeholder="Major Crops (e.g., Tomato, Paddy)" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+
+                  <label className="block border-2 border-dashed border-emerald-300 bg-white rounded-2xl p-3 text-center cursor-pointer">
+                    <Camera className="h-5 w-5 text-[#15803D] mx-auto mb-1" />
+                    <span className="font-bold text-slate-600">{regPhotoName || 'Upload Farm Photo (JPG, PNG)'}</span>
+                    <input type="file" accept="image/*" onChange={(e) => setRegPhotoName(e.target.files?.[0]?.name || '')} className="hidden" />
+                  </label>
+
+                  {renderBankAndUpiBlock()}
+                </>
+              )}
+
+              {/* WHOLESALE REGISTRATION (Ref Card 2) */}
+              {selectedRole === 'wholesale' && (
+                <>
+                  <p className="font-extrabold text-[#15803D]">— Business Details</p>
+                  <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Business Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="text" required value={regOwnerName} onChange={(e) => setRegOwnerName(e.target.value)} placeholder="Owner Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="tel" maxLength={10} required value={regMobile} onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, ''))} placeholder="Mobile Number *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="email" required value={regEmail} onChange={(e) => { setRegEmail(e.target.value); setRegOtpSent(false); }} placeholder="Email ID (Mandatory for OTP) *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="text" value={regGstNumber} onChange={(e) => setRegGstNumber(e.target.value.toUpperCase())} placeholder="GST Number (Optional)" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="text" required value={regAddress} onChange={(e) => setRegAddress(e.target.value)} placeholder="Business Address *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input type="text" required value={regDistrict} onChange={(e) => setRegDistrict(e.target.value)} placeholder="City *" className="bg-white border border-slate-200 rounded-xl px-3 py-2.5 font-bold" />
+                    <input type="text" required value={regState} onChange={(e) => setRegState(e.target.value)} placeholder="State *" className="bg-white border border-slate-200 rounded-xl px-3 py-2.5 font-bold" />
+                  </div>
+
+                  <p className="font-extrabold text-[#15803D] pt-1">— Store Type</p>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {['Distributor', 'Wholesaler', 'Trader'].map((st) => (
+                      <button
+                        type="button"
+                        key={st}
+                        onClick={() => setRegStoreType(st)}
+                        className={`py-2 rounded-full font-extrabold border ${regStoreType === st ? 'bg-[#15803D] text-white border-[#15803D]' : 'bg-white text-slate-600'}`}
+                      >
+                        {st}
+                      </button>
+                    ))}
+                  </div>
+
+                  {renderBankAndUpiBlock()}
+
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <label className="border-2 border-dashed border-emerald-300 bg-white rounded-xl p-2.5 text-center cursor-pointer">
+                      <span className="font-bold text-[10px] text-slate-600">{regPhotoName || 'GST Certificate (Optional)'}</span>
+                      <input type="file" onChange={(e) => setRegPhotoName(e.target.files?.[0]?.name || '')} className="hidden" />
+                    </label>
+                    <label className="border-2 border-dashed border-emerald-300 bg-white rounded-xl p-2.5 text-center cursor-pointer">
+                      <span className="font-bold text-[10px] text-slate-600">{regDocName || 'Shop License (Optional)'}</span>
+                      <input type="file" onChange={(e) => setRegDocName(e.target.files?.[0]?.name || '')} className="hidden" />
+                    </label>
+                  </div>
+                </>
+              )}
+
+{/* RETAIL STORE REGISTRATION (Ref Card 3) */}
+              {selectedRole === 'retail' && (
+                <>
+                  <p className="font-extrabold text-[#15803D]">— Store Details</p>
+                  <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Store Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="text" required value={regOwnerName} onChange={(e) => setRegOwnerName(e.target.value)} placeholder="Owner Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="tel" maxLength={10} required value={regMobile} onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, ''))} placeholder="Mobile Number *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="email" required value={regEmail} onChange={(e) => { setRegEmail(e.target.value); setRegOtpSent(false); }} placeholder="Email ID (Mandatory for OTP) *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="text" required value={regAddress} onChange={(e) => setRegAddress(e.target.value)} placeholder="Shop Address *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input type="text" required value={regDistrict} onChange={(e) => setRegDistrict(e.target.value)} placeholder="City *" className="bg-white border border-slate-200 rounded-xl px-3 py-2.5 font-bold" />
+                    <input type="text" required value={regState} onChange={(e) => setRegState(e.target.value)} placeholder="State *" className="bg-white border border-slate-200 rounded-xl px-3 py-2.5 font-bold" />
+                  </div>
+
+                  <p className="font-extrabold text-[#15803D] pt-1">— Business Type</p>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {['Grocery Store', 'Supermarket', 'Others'].map((bt) => (
+                      <button
+                        type="button"
+                        key={bt}
+                        onClick={() => setRegStoreType(bt)}
+                        className={`py-2 rounded-full font-extrabold border text-[10px] ${regStoreType === bt ? 'bg-[#15803D] text-white border-[#15803D]' : 'bg-white text-slate-600'}`}
+                      >
+                        {bt}
+                      </button>
+                    ))}
+                  </div>
+
+                  {renderBankAndUpiBlock()}
+
+                  <label className="block border-2 border-dashed border-emerald-300 bg-white rounded-2xl p-3 text-center cursor-pointer">
+                    <Camera className="h-5 w-5 text-[#15803D] mx-auto mb-1" />
+                    <span className="font-bold text-slate-600">{regPhotoName || 'Upload Shop Photo (JPG, PNG)'}</span>
+                    <input type="file" accept="image/*" onChange={(e) => setRegPhotoName(e.target.files?.[0]?.name || '')} className="hidden" />
+                  </label>
+                </>
+              )}
+
+              {/* DELIVERY PARTNER REGISTRATION (Ref Card 4) */}
+              {selectedRole === 'delivery' && (
+                <>
+                  <p className="font-extrabold text-[#15803D]">— Personal Details</p>
+                  <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Full Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="tel" maxLength={10} required value={regMobile} onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, ''))} placeholder="Mobile Number *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="email" required value={regEmail} onChange={(e) => { setRegEmail(e.target.value); setRegOtpSent(false); }} placeholder="Email ID (Mandatory for OTP) *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+
+                  <p className="font-extrabold text-[#15803D] pt-1">— Vehicle Details</p>
+                  <select value={regVehicleType} onChange={(e) => setRegVehicleType(e.target.value)} className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold">
+                    <option value="Bike / Scooter">Bike / Scooter</option>
+                    <option value="Auto / 3-Wheeler">Auto / 3-Wheeler</option>
+                    <option value="Mini Truck / Tempo">Mini Truck / Tempo</option>
+                  </select>
+                  <input type="text" required value={regVehicleNumber} onChange={(e) => setRegVehicleNumber(e.target.value.toUpperCase())} placeholder="Vehicle Number (e.g., AP 26 BX 1234) *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+
+                  <p className="font-extrabold text-[#15803D] pt-1">— Location</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input type="text" required value={regDistrict} onChange={(e) => setRegDistrict(e.target.value)} placeholder="City *" className="bg-white border border-slate-200 rounded-xl px-3 py-2.5 font-bold" />
+                    <input type="text" required value={regAddress} onChange={(e) => setRegAddress(e.target.value)} placeholder="Area / Locality *" className="bg-white border border-slate-200 rounded-xl px-3 py-2.5 font-bold" />
+                  </div>
+
+                  {renderBankAndUpiBlock()}
+
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <label className="border-2 border-dashed border-emerald-300 bg-white rounded-xl p-2.5 text-center cursor-pointer">
+                      <span className="font-bold text-[10px] text-slate-600">{regPhotoName || 'Driving License (Optional)'}</span>
+                      <input type="file" onChange={(e) => setRegPhotoName(e.target.files?.[0]?.name || '')} className="hidden" />
+                    </label>
+                    <label className="border-2 border-dashed border-emerald-300 bg-white rounded-xl p-2.5 text-center cursor-pointer">
+                      <span className="font-bold text-[10px] text-slate-600">{regDocName || 'Vehicle RC (Optional)'}</span>
+                      <input type="file" onChange={(e) => setRegDocName(e.target.files?.[0]?.name || '')} className="hidden" />
+                    </label>
+                  </div>
+                </>
+              )}
+
+              {/* ADMIN REGISTRATION */}
+              {selectedRole === 'admin' && (
+                <>
+                  <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Admin Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="tel" maxLength={10} required value={regMobile} onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, ''))} placeholder="Mobile Number *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="email" required value={regEmail} onChange={(e) => { setRegEmail(e.target.value); setRegOtpSent(false); }} placeholder="Admin Email ID (Mandatory for OTP) *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="text" required value={regAddress} onChange={(e) => setRegAddress(e.target.value)} placeholder="Office Location *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                </>
+              )}
+
+              <label className="flex items-center space-x-2 text-[11px] font-bold text-slate-600 pt-1">
+                <input type="checkbox" checked={regTermsAccepted} onChange={(e) => setRegTermsAccepted(e.target.checked)} className="accent-[#15803D] h-4 w-4" />
+                <span>I agree to the <span className="text-[#15803D]">Terms & Conditions</span> and <span className="text-[#15803D]">Privacy Policy</span></span>
+              </label>
+
+              {authMsg && <p className="text-red-600 font-bold bg-red-50 p-2.5 rounded-xl border border-red-200">{authMsg}</p>}
 
               {!regOtpSent ? (
                 <button
@@ -1255,12 +1700,12 @@ const handleAdjustPin = async (dLat, dLng) => {
                   onClick={handleSendRegisterOtp}
                   className="w-full bg-[#15803D] disabled:opacity-60 text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
                 >
-                  {sendingEmail ? 'Sending OTP to Email...' : 'Send 6-Digit Email OTP'}
+                  {sendingEmail ? 'Sending 6-Digit Email OTP...' : `Verify Email & ${roleMeta.cta}`}
                 </button>
               ) : (
-                <>
-                  <div className="flex justify-between items-center text-[11px] font-bold text-slate-500">
-                    <span>Sent to {regEmail}</span>
+                <div className="space-y-2.5 bg-white p-3.5 rounded-2xl border-2 border-[#15803D]">
+                  <div className="flex justify-between items-center text-[11px] font-bold text-slate-600">
+                    <span>6-Digit OTP sent to {regEmail}</span>
                     <button type="button" onClick={handleSendRegisterOtp} className="text-[#15803D] font-extrabold underline">
                       Resend OTP
                     </button>
@@ -1272,31 +1717,31 @@ const handleAdjustPin = async (dLat, dLng) => {
                     value={regOtpInput}
                     onChange={(e) => setRegOtpInput(e.target.value.replace(/\D/g, ''))}
                     placeholder="Enter 6-Digit Email OTP"
-                    className="w-full bg-slate-50 border border-emerald-400 rounded-2xl py-3.5 text-center text-base font-extrabold tracking-[0.4em]"
+                    className="w-full bg-emerald-50/50 border border-emerald-400 rounded-xl py-3 text-center text-base font-extrabold tracking-[0.4em]"
                   />
                   <button
                     type="submit"
-                    className="w-full bg-[#EA580C] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
+                    className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-xl shadow-md text-sm"
                   >
-                    Verify Email OTP & Complete Sign Up
+                    {roleMeta.cta}
                   </button>
-                </>
+                </div>
               )}
 
-              <p className="text-center text-slate-500 pt-2">
+              <p className="text-center text-slate-600 font-bold pt-2">
                 Already have an account?{' '}
-                <button type="button" onClick={() => setAuthScreen('login')} className="text-[#15803D] font-extrabold">
+                <button type="button" onClick={() => setAuthScreen('login')} className="text-[#15803D] font-extrabold underline">
                   Login
                 </button>
               </p>
             </form>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     );
   }
 
-  const WelcomeSmileModal = () =>
+const WelcomeSmileModal = () =>
     showWelcomeSmile ? (
       <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-3xl p-6 text-center max-w-xs w-full space-y-3 shadow-2xl">
@@ -1325,6 +1770,14 @@ const handleAdjustPin = async (dLat, dLng) => {
         </div>
       </div>
 
+      {(currentUser.bankAccount || currentUser.upiId) && (
+        <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-1">
+          <p className="font-extrabold text-[#15803D]">Registered Payout Details</p>
+          {currentUser.bankAccount && <p className="text-slate-600">Bank A/C: <strong>{currentUser.bankAccount}</strong> ({currentUser.ifscCode})</p>}
+          {currentUser.upiId && <p className="text-slate-600">UPI ID: <strong>{currentUser.upiId}</strong></p>}
+        </div>
+      )}
+
       <div className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white rounded-3xl p-5 shadow-md space-y-2">
         <div className="flex justify-between items-center">
           <span className="font-semibold text-emerald-100 flex items-center space-x-1.5">
@@ -1334,34 +1787,7 @@ const handleAdjustPin = async (dLat, dLng) => {
           <span className="bg-white/15 text-[10px] font-bold px-2.5 py-0.5 rounded-full">15-Day Validity</span>
         </div>
         <h3 className="text-3xl font-extrabold">₹{currentUser.wallet || 0}</h3>
-        <div className="bg-white/10 rounded-xl p-2 text-[10px] text-amber-200 font-semibold flex items-center space-x-1.5">
-          <Clock className="h-3.5 w-3.5 flex-shrink-0" />
-          <span>Auto-Alert active: Notifies 48h–6h before 15-day expiry.</span>
-        </div>
       </div>
-
-{currentUser.role === 'customer' && (
-        <div className="bg-white rounded-3xl p-4 shadow-sm border border-amber-200/70 space-y-2.5">
-          <div className="flex justify-between items-center">
-            <span className="font-extrabold text-slate-900 flex items-center space-x-1.5">
-              <Gift className="h-4 w-4 text-[#EA580C]" />
-              <span>Refer & Earn (₹50 / Referral)</span>
-            </span>
-            <span className="text-[10px] font-extrabold bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-full">
-              {currentUser.referralsCount || 0} / 10 Claimed
-            </span>
-          </div>
-          <p className="text-[11px] text-slate-500">
-            Earn <strong>₹50</strong> wallet cashback when your friend installs & completes their 1st order of <strong>₹200+</strong> (valid for first 10 referrals).
-          </p>
-          <div className="flex space-x-2">
-            <input readOnly value={`https://rythu-market.vercel.app/?ref=${currentUser.mobile}`} className="flex-1 bg-slate-50 border rounded-xl px-3 py-2 text-[10px] font-bold" />
-            <button onClick={() => notify('Referral link copied!')} className="bg-[#EA580C] text-white font-extrabold px-3.5 py-2 rounded-xl">
-              Share
-            </button>
-          </div>
-        </div>
-      )}
 
       <a href="tel:8328261103" className="w-full bg-white border border-slate-200 text-slate-800 font-extrabold py-3.5 rounded-2xl flex items-center justify-center space-x-2 shadow-sm">
         <Phone className="h-4 w-4 text-[#15803D]" />
@@ -1375,8 +1801,8 @@ const handleAdjustPin = async (dLat, dLng) => {
     </div>
   );
 
-  // =========================================================================
-  // 3. CUSTOMER STOREFRONT & LIVE CROSS-DEVICE TRACKING
+// =========================================================================
+  // 3. CUSTOMER STOREFRONT ('From Farmer' Badge ONLY on Farmer Products)
   // =========================================================================
   if (currentUser.role === 'customer') {
     const activeAddr = savedAddresses.find((a) => a.id === activeAddrId) || savedAddresses[0];
@@ -1439,7 +1865,10 @@ const handleAdjustPin = async (dLat, dLng) => {
         items: itemsArr,
         total: payableTotal,
         cashback: estimatedCashback,
-        status: 'Order Placed',
+        status: 'Order Placed', // Broadcast alert to all nearby Farmers, Wholesale & Retail Shops
+        acceptedById: null,
+        acceptedByName: null,
+        declinedBy: [],
         driverName: null,
         driverMobile: null,
         driverLat: 14.4350,
@@ -1458,15 +1887,15 @@ const handleAdjustPin = async (dLat, dLng) => {
       setCurrentUser(updatedUser);
       setUsers((prev) => prev.map((u) => (u.id === updatedUser.id ? updatedUser : u)));
       setOrders((prev) => [newOrd, ...prev]);
-      // Sync live to Cloud Firestore so Friend's Delivery Phone receives it instantly
       setDoc(doc(db, 'orders', newOrd.id), newOrd).catch(() => {});
       setLastPlacedOrder(newOrd);
       setCart({});
       setUtrRefInput('');
       setActiveTab('orderPlaced');
+      notify('Order Broadcasted to all nearby Farms & Shops!');
     };
 
-    const handlePayAndPlaceOrderTrigger = () => {
+const handlePayAndPlaceOrderTrigger = () => {
       setCardError('');
       if (payMode === 'card') {
         const digits = cardNo.replace(/\s+/g, '');
@@ -1541,15 +1970,7 @@ const handleAdjustPin = async (dLat, dLng) => {
               <span>Use current location (Capture GPS & Pin Map)</span>
             </button>
 
-            <div className="flex items-center justify-between pt-1">
-              <span className="text-xs font-extrabold text-slate-500">Saved addresses</span>
-              <button type="button" onClick={handleUseCurrentLocationMap} className="text-xs font-extrabold text-[#15803D] flex items-center space-x-1">
-                <Plus className="h-3.5 w-3.5" />
-                <span>ADD NEW ADDRESS</span>
-              </button>
-            </div>
-
-<div className="space-y-2.5">
+            <div className="space-y-2.5">
               {filteredAddrs.map((addr) => (
                 <button
                   key={addr.id}
@@ -1564,17 +1985,11 @@ const handleAdjustPin = async (dLat, dLng) => {
                     activeAddrId === addr.id ? 'border-[#15803D] bg-emerald-50/60' : 'border-slate-200 bg-white shadow-sm'
                   }`}
                 >
-                  <div className="flex flex-col items-center space-y-1 flex-shrink-0">
-                    <div className="h-9 w-9 rounded-xl bg-emerald-100 text-[#15803D] flex items-center justify-center">
-                      {addr.tag === 'Office' ? <Briefcase className="h-4 w-4" /> : <Home className="h-4 w-4" />}
-                    </div>
-                    <span className="text-[10px] font-extrabold text-[#15803D]">{addr.distance}</span>
+                  <div className="h-9 w-9 rounded-xl bg-emerald-100 text-[#15803D] flex items-center justify-center flex-shrink-0">
+                    {addr.tag === 'Office' ? <Briefcase className="h-4 w-4" /> : <Home className="h-4 w-4" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-xs font-extrabold text-slate-900">{addr.tag}</h3>
-                      {activeAddrId === addr.id && <Check className="h-4 w-4 text-[#15803D]" />}
-                    </div>
+                    <h3 className="text-xs font-extrabold text-slate-900">{addr.tag} • {addr.distance}</h3>
                     <p className="text-[11px] text-slate-500 mt-0.5">{addr.full}</p>
                   </div>
                 </button>
@@ -1595,7 +2010,7 @@ const handleAdjustPin = async (dLat, dLng) => {
             <h1 className="text-sm font-extrabold tracking-wide uppercase">PIN DELIVERY LOCATION</h1>
           </div>
 
-          <div className="p-4 space-y-3.5">
+<div className="p-4 space-y-3.5">
             <div className="relative h-72 w-full rounded-3xl overflow-hidden border-2 border-emerald-200 bg-emerald-50 shadow-md">
               <iframe
                 title="Nellore Location Map"
@@ -1604,14 +2019,6 @@ const handleAdjustPin = async (dLat, dLng) => {
                 style={{ border: 0, display: 'block' }}
                 src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapPinCoords.lng - 0.008}%2C${mapPinCoords.lat - 0.008}%2C${mapPinCoords.lng + 0.008}%2C${mapPinCoords.lat + 0.008}&layer=mapnik&marker=${mapPinCoords.lat}%2C${mapPinCoords.lng}`}
               />
-              <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center pb-6">
-                <div className="bg-slate-900/90 text-white px-3 py-1.5 rounded-xl shadow text-center mb-1">
-                  <p className="text-[10px] font-extrabold">Your order will be delivered here</p>
-                </div>
-                <div className="h-9 w-9 rounded-full bg-[#15803D]/30 flex items-center justify-center">
-                  <div className="h-4 w-4 rounded-full bg-[#15803D] border-2 border-white shadow" />
-                </div>
-              </div>
               <div className="absolute right-2.5 top-2.5 flex flex-col space-y-1 bg-white/95 p-1.5 rounded-xl shadow border text-[10px] font-extrabold">
                 <button type="button" onClick={() => handleAdjustPin(0.0015, 0)} className="px-2 py-1 bg-slate-100 rounded">↑ N</button>
                 <button type="button" onClick={() => handleAdjustPin(-0.0015, 0)} className="px-2 py-1 bg-slate-100 rounded">↓ S</button>
@@ -1630,7 +2037,7 @@ const handleAdjustPin = async (dLat, dLng) => {
               </div>
             </div>
 
- <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+            <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm space-y-3">
               <div className="flex items-start justify-between space-x-2">
                 <div className="flex items-start space-x-2 flex-1">
                   <MapPin className="h-5 w-5 text-[#15803D] flex-shrink-0 mt-0.5" />
@@ -1653,15 +2060,6 @@ const handleAdjustPin = async (dLat, dLng) => {
                 </button>
               </div>
 
-              <div className="flex items-center space-x-2 text-[11px]">
-                <span className="font-bold text-slate-400">Save as:</span>
-                {['Home', 'Office', 'Others'].map((t) => (
-                  <button key={t} type="button" onClick={() => setMapPinTag(t)} className={`px-3 py-1 rounded-full font-extrabold border ${mapPinTag === t ? 'bg-emerald-50 border-[#15803D] text-[#15803D]' : 'bg-slate-50 text-slate-600'}`}>
-                    {t}
-                  </button>
-                ))}
-              </div>
-
               <button type="button" onClick={handleConfirmSetLocation} className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl text-sm shadow-md">
                 Set Location
               </button>
@@ -1671,6 +2069,7 @@ const handleAdjustPin = async (dLat, dLng) => {
       );
     }
 
+ // Customers see Farmer + Wholesaler + Retailer products; ONLY Farmer items show 'From Farmer' badge
     const visibleProducts = products.filter((p) => {
       const catOk = selectedCat === 'All' || p.cat === selectedCat;
       const q = search.toLowerCase();
@@ -1692,26 +2091,20 @@ const handleAdjustPin = async (dLat, dLng) => {
         {scratchCard && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-3xl p-6 text-center max-w-xs w-full space-y-4 shadow-2xl">
-              <div className="h-12 w-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto">
-                <Sparkles className="h-6 w-6" />
-              </div>
+              <Sparkles className="h-8 w-8 text-amber-500 mx-auto" />
               <h3 className="text-lg font-extrabold text-slate-900">Order {scratchCard.orderId} Delivered!</h3>
-              <p className="text-[11px] font-bold text-[#15803D]">Invoice PDF sent automatically to {currentUser.email}</p>
+              <p className="text-[11px] font-bold text-[#15803D]">Invoice PDF sent to {currentUser.email}</p>
               {!scratchCard.scratched ? (
                 <button
                   onClick={() => setScratchCard({ ...scratchCard, scratched: true })}
-                  className="w-full h-32 rounded-2xl bg-gradient-to-br from-[#EAB308] to-[#EA580C] text-white font-extrabold text-base shadow-lg flex flex-col items-center justify-center"
+                  className="w-full h-32 rounded-2xl bg-gradient-to-br from-[#EAB308] to-[#EA580C] text-white font-extrabold text-base shadow-lg"
                 >
-                  <span>TAP TO SCRATCH CARD</span>
-                  <span className="text-xs font-medium mt-1 opacity-90">Win up to ₹{scratchMax} Wallet Cashback</span>
+                  TAP TO SCRATCH CARD
                 </button>
               ) : (
-                <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-1">
+                <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200">
                   <p className="text-xl font-extrabold text-[#15803D]">
                     {scratchCard.reward > 0 ? `You Won ₹${scratchCard.reward}!` : 'Better Luck Next Time!'}
-                  </p>
-                  <p className="text-[11px] text-slate-500">
-                    {scratchCard.reward > 0 ? 'Added to Rythu Wallet (15-day validity).' : 'Order again for your next reward!'}
                   </p>
                 </div>
               )}
@@ -1722,7 +2115,7 @@ const handleAdjustPin = async (dLat, dLng) => {
           </div>
         )}
 
-{activeTab === 'home' && (
+        {activeTab === 'home' && (
           <main className="px-4 pt-3.5 space-y-4 text-xs">
             <div className="flex items-center justify-between">
               <button
@@ -1755,7 +2148,6 @@ const handleAdjustPin = async (dLat, dLng) => {
                 </button>
                 <button onClick={() => setActiveTab('orders')} className="h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center relative">
                   <Bell className="h-4 w-4 text-slate-700" />
-                  <span className="absolute top-1.5 right-2 h-2 w-2 rounded-full bg-rose-500" />
                 </button>
               </div>
             </div>
@@ -1784,7 +2176,7 @@ const handleAdjustPin = async (dLat, dLng) => {
               />
             </div>
 
-            <div className="grid grid-cols-4 gap-2 text-center">
+<div className="grid grid-cols-4 gap-2 text-center">
               {TOP_CATEGORIES.map((c) => {
                 const active = selectedCat === c.id;
                 return (
@@ -1801,59 +2193,10 @@ const handleAdjustPin = async (dLat, dLng) => {
               })}
             </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-extrabold text-slate-900">Popular Categories</h3>
-                <button type="button" onClick={() => setActiveTab('categories')} className="text-xs font-extrabold text-[#15803D]">
-                  See All &gt;
-                </button>
-              </div>
-              <div className="grid grid-cols-4 gap-2 text-center">
-                {POPULAR_CIRCLES.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => {
-                      const found = products.find((p) => p.id === item.id);
-                      if (found) {
-                        setDetailProduct(found);
-                        setDetailQty(cart[found.id] || 1);
-                        setActiveTab('productDetail');
-                      }
-                    }}
-                    className="space-y-1"
-                  >
-                    <div className="h-14 w-14 rounded-full bg-white p-1 border border-slate-200 shadow-sm mx-auto overflow-hidden">
-                      <img src={item.img} alt={item.name} className="h-full w-full object-cover rounded-full" />
-                    </div>
-                    <p className="text-[10px] font-bold text-slate-700 truncate">{item.name}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {offersEnabled && (
-              <div className="bg-gradient-to-r from-[#86EFAC] to-[#FEF08A] rounded-2xl p-3.5 flex items-center justify-between shadow-sm">
-                <div>
-                  <span className="bg-[#15803D] text-white text-[9px] font-extrabold px-2 py-0.5 rounded">
-                    Special Offer • Order #{orderNum}
-                  </span>
-                  <h4 className="text-sm font-extrabold text-slate-900 mt-1">
-                    {orderNum <= 2 ? 'Get 50% OFF on Fresh Produce' : 'Get 25% OFF + Free Delivery ₹99+'}
-                  </h4>
-                </div>
-                <img
-                  src="https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=140&q=80"
-                  alt="Offer"
-                  className="h-14 w-14 rounded-xl object-cover"
-                />
-              </div>
-            )}
-
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-extrabold text-slate-900">
-                  {selectedCat === 'All' ? 'Fresh Harvest in Nellore' : selectedCat}
+                  {selectedCat === 'All' ? 'Fresh Harvest & Store Produce' : selectedCat}
                 </h3>
                 {selectedCat !== 'All' && (
                   <button onClick={() => setSelectedCat('All')} className="text-[11px] font-extrabold text-[#15803D]">
@@ -1864,6 +2207,7 @@ const handleAdjustPin = async (dLat, dLng) => {
 
               {visibleProducts.map((p) => {
                 const q = cart[p.id] || 0;
+                const isFarmerItem = (p.postedByRole || 'farmer') === 'farmer';
                 return (
                   <div key={p.id} className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex items-center justify-between">
                     <div
@@ -1876,6 +2220,13 @@ const handleAdjustPin = async (dLat, dLng) => {
                     >
                       <img src={p.img} alt={p.nameEn} className="h-16 w-16 rounded-2xl object-cover bg-slate-50" />
                       <div>
+                        {/* STRICTLY SHOW 'From Farmer' ONLY WHEN POSTED BY A FARMER */}
+                        {isFarmerItem && (
+                          <span className="inline-flex items-center space-x-1 bg-emerald-100 text-[#15803D] text-[9px] font-extrabold px-2 py-0.5 rounded-full mb-0.5">
+                            <Sprout className="h-2.5 w-2.5" />
+                            <span>From Farmer</span>
+                          </span>
+                        )}
                         <h4 className="text-xs font-extrabold text-slate-900">{p.nameEn}</h4>
                         <p className="text-[11px] font-bold text-[#15803D]">{p.nameTe} • {p.packLabel}</p>
                         <div className="mt-1">
@@ -1885,7 +2236,7 @@ const handleAdjustPin = async (dLat, dLng) => {
                       </div>
                     </div>
 
-  {!p.inStock ? (
+                    {!p.inStock ? (
                       <span className="text-[10px] font-extrabold text-rose-500 bg-rose-50 px-2.5 py-1.5 rounded-xl">Sold Out</span>
                     ) : q === 0 ? (
                       <button
@@ -1928,24 +2279,19 @@ const handleAdjustPin = async (dLat, dLng) => {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { id: 'Vegetables', title: 'Vegetables', te: 'కూరగాయలు', img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=300&q=80' },
-                { id: 'Fruits', title: 'Fruits', te: 'పండ్లు', img: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=300&q=80' },
-                { id: 'Staples', title: 'Groceries & Rice', te: 'బియ్యం & కిరాణా', img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=300&q=80' },
-                { id: 'Leafy Greens', title: 'Leafy Greens', te: 'ఆకుకూరలు', img: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=300&q=80' },
-              ].map((cat) => (
+ <div className="grid grid-cols-2 gap-3">
+              {TOP_CATEGORIES.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => {
                     setSelectedCat(cat.id);
                     setActiveTab('home');
                   }}
-                  className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 text-center space-y-2 hover:border-[#15803D] transition"
+                  className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 text-center space-y-2"
                 >
-                  <img src={cat.img} alt={cat.title} className="h-24 w-24 rounded-2xl object-cover mx-auto" />
-                  <h3 className="text-sm font-extrabold text-slate-900">{cat.title}</h3>
-                  <p className="text-[11px] font-bold text-[#15803D]">{cat.te}</p>
+                  <img src={cat.img} alt={cat.labelEn} className="h-24 w-24 rounded-2xl object-cover mx-auto" />
+                  <h3 className="text-sm font-extrabold text-slate-900">{cat.labelEn}</h3>
+                  <p className="text-[11px] font-bold text-[#15803D]">{cat.labelTe}</p>
                 </button>
               ))}
             </div>
@@ -1959,54 +2305,29 @@ const handleAdjustPin = async (dLat, dLng) => {
               <button onClick={() => setActiveTab('home')} className="absolute top-4 left-4 h-9 w-9 rounded-full bg-white/90 flex items-center justify-center shadow">
                 <ArrowLeft className="h-4 w-4" />
               </button>
-              <button
-                onClick={() => setWishlist((w) => (w.includes(detailProduct.id) ? w.filter((x) => x !== detailProduct.id) : [...w, detailProduct.id]))}
-                className="absolute top-4 right-4 h-9 w-9 rounded-full bg-white/90 flex items-center justify-center shadow"
-              >
-                <Heart className={`h-4 w-4 ${wishlist.includes(detailProduct.id) ? 'fill-rose-500 text-rose-500' : 'text-slate-600'}`} />
-              </button>
             </div>
-
             <div className="p-5 space-y-4">
               <div>
-                <span className="text-[10px] font-extrabold bg-emerald-50 text-[#15803D] px-2.5 py-1 rounded-full">
-                  {detailProduct.farmerName} ({detailProduct.distanceKm} km)
-                </span>
+                {(detailProduct.postedByRole || 'farmer') === 'farmer' && (
+                  <span className="inline-flex items-center space-x-1 bg-emerald-100 text-[#15803D] text-[10px] font-extrabold px-2.5 py-1 rounded-full">
+                    <Sprout className="h-3 w-3" />
+                    <span>From Farmer • {detailProduct.farmerName}</span>
+                  </span>
+                )}
                 <h2 className="text-xl font-extrabold text-slate-900 mt-2">{detailProduct.nameEn}</h2>
-                <p className="text-sm font-bold text-[#15803D]">{detailProduct.nameTe}</p>
+                <p className="text-sm font-bold text-[#15803D]">{detailProduct.nameTe} • ₹{detailProduct.retailPrice} / {detailProduct.packLabel}</p>
               </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-2xl font-extrabold text-slate-900">₹{detailProduct.retailPrice}</span>
-                  <span className="text-xs text-slate-400 font-bold"> / {detailProduct.packLabel}</span>
-                </div>
-                <div className="flex items-center space-x-1 bg-amber-50 px-2.5 py-1 rounded-full font-extrabold text-amber-800">
-                  <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                  <span>{detailProduct.rating} ({detailProduct.reviews} reviews)</span>
-                </div>
-              </div>
-
-              <p className="text-slate-600 leading-relaxed">{detailProduct.desc}</p>
-
-              <div className="flex items-center justify-between pt-3 border-t">
-                <div className="flex items-center border border-slate-200 rounded-2xl px-3 py-2 space-x-4 font-extrabold text-base">
-                  <button onClick={() => setDetailQty(Math.max(1, detailQty - 1))}>-</button>
-                  <span>{detailQty}</span>
-                  <button onClick={() => setDetailQty(detailQty + 1)}>+</button>
-                </div>
-
-<button
-                  onClick={() => {
-                    setCart({ ...cart, [detailProduct.id]: detailQty });
-                    notify('Added to Cart!');
-                    setActiveTab('cart');
-                  }}
-                  className="flex-1 ml-3 bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
-                >
-                  Add to Cart • ₹{detailProduct.retailPrice * detailQty}
-                </button>
-              </div>
+              <p className="text-slate-600">{detailProduct.desc}</p>
+              <button
+                onClick={() => {
+                  setCart({ ...cart, [detailProduct.id]: detailQty });
+                  notify('Added to Cart!');
+                  setActiveTab('cart');
+                }}
+                className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
+              >
+                Add to Cart • ₹{detailProduct.retailPrice * detailQty}
+              </button>
             </div>
           </main>
         )}
@@ -2019,7 +2340,6 @@ const handleAdjustPin = async (dLat, dLng) => {
                 <button onClick={() => setCart({})} className="text-rose-600 font-extrabold">Clear All</button>
               )}
             </div>
-
             {Object.keys(cart).length === 0 ? (
               <div className="bg-white rounded-3xl p-8 text-center font-bold text-slate-400 shadow-sm">Your cart is empty.</div>
             ) : (
@@ -2036,29 +2356,20 @@ const handleAdjustPin = async (dLat, dLng) => {
                           <p className="text-[#15803D] font-extrabold">₹{p.retailPrice} / {p.packLabel}</p>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="flex items-center border border-slate-200 rounded-xl px-2.5 py-1 space-x-2.5 font-extrabold">
-                          <button onClick={() => setCart((c) => { const n = { ...c }; if (n[id] <= 1) delete n[id]; else n[id]--; return n; })}>-</button>
-                          <span>{qty}</span>
-                          <button onClick={() => setCart({ ...cart, [id]: qty + 1 })}>+</button>
-                        </div>
-                        <button onClick={() => setCart((c) => { const n = { ...c }; delete n[id]; return n; })} className="p-1.5 text-slate-400 hover:text-rose-500">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                      <div className="flex items-center border border-slate-200 rounded-xl px-2.5 py-1 space-x-2.5 font-extrabold">
+                        <button onClick={() => setCart((c) => { const n = { ...c }; if (n[id] <= 1) delete n[id]; else n[id]--; return n; })}>-</button>
+                        <span>{qty}</span>
+                        <button onClick={() => setCart({ ...cart, [id]: qty + 1 })}>+</button>
                       </div>
                     </div>
                   );
                 })}
-
                 <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-2">
                   <div className="flex justify-between text-sm font-extrabold">
                     <span>Subtotal</span>
                     <span>₹{subtotal}</span>
                   </div>
-                  <button
-                    onClick={() => setActiveTab('checkout')}
-                    className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
-                  >
+                  <button onClick={() => setActiveTab('checkout')} className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm">
                     Proceed to Checkout
                   </button>
                 </div>
@@ -2067,19 +2378,13 @@ const handleAdjustPin = async (dLat, dLng) => {
           </main>
         )}
 
-        {activeTab === 'checkout' && (
+ {activeTab === 'checkout' && (
           <main className="p-4 space-y-3.5 text-xs">
             <div className="flex items-center space-x-3">
               <button onClick={() => setActiveTab('cart')} className="p-2 rounded-full bg-white shadow-sm">
                 <ArrowLeft className="h-4 w-4" />
               </button>
               <h2 className="text-base font-extrabold text-slate-900">Checkout</h2>
-            </div>
-
-            <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 grid grid-cols-3 text-center font-extrabold text-[10px]">
-              <div className="text-[#15803D]">● Address</div>
-              <div className="text-[#15803D]">● Payment</div>
-              <div className="text-[#15803D]">● Review</div>
             </div>
 
             <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-start justify-between">
@@ -2090,71 +2395,27 @@ const handleAdjustPin = async (dLat, dLng) => {
               <button onClick={() => setActiveTab('selectLocation')} className="text-[#15803D] font-extrabold">Change</button>
             </div>
 
-            <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
-              <div>
-                <p className="font-extrabold text-slate-900">Delivery Slot</p>
-                <p className="text-slate-500 mt-0.5">{deliverySlot}</p>
-              </div>
-              <button
-                onClick={() => setDeliverySlot(deliverySlot.includes('Today') ? 'Tomorrow, 7:00 AM – 9:00 AM' : 'Today, 6:00 PM – 8:00 PM')}
-                className="text-[#15803D] font-extrabold"
-              >
-                Change
-              </button>
-            </div>
-
             <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
-              <div className="flex space-x-2">
-                <input type="text" value={promoInput} onChange={(e) => setPromoInput(e.target.value.toUpperCase())} placeholder="Promo Code: RYTHU30" className="flex-1 bg-slate-50 border rounded-xl px-3 py-2 font-extrabold" />
-                <button onClick={() => { setAppliedPromo('RYTHU30'); notify('RYTHU30 Applied (-₹30)'); }} className="bg-[#15803D] text-white font-extrabold px-4 rounded-xl">
-                  Apply
-                </button>
-              </div>
-              {(currentUser.wallet || 0) > 0 && (
-                <label className="flex items-center justify-between p-2.5 bg-amber-50 border border-amber-200 rounded-xl font-extrabold text-amber-950">
-                  <span>Use Rythu Wallet (Available: ₹{currentUser.wallet})</span>
-                  <input type="checkbox" checked={useWalletBalance} onChange={(e) => setUseWalletBalance(e.target.checked)} className="accent-[#15803D] h-4 w-4" />
-                </label>
-              )}
-            </div>
-
-<div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
               <div className="flex items-center justify-between">
                 <h3 className="font-extrabold text-slate-900">Payment Method</h3>
                 <span className="text-[10px] font-bold text-[#15803D]">{merchantUpiId}</span>
               </div>
-
               {[
                 { id: 'phonepe', label: 'PhonePe UPI' },
                 { id: 'gpay', label: 'Google Pay (GPay)' },
-                { id: 'paytm', label: `Paytm (₹${Math.max(5, Math.round(payableTotal * 0.05))} Cashback)` },
-                { id: 'cred', label: `CRED UPI (₹${Math.max(10, Math.round(payableTotal * 0.08))} Cashback)` },
-                { id: 'card', label: `Credit / Debit Card (₹${Math.max(5, Math.round(payableTotal * 0.05))} Cashback)` },
+                { id: 'paytm', label: 'Paytm UPI' },
+                { id: 'cred', label: 'CRED UPI' },
+                { id: 'card', label: 'Credit / Debit Card' },
                 { id: 'cod', label: 'Cash on Delivery (COD)' },
               ].map((pm) => (
-                <div key={pm.id} className={`rounded-xl border-2 p-2.5 transition ${payMode === pm.id ? 'border-[#15803D] bg-emerald-50/40' : 'border-slate-100'}`}>
-                  <label onClick={() => setPayMode(pm.id)} className="flex items-center justify-between cursor-pointer">
-                    <div className="flex items-center space-x-2.5">
-                      <PaymentBadge type={pm.id} />
-                      <span className="font-extrabold text-slate-800">{pm.label}</span>
-                    </div>
-                    <input type="radio" checked={payMode === pm.id} onChange={() => setPayMode(pm.id)} className="accent-[#15803D]" />
-                  </label>
-
-                  {payMode === pm.id && (pm.id === 'phonepe' || pm.id === 'gpay' || pm.id === 'paytm' || pm.id === 'cred') && (
-                    <div className="mt-2 pt-2 border-t border-emerald-200/70">
-                      <a
-                        href={buildPaymentLaunchUrl(pm.id, merchantUpiId, payableTotal)}
-                        onClick={() => setTimeout(() => setActiveTab('upiProcessing'), 400)}
-                        className="block w-full bg-[#15803D] text-white text-center font-extrabold py-2 rounded-xl shadow-sm"
-                      >
-                        Open {pm.label.split(' (')[0]} & Pay ₹{payableTotal} ↗
-                      </a>
-                    </div>
-                  )}
-                </div>
+                <label key={pm.id} onClick={() => setPayMode(pm.id)} className={`flex items-center justify-between rounded-xl border-2 p-2.5 cursor-pointer ${payMode === pm.id ? 'border-[#15803D] bg-emerald-50/40' : 'border-slate-100'}`}>
+                  <div className="flex items-center space-x-2.5">
+                    <PaymentBadge type={pm.id} />
+                    <span className="font-extrabold text-slate-800">{pm.label}</span>
+                  </div>
+                  <input type="radio" checked={payMode === pm.id} onChange={() => setPayMode(pm.id)} className="accent-[#15803D]" />
+                </label>
               ))}
-
               {payMode === 'card' && (
                 <div className="pt-2 space-y-2">
                   <input type="text" maxLength={19} value={cardNo} onChange={(e) => setCardNo(e.target.value)} placeholder="16-Digit Card Number" className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
@@ -2170,8 +2431,6 @@ const handleAdjustPin = async (dLat, dLng) => {
             <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-1.5">
               <div className="flex justify-between"><span>Subtotal</span><span className="font-bold">₹{subtotal}</span></div>
               {autoTierDiscount > 0 && <div className="flex justify-between text-[#15803D] font-extrabold"><span>{autoTierLabel}</span><span>-₹{autoTierDiscount}</span></div>}
-              {promoDeduction > 0 && <div className="flex justify-between text-[#15803D] font-extrabold"><span>Promo RYTHU30</span><span>-₹{promoDeduction}</span></div>}
-              {walletDeduction > 0 && <div className="flex justify-between text-amber-700 font-extrabold"><span>Wallet Used</span><span>-₹{walletDeduction}</span></div>}
               <div className="flex justify-between"><span>Delivery (Free ₹99+)</span><span className="font-bold">{deliveryFee === 0 ? 'FREE' : `₹${deliveryFee}`}</span></div>
               <div className="border-t pt-2 flex justify-between text-sm font-extrabold text-slate-900"><span>Payable Total</span><span>₹{payableTotal}</span></div>
 
@@ -2195,21 +2454,12 @@ const handleAdjustPin = async (dLat, dLng) => {
         {activeTab === 'upiProcessing' && (
           <main className="p-4 space-y-4 text-xs">
             <div className="bg-white rounded-3xl p-5 shadow-md border border-emerald-200 text-center space-y-3">
-              <div className="flex justify-center">
-                <PaymentBadge type={payMode} />
-              </div>
               <h2 className="text-base font-extrabold text-slate-900">Pay ₹{payableTotal} to {merchantUpiId}</h2>
               <a href={paymentAppLaunchUrl} className="block w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow">
                 Open {payMode.toUpperCase()} App Now ↗
               </a>
               <img src={genericUpiQr} alt="UPI QR" className="w-32 h-32 mx-auto rounded-xl border p-1 bg-white" />
-              <input
-                type="text"
-                value={utrRefInput}
-                onChange={(e) => setUtrRefInput(e.target.value)}
-                placeholder="Enter 12-Digit UPI UTR / Ref ID (Optional)"
-                className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 text-center font-bold"
-              />
+              <input type="text" value={utrRefInput} onChange={(e) => setUtrRefInput(e.target.value)} placeholder="Enter 12-Digit UPI UTR (Optional)" className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 text-center font-bold" />
               <button type="button" onClick={finalizeCustomerOrder} className="w-full bg-[#EA580C] text-white font-extrabold py-3.5 rounded-2xl shadow-lg text-sm">
                 Payment Completed — Confirm Order ➔
               </button>
@@ -2225,7 +2475,7 @@ const handleAdjustPin = async (dLat, dLng) => {
             <div className="space-y-1">
               <h2 className="text-xl font-extrabold text-slate-900">Order Placed Successfully!</h2>
               <p className="text-xs font-extrabold text-[#15803D]">Order ID: {lastPlacedOrder.id}</p>
-              <p className="text-xs text-slate-500 pt-1">You will receive live updates on your order status</p>
+              <p className="text-xs text-slate-500 pt-1">Alert sent to all nearby Farms & Shops. Waiting for store confirmation.</p>
             </div>
             <div className="w-full space-y-2.5 pt-2">
               <button
@@ -2237,17 +2487,14 @@ const handleAdjustPin = async (dLat, dLng) => {
               >
                 Track Order (Live GPS)
               </button>
-              <button
-                onClick={() => setActiveTab('home')}
-                className="w-full border border-slate-300 text-slate-800 font-extrabold py-3.5 rounded-2xl text-sm"
-              >
+              <button onClick={() => setActiveTab('home')} className="w-full border border-slate-300 text-slate-800 font-extrabold py-3.5 rounded-2xl text-sm">
                 Continue Shopping
               </button>
             </div>
           </main>
         )}
 
-{activeTab === 'trackOrder' && trackingOrder && (
+ {activeTab === 'trackOrder' && trackingOrder && (
           <main className="pb-10 text-xs">
             <div className="bg-gradient-to-b from-[#15803D] to-[#22C55E] text-white p-5 rounded-b-[32px] shadow-md space-y-2">
               <div className="flex items-center space-x-3">
@@ -2257,7 +2504,7 @@ const handleAdjustPin = async (dLat, dLng) => {
                 <div>
                   <h2 className="text-base font-extrabold">{trackingOrder.status}</h2>
                   <p className="text-[11px] text-emerald-100">
-                    {trackingOrder.driverName ? `Live GPS: ${trackingOrder.driverCoords}` : 'Waiting for Delivery Partner...'} • {trackingOrder.id}
+                    {trackingOrder.acceptedByName ? `Accepted by: ${trackingOrder.acceptedByName}` : 'Alert sent to nearby Farms & Shops'}
                   </p>
                 </div>
               </div>
@@ -2273,64 +2520,16 @@ const handleAdjustPin = async (dLat, dLng) => {
                   src={`https://www.openstreetmap.org/export/embed.html?bbox=${liveLng - 0.008}%2C${liveLat - 0.008}%2C${liveLng + 0.008}%2C${liveLat + 0.008}&layer=mapnik&marker=${liveLat}%2C${liveLng}`}
                 />
                 <span className="absolute bottom-2 left-2 bg-slate-900/85 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full">
-                  Live Rider GPS: {liveLat}, {liveLng}
+                  Live GPS: {liveLat}, {liveLng}
                 </span>
               </div>
 
-              <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-3">
-                {['Order Placed', 'Partner Assigned', 'Out for Delivery', 'Delivered'].map((step, idx) => {
-                  const activeStep =
-                    trackingOrder.status === 'Delivered' ||
-                    idx === 0 ||
-                    (idx <= 2 && trackingOrder.status === 'Partner Assigned');
-                  return (
-                    <div key={step} className="flex items-center space-x-3">
-                      <div className={`h-6 w-6 rounded-full flex items-center justify-center text-white font-bold ${activeStep ? 'bg-[#15803D]' : 'bg-slate-200'}`}>
-                        ✓
-                      </div>
-                      <div>
-                        <p className="font-extrabold text-slate-900">{step}</p>
-                        <p className="text-[10px] text-slate-400">{trackingOrder.date}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="h-11 w-11 rounded-full bg-emerald-100 text-[#15803D] font-extrabold flex items-center justify-center">
-                    {(trackingOrder.driverName || 'DP').slice(0, 2).toUpperCase()}
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-slate-400 font-bold">Delivery Partner</p>
-                    <h4 className="font-extrabold text-slate-900">{trackingOrder.driverName || 'Assigning Rider...'}</h4>
-                  </div>
-                </div>
-                {trackingOrder.driverMobile && (
-                  <div className="flex space-x-2">
-                    <a href={`tel:${trackingOrder.driverMobile}`} className="p-2.5 bg-emerald-50 text-[#15803D] rounded-full">
-                      <Phone className="h-4 w-4" />
-                    </a>
-                    <a href={`sms:${trackingOrder.driverMobile}`} className="p-2.5 bg-sky-50 text-sky-600 rounded-full">
-                      <MessageSquare className="h-4 w-4" />
-                    </a>
-                  </div>
-                )}
-              </div>
-
               {trackingOrder.status !== 'Delivered' ? (
-                <button
-                  onClick={() => handleSimulateCustomerDelivery(trackingOrder)}
-                  className="w-full bg-[#EA580C] text-white font-extrabold py-3.5 rounded-2xl shadow"
-                >
-                  Complete Delivery (Auto Email Invoice PDF + Cashback)
+                <button onClick={() => handleSimulateCustomerDelivery(trackingOrder)} className="w-full bg-[#EA580C] text-white font-extrabold py-3.5 rounded-2xl shadow">
+                  Complete Delivery (Auto Email Invoice PDF)
                 </button>
               ) : (
-                <button
-                  onClick={() => window.print()}
-                  className="w-full bg-slate-900 text-white font-extrabold py-3.5 rounded-2xl shadow flex items-center justify-center space-x-2"
-                >
+                <button onClick={() => window.print()} className="w-full bg-slate-900 text-white font-extrabold py-3.5 rounded-2xl shadow flex items-center justify-center space-x-2">
                   <Printer className="h-4 w-4" />
                   <span>Download / Print Invoice PDF</span>
                 </button>
@@ -2342,76 +2541,21 @@ const handleAdjustPin = async (dLat, dLng) => {
         {activeTab === 'orders' && (
           <main className="p-4 space-y-3.5 text-xs">
             <h2 className="text-base font-extrabold text-slate-900">My Orders</h2>
-
-            <div className="flex space-x-2">
-              {['All', 'Ongoing', 'Delivered'].map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setOrderListFilter(f)}
-                  className={`px-4 py-1.5 rounded-full font-extrabold ${orderListFilter === f ? 'bg-[#15803D] text-white' : 'bg-white text-slate-600 border'}`}
-                >
-                  {f}
-                </button>
-              ))}
-            </div>
-
-  {orders.filter((o) => o.buyerRole === 'customer').length === 0 ? (
+            {orders.filter((o) => o.buyerRole === 'customer').length === 0 ? (
               <div className="bg-white rounded-3xl p-8 text-center font-bold text-slate-400">No orders placed yet.</div>
             ) : (
               orders
                 .filter((o) => o.buyerRole === 'customer')
-                .filter((o) => (orderListFilter === 'All' ? true : orderListFilter === 'Delivered' ? o.status === 'Delivered' : o.status !== 'Delivered'))
                 .map((ord) => (
-                  <div key={ord.id} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2.5">
-                        <div className="h-10 w-10 rounded-full bg-emerald-50 text-[#15803D] flex items-center justify-center">
-                          <Truck className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <h4 className="font-extrabold text-slate-900">{ord.id}</h4>
-                          <p className="text-[10px] text-slate-400">{ord.date}</p>
-                        </div>
-                      </div>
-                      <span className="font-extrabold text-sm">₹{ord.total}</span>
+                  <div key={ord.id} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-2">
+                    <div className="flex justify-between font-extrabold">
+                      <span>{ord.id} • {ord.status}</span>
+                      <span>₹{ord.total}</span>
                     </div>
-
-                    <div className="flex items-center justify-between pt-2 border-t gap-2">
-                      <span className="font-extrabold text-[#15803D]">{ord.status}</span>
-                      {ord.status === 'Delivered' ? (
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => window.print()}
-                            className="bg-slate-900 text-white font-extrabold px-3 py-1.5 rounded-xl flex items-center space-x-1"
-                          >
-                            <Printer className="h-3.5 w-3.5" />
-                            <span>PDF</span>
-                          </button>
-                          <button
-                            onClick={() => {
-                              const updatedCart = {};
-                              ord.items.forEach((it) => { updatedCart[it.id] = it.qty; });
-                              setCart(updatedCart);
-                              setActiveTab('cart');
-                              notify('Cart updated with present day rates!');
-                            }}
-                            className="bg-[#15803D] text-white font-extrabold px-3.5 py-1.5 rounded-xl"
-                          >
-                            Reorder
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => {
-                            setTrackingOrder(ord);
-                            setActiveTab('trackOrder');
-                          }}
-                          className="text-[#15803D] font-extrabold"
-                        >
-                          Track Order &gt;
-                        </button>
-                      )}
-                    </div>
+                    {ord.acceptedByName && <p className="text-[11px] font-bold text-[#15803D]">Fulfilled by: {ord.acceptedByName}</p>}
+                    <button onClick={() => { setTrackingOrder(ord); setActiveTab('trackOrder'); }} className="text-[#15803D] font-extrabold">
+                      Track Order &gt;
+                    </button>
                   </div>
                 ))
             )}
@@ -2425,12 +2569,10 @@ const handleAdjustPin = async (dLat, dLng) => {
             <Home className="h-5 w-5 mb-0.5" />
             <span>Home</span>
           </button>
-
           <button onClick={() => setActiveTab('categories')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'categories' ? 'text-[#15803D]' : 'text-slate-400'}`}>
             <Grid className="h-5 w-5 mb-0.5" />
             <span>Categories</span>
           </button>
-
           <button onClick={() => setActiveTab('cart')} className={`relative flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'cart' || activeTab === 'checkout' ? 'text-[#15803D]' : 'text-slate-400'}`}>
             <ShoppingCart className="h-5 w-5 mb-0.5" />
             <span>Cart</span>
@@ -2440,12 +2582,10 @@ const handleAdjustPin = async (dLat, dLng) => {
               </span>
             )}
           </button>
-
           <button onClick={() => setActiveTab('orders')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'orders' || activeTab === 'trackOrder' ? 'text-[#15803D]' : 'text-slate-400'}`}>
             <ClipboardList className="h-5 w-5 mb-0.5" />
             <span>Orders</span>
           </button>
-
           <button onClick={() => setActiveTab('profile')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'profile' ? 'text-[#15803D]' : 'text-slate-400'}`}>
             <User className="h-5 w-5 mb-0.5" />
             <span>Profile</span>
@@ -2455,46 +2595,75 @@ const handleAdjustPin = async (dLat, dLng) => {
     );
   }
 
- // =========================================================================
-  // 4. FARMER PORTAL
+  // =========================================================================
+  // BROADCAST CUSTOMER ORDER ALERT BOX (SHOWN TO ALL FARMERS, WHOLESALE & RETAIL SHOPS)
+  // =========================================================================
+  const renderBroadcastOrderAlerts = () => {
+    const openCustomerAlerts = orders.filter(
+      (o) =>
+        o.status === 'Order Placed' &&
+        !o.acceptedById &&
+        !(o.declinedBy || []).includes(currentUser.id)
+    );
+
+    if (openCustomerAlerts.length === 0) return null;
+
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center space-x-1.5 text-xs font-extrabold text-amber-800">
+          <Bell className="h-4 w-4 text-[#EA580C] animate-bounce" />
+          <span>New Nearby Customer Order Alert ({openCustomerAlerts.length})</span>
+        </div>
+        {openCustomerAlerts.map((ord) => (
+          <div key={ord.id} className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-3.5 shadow-sm space-y-2">
+            <div className="flex justify-between font-extrabold text-slate-900">
+              <span>Order #{ord.id} • {ord.buyerName}</span>
+              <span className="text-[#15803D]">₹{ord.total}</span>
+            </div>
+            <p className="text-[11px] text-slate-700">
+              Items: {ord.items.map((i) => `${i.qty} ${i.unit || 'Kg'} ${i.name}`).join(', ')}
+            </p>
+            <p className="text-[10px] text-slate-500">Deliver to: {ord.buyerAddress}</p>
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  const updateData = {
+                    status: 'Order Accepted',
+                    acceptedById: currentUser.id,
+                    acceptedByName: `${currentUser.name} (${currentUser.role.toUpperCase()})`,
+                  };
+                  setOrders((prev) => prev.map((o) => (o.id === ord.id ? { ...o, ...updateData } : o)));
+                  updateDoc(doc(db, 'orders', ord.id), updateData).catch(() => {});
+                  notify(`Order #${ord.id} Accepted! Alert stopped for other stores.`);
+                }}
+                className="bg-[#15803D] text-white font-extrabold py-2.5 rounded-xl shadow-sm"
+              >
+                ✓ Accept Order
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const nextDeclined = [...(ord.declinedBy || []), currentUser.id];
+                  setOrders((prev) => prev.map((o) => (o.id === ord.id ? { ...o, declinedBy: nextDeclined } : o)));
+                  updateDoc(doc(db, 'orders', ord.id), { declinedBy: nextDeclined }).catch(() => {});
+                  notify(`Declined Order #${ord.id}`);
+                }}
+                className="bg-white border border-rose-300 text-rose-600 font-extrabold py-2.5 rounded-xl"
+              >
+                ✕ Decline
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+// =========================================================================
+  // 4. FARMER PORTAL (POSTS VISIBLE TO WHOLESALE, RETAIL & CUSTOMERS)
   // =========================================================================
   if (currentUser.role === 'farmer') {
-    const handlePublishFarmerProduct = (e) => {
-      e.preventDefault();
-      if (!fNameEn.trim() || !fPrice) return;
-      const newProd = {
-        id: 'p_' + Date.now(),
-        farmerId: currentUser.id,
-        farmerName: `${currentUser.name} • 14 km`,
-        distanceKm: 14,
-        nameEn: fNameEn.trim(),
-        nameTe: fNameTe.trim() || fNameEn.trim(),
-        cat: 'Vegetables',
-        unit: fUnit,
-        packLabel: `1 ${fUnit}`,
-        mrp: Number(fPrice) + 16,
-        retailPrice: Number(fPrice) + 10,
-        farmerDirectPrice: Number(fPrice),
-        wholesalePrice: Number(fPrice) + 4,
-        minWholesaleQty: 25,
-        stockKg: Number(fQty),
-        inStock: true,
-        rating: 4.8,
-        reviews: 12,
-        desc: 'Fresh harvest directly from Nellore farmer.',
-        availableFrom: fAvailTime,
-        img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=400&q=80',
-      };
-      setProducts([newProd, ...products]);
-      setNotifications((prev) => [
-        `40km Wholesale Alert: ${currentUser.name} listed ${fQty} ${fUnit} ${newProd.nameEn} (${newProd.nameTe}) • ${fAvailTime}.`,
-        ...prev,
-      ]);
-      setFNameEn('');
-      setFNameTe('');
-      notify('Produce Listed! Notification sent to Wholesale Shops within 40 km.');
-    };
-
     return (
       <div style={fontStyle} className="min-h-screen bg-[#F5F7F5] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
         <WelcomeSmileModal />
@@ -2505,14 +2674,14 @@ const handleAdjustPin = async (dLat, dLng) => {
             <MapPin className="h-4 w-4 text-[#15803D]" />
             <span className="text-xs font-extrabold text-slate-900">{currentUser.address} ▾</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <span className="bg-emerald-50 text-[#15803D] text-xs font-extrabold px-3 py-1 rounded-full">₹{currentUser.wallet || 0}</span>
-            <Bell className="h-4 w-4 text-slate-600" />
-          </div>
+          <span className="bg-emerald-50 text-[#15803D] text-xs font-extrabold px-3 py-1 rounded-full">₹{currentUser.wallet || 0}</span>
         </header>
 
         {activeTab === 'home' && (
           <main className="p-4 space-y-4 text-xs">
+            {/* LIVE CUSTOMER ORDER ALERTS FOR FARMER */}
+            {renderBroadcastOrderAlerts()}
+
             <div className="bg-gradient-to-r from-[#DCFCE7] via-[#BBF7D0] to-[#86EFAC] rounded-3xl p-4 shadow-sm flex items-center justify-between">
               <div className="space-y-2 max-w-[58%]">
                 <h2 className="text-base font-extrabold text-[#0F5132] leading-snug">
@@ -2526,15 +2695,7 @@ const handleAdjustPin = async (dLat, dLng) => {
                   List Your Produce →
                 </button>
               </div>
-              <img
-                src={FARMER_HERO_IMG}
-                onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = '/icon-512.png';
-                }}
-                alt="Farmer"
-                className="h-24 w-24 rounded-2xl object-cover object-top shadow"
-              />
+              <img src={FARMER_HERO_IMG} alt="Farmer" className="h-24 w-24 rounded-2xl object-cover object-top shadow" />
             </div>
 
             <div className="grid grid-cols-3 gap-2.5 text-center">
@@ -2548,11 +2709,7 @@ const handleAdjustPin = async (dLat, dLng) => {
               ].map((tile) => {
                 const Icon = tile.icon;
                 return (
-                  <button
-                    key={tile.id}
-                    onClick={() => setActiveTab(tile.id)}
-                    className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex flex-col items-center space-y-1.5 hover:border-[#15803D] transition"
-                  >
+                  <button key={tile.id} onClick={() => setActiveTab(tile.id)} className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex flex-col items-center space-y-1.5">
                     <div className={`h-11 w-11 rounded-2xl ${tile.bg} flex items-center justify-center`}>
                       <Icon className="h-5 w-5" />
                     </div>
@@ -2560,22 +2717,6 @@ const handleAdjustPin = async (dLat, dLng) => {
                   </button>
                 );
               })}
-            </div>
-
- <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-extrabold text-slate-900">Today's Market Rates</h3>
-                <button onClick={() => setActiveTab('marketRates')} className="text-[#15803D] font-extrabold">View All &gt;</button>
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-center">
-                {products.slice(0, 3).map((p) => (
-                  <div key={p.id} className="bg-slate-50 rounded-2xl p-2 border border-slate-100">
-                    <img src={p.img} alt={p.nameEn} className="h-10 w-10 rounded-full object-cover mx-auto mb-1" />
-                    <p className="font-extrabold text-slate-800 truncate">{p.nameTe}</p>
-                    <p className="text-[#15803D] font-extrabold">₹{p.farmerDirectPrice}/{p.unit || 'Kg'}</p>
-                  </div>
-                ))}
-              </div>
             </div>
           </main>
         )}
@@ -2589,7 +2730,7 @@ const handleAdjustPin = async (dLat, dLng) => {
               <h2 className="text-base font-extrabold text-slate-900">List Your Produce</h2>
             </div>
 
-            <form onSubmit={handlePublishFarmerProduct} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-3">
+            <form onSubmit={(e) => handlePublishRoleProduct(e, 'farmer')} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-3">
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="text-[10px] font-bold text-slate-400">Product Name (English)</label>
@@ -2606,31 +2747,22 @@ const handleAdjustPin = async (dLat, dLng) => {
                   <label className="text-[10px] font-bold text-slate-400">Quantity & Unit</label>
                   <div className="flex space-x-1.5">
                     <input type="number" required value={fQty} onChange={(e) => setFQty(e.target.value)} className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-bold" />
-                    <select
-                      value={fUnit}
-                      onChange={(e) => setFUnit(e.target.value)}
-                      className="bg-emerald-50 border border-emerald-200 text-[#15803D] rounded-xl px-2.5 py-2.5 font-extrabold focus:outline-none"
-                    >
+                    <select value={fUnit} onChange={(e) => setFUnit(e.target.value)} className="bg-emerald-50 border border-emerald-200 text-[#15803D] rounded-xl px-2.5 py-2.5 font-extrabold">
                       <option value="Kg">Kg</option>
                       <option value="Grams">Grams</option>
                       <option value="Litres">Litres</option>
                     </select>
                   </div>
                 </div>
-
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400">Expected Price (₹ / {fUnit})</label>
+                  <label className="text-[10px] font-bold text-slate-400">Price (₹ / {fUnit})</label>
                   <input type="number" required value={fPrice} onChange={(e) => setFPrice(e.target.value)} className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-extrabold text-[#15803D]" />
                 </div>
               </div>
 
               <div>
                 <label className="text-[10px] font-bold text-slate-400">Harvest Availability Slot</label>
-                <select
-                  value={fAvailTime}
-                  onChange={(e) => setFAvailTime(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-extrabold text-slate-800 focus:outline-none mt-1"
-                >
+                <select value={fAvailTime} onChange={(e) => setFAvailTime(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-extrabold text-slate-800 mt-1">
                   {AVAILABILITY_SLOTS.map((slot) => (
                     <option key={slot} value={slot}>{slot}</option>
                   ))}
@@ -2638,20 +2770,23 @@ const handleAdjustPin = async (dLat, dLng) => {
               </div>
 
               <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm">
-                Publish Produce & Notify Shops (40 km)
+                Publish to Wholesale, Retail & Customers
               </button>
             </form>
+          </main>
+        )}
 
-            <h3 className="font-extrabold text-sm text-slate-900">Active Farm Listings</h3>
-            {products.map((p) => (
-              <div key={p.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex justify-between items-center">
-                <div>
-                  <h4 className="font-extrabold text-slate-900">{p.nameEn} • {p.nameTe}</h4>
-                  <p className="text-[10px] text-slate-500">{p.availableFrom} • ₹{p.farmerDirectPrice}/{p.unit || 'Kg'}</p>
+{activeTab === 'orders' && (
+          <main className="p-4 space-y-3 text-xs">
+            <h2 className="text-base font-extrabold">Orders & Live Alerts</h2>
+            {renderBroadcastOrderAlerts()}
+            {orders.filter((o) => o.acceptedById === currentUser.id).map((ord) => (
+              <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-emerald-200 space-y-1">
+                <div className="flex justify-between font-extrabold">
+                  <span>#{ord.id} • {ord.status}</span>
+                  <span className="text-[#15803D]">₹{ord.total}</span>
                 </div>
-                <span className="bg-emerald-50 text-[#15803D] font-extrabold px-3 py-1.5 rounded-xl">
-                  {p.stockKg} {p.unit || 'Kg'}
-                </span>
+                <p className="text-slate-600">{ord.buyerName} • {ord.items.map((i) => `${i.qty} ${i.unit || 'Kg'} ${i.name}`).join(', ')}</p>
               </div>
             ))}
           </main>
@@ -2659,35 +2794,18 @@ const handleAdjustPin = async (dLat, dLng) => {
 
         {activeTab === 'marketRates' && (
           <main className="p-4 space-y-3 text-xs">
-            <div className="flex items-center space-x-2">
-              <button onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white shadow-sm">
-                <ArrowLeft className="h-4 w-4" />
-              </button>
-              <h2 className="text-base font-extrabold text-slate-900">Nellore Mandi Market Rates</h2>
-            </div>
+            <h2 className="text-base font-extrabold">Nellore Mandi Rates</h2>
             {products.map((p) => (
-              <div key={p.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <img src={p.img} alt={p.nameEn} className="h-11 w-11 rounded-xl object-cover" />
-                  <div>
-                    <h4 className="font-extrabold text-slate-900">{p.nameEn}</h4>
-                    <p className="text-[11px] font-bold text-[#15803D]">{p.nameTe}</p>
-                  </div>
-                </div>
-                <span className="text-sm font-extrabold text-[#15803D]">₹{p.farmerDirectPrice}/{p.unit || 'Kg'} ↑</span>
+              <div key={p.id} className="bg-white rounded-2xl p-3.5 shadow-sm flex justify-between">
+                <span className="font-extrabold">{p.nameEn} ({p.nameTe})</span>
+                <span className="font-extrabold text-[#15803D]">₹{p.farmerDirectPrice}/{p.unit || 'Kg'}</span>
               </div>
             ))}
           </main>
         )}
 
-  {activeTab === 'earnings' && (
-          <main className="p-4 space-y-3 text-xs">
-            <div className="flex items-center space-x-2">
-              <button onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white shadow-sm">
-                <ArrowLeft className="h-4 w-4" />
-              </button>
-              <h2 className="text-base font-extrabold text-slate-900">My Earnings</h2>
-            </div>
+        {activeTab === 'earnings' && (
+          <main className="p-4 text-xs">
             <div className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white rounded-3xl p-5 shadow-md">
               <p className="text-emerald-100 font-bold">Total Farm Earnings</p>
               <h3 className="text-3xl font-extrabold mt-1">₹{currentUser.wallet || 0}</h3>
@@ -2696,47 +2814,11 @@ const handleAdjustPin = async (dLat, dLng) => {
         )}
 
         {activeTab === 'support' && (
-          <main className="p-4 space-y-3 text-xs text-center">
+          <main className="p-4 text-xs text-center">
             <div className="bg-white rounded-3xl p-6 shadow-sm space-y-3">
-              <h2 className="text-base font-extrabold">Need Help?</h2>
-              <p className="text-slate-500">Nellore Farmer Support Desk (8328261103)</p>
-              <a href="tel:8328261103" className="block w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl">
-                Call Support (8328261103)
-              </a>
+              <h2 className="text-base font-extrabold">Farmer Support Desk</h2>
+              <a href="tel:8328261103" className="block w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl">Call 8328261103</a>
             </div>
-          </main>
-        )}
-
-        {activeTab === 'orders' && (
-          <main className="p-4 space-y-3 text-xs">
-            <h2 className="text-base font-extrabold">My Orders</h2>
-            {orders.length === 0 ? (
-              <div className="bg-white rounded-2xl p-6 text-center text-slate-400 font-bold">No orders yet.</div>
-            ) : (
-              orders.map((ord) => (
-                <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
-                  <div className="flex justify-between font-extrabold">
-                    <span>{ord.id} • {ord.status}</span>
-                    <span className="text-[#15803D]">₹{ord.total}</span>
-                  </div>
-                  <p className="text-slate-600">{ord.buyerName} • {ord.items.map((i) => `${i.qty} ${i.unit || 'Kg'} ${i.name}`).join(', ')}</p>
-                  {ord.b2bOtp && <p className="text-amber-800 font-extrabold bg-amber-50 p-2 rounded-xl">B2B Handover OTP: {ord.b2bOtp}</p>}
-                  {ord.status === 'Order Placed' && (
-                    <button
-                      onClick={() => {
-                        setOrders((prev) => prev.map((o) => (o.id === ord.id ? { ...o, status: 'Order Accepted' } : o)));
-                        updateDoc(doc(db, 'orders', ord.id), { status: 'Order Accepted' }).catch(() => {});
-                        setNotifications((prev) => [`Delivery Alert: Farmer accepted ${ord.id}. Ready for pickup!`, ...prev]);
-                        notify('Order Accepted! Nearby Delivery Partners notified.');
-                      }}
-                      className="w-full bg-[#15803D] text-white font-extrabold py-2.5 rounded-xl"
-                    >
-                      Accept Order & Notify Delivery Partners
-                    </button>
-                  )}
-                </div>
-              ))
-            )}
           </main>
         )}
 
@@ -2764,10 +2846,17 @@ const handleAdjustPin = async (dLat, dLng) => {
   }
 
 // =========================================================================
-  // 5. WHOLESALE & RETAIL STORE PORTALS
+  // 5. WHOLESALE & RETAIL STORE PORTALS (HIERARCHY VISIBILITY + ORDER ALERTS)
   // =========================================================================
   if (currentUser.role === 'wholesale' || currentUser.role === 'retail') {
     const isRetail = currentUser.role === 'retail';
+
+    // Supply chain visibility:
+    // Wholesale sees Farmer items; Retail sees Farmer + Wholesale items
+    const visibleB2BProducts = products.filter((p) => {
+      const src = p.postedByRole || 'farmer';
+      return isRetail ? src === 'farmer' || src === 'wholesale' : src === 'farmer';
+    });
 
     const handlePlaceB2BOrder = (prod) => {
       const qty = prod.minWholesaleQty;
@@ -2787,6 +2876,9 @@ const handleAdjustPin = async (dLat, dLng) => {
         total: itemTotal + delivCharge,
         deliveryMode: b2bDeliveryMode === 'pickup' ? 'Pickup at Store / Farm (₹0 Fee)' : `Home Delivery (${prod.distanceKm} km • ₹${delivCharge})`,
         status: 'Order Placed',
+        acceptedById: null,
+        acceptedByName: null,
+        declinedBy: [],
         driverName: null,
         driverMobile: null,
         driverLat: 14.4350,
@@ -2822,6 +2914,9 @@ const handleAdjustPin = async (dLat, dLng) => {
 
         {activeTab === 'home' && (
           <main className="p-4 space-y-4 text-xs">
+            {/* LIVE CUSTOMER ORDER ALERTS FOR WHOLESALE & RETAIL SHOPS */}
+            {renderBroadcastOrderAlerts()}
+
             <div className="bg-gradient-to-r from-[#0F5132] to-[#16A34A] text-white rounded-3xl p-4 shadow-md flex items-center justify-between">
               <div>
                 <p className="text-emerald-100 font-bold">Today's Sales</p>
@@ -2839,39 +2934,53 @@ const handleAdjustPin = async (dLat, dLng) => {
               </div>
               <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-2xl p-3">
                 <p className="text-[10px] font-bold text-slate-500">Products</p>
-                <p className="text-base font-extrabold text-[#B45309] mt-0.5">({products.length})</p>
-              </div>
-              <div className="bg-[#FFF7ED] border border-[#FED7AA] rounded-2xl p-3">
-                <p className="text-[10px] font-bold text-slate-500">Stock Alert</p>
-                <p className="text-base font-extrabold text-[#C2410C] mt-0.5">({products.filter((p) => p.stockKg < 200).length})</p>
-              </div>
-              <div className="bg-[#ECFDF5] border border-[#BBF7D0] rounded-2xl p-3">
-                <p className="text-[10px] font-bold text-slate-500">Earnings</p>
-                <p className="text-base font-extrabold text-[#15803D] mt-0.5">₹{currentUser.wallet || 0}</p>
+                <p className="text-base font-extrabold text-[#B45309] mt-0.5">({visibleB2BProducts.length})</p>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <h3 className="font-extrabold text-slate-900">Quick Actions</h3>
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <button onClick={() => setActiveTab('browse')} className="bg-white border rounded-2xl p-3 shadow-sm space-y-1">
-                  <Plus className="h-5 w-5 text-[#15803D] mx-auto" />
-                  <p className="font-extrabold text-[10px]">{isRetail ? 'Buy Stock' : 'Add Stock'}</p>
-                </button>
-                <button onClick={() => setActiveTab('orders')} className="bg-white border rounded-2xl p-3 shadow-sm space-y-1">
-                  <ClipboardList className="h-5 w-5 text-[#15803D] mx-auto" />
-                  <p className="font-extrabold text-[10px]">View Orders</p>
-                </button>
-                <button onClick={() => window.print()} className="bg-white border rounded-2xl p-3 shadow-sm space-y-1">
-                  <Printer className="h-5 w-5 text-[#15803D] mx-auto" />
-                  <p className="font-extrabold text-[10px]">GST Invoices</p>
-                </button>
-              </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={() => setActiveTab('browse')} className="bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md">
+                Buy Bulk Stock →
+              </button>
+              <button onClick={() => setActiveTab('sellStock')} className="bg-slate-900 text-white font-extrabold py-3.5 rounded-2xl shadow-md">
+                + Post Store Product
+              </button>
+            </div>
+          </main>
+        )}
+
+ {/* POST PRODUCT FOR RETAILERS & CUSTOMERS */}
+        {activeTab === 'sellStock' && (
+          <main className="p-4 space-y-3 text-xs">
+            <div className="flex items-center space-x-2">
+              <button onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white shadow-sm">
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+              <h2 className="text-base font-extrabold">
+                {isRetail ? 'Post Product for Customers' : 'Post Wholesale Stock (For Retailers & Customers)'}
+              </h2>
             </div>
 
-<button onClick={() => setActiveTab('browse')} className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm">
-              Browse Farm Produce & Place Bulk Order →
-            </button>
+            <form onSubmit={(e) => handlePublishRoleProduct(e, currentUser.role)} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <input type="text" required value={fNameEn} onChange={(e) => handleFarmerEnChange(e.target.value)} placeholder="Product Name (English)" className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-bold" />
+                <input type="text" required value={fNameTe} onChange={(e) => handleFarmerTeChange(e.target.value)} placeholder="పేరు తెలుగులో" className="w-full bg-emerald-50 border rounded-xl px-3 py-2.5 font-bold text-[#15803D]" />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex space-x-1.5">
+                  <input type="number" required value={fQty} onChange={(e) => setFQty(e.target.value)} className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-bold" />
+                  <select value={fUnit} onChange={(e) => setFUnit(e.target.value)} className="bg-emerald-50 border text-[#15803D] rounded-xl px-2.5 font-extrabold">
+                    <option value="Kg">Kg</option>
+                    <option value="Grams">Grams</option>
+                    <option value="Litres">Litres</option>
+                  </select>
+                </div>
+                <input type="number" required value={fPrice} onChange={(e) => setFPrice(e.target.value)} placeholder={`Price ₹ / ${fUnit}`} className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-extrabold text-[#15803D]" />
+              </div>
+              <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md">
+                Publish Product Now
+              </button>
+            </form>
           </main>
         )}
 
@@ -2881,22 +2990,8 @@ const handleAdjustPin = async (dLat, dLng) => {
               <button onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white shadow-sm">
                 <ArrowLeft className="h-4 w-4" />
               </button>
-              <h2 className="text-base font-extrabold text-slate-900">Browse Products</h2>
+              <h2 className="text-base font-extrabold text-slate-900">Browse Farm & Wholesale Produce</h2>
             </div>
-
-            {isRetail && (
-              <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 space-y-1.5">
-                <p className="font-extrabold text-slate-500">Compare Supplier Rates:</p>
-                <div className="grid grid-cols-2 gap-2 font-extrabold">
-                  <button onClick={() => setB2bSource('farmer')} className={`py-2 rounded-xl border ${b2bSource === 'farmer' ? 'bg-[#15803D] text-white' : 'bg-slate-50'}`}>
-                    Direct Farmer Rate
-                  </button>
-                  <button onClick={() => setB2bSource('wholesale')} className={`py-2 rounded-xl border ${b2bSource === 'wholesale' ? 'bg-slate-900 text-white' : 'bg-slate-50'}`}>
-                    Wholesale Rate
-                  </button>
-                </div>
-              </div>
-            )}
 
             <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 space-y-1.5">
               <p className="font-extrabold text-slate-500">Delivery Mode:</p>
@@ -2910,17 +3005,19 @@ const handleAdjustPin = async (dLat, dLng) => {
               </div>
             </div>
 
-            {products.map((p) => {
-              const rate = b2bSource === 'farmer' ? p.farmerDirectPrice : p.wholesalePrice;
+            {visibleB2BProducts.map((p) => {
+              const rate = (p.postedByRole || 'farmer') === 'farmer' ? p.farmerDirectPrice : p.wholesalePrice;
               const estDeliv = b2bDeliveryMode === 'pickup' ? 0 : Math.round(p.distanceKm * 5 + p.minWholesaleQty * 0.5);
               return (
                 <div key={p.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2.5">
                   <div className="flex items-center space-x-3">
                     <img src={p.img} alt={p.nameEn} className="h-14 w-14 rounded-xl object-cover" />
                     <div>
-                      <h4 className="font-extrabold text-sm text-slate-900">{p.nameEn} ({p.nameTe})</h4>
-                      <p className="text-[10px] text-slate-500">{p.farmerName} • Stock: {p.stockKg} {p.unit || 'Kg'}</p>
-                      <p className="text-[11px] font-extrabold text-[#15803D] mt-0.5">
+                      <span className="text-[9px] font-extrabold uppercase bg-emerald-50 text-[#15803D] px-2 py-0.5 rounded">
+                        From {(p.postedByRole || 'farmer').toUpperCase()}
+                      </span>
+                      <h4 className="font-extrabold text-sm text-slate-900 mt-0.5">{p.nameEn} ({p.nameTe})</h4>
+                      <p className="text-[11px] font-extrabold text-[#15803D]">
                         ₹{rate}/{p.unit || 'Kg'} • Min: {p.minWholesaleQty} {p.unit || 'Kg'} • Delivery: ₹{estDeliv}
                       </p>
                     </div>
@@ -2934,31 +3031,28 @@ const handleAdjustPin = async (dLat, dLng) => {
           </main>
         )}
 
-        {activeTab === 'orders' && (
+{activeTab === 'orders' && (
           <main className="p-4 space-y-3 text-xs">
-            <h2 className="text-base font-extrabold">My Orders & PDF Invoices</h2>
-            {orders.length === 0 ? (
-              <div className="bg-white rounded-2xl p-6 text-center text-slate-400 font-bold">No orders yet.</div>
-            ) : (
-              orders.map((ord) => (
-                <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
-                  <div className="flex justify-between font-extrabold">
-                    <span>#{ord.id} • {ord.status}</span>
-                    <span className="text-[#15803D]">₹{ord.total}</span>
-                  </div>
-                  <p className="text-slate-600">{ord.items.map((i) => `${i.qty} ${i.unit || 'Kg'} ${i.name}`).join(', ')}</p>
-                  {ord.b2bOtp && (
-                    <div className="bg-amber-50 border border-amber-200 p-2.5 rounded-xl font-extrabold text-amber-950">
-                      Delivery Verification OTP (Share with Rider): {ord.b2bOtp}
-                    </div>
-                  )}
-                  <button onClick={() => window.print()} className="w-full bg-slate-900 text-white font-extrabold py-2.5 rounded-xl flex items-center justify-center space-x-1.5">
-                    <Printer className="h-3.5 w-3.5" />
-                    <span>Print / Save PDF Invoice</span>
-                  </button>
+            <h2 className="text-base font-extrabold">Orders & Customer Alerts</h2>
+            {renderBroadcastOrderAlerts()}
+            {orders.map((ord) => (
+              <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
+                <div className="flex justify-between font-extrabold">
+                  <span>#{ord.id} • {ord.status}</span>
+                  <span className="text-[#15803D]">₹{ord.total}</span>
                 </div>
-              ))
-            )}
+                <p className="text-slate-600">{ord.items.map((i) => `${i.qty} ${i.unit || 'Kg'} ${i.name}`).join(', ')}</p>
+                {ord.b2bOtp && (
+                  <div className="bg-amber-50 border border-amber-200 p-2 rounded-xl font-extrabold text-amber-950">
+                    Delivery Verification OTP: {ord.b2bOtp}
+                  </div>
+                )}
+                <button onClick={() => window.print()} className="w-full bg-slate-900 text-white font-extrabold py-2.5 rounded-xl flex items-center justify-center space-x-1.5">
+                  <Printer className="h-3.5 w-3.5" />
+                  <span>Print / Save PDF Invoice</span>
+                </button>
+              </div>
+            ))}
           </main>
         )}
 
@@ -2967,7 +3061,8 @@ const handleAdjustPin = async (dLat, dLng) => {
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-6 py-2.5 flex justify-between items-center z-40">
           {[
             { id: 'home', icon: Home, label: 'Home' },
-            { id: 'browse', icon: Package, label: 'Inventory' },
+            { id: 'browse', icon: Package, label: 'Buy Stock' },
+            { id: 'sellStock', icon: Plus, label: 'Post Item' },
             { id: 'orders', icon: ClipboardList, label: 'Orders' },
             { id: 'profile', icon: User, label: 'Account' },
           ].map((t) => {
@@ -2984,7 +3079,7 @@ const handleAdjustPin = async (dLat, dLng) => {
     );
   }
 
-// =========================================================================
+  // =========================================================================
   // 6. DELIVERY PARTNER PORTAL (LIVE MULTI-DEVICE GPS + AUTO EMAIL INVOICE)
   // =========================================================================
   if (currentUser.role === 'delivery') {
@@ -3016,10 +3111,7 @@ const handleAdjustPin = async (dLat, dLng) => {
             <span className="text-[10px] font-bold text-slate-400 block">Hello,</span>
             <h1 className="text-sm font-extrabold text-slate-900">{currentUser.name} 👋</h1>
           </div>
-          <div className="flex items-center space-x-2">
-            <span className="bg-emerald-50 text-[#15803D] text-xs font-extrabold px-3 py-1 rounded-full">₹{currentUser.wallet || 0}</span>
-            <Bell className="h-4 w-4 text-slate-600" />
-          </div>
+          <span className="bg-emerald-50 text-[#15803D] text-xs font-extrabold px-3 py-1 rounded-full">₹{currentUser.wallet || 0}</span>
         </header>
 
         {activeTab === 'home' && (
@@ -3027,52 +3119,15 @@ const handleAdjustPin = async (dLat, dLng) => {
             <div className="bg-gradient-to-r from-[#0F5132] to-[#16A34A] text-white rounded-3xl p-4 shadow-md flex items-center justify-between">
               <div>
                 <p className="text-emerald-100 font-bold">Today's Earnings</p>
-                <h2 className="text-2xl font-extrabold mt-0.5">
-                  ₹{currentUser.wallet || 0} <span className="text-xs text-[#FDE047]">↑ 12%</span>
-                </h2>
+                <h2 className="text-2xl font-extrabold mt-0.5">₹{currentUser.wallet || 0}</h2>
               </div>
               <TrendingUp className="h-10 w-10 text-[#FDE047]" />
             </div>
 
-            <div className="grid grid-cols-2 gap-2.5">
-              <button onClick={() => setDelivFilter('available')} className="bg-[#FFF7ED] border border-[#FED7AA] rounded-2xl p-3 text-left">
-                <p className="text-[10px] font-bold text-slate-500">New Orders</p>
-                <p className="text-base font-extrabold text-[#C2410C] mt-0.5">({availOrders.length})</p>
-              </button>
-              <button onClick={() => setDelivFilter('available')} className="bg-[#FFFBEB] border border-[#FDE68A] rounded-2xl p-3 text-left">
-                <p className="text-[10px] font-bold text-slate-500">On Going</p>
-                <p className="text-base font-extrabold text-[#B45309] mt-0.5">({availOrders.filter((o) => o.driverName).length})</p>
-              </button>
-              <button onClick={() => setDelivFilter('delivered')} className="bg-[#ECFDF5] border border-[#BBF7D0] rounded-2xl p-3 text-left">
-                <p className="text-[10px] font-bold text-slate-500">Completed</p>
-                <p className="text-base font-extrabold text-[#15803D] mt-0.5">({delivOrders.length})</p>
-              </button>
-              <button onClick={() => setDelivFilter('earnings')} className="bg-[#EFF6FF] border border-[#BFDBFE] rounded-2xl p-3 text-left">
-                <p className="text-[10px] font-bold text-slate-500">My Wallet</p>
-                <p className="text-base font-extrabold text-[#1D4ED8] mt-0.5">₹{currentUser.wallet || 0}</p>
-              </button>
-            </div>
-
-            <div className="bg-gradient-to-r from-[#EA580C] to-[#EAB308] text-white rounded-2xl p-3.5 shadow space-y-1.5">
-              <div className="flex justify-between font-extrabold">
-                <span>Weekly 100 Orders Bonus: ₹1,500</span>
-                <span>{weeklyCompleted} / 100</span>
-              </div>
-              <div className="w-full bg-white/30 h-2 rounded-full overflow-hidden">
-                <div className="bg-white h-full rounded-full" style={{ width: `${Math.min(100, weeklyCompleted)}%` }} />
-              </div>
-            </div>
-
-{delivFilter === 'earnings' ? (
-              <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-2">
-                <h3 className="font-extrabold">Earnings & Incentive Breakdown</h3>
-                <div className="flex justify-between"><span>Available Balance</span><span className="font-extrabold">₹{currentUser.wallet || 0}</span></div>
-                <div className="flex justify-between"><span>Weekly 100-Order Target</span><span className="font-extrabold text-[#15803D]">₹1,500 Bonus</span></div>
-              </div>
-            ) : (delivFilter === 'available' ? availOrders : delivOrders).length === 0 ? (
-              <div className="bg-white rounded-2xl p-6 text-center text-slate-400 font-bold">No orders in this list.</div>
+            {availOrders.length === 0 ? (
+              <div className="bg-white rounded-2xl p-6 text-center text-slate-400 font-bold">No active orders yet.</div>
             ) : (
-              (delivFilter === 'available' ? availOrders : delivOrders).map((ord) => (
+              availOrders.map((ord) => (
                 <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2.5">
                   <div className="flex justify-between font-extrabold">
                     <span>#{ord.id} ({ord.buyerRole.toUpperCase()})</span>
@@ -3098,65 +3153,54 @@ const handleAdjustPin = async (dLat, dLng) => {
                       <Navigation className="h-3.5 w-3.5" />
                       <span>Navigate</span>
                     </a>
-                    {ord.status !== 'Delivered' && (
-                      <button
-                        onClick={() => {
-                          if (ord.status !== 'Partner Assigned') {
-                            const initLat = 14.4390;
-                            const initLng = 79.9810;
-                            setOrders((prev) =>
-                              prev.map((o) =>
-                                o.id === ord.id
-                                  ? { ...o, status: 'Partner Assigned', driverName: currentUser.name, driverMobile: currentUser.mobile, driverLat: initLat, driverLng: initLng, driverCoords: `${initLat}, ${initLng}` }
-                                  : o
-                              )
-                            );
-                            updateDoc(doc(db, 'orders', ord.id), {
-                              status: 'Partner Assigned',
-                              driverName: currentUser.name,
-                              driverMobile: currentUser.mobile,
-                              driverLat: initLat,
-                              driverLng: initLng,
-                              driverCoords: `${initLat}, ${initLng}`,
-                            }).catch(() => {});
-                            notify('Accepted! Live GPS broadcasting to Customer.');
-                          } else {
-                            if (ord.b2bOtp) {
-                              const entered = window.prompt(`Enter ${ord.buyerRole.toUpperCase()} Delivery OTP (${ord.b2bOtp}):`);
-                              if (entered !== ord.b2bOtp) {
-                                notify('Invalid B2B OTP!');
-                                return;
-                              }
+                    <button
+                      onClick={() => {
+                        if (ord.status !== 'Partner Assigned') {
+                          const initLat = mapPinCoords.lat;
+                          const initLng = mapPinCoords.lng;
+                          setOrders((prev) =>
+                            prev.map((o) =>
+                              o.id === ord.id
+                                ? { ...o, status: 'Partner Assigned', driverName: currentUser.name, driverMobile: currentUser.mobile, driverLat: initLat, driverLng: initLng, driverCoords: `${initLat}, ${initLng}` }
+                                : o
+                            )
+                          );
+                          updateDoc(doc(db, 'orders', ord.id), {
+                            status: 'Partner Assigned',
+                            driverName: currentUser.name,
+                            driverMobile: currentUser.mobile,
+                            driverLat: initLat,
+                            driverLng: initLng,
+                            driverCoords: `${initLat}, ${initLng}`,
+                          }).catch(() => {});
+                          notify('Accepted! Live GPS broadcasting to Customer.');
+                        } else {
+                          if (ord.b2bOtp) {
+                            const entered = window.prompt(`Enter ${ord.buyerRole.toUpperCase()} Delivery OTP (${ord.b2bOtp}):`);
+                            if (entered !== ord.b2bOtp) {
+                              notify('Invalid B2B OTP!');
+                              return;
                             }
-                            handleCompleteDelivery(ord);
                           }
-                        }}
-                        className="flex-1 bg-[#15803D] text-white font-extrabold py-2.5 rounded-xl"
-                      >
-                        {ord.status !== 'Partner Assigned' ? 'Accept Order' : ord.b2bOtp ? 'Verify B2B OTP' : 'Reached Customer'}
-                      </button>
-                    )}
+                          handleCompleteDelivery(ord);
+                        }
+                      }}
+                      className="flex-1 bg-[#15803D] text-white font-extrabold py-2.5 rounded-xl"
+                    >
+                      {ord.status !== 'Partner Assigned' ? 'Accept Order' : ord.b2bOtp ? 'Verify B2B OTP' : 'Reached Customer'}
+                    </button>
                   </div>
                 </div>
               ))
             )}
           </main>
         )}
+{activeTab === 'profile' && renderSharedProfileTab()}
 
-  {activeTab === 'profile' && renderSharedProfileTab()}
-
-        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-6 py-2.5 flex justify-between items-center z-40">
-          <button onClick={() => { setDelivFilter('available'); setActiveTab('home'); }} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'home' && delivFilter === 'available' ? 'text-[#15803D]' : 'text-slate-400'}`}>
-            <Home className="h-5 w-5 mb-0.5" />
-            <span>Home</span>
-          </button>
-          <button onClick={() => { setDelivFilter('delivered'); setActiveTab('home'); }} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'home' && delivFilter === 'delivered' ? 'text-[#15803D]' : 'text-slate-400'}`}>
-            <ClipboardList className="h-5 w-5 mb-0.5" />
-            <span>Orders</span>
-          </button>
-          <button onClick={() => { setDelivFilter('earnings'); setActiveTab('home'); }} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'home' && delivFilter === 'earnings' ? 'text-[#15803D]' : 'text-slate-400'}`}>
-            <Wallet className="h-5 w-5 mb-0.5" />
-            <span>Earnings</span>
+        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-12 py-2.5 flex justify-between items-center z-40">
+          <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'home' ? 'text-[#15803D]' : 'text-slate-400'}`}>
+            <Truck className="h-5 w-5 mb-0.5" />
+            <span>Deliveries</span>
           </button>
           <button onClick={() => setActiveTab('profile')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'profile' ? 'text-[#15803D]' : 'text-slate-400'}`}>
             <User className="h-5 w-5 mb-0.5" />
@@ -3180,103 +3224,33 @@ const handleAdjustPin = async (dLat, dLng) => {
           <h1 className="text-base font-extrabold mt-0.5">Rythu Basket Control</h1>
         </div>
         <span className="bg-[#EAB308] text-slate-900 text-xs font-extrabold px-2.5 py-1 rounded-full">
-          {notifications.length} Alerts
+          {users.length} Users
         </span>
       </header>
 
       {activeTab === 'home' && (
         <main className="p-4 space-y-3 text-xs">
-          <div className="flex space-x-1.5 overflow-x-auto pb-1">
-            {[
-              { id: 'approvals', label: 'Approvals' },
-              { id: 'stock', label: 'Stock Control' },
-              { id: 'controls', label: 'Scratch & Offers' },
-            ].map((t) => (
-              <button key={t.id} onClick={() => setAdminTab(t.id)} className={`px-3.5 py-2 rounded-xl font-extrabold border ${adminTab === t.id ? 'bg-[#15803D] text-white' : 'bg-white text-slate-700'}`}>
-                {t.label}
-              </button>
-            ))}
-          </div>
-
-          {adminTab === 'approvals' && (
-            <div className="space-y-2.5">
-              {notifications.map((n, idx) => (
-                <div key={idx} className="bg-amber-50 border border-amber-200 p-3 rounded-2xl font-bold text-amber-950">
-                  {n}
-                </div>
-              ))}
-              {users
-                .filter((u) => u.role === 'farmer' || u.role === 'wholesale' || u.role === 'retail')
-                .map((u) => (
-                  <div key={u.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] font-extrabold uppercase bg-emerald-50 text-[#15803D] px-2 py-0.5 rounded">{u.role}</span>
-                      <h4 className="font-extrabold text-sm mt-1">{u.name}</h4>
-                      <p className="text-slate-500">{u.email} • +91 {u.mobile}</p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, approved: !x.approved } : x)));
-                        notify('Approval Status Updated!');
-                      }}
-                      className={`px-3.5 py-2 rounded-xl font-extrabold ${u.approved ? 'bg-emerald-50 text-[#15803D]' : 'bg-[#15803D] text-white'}`}
-                    >
-                      {u.approved ? 'Approved' : 'Approve'}
-                    </button>
-                  </div>
-                ))}
-            </div>
-          )}
-
- {adminTab === 'stock' &&
-            products.map((p) => (
-              <div key={p.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
+          {users
+            .filter((u) => u.role === 'farmer' || u.role === 'wholesale' || u.role === 'retail')
+            .map((u) => (
+              <div key={u.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
                 <div>
-                  <h4 className="font-extrabold text-slate-900">{p.nameEn} ({p.nameTe})</h4>
-                  <p className="text-slate-500">Remaining: {p.stockKg} {p.unit || 'Kg'} • Retail: ₹{p.retailPrice}/{p.unit || 'Kg'}</p>
+                  <span className="text-[10px] font-extrabold uppercase bg-emerald-50 text-[#15803D] px-2 py-0.5 rounded">{u.role}</span>
+                  <h4 className="font-extrabold text-sm mt-1">{u.name}</h4>
+                  <p className="text-slate-500">{u.email} • +91 {u.mobile}</p>
                 </div>
                 <button
                   onClick={() => {
-                    setProducts((prev) => prev.map((x) => (x.id === p.id ? { ...x, inStock: !x.inStock } : x)));
-                    notify('Stock Status Updated!');
+                    setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, approved: !x.approved } : x)));
+                    updateDoc(doc(db, 'users', u.id), { approved: !u.approved }).catch(() => {});
+                    notify('Approval Status Updated!');
                   }}
-                  className={`px-3.5 py-2 rounded-xl font-extrabold ${p.inStock ? 'bg-emerald-50 text-[#15803D]' : 'bg-rose-50 text-rose-600'}`}
+                  className={`px-3.5 py-2 rounded-xl font-extrabold ${u.approved ? 'bg-emerald-50 text-[#15803D]' : 'bg-[#15803D] text-white'}`}
                 >
-                  {p.inStock ? 'In Stock' : 'Out of Stock'}
+                  {u.approved ? 'Approved' : 'Approve'}
                 </button>
               </div>
             ))}
-
-          {adminTab === 'controls' && (
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="font-extrabold text-slate-900">Customer Loyalty Offers</span>
-                <button
-                  onClick={() => {
-                    setOffersEnabled(!offersEnabled);
-                    notify(offersEnabled ? 'Offers Disabled' : 'Offers Enabled');
-                  }}
-                  className={`px-4 py-1.5 rounded-full font-extrabold ${offersEnabled ? 'bg-[#15803D] text-white' : 'bg-slate-200 text-slate-600'}`}
-                >
-                  {offersEnabled ? 'ENABLED' : 'DISABLED'}
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 pt-2 border-t">
-                <div>
-                  <label className="block font-bold text-slate-500 mb-1">Daily Scratch Min (₹)</label>
-                  <input type="number" value={scratchMin} onChange={(e) => setScratchMin(Number(e.target.value))} className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-extrabold" />
-                </div>
-                <div>
-                  <label className="block font-bold text-slate-500 mb-1">Daily Scratch Max (₹)</label>
-                  <input type="number" value={scratchMax} onChange={(e) => setScratchMax(Number(e.target.value))} className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-extrabold" />
-                </div>
-              </div>
-              <button onClick={() => notify(`Daily Scratch Card Range Set: ₹${scratchMin} – ₹${scratchMax}`)} className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl">
-                Save Admin Rules
-              </button>
-            </div>
-          )}
         </main>
       )}
 
