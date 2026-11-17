@@ -11,6 +11,7 @@ import {
 // EmailJS Credentials for Direct Free 6-Digit Email OTP & Automatic Delivery Invoice
 const EMAILJS_SERVICE_ID = 'service_auf6gch';
 const EMAILJS_TEMPLATE_ID = 'template_z42k41l';
+const EMAILJS_INVOICE_TEMPLATE_ID = 'template_fhx6p4e';
 const EMAILJS_PUBLIC_KEY = 'Y1UQmUcSoEzEtFR1m';
 
 // Guaranteed Indian Farmer Photo
