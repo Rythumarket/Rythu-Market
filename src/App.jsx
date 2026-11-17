@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Search, ShoppingCart, Plus, Minus, Home, ClipboardList, User, MapPin,
+  Search, ShoppingCart, Plus, Home, ClipboardList, User, MapPin,
   Phone, MessageSquare, Sprout, Store, Truck, ShieldCheck, ChevronRight,
   ArrowLeft, CheckCircle2, Wallet, Gift, Sparkles, Bell, Globe,
   LocateFixed, LogOut, Printer, Warehouse, Heart, Clock, ChevronDown,
   Briefcase, Leaf, Shield, Zap, Grid, Star, Trash2, Check, Mail,
-  TrendingUp, Package, AlertTriangle, HelpCircle, Navigation
+  TrendingUp, Package, HelpCircle, Navigation
 } from 'lucide-react';
+import { db } from './firebase';
+import { collection, doc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 
 // EmailJS Credentials for Direct Free 6-Digit Email OTP & Automatic Delivery Invoice
 const EMAILJS_SERVICE_ID = 'service_auf6gch';
@@ -219,6 +221,23 @@ export default function App() {
     }
   }, []);
 
+  const [sharedInvoiceData, setSharedInvoiceData] = useState(null);
+
+  // 1. Open Direct Tax Invoice PDF View when clicked from Customer Email
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get('invoiceData');
+    if (raw) {
+      try {
+        const parsed = JSON.parse(decodeURIComponent(raw));
+        setSharedInvoiceData(parsed);
+        setTimeout(() => window.print(), 800);
+      } catch {
+        // ignore invalid link
+      }
+    }
+  }, []);
+
 const [lang, setLang] = useState('te');
   const [selectedRole, setSelectedRole] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
@@ -317,7 +336,7 @@ const [lang, setLang] = useState('te');
   const [cardError, setCardError] = useState('');
   const [merchantUpiId] = useState('madhavam.com@ybl');
 
-// B2B States
+  // B2B States
   const [b2bSource, setB2bSource] = useState('farmer');
   const [b2bDeliveryMode, setB2bDeliveryMode] = useState('pickup');
 
@@ -328,7 +347,50 @@ const [lang, setLang] = useState('te');
   ]);
   const [orders, setOrders] = useState([]);
 
-  // Farmer Form States (With Unit Dropdown: Kg / Grams / Litres + Availability Slot Dropdown)
+// 2. Real-Time Cross-Device Sync for Orders (Customer Phone <-> Friend Delivery Phone)
+  useEffect(() => {
+    const unsub = onSnapshot(
+      collection(db, 'orders'),
+      (snapshot) => {
+        const liveOrders = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+        liveOrders.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        setOrders(liveOrders);
+        setTrackingOrder((prev) => (prev ? liveOrders.find((o) => o.id === prev.id) || prev : null));
+      },
+      () => {
+        // fallback if offline
+      }
+    );
+    return () => unsub();
+  }, []);
+
+  // 3. Continuous Live GPS Broadcast while Friend is Delivering an Active Order
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== 'delivery' || !navigator.geolocation) return;
+    const activeAssigned = orders.filter(
+      (o) => o.driverMobile === currentUser.mobile && o.status === 'Partner Assigned'
+    );
+    if (activeAssigned.length === 0) return;
+
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const lat = Number(pos.coords.latitude.toFixed(5));
+        const lng = Number(pos.coords.longitude.toFixed(5));
+        activeAssigned.forEach((ord) => {
+          updateDoc(doc(db, 'orders', ord.id), {
+            driverLat: lat,
+            driverLng: lng,
+            driverCoords: `${lat}, ${lng}`,
+          }).catch(() => {});
+        });
+      },
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
+    );
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [currentUser, orders]);
+
+  // Farmer Form States
   const [fNameEn, setFNameEn] = useState('');
   const [fNameTe, setFNameTe] = useState('');
   const [fQty, setFQty] = useState('100');
@@ -386,7 +448,7 @@ const [lang, setLang] = useState('te');
     }
   };
 
-    // AUTOMATIC EMAIL INVOICE DISPATCH UPON ORDER DELIVERY
+ // AUTOMATIC EMAIL INVOICE DISPATCH UPON ORDER DELIVERY
   const sendAutomaticInvoiceEmail = async (ord) => {
     const recipientEmail = ord.buyerEmail || currentUser?.email;
     if (!recipientEmail) return;
@@ -458,6 +520,18 @@ const [lang, setLang] = useState('te');
       </div>
     `;
 
+    const invoicePayload = encodeURIComponent(
+      JSON.stringify({
+        id: ord.id,
+        date: invoiceDate,
+        name: ord.buyerName,
+        mobile: ord.buyerMobile,
+        address: ord.buyerAddress,
+        total: ord.total,
+        items: ord.items,
+      })
+    );
+
     try {
       await fetch('https://api.emailjs.com/api/v1.0/email/send', {
         method: 'POST',
@@ -470,7 +544,7 @@ const [lang, setLang] = useState('te');
             to_email: recipientEmail,
             order_id: ord.id,
             invoice_html: invoiceHtml,
-            invoice_pdf_link: `https://rythu-market.vercel.app/?invoice=${encodeURIComponent(ord.id)}`,
+            invoice_pdf_link: `https://rythu-market.vercel.app/?invoiceData=${invoicePayload}`,
           },
         }),
       });
@@ -509,7 +583,7 @@ const [lang, setLang] = useState('te');
     if (ok) setLoginOtpSent(true);
   };
 
-const handleVerifyLogin = (e) => {
+  const handleVerifyLogin = (e) => {
     e.preventDefault();
     const cleanEmail = loginEmail.trim().toLowerCase();
     const existing = users.find((u) => (u.email || '').toLowerCase() === cleanEmail && u.role === selectedRole);
@@ -524,7 +598,7 @@ const handleVerifyLogin = (e) => {
     setActiveTab('home');
   };
 
-  const handleSendRegisterOtp = async () => {
+const handleSendRegisterOtp = async () => {
     const cleanMobile = regMobile.replace(/\D/g, '');
     const cleanEmail = regEmail.trim().toLowerCase();
 
@@ -617,7 +691,7 @@ const handleVerifyLogin = (e) => {
     setMapPinFullAddress(`Lat ${lat.toFixed(5)}, Lng ${lng.toFixed(5)}, Nellore, Andhra Pradesh`);
   };
 
-const handleUseCurrentLocationMap = () => {
+  const handleUseCurrentLocationMap = () => {
     setIsLocatingGps(true);
     setIsEditingPinText(false);
     setActiveTab('mapPin');
@@ -645,7 +719,7 @@ const handleUseCurrentLocationMap = () => {
     );
   };
 
-  const handleAdjustPin = async (dLat, dLng) => {
+const handleAdjustPin = async (dLat, dLng) => {
     const lat = Number((mapPinCoords.lat + dLat).toFixed(5));
     const lng = Number((mapPinCoords.lng + dLng).toFixed(5));
     setMapPinCoords({ lat, lng });
@@ -684,6 +758,85 @@ const handleUseCurrentLocationMap = () => {
   const fontStyle = { fontFamily: "'Plus Jakarta Sans', 'Noto Sans Telugu', sans-serif" };
 
   // =========================================================================
+  // 0. DIRECT INVOICE PDF PRINT VIEW (OPENED FROM EMAIL DOWNLOAD BUTTON)
+  // =========================================================================
+  if (sharedInvoiceData) {
+    return (
+      <div style={fontStyle} className="min-h-screen bg-white max-w-xl mx-auto p-6 text-slate-800 space-y-4">
+        <div className="flex items-center justify-between border-b-2 border-[#15803D] pb-4">
+          <div className="flex items-center space-x-3">
+            <img src="/icon-512.png" alt="Logo" className="h-14 w-14 rounded-full border-2 border-[#EAB308]" />
+            <div>
+              <h1 className="text-xl font-extrabold text-[#15803D]">రైతు బాస్కెట్ • Rythu Basket</h1>
+              <p className="text-xs text-slate-500">Nellore Direct Farm-to-Home Marketplace</p>
+            </div>
+          </div>
+          <div className="text-right text-xs">
+            <span className="bg-emerald-50 text-[#15803D] font-extrabold px-2.5 py-1 rounded">TAX INVOICE</span>
+            <p className="font-bold mt-1">#{sharedInvoiceData.id}</p>
+            <p className="text-slate-500">{sharedInvoiceData.date}</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 p-3.5 rounded-2xl border">
+          <div>
+            <p className="font-extrabold text-slate-500">FROM / SELLER</p>
+            <p className="font-bold mt-0.5">Rythu Basket Nellore</p>
+            <p>Support: 8328261103</p>
+          </div>
+          <div>
+            <p className="font-extrabold text-slate-500">BILL & DELIVER TO</p>
+            <p className="font-bold mt-0.5">{sharedInvoiceData.name} (+91 {sharedInvoiceData.mobile})</p>
+            <p>{sharedInvoiceData.address}</p>
+          </div>
+        </div>
+
+        <table className="w-full text-xs border-collapse border border-slate-200">
+          <thead>
+            <tr className="bg-[#15803D] text-white">
+              <th className="p-2 text-left">#</th>
+              <th className="p-2 text-left">Product</th>
+              <th className="p-2 text-center">Qty</th>
+              <th className="p-2 text-right">Rate</th>
+              <th className="p-2 text-right">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(sharedInvoiceData.items || []).map((it, idx) => (
+              <tr key={idx} className="border-b">
+                <td className="p-2">{idx + 1}</td>
+                <td className="p-2 font-bold">{it.name}</td>
+                <td className="p-2 text-center">{it.qty} {it.unit || 'Kg'}</td>
+                <td className="p-2 text-right">₹{Number(it.price).toFixed(2)}</td>
+                <td className="p-2 text-right font-bold">₹{(it.price * it.qty).toFixed(2)}</td>
+              </tr>
+            ))}
+            <tr className="bg-emerald-50 font-extrabold text-sm">
+              <td colSpan={4} className="p-2.5 text-right">Grand Total Paid</td>
+              <td className="p-2.5 text-right text-[#15803D]">₹{Number(sharedInvoiceData.total).toFixed(2)}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div className="flex space-x-3 pt-2 print:hidden">
+          <button onClick={() => window.print()} className="flex-1 bg-[#15803D] text-white font-extrabold py-3 rounded-xl">
+            Save / Print PDF
+          </button>
+          <button
+            onClick={() => {
+              window.history.replaceState({}, '', '/');
+              setSharedInvoiceData(null);
+            }}
+            className="px-4 border border-slate-300 font-extrabold py-3 rounded-xl"
+          >
+            Back to App
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+ // =========================================================================
   // 1. HOME / ROLE ENTRY PAGE (ONLY 'HOME' IN BOTTOM BAR + STRICT FARMER PHOTO)
   // =========================================================================
   if (!selectedRole) {
@@ -744,7 +897,7 @@ const handleUseCurrentLocationMap = () => {
       },
     ];
 
-return (
+    return (
       <div style={fontStyle} className="min-h-screen bg-[#F5F7F5] max-w-md mx-auto text-slate-800 shadow-2xl pb-24 relative overflow-x-hidden">
         <div className="bg-gradient-to-b from-[#0E5A2B] via-[#15803D] to-[#4ADE80]/30 text-white rounded-b-[36px] px-4 pt-4 pb-6 shadow-lg relative overflow-hidden">
           <div className="flex items-center justify-between relative z-10">
@@ -775,7 +928,6 @@ return (
             </div>
           </div>
 
-          {/* Hero Card with Strictly Indian Farmer Photo */}
           <div className="mt-4 bg-gradient-to-r from-white/95 via-white/90 to-emerald-50/90 rounded-3xl p-3.5 shadow-md flex items-center justify-between relative z-10 text-slate-900">
             <div className="space-y-2 max-w-[55%]">
               <p className="text-xs font-extrabold text-[#15803D] leading-snug">
@@ -851,7 +1003,7 @@ return (
           })}
         </div>
 
- <div className="px-3.5 pt-3.5">
+        <div className="px-3.5 pt-3.5">
           <div className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white rounded-2xl p-3.5 shadow-md flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="h-11 w-11 rounded-full bg-white/15 border border-white/25 flex items-center justify-center flex-shrink-0">
@@ -872,7 +1024,7 @@ return (
           </div>
         </div>
 
-        <div className="px-3.5 pt-3.5">
+  <div className="px-3.5 pt-3.5">
           <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2.5">
             <div className="flex items-center space-x-1.5 text-xs font-extrabold text-slate-800">
               <Leaf className="h-4 w-4 text-[#15803D]" />
@@ -907,7 +1059,6 @@ return (
           </div>
         </div>
 
-        {/* BOTTOM DOCK WITH ONLY 'HOME' (Orders, More, Profile Removed as Requested) */}
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0D4A24] text-white px-6 py-2.5 rounded-t-3xl flex justify-center items-center z-40 shadow-2xl">
           <button
             type="button"
@@ -1189,7 +1340,7 @@ return (
         </div>
       </div>
 
-      {currentUser.role === 'customer' && (
+{currentUser.role === 'customer' && (
         <div className="bg-white rounded-3xl p-4 shadow-sm border border-amber-200/70 space-y-2.5">
           <div className="flex justify-between items-center">
             <span className="font-extrabold text-slate-900 flex items-center space-x-1.5">
@@ -1224,8 +1375,8 @@ return (
     </div>
   );
 
-// =========================================================================
-  // 3. CUSTOMER STOREFRONT & AUTO EMAIL PDF INVOICE ON DELIVERY
+  // =========================================================================
+  // 3. CUSTOMER STOREFRONT & LIVE CROSS-DEVICE TRACKING
   // =========================================================================
   if (currentUser.role === 'customer') {
     const activeAddr = savedAddresses.find((a) => a.id === activeAddrId) || savedAddresses[0];
@@ -1289,10 +1440,13 @@ return (
         total: payableTotal,
         cashback: estimatedCashback,
         status: 'Order Placed',
-        driverName: 'Ramesh Kumar',
-        driverMobile: '9000334455',
+        driverName: null,
+        driverMobile: null,
+        driverLat: 14.4350,
+        driverLng: 79.9780,
         driverCoords: '14.4350, 79.9780',
         b2bOtp: null,
+        createdAt: Date.now(),
         date: 'Today, ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
 
@@ -1303,7 +1457,9 @@ return (
       };
       setCurrentUser(updatedUser);
       setUsers((prev) => prev.map((u) => (u.id === updatedUser.id ? updatedUser : u)));
-      setOrders([newOrd, ...orders]);
+      setOrders((prev) => [newOrd, ...prev]);
+      // Sync live to Cloud Firestore so Friend's Delivery Phone receives it instantly
+      setDoc(doc(db, 'orders', newOrd.id), newOrd).catch(() => {});
       setLastPlacedOrder(newOrd);
       setCart({});
       setUtrRefInput('');
@@ -1340,10 +1496,10 @@ return (
       };
       setCurrentUser(updatedUser);
       setOrders((prev) => prev.map((o) => (o.id === ord.id ? { ...o, status: 'Delivered' } : o)));
+      updateDoc(doc(db, 'orders', ord.id), { status: 'Delivered' }).catch(() => {});
       if (trackingOrder && trackingOrder.id === ord.id) {
         setTrackingOrder({ ...ord, status: 'Delivered' });
       }
-      // AUTOMATIC INVOICE PDF EMAIL TRIGGER ON DELIVERY
       sendAutomaticInvoiceEmail(ord);
       setScratchCard({ orderId: ord.id, reward, scratched: false });
     };
@@ -1393,7 +1549,7 @@ return (
               </button>
             </div>
 
-            <div className="space-y-2.5">
+<div className="space-y-2.5">
               {filteredAddrs.map((addr) => (
                 <button
                   key={addr.id}
@@ -1429,7 +1585,7 @@ return (
       );
     }
 
-if (activeTab === 'mapPin') {
+    if (activeTab === 'mapPin') {
       return (
         <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto text-slate-800 shadow-2xl pb-10">
           <div className="bg-[#0F5132] px-4 py-4 text-white flex items-center space-x-3 rounded-b-3xl shadow">
@@ -1474,7 +1630,7 @@ if (activeTab === 'mapPin') {
               </div>
             </div>
 
-            <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+ <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm space-y-3">
               <div className="flex items-start justify-between space-x-2">
                 <div className="flex items-start space-x-2 flex-1">
                   <MapPin className="h-5 w-5 text-[#15803D] flex-shrink-0 mt-0.5" />
@@ -1521,6 +1677,9 @@ if (activeTab === 'mapPin') {
       return catOk && (p.nameEn.toLowerCase().includes(q) || p.nameTe.includes(search));
     });
 
+    const liveLat = trackingOrder?.driverLat || mapPinCoords.lat;
+    const liveLng = trackingOrder?.driverLng || mapPinCoords.lng;
+
     return (
       <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
         <WelcomeSmileModal />
@@ -1563,7 +1722,7 @@ if (activeTab === 'mapPin') {
           </div>
         )}
 
-  {activeTab === 'home' && (
+{activeTab === 'home' && (
           <main className="px-4 pt-3.5 space-y-4 text-xs">
             <div className="flex items-center justify-between">
               <button
@@ -1726,7 +1885,7 @@ if (activeTab === 'mapPin') {
                       </div>
                     </div>
 
-{!p.inStock ? (
+  {!p.inStock ? (
                       <span className="text-[10px] font-extrabold text-rose-500 bg-rose-50 px-2.5 py-1.5 rounded-xl">Sold Out</span>
                     ) : q === 0 ? (
                       <button
@@ -1837,7 +1996,7 @@ if (activeTab === 'mapPin') {
                   <button onClick={() => setDetailQty(detailQty + 1)}>+</button>
                 </div>
 
-                <button
+<button
                   onClick={() => {
                     setCart({ ...cart, [detailProduct.id]: detailQty });
                     notify('Added to Cart!');
@@ -1908,7 +2067,7 @@ if (activeTab === 'mapPin') {
           </main>
         )}
 
- {activeTab === 'checkout' && (
+        {activeTab === 'checkout' && (
           <main className="p-4 space-y-3.5 text-xs">
             <div className="flex items-center space-x-3">
               <button onClick={() => setActiveTab('cart')} className="p-2 rounded-full bg-white shadow-sm">
@@ -1959,7 +2118,7 @@ if (activeTab === 'mapPin') {
               )}
             </div>
 
-            <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
+<div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
               <div className="flex items-center justify-between">
                 <h3 className="font-extrabold text-slate-900">Payment Method</h3>
                 <span className="text-[10px] font-bold text-[#15803D]">{merchantUpiId}</span>
@@ -2033,7 +2192,7 @@ if (activeTab === 'mapPin') {
           </main>
         )}
 
-{activeTab === 'upiProcessing' && (
+        {activeTab === 'upiProcessing' && (
           <main className="p-4 space-y-4 text-xs">
             <div className="bg-white rounded-3xl p-5 shadow-md border border-emerald-200 text-center space-y-3">
               <div className="flex justify-center">
@@ -2076,7 +2235,7 @@ if (activeTab === 'mapPin') {
                 }}
                 className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
               >
-                Track Order
+                Track Order (Live GPS)
               </button>
               <button
                 onClick={() => setActiveTab('home')}
@@ -2088,66 +2247,79 @@ if (activeTab === 'mapPin') {
           </main>
         )}
 
-        {activeTab === 'trackOrder' && trackingOrder && (
+{activeTab === 'trackOrder' && trackingOrder && (
           <main className="pb-10 text-xs">
-            <div className="bg-gradient-to-b from-[#15803D] to-[#22C55E] text-white p-5 rounded-b-[32px] shadow-md space-y-3">
+            <div className="bg-gradient-to-b from-[#15803D] to-[#22C55E] text-white p-5 rounded-b-[32px] shadow-md space-y-2">
               <div className="flex items-center space-x-3">
                 <button onClick={() => setActiveTab('orders')} className="p-2 rounded-full bg-white/15">
                   <ArrowLeft className="h-4 w-4" />
                 </button>
                 <div>
                   <h2 className="text-base font-extrabold">{trackingOrder.status}</h2>
-                  <p className="text-[11px] text-emerald-100">Arriving in ~30 mins • {trackingOrder.id}</p>
+                  <p className="text-[11px] text-emerald-100">
+                    {trackingOrder.driverName ? `Live GPS: ${trackingOrder.driverCoords}` : 'Waiting for Delivery Partner...'} • {trackingOrder.id}
+                  </p>
                 </div>
               </div>
             </div>
 
             <div className="p-4 space-y-3.5">
-              <div className="relative h-44 w-full rounded-3xl overflow-hidden border border-emerald-200 shadow-sm">
+              <div className="relative h-48 w-full rounded-3xl overflow-hidden border border-emerald-200 shadow-sm">
                 <iframe
                   title="Live Scooter Route"
                   width="100%"
-                  height="176"
+                  height="192"
                   style={{ border: 0 }}
-                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapPinCoords.lng - 0.01}%2C${mapPinCoords.lat - 0.01}%2C${mapPinCoords.lng + 0.01}%2C${mapPinCoords.lat + 0.01}&layer=mapnik&marker=${mapPinCoords.lat}%2C${mapPinCoords.lng}`}
+                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${liveLng - 0.008}%2C${liveLat - 0.008}%2C${liveLng + 0.008}%2C${liveLat + 0.008}&layer=mapnik&marker=${liveLat}%2C${liveLng}`}
                 />
+                <span className="absolute bottom-2 left-2 bg-slate-900/85 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full">
+                  Live Rider GPS: {liveLat}, {liveLng}
+                </span>
               </div>
 
               <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-3">
-                {['Order Placed', 'Order Confirmed', 'Out for Delivery', 'Delivered'].map((step, idx) => (
-                  <div key={step} className="flex items-center space-x-3">
-                    <div className={`h-6 w-6 rounded-full flex items-center justify-center text-white font-bold ${idx < 3 || trackingOrder.status === 'Delivered' ? 'bg-[#15803D]' : 'bg-slate-200'}`}>
-                      ✓
+                {['Order Placed', 'Partner Assigned', 'Out for Delivery', 'Delivered'].map((step, idx) => {
+                  const activeStep =
+                    trackingOrder.status === 'Delivered' ||
+                    idx === 0 ||
+                    (idx <= 2 && trackingOrder.status === 'Partner Assigned');
+                  return (
+                    <div key={step} className="flex items-center space-x-3">
+                      <div className={`h-6 w-6 rounded-full flex items-center justify-center text-white font-bold ${activeStep ? 'bg-[#15803D]' : 'bg-slate-200'}`}>
+                        ✓
+                      </div>
+                      <div>
+                        <p className="font-extrabold text-slate-900">{step}</p>
+                        <p className="text-[10px] text-slate-400">{trackingOrder.date}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-extrabold text-slate-900">{step}</p>
-                      <p className="text-[10px] text-slate-400">{trackingOrder.date}</p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="h-11 w-11 rounded-full bg-emerald-100 text-[#15803D] font-extrabold flex items-center justify-center">
-                    RK
+                    {(trackingOrder.driverName || 'DP').slice(0, 2).toUpperCase()}
                   </div>
                   <div>
                     <p className="text-[10px] text-slate-400 font-bold">Delivery Partner</p>
-                    <h4 className="font-extrabold text-slate-900">{trackingOrder.driverName || 'Ramesh Kumar'}</h4>
+                    <h4 className="font-extrabold text-slate-900">{trackingOrder.driverName || 'Assigning Rider...'}</h4>
                   </div>
                 </div>
-                <div className="flex space-x-2">
-                  <a href={`tel:${trackingOrder.driverMobile || '9000334455'}`} className="p-2.5 bg-emerald-50 text-[#15803D] rounded-full">
-                    <Phone className="h-4 w-4" />
-                  </a>
-                  <a href={`sms:${trackingOrder.driverMobile || '9000334455'}`} className="p-2.5 bg-sky-50 text-sky-600 rounded-full">
-                    <MessageSquare className="h-4 w-4" />
-                  </a>
-                </div>
+                {trackingOrder.driverMobile && (
+                  <div className="flex space-x-2">
+                    <a href={`tel:${trackingOrder.driverMobile}`} className="p-2.5 bg-emerald-50 text-[#15803D] rounded-full">
+                      <Phone className="h-4 w-4" />
+                    </a>
+                    <a href={`sms:${trackingOrder.driverMobile}`} className="p-2.5 bg-sky-50 text-sky-600 rounded-full">
+                      <MessageSquare className="h-4 w-4" />
+                    </a>
+                  </div>
+                )}
               </div>
 
-{trackingOrder.status !== 'Delivered' ? (
+              {trackingOrder.status !== 'Delivered' ? (
                 <button
                   onClick={() => handleSimulateCustomerDelivery(trackingOrder)}
                   className="w-full bg-[#EA580C] text-white font-extrabold py-3.5 rounded-2xl shadow"
@@ -2183,7 +2355,7 @@ if (activeTab === 'mapPin') {
               ))}
             </div>
 
-            {orders.filter((o) => o.buyerRole === 'customer').length === 0 ? (
+  {orders.filter((o) => o.buyerRole === 'customer').length === 0 ? (
               <div className="bg-white rounded-3xl p-8 text-center font-bold text-slate-400">No orders placed yet.</div>
             ) : (
               orders
@@ -2246,7 +2418,7 @@ if (activeTab === 'mapPin') {
           </main>
         )}
 
-{activeTab === 'profile' && renderSharedProfileTab()}
+        {activeTab === 'profile' && renderSharedProfileTab()}
 
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-slate-200 px-4 py-2 flex justify-between items-center z-40 shadow-lg">
           <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'home' ? 'text-[#15803D]' : 'text-slate-400'}`}>
@@ -2283,8 +2455,8 @@ if (activeTab === 'mapPin') {
     );
   }
 
-// =========================================================================
-  // 4. FARMER PORTAL (EXACT REFERENCE 1000043646.png + KG/GRAMS/LITRES & TIME DROPDOWNS)
+ // =========================================================================
+  // 4. FARMER PORTAL
   // =========================================================================
   if (currentUser.role === 'farmer') {
     const handlePublishFarmerProduct = (e) => {
@@ -2328,7 +2500,6 @@ if (activeTab === 'mapPin') {
         <WelcomeSmileModal />
         {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-extrabold px-4 py-2 rounded-full shadow-lg">{toast}</div>}
 
-        {/* Top Location + Bell Header (Ref 1000043646 Screen 4) */}
         <header className="bg-white px-4 py-3 flex items-center justify-between border-b border-slate-100 sticky top-0 z-30">
           <div className="flex items-center space-x-2">
             <MapPin className="h-4 w-4 text-[#15803D]" />
@@ -2342,7 +2513,6 @@ if (activeTab === 'mapPin') {
 
         {activeTab === 'home' && (
           <main className="p-4 space-y-4 text-xs">
-            {/* Hero Banner: Sell Your Produce Get Best Price + List Your Produce -> (Ref Screen 4) */}
             <div className="bg-gradient-to-r from-[#DCFCE7] via-[#BBF7D0] to-[#86EFAC] rounded-3xl p-4 shadow-sm flex items-center justify-between">
               <div className="space-y-2 max-w-[58%]">
                 <h2 className="text-base font-extrabold text-[#0F5132] leading-snug">
@@ -2367,7 +2537,6 @@ if (activeTab === 'mapPin') {
               />
             </div>
 
-            {/* 6-Tile Farmer Quick Grid (My Produce, Market Rates, Orders, Earnings, Support, Profile - Ref Screen 4) */}
             <div className="grid grid-cols-3 gap-2.5 text-center">
               {[
                 { id: 'listProduce', label: 'My Produce', icon: Sprout, bg: 'bg-emerald-50 text-[#15803D]' },
@@ -2393,8 +2562,7 @@ if (activeTab === 'mapPin') {
               })}
             </div>
 
-{/* Today's Market Rates Strip (Ref Screen 4 & 11) */}
-            <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-2.5">
+ <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-2.5">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-extrabold text-slate-900">Today's Market Rates</h3>
                 <button onClick={() => setActiveTab('marketRates')} className="text-[#15803D] font-extrabold">View All &gt;</button>
@@ -2412,7 +2580,6 @@ if (activeTab === 'mapPin') {
           </main>
         )}
 
-        {/* SCREEN 5 & 7: LIST YOUR PRODUCE (WITH KG/GRAMS/LITRES + AVAILABILITY DROPDOWNS) */}
         {activeTab === 'listProduce' && (
           <main className="p-4 space-y-3.5 text-xs">
             <div className="flex items-center space-x-2">
@@ -2434,7 +2601,6 @@ if (activeTab === 'mapPin') {
                 </div>
               </div>
 
-              {/* Quantity + Unit Selection Dropdown (Kg, Grams, Litres) */}
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="text-[10px] font-bold text-slate-400">Quantity & Unit</label>
@@ -2458,7 +2624,6 @@ if (activeTab === 'mapPin') {
                 </div>
               </div>
 
-              {/* Availability Time Slot Dropdown */}
               <div>
                 <label className="text-[10px] font-bold text-slate-400">Harvest Availability Slot</label>
                 <select
@@ -2492,7 +2657,6 @@ if (activeTab === 'mapPin') {
           </main>
         )}
 
-{/* SCREEN 11: MARKET RATES */}
         {activeTab === 'marketRates' && (
           <main className="p-4 space-y-3 text-xs">
             <div className="flex items-center space-x-2">
@@ -2516,8 +2680,7 @@ if (activeTab === 'mapPin') {
           </main>
         )}
 
-        {/* SCREEN 10: FARMER EARNINGS */}
-        {activeTab === 'earnings' && (
+  {activeTab === 'earnings' && (
           <main className="p-4 space-y-3 text-xs">
             <div className="flex items-center space-x-2">
               <button onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white shadow-sm">
@@ -2532,7 +2695,6 @@ if (activeTab === 'mapPin') {
           </main>
         )}
 
-        {/* SCREEN 13: FARMER SUPPORT */}
         {activeTab === 'support' && (
           <main className="p-4 space-y-3 text-xs text-center">
             <div className="bg-white rounded-3xl p-6 shadow-sm space-y-3">
@@ -2545,7 +2707,6 @@ if (activeTab === 'mapPin') {
           </main>
         )}
 
-        {/* SCREEN 8: INCOMING ORDERS */}
         {activeTab === 'orders' && (
           <main className="p-4 space-y-3 text-xs">
             <h2 className="text-base font-extrabold">My Orders</h2>
@@ -2564,6 +2725,7 @@ if (activeTab === 'mapPin') {
                     <button
                       onClick={() => {
                         setOrders((prev) => prev.map((o) => (o.id === ord.id ? { ...o, status: 'Order Accepted' } : o)));
+                        updateDoc(doc(db, 'orders', ord.id), { status: 'Order Accepted' }).catch(() => {});
                         setNotifications((prev) => [`Delivery Alert: Farmer accepted ${ord.id}. Ready for pickup!`, ...prev]);
                         notify('Order Accepted! Nearby Delivery Partners notified.');
                       }}
@@ -2580,7 +2742,6 @@ if (activeTab === 'mapPin') {
 
         {activeTab === 'profile' && renderSharedProfileTab()}
 
-        {/* 5-Icon Farmer Bottom Bar (Ref 1000043646 Screen 4) */}
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-4 py-2 flex justify-between items-center z-40">
           {[
             { id: 'home', icon: Home, label: 'Home' },
@@ -2603,7 +2764,7 @@ if (activeTab === 'mapPin') {
   }
 
 // =========================================================================
-  // 5. WHOLESALE & RETAIL STORE PORTALS (EXACT REFERENCE 1000043647.png)
+  // 5. WHOLESALE & RETAIL STORE PORTALS
   // =========================================================================
   if (currentUser.role === 'wholesale' || currentUser.role === 'retail') {
     const isRetail = currentUser.role === 'retail';
@@ -2627,11 +2788,16 @@ if (activeTab === 'mapPin') {
         deliveryMode: b2bDeliveryMode === 'pickup' ? 'Pickup at Store / Farm (₹0 Fee)' : `Home Delivery (${prod.distanceKm} km • ₹${delivCharge})`,
         status: 'Order Placed',
         driverName: null,
+        driverMobile: null,
+        driverLat: 14.4350,
+        driverLng: 79.9780,
         b2bOtp: otp,
+        createdAt: Date.now(),
         date: 'Today, ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
 
-      setOrders([newOrd, ...orders]);
+      setOrders((prev) => [newOrd, ...prev]);
+      setDoc(doc(db, 'orders', newOrd.id), newOrd).catch(() => {});
       notify(`B2B Order Placed! Delivery OTP: ${otp}`);
       setActiveTab('orders');
     };
@@ -2656,7 +2822,6 @@ if (activeTab === 'mapPin') {
 
         {activeTab === 'home' && (
           <main className="p-4 space-y-4 text-xs">
-            {/* Green Today's Sales Banner (Ref 1000043647 Screen 4) */}
             <div className="bg-gradient-to-r from-[#0F5132] to-[#16A34A] text-white rounded-3xl p-4 shadow-md flex items-center justify-between">
               <div>
                 <p className="text-emerald-100 font-bold">Today's Sales</p>
@@ -2667,7 +2832,6 @@ if (activeTab === 'mapPin') {
               <TrendingUp className="h-10 w-10 text-[#FDE047] opacity-90" />
             </div>
 
-            {/* 4 Pastel Metric Cards (Orders, Products, Stock Alert, Earnings - Ref Screen 4) */}
             <div className="grid grid-cols-2 gap-2.5">
               <div className="bg-[#EFF6FF] border border-[#BFDBFE] rounded-2xl p-3">
                 <p className="text-[10px] font-bold text-slate-500">Orders</p>
@@ -2687,7 +2851,6 @@ if (activeTab === 'mapPin') {
               </div>
             </div>
 
-            {/* Quick Actions (Ref Screen 4) */}
             <div className="space-y-2">
               <h3 className="font-extrabold text-slate-900">Quick Actions</h3>
               <div className="grid grid-cols-3 gap-2 text-center">
@@ -2706,14 +2869,12 @@ if (activeTab === 'mapPin') {
               </div>
             </div>
 
-            {/* Direct Bulk Catalog Preview */}
-            <button onClick={() => setActiveTab('browse')} className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm">
+<button onClick={() => setActiveTab('browse')} className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm">
               Browse Farm Produce & Place Bulk Order →
             </button>
           </main>
         )}
 
-{/* SCREEN 5 & 6: BROWSE PRODUCTS & PLACE BULK ORDER */}
         {activeTab === 'browse' && (
           <main className="p-4 space-y-3 text-xs">
             <div className="flex items-center space-x-2">
@@ -2738,7 +2899,7 @@ if (activeTab === 'mapPin') {
             )}
 
             <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 space-y-1.5">
-              <p className="font-extrabold text-slate-500">Delivery Mode (Ref Screen 6):</p>
+              <p className="font-extrabold text-slate-500">Delivery Mode:</p>
               <div className="grid grid-cols-2 gap-2 font-extrabold">
                 <button onClick={() => setB2bDeliveryMode('pickup')} className={`py-2 rounded-xl border ${b2bDeliveryMode === 'pickup' ? 'bg-emerald-50 border-[#15803D] text-[#15803D]' : 'bg-slate-50'}`}>
                   Pickup at Store (₹0)
@@ -2773,7 +2934,6 @@ if (activeTab === 'mapPin') {
           </main>
         )}
 
-        {/* SCREEN 7: B2B MY ORDERS & PDF INVOICE */}
         {activeTab === 'orders' && (
           <main className="p-4 space-y-3 text-xs">
             <h2 className="text-base font-extrabold">My Orders & PDF Invoices</h2>
@@ -2802,7 +2962,7 @@ if (activeTab === 'mapPin') {
           </main>
         )}
 
-{activeTab === 'profile' && renderSharedProfileTab()}
+        {activeTab === 'profile' && renderSharedProfileTab()}
 
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-6 py-2.5 flex justify-between items-center z-40">
           {[
@@ -2824,8 +2984,8 @@ if (activeTab === 'mapPin') {
     );
   }
 
-  // =========================================================================
-  // 6. DELIVERY PARTNER PORTAL (EXACT REFERENCE 1000043648.png + AUTO EMAIL INVOICE)
+// =========================================================================
+  // 6. DELIVERY PARTNER PORTAL (LIVE MULTI-DEVICE GPS + AUTO EMAIL INVOICE)
   // =========================================================================
   if (currentUser.role === 'delivery') {
     const availOrders = orders.filter((o) => o.status !== 'Delivered');
@@ -2841,8 +3001,8 @@ if (activeTab === 'mapPin') {
         })
       );
       setOrders((prev) => prev.map((o) => (o.id === ord.id ? { ...o, status: 'Delivered' } : o)));
+      updateDoc(doc(db, 'orders', ord.id), { status: 'Delivered' }).catch(() => {});
       setCurrentUser({ ...currentUser, wallet: (currentUser.wallet || 0) + 40, weeklyOrders: weeklyCompleted + 1 });
-      // AUTOMATIC INVOICE PDF EMAIL TO CUSTOMER ON DELIVERY
       sendAutomaticInvoiceEmail(ord);
       notify('Delivery Completed! Invoice PDF sent to Customer Email & ₹40 credited.');
     };
@@ -2864,7 +3024,6 @@ if (activeTab === 'mapPin') {
 
         {activeTab === 'home' && (
           <main className="p-4 space-y-3.5 text-xs">
-            {/* Green Today's Earnings Banner (Ref 1000043648 Screen 4) */}
             <div className="bg-gradient-to-r from-[#0F5132] to-[#16A34A] text-white rounded-3xl p-4 shadow-md flex items-center justify-between">
               <div>
                 <p className="text-emerald-100 font-bold">Today's Earnings</p>
@@ -2875,7 +3034,6 @@ if (activeTab === 'mapPin') {
               <TrendingUp className="h-10 w-10 text-[#FDE047]" />
             </div>
 
-            {/* 4 Pastel Metric Cards (New Orders, On Going, Completed, My Wallet - Ref Screen 4) */}
             <div className="grid grid-cols-2 gap-2.5">
               <button onClick={() => setDelivFilter('available')} className="bg-[#FFF7ED] border border-[#FED7AA] rounded-2xl p-3 text-left">
                 <p className="text-[10px] font-bold text-slate-500">New Orders</p>
@@ -2895,7 +3053,6 @@ if (activeTab === 'mapPin') {
               </button>
             </div>
 
-{/* Weekly 100 Orders Bonus Progress */}
             <div className="bg-gradient-to-r from-[#EA580C] to-[#EAB308] text-white rounded-2xl p-3.5 shadow space-y-1.5">
               <div className="flex justify-between font-extrabold">
                 <span>Weekly 100 Orders Bonus: ₹1,500</span>
@@ -2906,7 +3063,7 @@ if (activeTab === 'mapPin') {
               </div>
             </div>
 
-            {delivFilter === 'earnings' ? (
+{delivFilter === 'earnings' ? (
               <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-2">
                 <h3 className="font-extrabold">Earnings & Incentive Breakdown</h3>
                 <div className="flex justify-between"><span>Available Balance</span><span className="font-extrabold">₹{currentUser.wallet || 0}</span></div>
@@ -2926,6 +3083,11 @@ if (activeTab === 'mapPin') {
                     <MapPin className="h-3.5 w-3.5 text-[#EA580C]" />
                     <span>{ord.buyerAddress}</span>
                   </p>
+                  {ord.status === 'Partner Assigned' && (
+                    <p className="text-[10px] font-extrabold text-[#15803D] bg-emerald-50 px-2.5 py-1 rounded-lg">
+                      ● Broadcasting Live GPS ({ord.driverCoords}) to Customer
+                    </p>
+                  )}
                   <div className="flex space-x-2">
                     <a
                       href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(ord.buyerAddress)}`}
@@ -2940,14 +3102,24 @@ if (activeTab === 'mapPin') {
                       <button
                         onClick={() => {
                           if (ord.status !== 'Partner Assigned') {
+                            const initLat = 14.4390;
+                            const initLng = 79.9810;
                             setOrders((prev) =>
                               prev.map((o) =>
                                 o.id === ord.id
-                                  ? { ...o, status: 'Partner Assigned', driverName: currentUser.name, driverMobile: currentUser.mobile, driverCoords: '14.4390, 79.9810' }
+                                  ? { ...o, status: 'Partner Assigned', driverName: currentUser.name, driverMobile: currentUser.mobile, driverLat: initLat, driverLng: initLng, driverCoords: `${initLat}, ${initLng}` }
                                   : o
                               )
                             );
-                            notify('Accepted! Live GPS shared with Customer.');
+                            updateDoc(doc(db, 'orders', ord.id), {
+                              status: 'Partner Assigned',
+                              driverName: currentUser.name,
+                              driverMobile: currentUser.mobile,
+                              driverLat: initLat,
+                              driverLng: initLng,
+                              driverCoords: `${initLat}, ${initLng}`,
+                            }).catch(() => {});
+                            notify('Accepted! Live GPS broadcasting to Customer.');
                           } else {
                             if (ord.b2bOtp) {
                               const entered = window.prompt(`Enter ${ord.buyerRole.toUpperCase()} Delivery OTP (${ord.b2bOtp}):`);
@@ -2971,7 +3143,7 @@ if (activeTab === 'mapPin') {
           </main>
         )}
 
-        {activeTab === 'profile' && renderSharedProfileTab()}
+  {activeTab === 'profile' && renderSharedProfileTab()}
 
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-6 py-2.5 flex justify-between items-center z-40">
           <button onClick={() => { setDelivFilter('available'); setActiveTab('home'); }} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'home' && delivFilter === 'available' ? 'text-[#15803D]' : 'text-slate-400'}`}>
@@ -2995,7 +3167,7 @@ if (activeTab === 'mapPin') {
     );
   }
 
-// =========================================================================
+  // =========================================================================
   // 7. MASTER ADMIN HQ
   // =========================================================================
   return (
@@ -3056,7 +3228,7 @@ if (activeTab === 'mapPin') {
             </div>
           )}
 
-          {adminTab === 'stock' &&
+ {adminTab === 'stock' &&
             products.map((p) => (
               <div key={p.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
                 <div>
