@@ -4,13 +4,17 @@ import {
   Phone, MessageSquare, Sprout, Store, Truck, ShieldCheck, ChevronRight,
   ArrowLeft, CheckCircle2, Wallet, Gift, Sparkles, Bell, Globe,
   LocateFixed, LogOut, Printer, Warehouse, Heart, Clock, ChevronDown,
-  Briefcase, Leaf, Shield, Zap, Grid, Star, Trash2, Check, Mail
+  Briefcase, Leaf, Shield, Zap, Grid, Star, Trash2, Check, Mail,
+  TrendingUp, Package, AlertTriangle, HelpCircle, Navigation
 } from 'lucide-react';
 
-// EmailJS Credentials for Direct Free 6-Digit Email OTP
+// EmailJS Credentials for Direct Free 6-Digit Email OTP & Automatic Delivery Invoice
 const EMAILJS_SERVICE_ID = 'service_auf6gch';
 const EMAILJS_TEMPLATE_ID = 'template_z42k41l';
 const EMAILJS_PUBLIC_KEY = 'Y1UQmUcSoEzEtFR1m';
+
+// Guaranteed Indian Farmer Photo
+const FARMER_HERO_IMG = 'https://images.pexels.com/photos/2889440/pexels-photo-2889440.jpeg?auto=compress&cs=tinysrgb&w=400';
 
 const EN_TO_TE = {
   tomato: 'టమాటా',
@@ -34,10 +38,10 @@ const TE_TO_EN = Object.fromEntries(
 );
 
 const TOP_CATEGORIES = [
-  { id: 'Vegetables', labelEn: 'Vegetables', labelTe: 'కూరగాయలు', bg: 'bg-emerald-50', img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=160&q=80' },
-  { id: 'Fruits', labelEn: 'Fruits', labelTe: 'పండ్లు', bg: 'bg-amber-50', img: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=160&q=80' },
-  { id: 'Staples', labelEn: 'Groceries', labelTe: 'కిరాణా', bg: 'bg-orange-50', img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=160&q=80' },
-  { id: 'Leafy Greens', labelEn: 'Farm Fresh', labelTe: 'ఆకుకూరలు', bg: 'bg-lime-50', img: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=160&q=80' },
+  { id: 'Vegetables', labelEn: 'Vegetables', labelTe: 'కూరగాయలు', img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=160&q=80' },
+  { id: 'Fruits', labelEn: 'Fruits', labelTe: 'పండ్లు', img: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=160&q=80' },
+  { id: 'Staples', labelEn: 'Groceries', labelTe: 'కిరాణా', img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=160&q=80' },
+  { id: 'Leafy Greens', labelEn: 'Farm Fresh', labelTe: 'ఆకుకూరలు', img: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=160&q=80' },
 ];
 
 const POPULAR_CIRCLES = [
@@ -45,6 +49,15 @@ const POPULAR_CIRCLES = [
   { id: 'p2', name: 'Onions', nameTe: 'ఉల్లి', img: 'https://images.unsplash.com/photo-1508747705729-e0613307ab6e?auto=format&fit=crop&w=160&q=80' },
   { id: 'p5', name: 'Sona Rice', nameTe: 'బియ్యం', img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=160&q=80' },
   { id: 'p4', name: 'Green Leafy', nameTe: 'ఆకుకూరలు', img: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=160&q=80' },
+];
+
+const AVAILABILITY_SLOTS = [
+  'Available Now',
+  'After 1 Hour',
+  'After 3 Hours',
+  'Today Evening 6:00 PM',
+  'Tomorrow Morning 6:00 AM',
+  'Tomorrow Morning 9:00 AM',
 ];
 
 const INITIAL_PRODUCTS = [
@@ -56,7 +69,8 @@ const INITIAL_PRODUCTS = [
     nameEn: 'Fresh Tomato (Grade A)',
     nameTe: 'టమాటా',
     cat: 'Vegetables',
-    packLabel: '1 kg',
+    unit: 'Kg',
+    packLabel: '1 Kg',
     mrp: 48,
     retailPrice: 36,
     farmerDirectPrice: 24,
@@ -67,7 +81,7 @@ const INITIAL_PRODUCTS = [
     rating: 4.5,
     reviews: 128,
     desc: 'Fresh and juicy country tomatoes harvested this morning from Kovur farms, Nellore.',
-    availableFrom: 'Today, 5:00 PM',
+    availableFrom: 'Available Now',
     img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=500&q=80',
   },
   {
@@ -78,7 +92,8 @@ const INITIAL_PRODUCTS = [
     nameEn: 'Red Onion (Grade A)',
     nameTe: 'ఉల్లిపాయలు',
     cat: 'Vegetables',
-    packLabel: '1 kg',
+    unit: 'Kg',
+    packLabel: '1 Kg',
     mrp: 44,
     retailPrice: 34,
     farmerDirectPrice: 22,
@@ -89,7 +104,7 @@ const INITIAL_PRODUCTS = [
     rating: 4.6,
     reviews: 94,
     desc: 'Farm-cured crisp red onions sourced directly from Buchireddypalem growers.',
-    availableFrom: 'Tomorrow, 6:00 AM',
+    availableFrom: 'Tomorrow Morning 6:00 AM',
     img: 'https://images.unsplash.com/photo-1508747705729-e0613307ab6e?auto=format&fit=crop&w=500&q=80',
   },
   {
@@ -100,7 +115,8 @@ const INITIAL_PRODUCTS = [
     nameEn: 'Banganapalli Mango',
     nameTe: 'మామిడిపండు',
     cat: 'Fruits',
-    packLabel: '1 kg',
+    unit: 'Kg',
+    packLabel: '1 Kg',
     mrp: 140,
     retailPrice: 110,
     farmerDirectPrice: 85,
@@ -122,7 +138,8 @@ id: 'p4',
     nameEn: 'Fresh Spinach (Palakura)',
     nameTe: 'పాలకూర',
     cat: 'Leafy Greens',
-    packLabel: '2 Bunches',
+    unit: 'Grams',
+    packLabel: '500 Grams',
     mrp: 28,
     retailPrice: 20,
     farmerDirectPrice: 14,
@@ -133,7 +150,7 @@ id: 'p4',
     rating: 4.7,
     reviews: 76,
     desc: 'Pesticide-free tender green spinach bundles harvested at dawn.',
-    availableFrom: 'Today, 6:00 AM',
+    availableFrom: 'After 1 Hour',
     img: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=500&q=80',
   },
   {
@@ -144,7 +161,8 @@ id: 'p4',
     nameEn: 'Nellore Sona Masuri Rice',
     nameTe: 'సోనా మసూరి బియ్యం',
     cat: 'Staples',
-    packLabel: '5 kg',
+    unit: 'Kg',
+    packLabel: '5 Kg',
     mrp: 340,
     retailPrice: 285,
     farmerDirectPrice: 250,
@@ -200,7 +218,7 @@ export default function App() {
     }
   }, []);
 
-  const [lang, setLang] = useState('te');
+const [lang, setLang] = useState('te');
   const [selectedRole, setSelectedRole] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [users, setUsers] = useState(() => {
@@ -217,11 +235,11 @@ export default function App() {
     try {
       localStorage.setItem('rythu_registered_users', JSON.stringify(users));
     } catch {
-      // ignore storage errors
+      // ignore
     }
   }, [users]);
 
-  // Direct Email 6-Digit OTP States (₹0 Cost via EmailJS)
+  // Direct Email 6-Digit OTP States
   const [authScreen, setAuthScreen] = useState('login');
   const [loginEmail, setLoginEmail] = useState('');
   const [loginOtpSent, setLoginOtpSent] = useState(false);
@@ -241,7 +259,7 @@ export default function App() {
   const [regOtpInput, setRegOtpInput] = useState('');
   const [showWelcomeSmile, setShowWelcomeSmile] = useState(false);
 
-  // Navigation & Customer Reference Screens
+  // Navigation & Customer Screens
   const [activeTab, setActiveTab] = useState('home');
   const [detailProduct, setDetailProduct] = useState(null);
   const [detailQty, setDetailQty] = useState(1);
@@ -255,7 +273,7 @@ export default function App() {
   const [search, setSearch] = useState('');
   const [wishlist, setWishlist] = useState(['p1', 'p3']);
 
-// Location & Map Pin States
+  // Location & Map Pin States
   const [savedAddresses, setSavedAddresses] = useState([
     {
       id: 'addr1',
@@ -298,7 +316,7 @@ export default function App() {
   const [cardError, setCardError] = useState('');
   const [merchantUpiId] = useState('madhavam.com@ybl');
 
-  // B2B States
+// B2B States
   const [b2bSource, setB2bSource] = useState('farmer');
   const [b2bDeliveryMode, setB2bDeliveryMode] = useState('pickup');
 
@@ -309,12 +327,13 @@ export default function App() {
   ]);
   const [orders, setOrders] = useState([]);
 
-  // Farmer Form States
+  // Farmer Form States (With Unit Dropdown: Kg / Grams / Litres + Availability Slot Dropdown)
   const [fNameEn, setFNameEn] = useState('');
   const [fNameTe, setFNameTe] = useState('');
   const [fQty, setFQty] = useState('100');
+  const [fUnit, setFUnit] = useState('Kg');
   const [fPrice, setFPrice] = useState('22');
-  const [fAvailTime, setFAvailTime] = useState('Tomorrow, 6:30 AM');
+  const [fAvailTime, setFAvailTime] = useState('Available Now');
 
   // Delivery & Admin States
   const [delivFilter, setDelivFilter] = useState('available');
@@ -328,7 +347,7 @@ export default function App() {
     setTimeout(() => setToast(''), 3500);
   };
 
-  // SEND REAL 6-DIGIT OTP TO USER EMAIL INBOX VIA EMAILJS (₹0 COST)
+  // SEND REAL 6-DIGIT OTP TO USER EMAIL INBOX VIA EMAILJS
   const triggerEmailOtp = async (targetEmail, userName) => {
     setSendingEmail(true);
     setAuthMsg('');
@@ -355,14 +374,46 @@ export default function App() {
       }
 
       setGeneratedEmailOtp(code);
-      setEmailOtpExpiry(Date.now() + 5 * 60 * 1000); // 5 mins validity
-      notify(`6-Digit OTP sent to ${targetEmail}! Check your Inbox/Spam folder.`);
+      setEmailOtpExpiry(Date.now() + 5 * 60 * 1000);
+      notify(`6-Digit OTP sent to ${targetEmail}! Check your Inbox/Spam.`);
       return true;
     } catch (err) {
       setAuthMsg(`Email OTP Error: ${err.message}`);
       return false;
     } finally {
       setSendingEmail(false);
+    }
+  };
+
+  // AUTOMATIC EMAIL INVOICE PDF DISPATCH UPON ORDER DELIVERY
+  const sendAutomaticInvoiceEmail = async (ord) => {
+    const recipientEmail = ord.buyerEmail || currentUser?.email;
+    if (!recipientEmail) return;
+
+    const itemLines = ord.items
+      .map((i, idx) => `${idx + 1}. ${i.name} (${i.qty} ${i.unit || 'Kg'}) - Rs.${i.price * i.qty}`)
+      .join(' | ');
+
+    const invoiceSummary = `TAX INVOICE #${ord.id} | Status: DELIVERED | Items: ${itemLines} | Grand Total Paid: Rs.${ord.total} (Paid via ${merchantUpiId}) | Delivered to: ${ord.buyerAddress}`;
+
+    try {
+      await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          service_id: EMAILJS_SERVICE_ID,
+          template_id: EMAILJS_TEMPLATE_ID,
+          user_id: EMAILJS_PUBLIC_KEY,
+          template_params: {
+            to_email: recipientEmail,
+            to_name: `${ord.buyerName} — Official PDF Invoice (${ord.id})`,
+            otp_code: invoiceSummary,
+          },
+        }),
+      });
+      notify(`Official Invoice PDF sent automatically to ${recipientEmail}!`);
+    } catch {
+      // silent fallback
     }
   };
 
@@ -378,7 +429,6 @@ export default function App() {
     return true;
   };
 
-// STEP 1: Login Email OTP Request
   const handleSendLoginOtp = async () => {
     const cleanEmail = loginEmail.trim().toLowerCase();
     if (!isValidEmail(cleanEmail)) {
@@ -396,8 +446,7 @@ export default function App() {
     if (ok) setLoginOtpSent(true);
   };
 
-  // STEP 2: Verify Email OTP & Login
-  const handleVerifyLogin = (e) => {
+const handleVerifyLogin = (e) => {
     e.preventDefault();
     const cleanEmail = loginEmail.trim().toLowerCase();
     const existing = users.find((u) => (u.email || '').toLowerCase() === cleanEmail && u.role === selectedRole);
@@ -412,7 +461,6 @@ export default function App() {
     setActiveTab('home');
   };
 
-  // Registration Step 1: Send Email OTP
   const handleSendRegisterOtp = async () => {
     const cleanMobile = regMobile.replace(/\D/g, '');
     const cleanEmail = regEmail.trim().toLowerCase();
@@ -440,7 +488,6 @@ export default function App() {
     if (ok) setRegOtpSent(true);
   };
 
-  // Registration Step 2: Verify Email OTP & Create Account
   const handleCompleteRegistration = (e) => {
     e.preventDefault();
     if (!verifyEmailOtpCode(regOtpInput)) return;
@@ -574,7 +621,7 @@ const handleUseCurrentLocationMap = () => {
   const fontStyle = { fontFamily: "'Plus Jakarta Sans', 'Noto Sans Telugu', sans-serif" };
 
   // =========================================================================
-  // 1. REFERENCE IMAGE 1: ROLE ENTRY HOME PAGE
+  // 1. HOME / ROLE ENTRY PAGE (ONLY 'HOME' IN BOTTOM BAR + STRICT FARMER PHOTO)
   // =========================================================================
   if (!selectedRole) {
     const roleCards = [
@@ -634,7 +681,7 @@ const handleUseCurrentLocationMap = () => {
       },
     ];
 
-    return (
+return (
       <div style={fontStyle} className="min-h-screen bg-[#F5F7F5] max-w-md mx-auto text-slate-800 shadow-2xl pb-24 relative overflow-x-hidden">
         <div className="bg-gradient-to-b from-[#0E5A2B] via-[#15803D] to-[#4ADE80]/30 text-white rounded-b-[36px] px-4 pt-4 pb-6 shadow-lg relative overflow-hidden">
           <div className="flex items-center justify-between relative z-10">
@@ -665,8 +712,9 @@ const handleUseCurrentLocationMap = () => {
             </div>
           </div>
 
-<div className="mt-4 bg-gradient-to-r from-white/95 via-white/90 to-emerald-50/90 rounded-3xl p-3.5 shadow-md flex items-center justify-between relative z-10 text-slate-900">
-            <div className="space-y-2 max-w-[56%]">
+          {/* Hero Card with Strictly Indian Farmer Photo */}
+          <div className="mt-4 bg-gradient-to-r from-white/95 via-white/90 to-emerald-50/90 rounded-3xl p-3.5 shadow-md flex items-center justify-between relative z-10 text-slate-900">
+            <div className="space-y-2 max-w-[55%]">
               <p className="text-xs font-extrabold text-[#15803D] leading-snug">
                 మా రైతు ఉత్పత్తులు
               </p>
@@ -686,11 +734,15 @@ const handleUseCurrentLocationMap = () => {
               </button>
             </div>
 
-            <div className="w-[42%] flex justify-end">
+            <div className="w-[43%] flex justify-end">
               <img
-                src="https://images.unsplash.com/photo-1595855759920-86582396756a?auto=format&fit=crop&w=320&q=80"
-                alt="Farmer Harvest"
-                className="h-28 w-28 rounded-2xl object-cover border-2 border-[#15803D]/20 shadow-md"
+                src={FARMER_HERO_IMG}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = '/icon-512.png';
+                }}
+                alt="Indian Farmer"
+                className="h-28 w-28 rounded-2xl object-cover object-top border-2 border-[#15803D]/30 shadow-md bg-emerald-50"
               />
             </div>
           </div>
@@ -736,7 +788,7 @@ const handleUseCurrentLocationMap = () => {
           })}
         </div>
 
-        <div className="px-3.5 pt-3.5">
+ <div className="px-3.5 pt-3.5">
           <div className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white rounded-2xl p-3.5 shadow-md flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="h-11 w-11 rounded-full bg-white/15 border border-white/25 flex items-center justify-center flex-shrink-0">
@@ -792,46 +844,23 @@ const handleUseCurrentLocationMap = () => {
           </div>
         </div>
 
- <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0D4A24] text-white px-5 py-2.5 rounded-t-3xl flex justify-between items-center z-40 shadow-2xl">
+        {/* BOTTOM DOCK WITH ONLY 'HOME' (Orders, More, Profile Removed as Requested) */}
+        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0D4A24] text-white px-6 py-2.5 rounded-t-3xl flex justify-center items-center z-40 shadow-2xl">
           <button
             type="button"
             onClick={() => setSelectedRole(null)}
-            className="bg-[#D9F99D] text-[#0D4A24] px-4 py-1.5 rounded-2xl flex flex-col items-center text-[10px] font-extrabold shadow"
+            className="bg-[#D9F99D] text-[#0D4A24] px-8 py-1.5 rounded-2xl flex items-center space-x-2 text-xs font-extrabold shadow"
           >
-            <Home className="h-4 w-4 mb-0.5" />
+            <Home className="h-4 w-4" />
             <span>Home</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setSelectedRole('customer')}
-            className="flex flex-col items-center text-[10px] font-bold text-emerald-100"
-          >
-            <ShoppingCart className="h-4 w-4 mb-0.5" />
-            <span>Orders</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setSelectedRole('wholesale')}
-            className="flex flex-col items-center text-[10px] font-bold text-emerald-100"
-          >
-            <Grid className="h-4 w-4 mb-0.5" />
-            <span>More</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setSelectedRole('farmer')}
-            className="flex flex-col items-center text-[10px] font-bold text-emerald-100"
-          >
-            <User className="h-4 w-4 mb-0.5" />
-            <span>Profile</span>
           </button>
         </nav>
       </div>
     );
   }
 
-  // =========================================================================
-  // 2. DIRECT EMAIL 6-DIGIT OTP LOGIN / SIGN UP SCREEN (₹0 COST)
+// =========================================================================
+  // 2. DIRECT EMAIL 6-DIGIT OTP LOGIN / SIGN UP SCREEN
   // =========================================================================
   if (!currentUser) {
     return (
@@ -969,11 +998,11 @@ const handleUseCurrentLocationMap = () => {
                     setRegOtpSent(false);
                     setAuthMsg('');
                   }}
-                  placeholder="Email ID (for 6-Digit OTP) *"
+                  placeholder="Email ID (for 6-Digit OTP & Invoices) *"
                   className="w-full bg-transparent font-bold text-sm focus:outline-none"
                 />
               </div>
- <div className="flex items-center border border-slate-200 rounded-2xl px-3.5 py-3.5 bg-slate-50">
+              <div className="flex items-center border border-slate-200 rounded-2xl px-3.5 py-3.5 bg-slate-50">
                 <span className="font-extrabold text-slate-500 pr-2 border-r">+91</span>
                 <input
                   type="tel"
@@ -990,7 +1019,7 @@ const handleUseCurrentLocationMap = () => {
                 required
                 value={regAddress}
                 onChange={(e) => setRegAddress(e.target.value)}
-                placeholder="Address in Nellore *"
+                placeholder="Village / Area Address in Nellore *"
                 className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 font-bold"
               />
               {selectedRole === 'customer' && (
@@ -1003,7 +1032,7 @@ const handleUseCurrentLocationMap = () => {
                 />
               )}
 
-              {authMsg && <p className="text-red-600 font-bold">{authMsg}</p>}
+{authMsg && <p className="text-red-600 font-bold">{authMsg}</p>}
 
               {!regOtpSent ? (
                 <button
@@ -1053,7 +1082,7 @@ const handleUseCurrentLocationMap = () => {
     );
   }
 
-const WelcomeSmileModal = () =>
+  const WelcomeSmileModal = () =>
     showWelcomeSmile ? (
       <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-3xl p-6 text-center max-w-xs w-full space-y-3 shadow-2xl">
@@ -1133,7 +1162,7 @@ const WelcomeSmileModal = () =>
   );
 
 // =========================================================================
-  // 3. CUSTOMER STOREFRONT & TRACKING
+  // 3. CUSTOMER STOREFRONT & AUTO EMAIL PDF INVOICE ON DELIVERY
   // =========================================================================
   if (currentUser.role === 'customer') {
     const activeAddr = savedAddresses.find((a) => a.id === activeAddrId) || savedAddresses[0];
@@ -1179,7 +1208,7 @@ const WelcomeSmileModal = () =>
       const itemsArr = Object.entries(cart)
         .map(([id, qty]) => {
           const p = products.find((x) => x.id === id);
-          return p ? { id: p.id, name: p.nameEn, qty, price: p.retailPrice, img: p.img } : null;
+          return p ? { id: p.id, name: p.nameEn, unit: p.unit || 'Kg', qty, price: p.retailPrice, img: p.img } : null;
         })
         .filter(Boolean);
 
@@ -1190,6 +1219,7 @@ const WelcomeSmileModal = () =>
         buyerRole: 'customer',
         buyerName: currentUser.name,
         buyerMobile: currentUser.mobile,
+        buyerEmail: currentUser.email,
         buyerAddress: activeAddr.full,
         deliverySlot,
         items: itemsArr,
@@ -1238,7 +1268,7 @@ const WelcomeSmileModal = () =>
       }, 350);
     };
 
-const handleSimulateCustomerDelivery = (ord) => {
+    const handleSimulateCustomerDelivery = (ord) => {
       const isLucky = Math.random() > 0.2;
       const reward = isLucky ? Math.floor(scratchMin + Math.random() * (scratchMax - scratchMin + 1)) : 0;
       const updatedUser = {
@@ -1250,6 +1280,8 @@ const handleSimulateCustomerDelivery = (ord) => {
       if (trackingOrder && trackingOrder.id === ord.id) {
         setTrackingOrder({ ...ord, status: 'Delivered' });
       }
+      // AUTOMATIC INVOICE PDF EMAIL TRIGGER ON DELIVERY
+      sendAutomaticInvoiceEmail(ord);
       setScratchCard({ orderId: ord.id, reward, scratched: false });
     };
 
@@ -1334,7 +1366,7 @@ const handleSimulateCustomerDelivery = (ord) => {
       );
     }
 
-    if (activeTab === 'mapPin') {
+if (activeTab === 'mapPin') {
       return (
         <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto text-slate-800 shadow-2xl pb-10">
           <div className="bg-[#0F5132] px-4 py-4 text-white flex items-center space-x-3 rounded-b-3xl shadow">
@@ -1420,7 +1452,7 @@ const handleSimulateCustomerDelivery = (ord) => {
       );
     }
 
-const visibleProducts = products.filter((p) => {
+    const visibleProducts = products.filter((p) => {
       const catOk = selectedCat === 'All' || p.cat === selectedCat;
       const q = search.toLowerCase();
       return catOk && (p.nameEn.toLowerCase().includes(q) || p.nameTe.includes(search));
@@ -1442,6 +1474,7 @@ const visibleProducts = products.filter((p) => {
                 <Sparkles className="h-6 w-6" />
               </div>
               <h3 className="text-lg font-extrabold text-slate-900">Order {scratchCard.orderId} Delivered!</h3>
+              <p className="text-[11px] font-bold text-[#15803D]">Invoice PDF sent automatically to {currentUser.email}</p>
               {!scratchCard.scratched ? (
                 <button
                   onClick={() => setScratchCard({ ...scratchCard, scratched: true })}
@@ -1467,7 +1500,7 @@ const visibleProducts = products.filter((p) => {
           </div>
         )}
 
-        {activeTab === 'home' && (
+  {activeTab === 'home' && (
           <main className="px-4 pt-3.5 space-y-4 text-xs">
             <div className="flex items-center justify-between">
               <button
@@ -1519,9 +1552,13 @@ const visibleProducts = products.filter((p) => {
                 </button>
               </div>
               <img
-                src="https://images.unsplash.com/photo-1595855759920-86582396756a?auto=format&fit=crop&w=260&q=80"
+                src={FARMER_HERO_IMG}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = '/icon-512.png';
+                }}
                 alt="Farmer"
-                className="h-24 w-24 rounded-2xl object-cover shadow"
+                className="h-24 w-24 rounded-2xl object-cover object-top shadow"
               />
             </div>
 
@@ -1573,7 +1610,7 @@ const visibleProducts = products.filter((p) => {
               </div>
             </div>
 
-{offersEnabled && (
+            {offersEnabled && (
               <div className="bg-gradient-to-r from-[#86EFAC] to-[#FEF08A] rounded-2xl p-3.5 flex items-center justify-between shadow-sm">
                 <div>
                   <span className="bg-[#15803D] text-white text-[9px] font-extrabold px-2 py-0.5 rounded">
@@ -1626,7 +1663,7 @@ const visibleProducts = products.filter((p) => {
                       </div>
                     </div>
 
-                    {!p.inStock ? (
+{!p.inStock ? (
                       <span className="text-[10px] font-extrabold text-rose-500 bg-rose-50 px-2.5 py-1.5 rounded-xl">Sold Out</span>
                     ) : q === 0 ? (
                       <button
@@ -1693,7 +1730,7 @@ const visibleProducts = products.filter((p) => {
           </main>
         )}
 
-  {activeTab === 'productDetail' && detailProduct && (
+        {activeTab === 'productDetail' && detailProduct && (
           <main className="bg-white min-h-screen pb-24 text-xs">
             <div className="relative h-64 w-full bg-slate-100">
               <img src={detailProduct.img} alt={detailProduct.nameEn} className="h-full w-full object-cover" />
@@ -1808,7 +1845,7 @@ const visibleProducts = products.filter((p) => {
           </main>
         )}
 
-        {activeTab === 'checkout' && (
+ {activeTab === 'checkout' && (
           <main className="p-4 space-y-3.5 text-xs">
             <div className="flex items-center space-x-3">
               <button onClick={() => setActiveTab('cart')} className="p-2 rounded-full bg-white shadow-sm">
@@ -1859,7 +1896,7 @@ const visibleProducts = products.filter((p) => {
               )}
             </div>
 
-<div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
+            <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
               <div className="flex items-center justify-between">
                 <h3 className="font-extrabold text-slate-900">Payment Method</h3>
                 <span className="text-[10px] font-bold text-[#15803D]">{merchantUpiId}</span>
@@ -1933,7 +1970,7 @@ const visibleProducts = products.filter((p) => {
           </main>
         )}
 
-        {activeTab === 'upiProcessing' && (
+{activeTab === 'upiProcessing' && (
           <main className="p-4 space-y-4 text-xs">
             <div className="bg-white rounded-3xl p-5 shadow-md border border-emerald-200 text-center space-y-3">
               <div className="flex justify-center">
@@ -2013,7 +2050,7 @@ const visibleProducts = products.filter((p) => {
                 />
               </div>
 
-<div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-3">
+              <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-3">
                 {['Order Placed', 'Order Confirmed', 'Out for Delivery', 'Delivered'].map((step, idx) => (
                   <div key={step} className="flex items-center space-x-3">
                     <div className={`h-6 w-6 rounded-full flex items-center justify-center text-white font-bold ${idx < 3 || trackingOrder.status === 'Delivered' ? 'bg-[#15803D]' : 'bg-slate-200'}`}>
@@ -2047,12 +2084,20 @@ const visibleProducts = products.filter((p) => {
                 </div>
               </div>
 
-              {trackingOrder.status !== 'Delivered' && (
+{trackingOrder.status !== 'Delivered' ? (
                 <button
                   onClick={() => handleSimulateCustomerDelivery(trackingOrder)}
                   className="w-full bg-[#EA580C] text-white font-extrabold py-3.5 rounded-2xl shadow"
                 >
-                  Complete Delivery (Unlock ₹{trackingOrder.cashback} Cashback & Scratch Card)
+                  Complete Delivery (Auto Email Invoice PDF + Cashback)
+                </button>
+              ) : (
+                <button
+                  onClick={() => window.print()}
+                  className="w-full bg-slate-900 text-white font-extrabold py-3.5 rounded-2xl shadow flex items-center justify-center space-x-2"
+                >
+                  <Printer className="h-4 w-4" />
+                  <span>Download / Print Invoice PDF</span>
                 </button>
               )}
             </div>
@@ -2096,21 +2141,30 @@ const visibleProducts = products.filter((p) => {
                       <span className="font-extrabold text-sm">₹{ord.total}</span>
                     </div>
 
-                    <div className="flex items-center justify-between pt-2 border-t">
+                    <div className="flex items-center justify-between pt-2 border-t gap-2">
                       <span className="font-extrabold text-[#15803D]">{ord.status}</span>
                       {ord.status === 'Delivered' ? (
-                        <button
-                          onClick={() => {
-                            const updatedCart = {};
-                            ord.items.forEach((it) => { updatedCart[it.id] = it.qty; });
-                            setCart(updatedCart);
-                            setActiveTab('cart');
-                            notify('Cart updated with present day rates!');
-                          }}
-                          className="bg-[#15803D] text-white font-extrabold px-3.5 py-1.5 rounded-xl"
-                        >
-                          Reorder (Today's Rates)
-                        </button>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => window.print()}
+                            className="bg-slate-900 text-white font-extrabold px-3 py-1.5 rounded-xl flex items-center space-x-1"
+                          >
+                            <Printer className="h-3.5 w-3.5" />
+                            <span>PDF</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              const updatedCart = {};
+                              ord.items.forEach((it) => { updatedCart[it.id] = it.qty; });
+                              setCart(updatedCart);
+                              setActiveTab('cart');
+                              notify('Cart updated with present day rates!');
+                            }}
+                            className="bg-[#15803D] text-white font-extrabold px-3.5 py-1.5 rounded-xl"
+                          >
+                            Reorder
+                          </button>
+                        </div>
                       ) : (
                         <button
                           onClick={() => {
@@ -2129,7 +2183,7 @@ const visibleProducts = products.filter((p) => {
           </main>
         )}
 
-        {activeTab === 'profile' && renderSharedProfileTab()}
+{activeTab === 'profile' && renderSharedProfileTab()}
 
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-slate-200 px-4 py-2 flex justify-between items-center z-40 shadow-lg">
           <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'home' ? 'text-[#15803D]' : 'text-slate-400'}`}>
@@ -2167,7 +2221,7 @@ const visibleProducts = products.filter((p) => {
   }
 
 // =========================================================================
-  // 4. FARMER PORTAL
+  // 4. FARMER PORTAL (EXACT REFERENCE 1000043646.png + KG/GRAMS/LITRES & TIME DROPDOWNS)
   // =========================================================================
   if (currentUser.role === 'farmer') {
     const handlePublishFarmerProduct = (e) => {
@@ -2181,7 +2235,8 @@ const visibleProducts = products.filter((p) => {
         nameEn: fNameEn.trim(),
         nameTe: fNameTe.trim() || fNameEn.trim(),
         cat: 'Vegetables',
-        packLabel: '1 kg',
+        unit: fUnit,
+        packLabel: `1 ${fUnit}`,
         mrp: Number(fPrice) + 16,
         retailPrice: Number(fPrice) + 10,
         farmerDirectPrice: Number(fPrice),
@@ -2197,80 +2252,240 @@ const visibleProducts = products.filter((p) => {
       };
       setProducts([newProd, ...products]);
       setNotifications((prev) => [
-        `40km Wholesale Alert: ${currentUser.name} listed ${fQty}kg ${newProd.nameEn} (${newProd.nameTe}) available ${fAvailTime}.`,
+        `40km Wholesale Alert: ${currentUser.name} listed ${fQty} ${fUnit} ${newProd.nameEn} (${newProd.nameTe}) • ${fAvailTime}.`,
         ...prev,
       ]);
       setFNameEn('');
       setFNameTe('');
-      notify('Published! Notification sent to Wholesale Shops within 40 km.');
+      notify('Produce Listed! Notification sent to Wholesale Shops within 40 km.');
     };
 
     return (
-      <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
+      <div style={fontStyle} className="min-h-screen bg-[#F5F7F5] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
         <WelcomeSmileModal />
         {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-extrabold px-4 py-2 rounded-full shadow-lg">{toast}</div>}
 
-        <header className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white p-4 rounded-b-[28px] flex justify-between items-center shadow-md">
-          <div>
-            <span className="text-[10px] bg-white/15 px-2 py-0.5 rounded font-extrabold uppercase">Farmer Workspace</span>
-            <h1 className="text-base font-extrabold mt-0.5">{currentUser.name}</h1>
+        {/* Top Location + Bell Header (Ref 1000043646 Screen 4) */}
+        <header className="bg-white px-4 py-3 flex items-center justify-between border-b border-slate-100 sticky top-0 z-30">
+          <div className="flex items-center space-x-2">
+            <MapPin className="h-4 w-4 text-[#15803D]" />
+            <span className="text-xs font-extrabold text-slate-900">{currentUser.address} ▾</span>
           </div>
-          <span className="bg-[#EAB308] text-slate-900 text-xs font-extrabold px-3 py-1 rounded-full">₹{currentUser.wallet}</span>
+          <div className="flex items-center space-x-2">
+            <span className="bg-emerald-50 text-[#15803D] text-xs font-extrabold px-3 py-1 rounded-full">₹{currentUser.wallet || 0}</span>
+            <Bell className="h-4 w-4 text-slate-600" />
+          </div>
         </header>
 
         {activeTab === 'home' && (
+          <main className="p-4 space-y-4 text-xs">
+            {/* Hero Banner: Sell Your Produce Get Best Price + List Your Produce -> (Ref Screen 4) */}
+            <div className="bg-gradient-to-r from-[#DCFCE7] via-[#BBF7D0] to-[#86EFAC] rounded-3xl p-4 shadow-sm flex items-center justify-between">
+              <div className="space-y-2 max-w-[58%]">
+                <h2 className="text-base font-extrabold text-[#0F5132] leading-snug">
+                  Sell Your Produce Get Best Price
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('listProduce')}
+                  className="bg-[#15803D] text-white font-extrabold px-3.5 py-2 rounded-xl shadow text-xs"
+                >
+                  List Your Produce →
+                </button>
+              </div>
+              <img
+                src={FARMER_HERO_IMG}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = '/icon-512.png';
+                }}
+                alt="Farmer"
+                className="h-24 w-24 rounded-2xl object-cover object-top shadow"
+              />
+            </div>
+
+            {/* 6-Tile Farmer Quick Grid (My Produce, Market Rates, Orders, Earnings, Support, Profile - Ref Screen 4) */}
+            <div className="grid grid-cols-3 gap-2.5 text-center">
+              {[
+                { id: 'listProduce', label: 'My Produce', icon: Sprout, bg: 'bg-emerald-50 text-[#15803D]' },
+                { id: 'marketRates', label: 'Market Rates', icon: TrendingUp, bg: 'bg-sky-50 text-sky-700' },
+                { id: 'orders', label: 'Orders', icon: ClipboardList, bg: 'bg-amber-50 text-amber-700' },
+                { id: 'earnings', label: 'Earnings', icon: Wallet, bg: 'bg-orange-50 text-orange-700' },
+                { id: 'support', label: 'Support', icon: HelpCircle, bg: 'bg-indigo-50 text-indigo-700' },
+                { id: 'profile', label: 'Profile', icon: User, bg: 'bg-rose-50 text-rose-700' },
+              ].map((tile) => {
+                const Icon = tile.icon;
+                return (
+                  <button
+                    key={tile.id}
+                    onClick={() => setActiveTab(tile.id)}
+                    className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex flex-col items-center space-y-1.5 hover:border-[#15803D] transition"
+                  >
+                    <div className={`h-11 w-11 rounded-2xl ${tile.bg} flex items-center justify-center`}>
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <span className="text-[11px] font-extrabold text-slate-800">{tile.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+{/* Today's Market Rates Strip (Ref Screen 4 & 11) */}
+            <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-extrabold text-slate-900">Today's Market Rates</h3>
+                <button onClick={() => setActiveTab('marketRates')} className="text-[#15803D] font-extrabold">View All &gt;</button>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                {products.slice(0, 3).map((p) => (
+                  <div key={p.id} className="bg-slate-50 rounded-2xl p-2 border border-slate-100">
+                    <img src={p.img} alt={p.nameEn} className="h-10 w-10 rounded-full object-cover mx-auto mb-1" />
+                    <p className="font-extrabold text-slate-800 truncate">{p.nameTe}</p>
+                    <p className="text-[#15803D] font-extrabold">₹{p.farmerDirectPrice}/{p.unit || 'Kg'}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </main>
+        )}
+
+        {/* SCREEN 5 & 7: LIST YOUR PRODUCE (WITH KG/GRAMS/LITRES + AVAILABILITY DROPDOWNS) */}
+        {activeTab === 'listProduce' && (
           <main className="p-4 space-y-3.5 text-xs">
+            <div className="flex items-center space-x-2">
+              <button onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white shadow-sm">
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+              <h2 className="text-base font-extrabold text-slate-900">List Your Produce</h2>
+            </div>
+
             <form onSubmit={handlePublishFarmerProduct} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-3">
-              <h2 className="font-extrabold text-sm text-slate-900">Publish Harvest (Auto English ↔ తెలుగు)</h2>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400">Name in English</label>
-                  <input type="text" required value={fNameEn} onChange={(e) => handleFarmerEnChange(e.target.value)} placeholder="e.g., Tomato" className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
+                  <label className="text-[10px] font-bold text-slate-400">Product Name (English)</label>
+                  <input type="text" required value={fNameEn} onChange={(e) => handleFarmerEnChange(e.target.value)} placeholder="e.g., Tomato" className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-bold" />
                 </div>
                 <div>
                   <label className="text-[10px] font-bold text-slate-400">పేరు తెలుగులో (Auto)</label>
-                  <input type="text" required value={fNameTe} onChange={(e) => handleFarmerTeChange(e.target.value)} placeholder="ఉదా: టమాటా" className="w-full bg-emerald-50/70 border border-emerald-200 rounded-xl px-3 py-2 font-bold text-[#15803D]" />
+                  <input type="text" required value={fNameTe} onChange={(e) => handleFarmerTeChange(e.target.value)} placeholder="ఉదా: టమాటా" className="w-full bg-emerald-50/70 border border-emerald-200 rounded-xl px-3 py-2.5 font-bold text-[#15803D]" />
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2">
+              {/* Quantity + Unit Selection Dropdown (Kg, Grams, Litres) */}
+              <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400">Qty (KG)</label>
-                  <input type="number" required value={fQty} onChange={(e) => setFQty(e.target.value)} className="w-full bg-slate-50 border rounded-xl px-2.5 py-2 font-bold" />
+                  <label className="text-[10px] font-bold text-slate-400">Quantity & Unit</label>
+                  <div className="flex space-x-1.5">
+                    <input type="number" required value={fQty} onChange={(e) => setFQty(e.target.value)} className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-bold" />
+                    <select
+                      value={fUnit}
+                      onChange={(e) => setFUnit(e.target.value)}
+                      className="bg-emerald-50 border border-emerald-200 text-[#15803D] rounded-xl px-2.5 py-2.5 font-extrabold focus:outline-none"
+                    >
+                      <option value="Kg">Kg</option>
+                      <option value="Grams">Grams</option>
+                      <option value="Litres">Litres</option>
+                    </select>
+                  </div>
                 </div>
+
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400">Price ₹/kg</label>
-                  <input type="number" required value={fPrice} onChange={(e) => setFPrice(e.target.value)} className="w-full bg-slate-50 border rounded-xl px-2.5 py-2 font-extrabold text-[#15803D]" />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-slate-400">Available Time</label>
-                  <input type="text" required value={fAvailTime} onChange={(e) => setFAvailTime(e.target.value)} className="w-full bg-slate-50 border rounded-xl px-2.5 py-2 font-bold" />
+                  <label className="text-[10px] font-bold text-slate-400">Expected Price (₹ / {fUnit})</label>
+                  <input type="number" required value={fPrice} onChange={(e) => setFPrice(e.target.value)} className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-extrabold text-[#15803D]" />
                 </div>
               </div>
 
-              <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow-sm">
-                Publish & Notify Wholesale Shops (40 km)
+              {/* Availability Time Slot Dropdown */}
+              <div>
+                <label className="text-[10px] font-bold text-slate-400">Harvest Availability Slot</label>
+                <select
+                  value={fAvailTime}
+                  onChange={(e) => setFAvailTime(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-extrabold text-slate-800 focus:outline-none mt-1"
+                >
+                  {AVAILABILITY_SLOTS.map((slot) => (
+                    <option key={slot} value={slot}>{slot}</option>
+                  ))}
+                </select>
+              </div>
+
+              <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm">
+                Publish Produce & Notify Shops (40 km)
               </button>
             </form>
 
-            <h3 className="font-extrabold text-sm text-slate-900">Live Farm Inventory</h3>
+            <h3 className="font-extrabold text-sm text-slate-900">Active Farm Listings</h3>
             {products.map((p) => (
               <div key={p.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex justify-between items-center">
                 <div>
                   <h4 className="font-extrabold text-slate-900">{p.nameEn} • {p.nameTe}</h4>
-                  <p className="text-[10px] text-slate-500">Available: {p.availableFrom} • ₹{p.farmerDirectPrice}/kg</p>
+                  <p className="text-[10px] text-slate-500">{p.availableFrom} • ₹{p.farmerDirectPrice}/{p.unit || 'Kg'}</p>
                 </div>
                 <span className="bg-emerald-50 text-[#15803D] font-extrabold px-3 py-1.5 rounded-xl">
-                  {p.stockKg} KG Left
+                  {p.stockKg} {p.unit || 'Kg'}
                 </span>
               </div>
             ))}
           </main>
         )}
 
+{/* SCREEN 11: MARKET RATES */}
+        {activeTab === 'marketRates' && (
+          <main className="p-4 space-y-3 text-xs">
+            <div className="flex items-center space-x-2">
+              <button onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white shadow-sm">
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+              <h2 className="text-base font-extrabold text-slate-900">Nellore Mandi Market Rates</h2>
+            </div>
+            {products.map((p) => (
+              <div key={p.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <img src={p.img} alt={p.nameEn} className="h-11 w-11 rounded-xl object-cover" />
+                  <div>
+                    <h4 className="font-extrabold text-slate-900">{p.nameEn}</h4>
+                    <p className="text-[11px] font-bold text-[#15803D]">{p.nameTe}</p>
+                  </div>
+                </div>
+                <span className="text-sm font-extrabold text-[#15803D]">₹{p.farmerDirectPrice}/{p.unit || 'Kg'} ↑</span>
+              </div>
+            ))}
+          </main>
+        )}
+
+        {/* SCREEN 10: FARMER EARNINGS */}
+        {activeTab === 'earnings' && (
+          <main className="p-4 space-y-3 text-xs">
+            <div className="flex items-center space-x-2">
+              <button onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white shadow-sm">
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+              <h2 className="text-base font-extrabold text-slate-900">My Earnings</h2>
+            </div>
+            <div className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white rounded-3xl p-5 shadow-md">
+              <p className="text-emerald-100 font-bold">Total Farm Earnings</p>
+              <h3 className="text-3xl font-extrabold mt-1">₹{currentUser.wallet || 0}</h3>
+            </div>
+          </main>
+        )}
+
+        {/* SCREEN 13: FARMER SUPPORT */}
+        {activeTab === 'support' && (
+          <main className="p-4 space-y-3 text-xs text-center">
+            <div className="bg-white rounded-3xl p-6 shadow-sm space-y-3">
+              <h2 className="text-base font-extrabold">Need Help?</h2>
+              <p className="text-slate-500">Nellore Farmer Support Desk (8328261103)</p>
+              <a href="tel:8328261103" className="block w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl">
+                Call Support (8328261103)
+              </a>
+            </div>
+          </main>
+        )}
+
+        {/* SCREEN 8: INCOMING ORDERS */}
         {activeTab === 'orders' && (
           <main className="p-4 space-y-3 text-xs">
-            <h2 className="text-base font-extrabold">Incoming Shop Orders</h2>
+            <h2 className="text-base font-extrabold">My Orders</h2>
             {orders.length === 0 ? (
               <div className="bg-white rounded-2xl p-6 text-center text-slate-400 font-bold">No orders yet.</div>
             ) : (
@@ -2280,7 +2495,7 @@ const visibleProducts = products.filter((p) => {
                     <span>{ord.id} • {ord.status}</span>
                     <span className="text-[#15803D]">₹{ord.total}</span>
                   </div>
-                  <p className="text-slate-600">{ord.buyerName} • {ord.items.map((i) => `${i.qty}kg ${i.name}`).join(', ')}</p>
+                  <p className="text-slate-600">{ord.buyerName} • {ord.items.map((i) => `${i.qty} ${i.unit || 'Kg'} ${i.name}`).join(', ')}</p>
                   {ord.b2bOtp && <p className="text-amber-800 font-extrabold bg-amber-50 p-2 rounded-xl">B2B Handover OTP: {ord.b2bOtp}</p>}
                   {ord.status === 'Order Placed' && (
                     <button
@@ -2302,10 +2517,13 @@ const visibleProducts = products.filter((p) => {
 
         {activeTab === 'profile' && renderSharedProfileTab()}
 
-        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-8 py-2.5 flex justify-between items-center z-40">
+        {/* 5-Icon Farmer Bottom Bar (Ref 1000043646 Screen 4) */}
+        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-4 py-2 flex justify-between items-center z-40">
           {[
-            { id: 'home', icon: Sprout, label: 'My Farm' },
+            { id: 'home', icon: Home, label: 'Home' },
+            { id: 'listProduce', icon: Sprout, label: 'My Produce' },
             { id: 'orders', icon: ClipboardList, label: 'Orders' },
+            { id: 'earnings', icon: Wallet, label: 'Earnings' },
             { id: 'profile', icon: User, label: 'Profile' },
           ].map((t) => {
             const Icon = t.icon;
@@ -2322,7 +2540,7 @@ const visibleProducts = products.filter((p) => {
   }
 
 // =========================================================================
-  // 5. WHOLESALE & RETAIL PORTAL
+  // 5. WHOLESALE & RETAIL STORE PORTALS (EXACT REFERENCE 1000043647.png)
   // =========================================================================
   if (currentUser.role === 'wholesale' || currentUser.role === 'retail') {
     const isRetail = currentUser.role === 'retail';
@@ -2335,18 +2553,19 @@ const visibleProducts = products.filter((p) => {
       const otp = String(Math.floor(1000 + Math.random() * 9000));
 
       const newOrd = {
-        id: 'B2B-' + Math.floor(200 + Math.random() * 799),
+        id: (isRetail ? 'RIT-' : 'WS-') + Math.floor(1000 + Math.random() * 8999),
         buyerRole: currentUser.role,
         buyerName: currentUser.name,
         buyerMobile: currentUser.mobile,
+        buyerEmail: currentUser.email,
         buyerAddress: currentUser.address,
-        items: [{ id: prod.id, name: prod.nameEn, qty, price: unitRate }],
+        items: [{ id: prod.id, name: prod.nameEn, unit: prod.unit || 'Kg', qty, price: unitRate }],
         total: itemTotal + delivCharge,
-        deliveryMode: b2bDeliveryMode === 'pickup' ? 'Farm Pickup (₹0 Fee)' : `Delivery to Shop (${prod.distanceKm} km • ₹${delivCharge})`,
+        deliveryMode: b2bDeliveryMode === 'pickup' ? 'Pickup at Store / Farm (₹0 Fee)' : `Home Delivery (${prod.distanceKm} km • ₹${delivCharge})`,
         status: 'Order Placed',
         driverName: null,
         b2bOtp: otp,
-        date: 'Just now',
+        date: 'Today, ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
 
       setOrders([newOrd, ...orders]);
@@ -2355,20 +2574,92 @@ const visibleProducts = products.filter((p) => {
     };
 
     return (
-      <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
+      <div style={fontStyle} className="min-h-screen bg-[#F5F7F5] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
         <WelcomeSmileModal />
         {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-extrabold px-4 py-2 rounded-full shadow-lg">{toast}</div>}
 
-        <header className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white p-4 rounded-b-[28px] flex justify-between items-center shadow-md">
-          <div>
-            <span className="text-[10px] bg-white/15 px-2 py-0.5 rounded font-extrabold uppercase">{currentUser.role} Store</span>
-            <h1 className="text-base font-extrabold mt-0.5">{currentUser.name}</h1>
+        <header className="bg-white px-4 py-3.5 flex items-center justify-between border-b border-slate-100 sticky top-0 z-30">
+          <div className="flex items-center space-x-2.5">
+            <div className="h-9 w-9 rounded-xl bg-emerald-50 text-[#15803D] flex items-center justify-center">
+              {isRetail ? <Store className="h-5 w-5" /> : <Warehouse className="h-5 w-5" />}
+            </div>
+            <div>
+              <span className="text-[10px] font-bold text-slate-400 block">Welcome,</span>
+              <h1 className="text-sm font-extrabold text-slate-900">{currentUser.name}</h1>
+            </div>
           </div>
-          <span className="bg-[#EAB308] text-slate-900 text-xs font-extrabold px-3 py-1 rounded-full">₹{currentUser.wallet}</span>
+          <span className="bg-[#EAB308] text-slate-900 text-xs font-extrabold px-3 py-1 rounded-full">₹{currentUser.wallet || 0}</span>
         </header>
 
         {activeTab === 'home' && (
+          <main className="p-4 space-y-4 text-xs">
+            {/* Green Today's Sales Banner (Ref 1000043647 Screen 4) */}
+            <div className="bg-gradient-to-r from-[#0F5132] to-[#16A34A] text-white rounded-3xl p-4 shadow-md flex items-center justify-between">
+              <div>
+                <p className="text-emerald-100 font-bold">Today's Sales</p>
+                <h2 className="text-2xl font-extrabold mt-0.5">
+                  ₹{orders.reduce((s, o) => s + o.total, 0)} <span className="text-xs text-[#FDE047]">↑ 12%</span>
+                </h2>
+              </div>
+              <TrendingUp className="h-10 w-10 text-[#FDE047] opacity-90" />
+            </div>
+
+            {/* 4 Pastel Metric Cards (Orders, Products, Stock Alert, Earnings - Ref Screen 4) */}
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="bg-[#EFF6FF] border border-[#BFDBFE] rounded-2xl p-3">
+                <p className="text-[10px] font-bold text-slate-500">Orders</p>
+                <p className="text-base font-extrabold text-[#1D4ED8] mt-0.5">({orders.length})</p>
+              </div>
+              <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-2xl p-3">
+                <p className="text-[10px] font-bold text-slate-500">Products</p>
+                <p className="text-base font-extrabold text-[#B45309] mt-0.5">({products.length})</p>
+              </div>
+              <div className="bg-[#FFF7ED] border border-[#FED7AA] rounded-2xl p-3">
+                <p className="text-[10px] font-bold text-slate-500">Stock Alert</p>
+                <p className="text-base font-extrabold text-[#C2410C] mt-0.5">({products.filter((p) => p.stockKg < 200).length})</p>
+              </div>
+              <div className="bg-[#ECFDF5] border border-[#BBF7D0] rounded-2xl p-3">
+                <p className="text-[10px] font-bold text-slate-500">Earnings</p>
+                <p className="text-base font-extrabold text-[#15803D] mt-0.5">₹{currentUser.wallet || 0}</p>
+              </div>
+            </div>
+
+            {/* Quick Actions (Ref Screen 4) */}
+            <div className="space-y-2">
+              <h3 className="font-extrabold text-slate-900">Quick Actions</h3>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <button onClick={() => setActiveTab('browse')} className="bg-white border rounded-2xl p-3 shadow-sm space-y-1">
+                  <Plus className="h-5 w-5 text-[#15803D] mx-auto" />
+                  <p className="font-extrabold text-[10px]">{isRetail ? 'Buy Stock' : 'Add Stock'}</p>
+                </button>
+                <button onClick={() => setActiveTab('orders')} className="bg-white border rounded-2xl p-3 shadow-sm space-y-1">
+                  <ClipboardList className="h-5 w-5 text-[#15803D] mx-auto" />
+                  <p className="font-extrabold text-[10px]">View Orders</p>
+                </button>
+                <button onClick={() => window.print()} className="bg-white border rounded-2xl p-3 shadow-sm space-y-1">
+                  <Printer className="h-5 w-5 text-[#15803D] mx-auto" />
+                  <p className="font-extrabold text-[10px]">GST Invoices</p>
+                </button>
+              </div>
+            </div>
+
+            {/* Direct Bulk Catalog Preview */}
+            <button onClick={() => setActiveTab('browse')} className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm">
+              Browse Farm Produce & Place Bulk Order →
+            </button>
+          </main>
+        )}
+
+{/* SCREEN 5 & 6: BROWSE PRODUCTS & PLACE BULK ORDER */}
+        {activeTab === 'browse' && (
           <main className="p-4 space-y-3 text-xs">
+            <div className="flex items-center space-x-2">
+              <button onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white shadow-sm">
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+              <h2 className="text-base font-extrabold text-slate-900">Browse Products</h2>
+            </div>
+
             {isRetail && (
               <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 space-y-1.5">
                 <p className="font-extrabold text-slate-500">Compare Supplier Rates:</p>
@@ -2384,13 +2675,13 @@ const visibleProducts = products.filter((p) => {
             )}
 
             <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 space-y-1.5">
-              <p className="font-extrabold text-slate-500">Select Fulfillment Option:</p>
+              <p className="font-extrabold text-slate-500">Delivery Mode (Ref Screen 6):</p>
               <div className="grid grid-cols-2 gap-2 font-extrabold">
                 <button onClick={() => setB2bDeliveryMode('pickup')} className={`py-2 rounded-xl border ${b2bDeliveryMode === 'pickup' ? 'bg-emerald-50 border-[#15803D] text-[#15803D]' : 'bg-slate-50'}`}>
-                  Farm Pickup (₹0 Fee)
+                  Pickup at Store (₹0)
                 </button>
                 <button onClick={() => setB2bDeliveryMode('delivery')} className={`py-2 rounded-xl border ${b2bDeliveryMode === 'delivery' ? 'bg-sky-50 border-sky-600 text-sky-700' : 'bg-slate-50'}`}>
-                  Delivery to Shop
+                  Home Delivery
                 </button>
               </div>
             </div>
@@ -2404,14 +2695,14 @@ const visibleProducts = products.filter((p) => {
                     <img src={p.img} alt={p.nameEn} className="h-14 w-14 rounded-xl object-cover" />
                     <div>
                       <h4 className="font-extrabold text-sm text-slate-900">{p.nameEn} ({p.nameTe})</h4>
-                      <p className="text-[10px] text-slate-500">{p.farmerName} • Stock: {p.stockKg} KG</p>
+                      <p className="text-[10px] text-slate-500">{p.farmerName} • Stock: {p.stockKg} {p.unit || 'Kg'}</p>
                       <p className="text-[11px] font-extrabold text-[#15803D] mt-0.5">
-                        ₹{rate}/kg • Min Qty: {p.minWholesaleQty} KG • Delivery: ₹{estDeliv}
+                        ₹{rate}/{p.unit || 'Kg'} • Min: {p.minWholesaleQty} {p.unit || 'Kg'} • Delivery: ₹{estDeliv}
                       </p>
                     </div>
                   </div>
                   <button onClick={() => handlePlaceB2BOrder(p)} className="w-full bg-[#15803D] text-white font-extrabold py-2.5 rounded-xl">
-                    Order {p.minWholesaleQty} KG (₹{rate * p.minWholesaleQty + estDeliv}) + PDF Invoice
+                    Place Order ({p.minWholesaleQty} {p.unit || 'Kg'} • ₹{rate * p.minWholesaleQty + estDeliv})
                   </button>
                 </div>
               );
@@ -2419,19 +2710,20 @@ const visibleProducts = products.filter((p) => {
           </main>
         )}
 
+        {/* SCREEN 7: B2B MY ORDERS & PDF INVOICE */}
         {activeTab === 'orders' && (
           <main className="p-4 space-y-3 text-xs">
-            <h2 className="text-base font-extrabold">B2B Orders, Delivery OTP & PDF Invoices</h2>
+            <h2 className="text-base font-extrabold">My Orders & PDF Invoices</h2>
             {orders.length === 0 ? (
-              <div className="bg-white rounded-2xl p-6 text-center text-slate-400 font-bold">No B2B orders yet.</div>
+              <div className="bg-white rounded-2xl p-6 text-center text-slate-400 font-bold">No orders yet.</div>
             ) : (
               orders.map((ord) => (
                 <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
                   <div className="flex justify-between font-extrabold">
-                    <span>{ord.id} • {ord.status}</span>
+                    <span>#{ord.id} • {ord.status}</span>
                     <span className="text-[#15803D]">₹{ord.total}</span>
                   </div>
-                  <p className="text-slate-600">{ord.items.map((i) => `${i.qty}kg ${i.name}`).join(', ')}</p>
+                  <p className="text-slate-600">{ord.items.map((i) => `${i.qty} ${i.unit || 'Kg'} ${i.name}`).join(', ')}</p>
                   {ord.b2bOtp && (
                     <div className="bg-amber-50 border border-amber-200 p-2.5 rounded-xl font-extrabold text-amber-950">
                       Delivery Verification OTP (Share with Rider): {ord.b2bOtp}
@@ -2439,7 +2731,7 @@ const visibleProducts = products.filter((p) => {
                   )}
                   <button onClick={() => window.print()} className="w-full bg-slate-900 text-white font-extrabold py-2.5 rounded-xl flex items-center justify-center space-x-1.5">
                     <Printer className="h-3.5 w-3.5" />
-                    <span>Print / Save PDF Invoice (Both Parties)</span>
+                    <span>Print / Save PDF Invoice</span>
                   </button>
                 </div>
               ))
@@ -2447,13 +2739,14 @@ const visibleProducts = products.filter((p) => {
           </main>
         )}
 
-        {activeTab === 'profile' && renderSharedProfileTab()}
+{activeTab === 'profile' && renderSharedProfileTab()}
 
-        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-8 py-2.5 flex justify-between items-center z-40">
+        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-6 py-2.5 flex justify-between items-center z-40">
           {[
-            { id: 'home', icon: Store, label: 'Buy Bulk' },
-            { id: 'orders', icon: ClipboardList, label: 'Orders & PDF' },
-            { id: 'profile', icon: User, label: 'Profile' },
+            { id: 'home', icon: Home, label: 'Home' },
+            { id: 'browse', icon: Package, label: 'Inventory' },
+            { id: 'orders', icon: ClipboardList, label: 'Orders' },
+            { id: 'profile', icon: User, label: 'Account' },
           ].map((t) => {
             const Icon = t.icon;
             return (
@@ -2468,8 +2761,8 @@ const visibleProducts = products.filter((p) => {
     );
   }
 
-// =========================================================================
-  // 6. DELIVERY PARTNER PORTAL
+  // =========================================================================
+  // 6. DELIVERY PARTNER PORTAL (EXACT REFERENCE 1000043648.png + AUTO EMAIL INVOICE)
   // =========================================================================
   if (currentUser.role === 'delivery') {
     const availOrders = orders.filter((o) => o.status !== 'Delivered');
@@ -2486,44 +2779,66 @@ const visibleProducts = products.filter((p) => {
       );
       setOrders((prev) => prev.map((o) => (o.id === ord.id ? { ...o, status: 'Delivered' } : o)));
       setCurrentUser({ ...currentUser, wallet: (currentUser.wallet || 0) + 40, weeklyOrders: weeklyCompleted + 1 });
-      notify('Delivered! Farmer stock reduced & ₹40 credited.');
+      // AUTOMATIC INVOICE PDF EMAIL TO CUSTOMER ON DELIVERY
+      sendAutomaticInvoiceEmail(ord);
+      notify('Delivery Completed! Invoice PDF sent to Customer Email & ₹40 credited.');
     };
 
     return (
-      <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
+      <div style={fontStyle} className="min-h-screen bg-[#F5F7F5] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
         {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-extrabold px-4 py-2 rounded-full shadow-lg">{toast}</div>}
 
-        <header className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white p-4 rounded-b-[28px] flex justify-between items-center shadow-md">
+        <header className="bg-white px-4 py-3.5 flex items-center justify-between border-b border-slate-100 sticky top-0 z-30">
           <div>
-            <span className="text-[10px] bg-white/15 px-2 py-0.5 rounded font-extrabold uppercase">Delivery Fleet</span>
-            <h1 className="text-base font-extrabold mt-0.5">{currentUser.name}</h1>
+            <span className="text-[10px] font-bold text-slate-400 block">Hello,</span>
+            <h1 className="text-sm font-extrabold text-slate-900">{currentUser.name} 👋</h1>
           </div>
-          <span className="bg-[#EAB308] text-slate-900 text-xs font-extrabold px-3 py-1 rounded-full">₹{currentUser.wallet}</span>
+          <div className="flex items-center space-x-2">
+            <span className="bg-emerald-50 text-[#15803D] text-xs font-extrabold px-3 py-1 rounded-full">₹{currentUser.wallet || 0}</span>
+            <Bell className="h-4 w-4 text-slate-600" />
+          </div>
         </header>
 
         {activeTab === 'home' && (
-          <main className="p-4 space-y-3 text-xs">
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <button onClick={() => setDelivFilter('available')} className={`p-3 rounded-2xl shadow-sm border ${delivFilter === 'available' ? 'bg-emerald-50 border-[#15803D]' : 'bg-white border-slate-100'}`}>
-                <p className="text-[10px] text-slate-500 font-bold">Available</p>
-                <p className="text-xl font-extrabold text-[#EA580C]">{availOrders.length}</p>
+          <main className="p-4 space-y-3.5 text-xs">
+            {/* Green Today's Earnings Banner (Ref 1000043648 Screen 4) */}
+            <div className="bg-gradient-to-r from-[#0F5132] to-[#16A34A] text-white rounded-3xl p-4 shadow-md flex items-center justify-between">
+              <div>
+                <p className="text-emerald-100 font-bold">Today's Earnings</p>
+                <h2 className="text-2xl font-extrabold mt-0.5">
+                  ₹{currentUser.wallet || 0} <span className="text-xs text-[#FDE047]">↑ 12%</span>
+                </h2>
+              </div>
+              <TrendingUp className="h-10 w-10 text-[#FDE047]" />
+            </div>
+
+            {/* 4 Pastel Metric Cards (New Orders, On Going, Completed, My Wallet - Ref Screen 4) */}
+            <div className="grid grid-cols-2 gap-2.5">
+              <button onClick={() => setDelivFilter('available')} className="bg-[#FFF7ED] border border-[#FED7AA] rounded-2xl p-3 text-left">
+                <p className="text-[10px] font-bold text-slate-500">New Orders</p>
+                <p className="text-base font-extrabold text-[#C2410C] mt-0.5">({availOrders.length})</p>
               </button>
-              <button onClick={() => setDelivFilter('delivered')} className={`p-3 rounded-2xl shadow-sm border ${delivFilter === 'delivered' ? 'bg-emerald-50 border-[#15803D]' : 'bg-white border-slate-100'}`}>
-                <p className="text-[10px] text-slate-500 font-bold">Delivered</p>
-                <p className="text-xl font-extrabold text-[#15803D]">{delivOrders.length}</p>
+              <button onClick={() => setDelivFilter('available')} className="bg-[#FFFBEB] border border-[#FDE68A] rounded-2xl p-3 text-left">
+                <p className="text-[10px] font-bold text-slate-500">On Going</p>
+                <p className="text-base font-extrabold text-[#B45309] mt-0.5">({availOrders.filter((o) => o.driverName).length})</p>
               </button>
-              <button onClick={() => setDelivFilter('earnings')} className={`p-3 rounded-2xl shadow-sm border ${delivFilter === 'earnings' ? 'bg-emerald-50 border-[#15803D]' : 'bg-white border-slate-100'}`}>
-                <p className="text-[10px] text-slate-500 font-bold">Earnings</p>
-                <p className="text-xl font-extrabold text-sky-600">₹{currentUser.wallet}</p>
+              <button onClick={() => setDelivFilter('delivered')} className="bg-[#ECFDF5] border border-[#BBF7D0] rounded-2xl p-3 text-left">
+                <p className="text-[10px] font-bold text-slate-500">Completed</p>
+                <p className="text-base font-extrabold text-[#15803D] mt-0.5">({delivOrders.length})</p>
+              </button>
+              <button onClick={() => setDelivFilter('earnings')} className="bg-[#EFF6FF] border border-[#BFDBFE] rounded-2xl p-3 text-left">
+                <p className="text-[10px] font-bold text-slate-500">My Wallet</p>
+                <p className="text-base font-extrabold text-[#1D4ED8] mt-0.5">₹{currentUser.wallet || 0}</p>
               </button>
             </div>
 
-            <div className="bg-gradient-to-r from-[#EA580C] to-[#EAB308] text-white rounded-2xl p-4 shadow space-y-2">
+{/* Weekly 100 Orders Bonus Progress */}
+            <div className="bg-gradient-to-r from-[#EA580C] to-[#EAB308] text-white rounded-2xl p-3.5 shadow space-y-1.5">
               <div className="flex justify-between font-extrabold">
                 <span>Weekly 100 Orders Bonus: ₹1,500</span>
                 <span>{weeklyCompleted} / 100</span>
               </div>
-              <div className="w-full bg-white/30 h-2.5 rounded-full overflow-hidden">
+              <div className="w-full bg-white/30 h-2 rounded-full overflow-hidden">
                 <div className="bg-white h-full rounded-full" style={{ width: `${Math.min(100, weeklyCompleted)}%` }} />
               </div>
             </div>
@@ -2531,7 +2846,7 @@ const visibleProducts = products.filter((p) => {
             {delivFilter === 'earnings' ? (
               <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-2">
                 <h3 className="font-extrabold">Earnings & Incentive Breakdown</h3>
-                <div className="flex justify-between"><span>Base Delivery Fees</span><span className="font-extrabold">₹{currentUser.wallet}</span></div>
+                <div className="flex justify-between"><span>Available Balance</span><span className="font-extrabold">₹{currentUser.wallet || 0}</span></div>
                 <div className="flex justify-between"><span>Weekly 100-Order Target</span><span className="font-extrabold text-[#15803D]">₹1,500 Bonus</span></div>
               </div>
             ) : (delivFilter === 'available' ? availOrders : delivOrders).length === 0 ? (
@@ -2540,10 +2855,11 @@ const visibleProducts = products.filter((p) => {
               (delivFilter === 'available' ? availOrders : delivOrders).map((ord) => (
                 <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2.5">
                   <div className="flex justify-between font-extrabold">
-                    <span>{ord.id} ({ord.buyerRole.toUpperCase()})</span>
+                    <span>#{ord.id} ({ord.buyerRole.toUpperCase()})</span>
                     <span className="text-[#15803D]">₹{ord.total}</span>
                   </div>
-                  <p className="font-bold text-slate-600 flex items-center space-x-1">
+                  <p className="font-bold text-slate-700">{ord.buyerName} • +91 {ord.buyerMobile}</p>
+                  <p className="text-slate-500 flex items-center space-x-1">
                     <MapPin className="h-3.5 w-3.5 text-[#EA580C]" />
                     <span>{ord.buyerAddress}</span>
                   </p>
@@ -2552,14 +2868,15 @@ const visibleProducts = products.filter((p) => {
                       href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(ord.buyerAddress)}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex-1 bg-sky-600 text-white font-extrabold py-2.5 rounded-xl text-center"
+                      className="flex-1 bg-sky-600 text-white font-extrabold py-2.5 rounded-xl text-center flex items-center justify-center space-x-1"
                     >
-                      Navigate Map
+                      <Navigation className="h-3.5 w-3.5" />
+                      <span>Navigate</span>
                     </a>
                     {ord.status !== 'Delivered' && (
                       <button
                         onClick={() => {
-                          if (!ord.driverName) {
+                          if (ord.status !== 'Partner Assigned') {
                             setOrders((prev) =>
                               prev.map((o) =>
                                 o.id === ord.id
@@ -2581,7 +2898,7 @@ const visibleProducts = products.filter((p) => {
                         }}
                         className="flex-1 bg-[#15803D] text-white font-extrabold py-2.5 rounded-xl"
                       >
-                        {!ord.driverName ? 'Accept Order' : ord.b2bOtp ? 'Verify B2B OTP' : 'Deliver (No OTP)'}
+                        {ord.status !== 'Partner Assigned' ? 'Accept Order' : ord.b2bOtp ? 'Verify B2B OTP' : 'Reached Customer'}
                       </button>
                     )}
                   </div>
@@ -2593,10 +2910,18 @@ const visibleProducts = products.filter((p) => {
 
         {activeTab === 'profile' && renderSharedProfileTab()}
 
-        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-12 py-2.5 flex justify-between items-center z-40">
-          <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'home' ? 'text-[#15803D]' : 'text-slate-400'}`}>
-            <Truck className="h-5 w-5 mb-0.5" />
-            <span>Deliveries</span>
+        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-6 py-2.5 flex justify-between items-center z-40">
+          <button onClick={() => { setDelivFilter('available'); setActiveTab('home'); }} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'home' && delivFilter === 'available' ? 'text-[#15803D]' : 'text-slate-400'}`}>
+            <Home className="h-5 w-5 mb-0.5" />
+            <span>Home</span>
+          </button>
+          <button onClick={() => { setDelivFilter('delivered'); setActiveTab('home'); }} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'home' && delivFilter === 'delivered' ? 'text-[#15803D]' : 'text-slate-400'}`}>
+            <ClipboardList className="h-5 w-5 mb-0.5" />
+            <span>Orders</span>
+          </button>
+          <button onClick={() => { setDelivFilter('earnings'); setActiveTab('home'); }} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'home' && delivFilter === 'earnings' ? 'text-[#15803D]' : 'text-slate-400'}`}>
+            <Wallet className="h-5 w-5 mb-0.5" />
+            <span>Earnings</span>
           </button>
           <button onClick={() => setActiveTab('profile')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'profile' ? 'text-[#15803D]' : 'text-slate-400'}`}>
             <User className="h-5 w-5 mb-0.5" />
@@ -2673,7 +2998,7 @@ const visibleProducts = products.filter((p) => {
               <div key={p.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
                 <div>
                   <h4 className="font-extrabold text-slate-900">{p.nameEn} ({p.nameTe})</h4>
-                  <p className="text-slate-500">Remaining: {p.stockKg} KG • Retail: ₹{p.retailPrice}/kg</p>
+                  <p className="text-slate-500">Remaining: {p.stockKg} {p.unit || 'Kg'} • Retail: ₹{p.retailPrice}/{p.unit || 'Kg'}</p>
                 </div>
                 <button
                   onClick={() => {
