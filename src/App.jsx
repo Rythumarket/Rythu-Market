@@ -3,12 +3,12 @@ import {
   Search, ShoppingCart, Plus, Home, ClipboardList, User, MapPin,
   Phone, MessageSquare, Sprout, Store, Truck, ShieldCheck, ChevronRight,
   ArrowLeft, CheckCircle2, Wallet, Sparkles, Bell, Globe,
-  LocateFixed, LogOut, Printer, Warehouse, Clock, ChevronDown,
-  Briefcase, Leaf, Shield, Zap, Grid, Check, Mail,
-  TrendingUp, Package, HelpCircle, Navigation, Camera, Landmark, Volume2, VolumeX
+  LocateFixed, LogOut, Printer, Warehouse, ChevronDown,
+  Briefcase, Leaf, Shield, Zap, Grid, Check,
+  TrendingUp, Package, HelpCircle, Navigation, Camera, Landmark, Volume2, VolumeX, Trash2, Image
 } from 'lucide-react';
 import { db } from './firebase';
-import { collection, doc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 
 // EmailJS Credentials for Direct Free 6-Digit Email OTP & Automatic Delivery Invoice
 const EMAILJS_SERVICE_ID = 'service_auf6gch';
@@ -45,6 +45,57 @@ const TE_TO_EN = Object.fromEntries(
 
 const PRODUCT_CATEGORIES = ['Vegetables', 'Fruits', 'Staples', 'Leafy Greens'];
 const QUALITY_GRADES = ['Grade A (Export)', 'Grade A', 'Grade B', 'Organic'];
+
+const DEFAULT_MASTER_CATALOG = [
+  {
+    id: 'cat_tomato',
+    nameEn: 'Fresh Tomato',
+    nameTe: 'టమాటా',
+    cat: 'Vegetables',
+    defaultUnit: 'Kg',
+    img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=400&q=80',
+  },
+  {
+    id: 'cat_onion',
+    nameEn: 'Red Onion',
+    nameTe: 'ఉల్లిపాయలు',
+    cat: 'Vegetables',
+    defaultUnit: 'Kg',
+    img: 'https://images.unsplash.com/photo-1508747705729-e0613307ab6e?auto=format&fit=crop&w=400&q=80',
+  },
+  {
+    id: 'cat_mango',
+    nameEn: 'Banganapalli Mango',
+    nameTe: 'మామిడిపండు',
+    cat: 'Fruits',
+    defaultUnit: 'Kg',
+    img: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=400&q=80',
+  },
+  {
+    id: 'cat_spinach',
+    nameEn: 'Fresh Spinach (Palakura)',
+    nameTe: 'పాలకూర',
+    cat: 'Leafy Greens',
+    defaultUnit: 'Grams',
+    img: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=400&q=80',
+  },
+  {
+    id: 'cat_rice',
+    nameEn: 'Nellore Sona Masuri Rice',
+    nameTe: 'సోనా మసూరి బియ్యం',
+    cat: 'Staples',
+    defaultUnit: 'Kg',
+    img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=400&q=80',
+  },
+  {
+    id: 'cat_potato',
+    nameEn: 'Fresh Potato',
+    nameTe: 'బంగాళాదుంప',
+    cat: 'Vegetables',
+    defaultUnit: 'Kg',
+    img: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80',
+  },
+];
 
 const TOP_CATEGORIES = [
   { id: 'Vegetables', labelEn: 'Vegetables', labelTe: 'కూరగాయలు', img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=160&q=80' },
@@ -190,6 +241,29 @@ id: 'p3',
   },
 ];
 
+// Compress uploaded image file to lightweight base64 data URL for instant Firestore storage
+const compressImageFileToDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxSide = 360;
+        const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.78));
+      };
+      img.onerror = reject;
+      img.src = ev.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
 const PaymentBadge = ({ type }) => {
   if (type === 'phonepe') return <span className="h-8 w-8 rounded-xl bg-[#5F259F] text-white font-black text-xs flex items-center justify-center shadow-sm">पे</span>;
   if (type === 'gpay') return <span className="h-8 w-8 rounded-xl bg-white border border-gray-200 text-[#1A73E8] font-black text-xs flex items-center justify-center shadow-sm">G</span>;
@@ -218,7 +292,6 @@ const buildPaymentLaunchUrl = (mode, upiId, amount) => {
   return `upi://pay?${query}`;
 };
 
-// Build independent Pickup Stops grouped by Seller/Role so Farmer, Retail & Wholesale each get their own alert & acceptance state
 const buildPickupStopsFromItems = (itemsArr) => {
   const stopMap = new Map();
   itemsArr.forEach((item) => {
@@ -233,7 +306,7 @@ const buildPickupStopsFromItems = (itemsArr) => {
         sellerLng: item.sellerLng || 79.9850,
         itemsSummary: [`${item.qty} ${item.unit || 'Kg'} ${item.name}`],
         stopSubtotal: item.price * item.qty,
-        stopStatus: 'Pending', // 'Pending' | 'Accepted' | 'Declined'
+        stopStatus: 'Pending',
         acceptedByUserId: null,
         acceptedByUserName: null,
         pickedUp: false,
@@ -247,7 +320,6 @@ const buildPickupStopsFromItems = (itemsArr) => {
   return Array.from(stopMap.values());
 };
 
-// Compute overall order acceptance status ('Order Placed' | 'Order Partially Accepted' | 'Order Fully Accepted')
 const computeOrderAcceptanceStatus = (stops, currentStatus) => {
   if (['Partner Assigned', 'Out for Delivery', 'Delivered'].includes(currentStatus)) {
     return currentStatus;
@@ -309,6 +381,24 @@ export default function App() {
   });
   const [products, setProducts] = useState(INITIAL_PRODUCTS);
 
+  // Admin Master Product Catalog (Synced across all devices via Firestore)
+  const [masterCatalog, setMasterCatalog] = useState(() => {
+    try {
+      const saved = localStorage.getItem('rythu_master_catalog');
+      return saved ? JSON.parse(saved) : DEFAULT_MASTER_CATALOG;
+    } catch {
+      return DEFAULT_MASTER_CATALOG;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('rythu_master_catalog', JSON.stringify(masterCatalog));
+    } catch {
+      // ignore
+    }
+  }, [masterCatalog]);
+
   useEffect(() => {
     try {
       localStorage.setItem('rythu_registered_users', JSON.stringify(users));
@@ -353,7 +443,7 @@ export default function App() {
   const [regOtpInput, setRegOtpInput] = useState('');
   const [showWelcomeSmile, setShowWelcomeSmile] = useState(false);
 
-  // Navigation & Screens
+// Navigation & Screens
   const [activeTab, setActiveTab] = useState('home');
   const [detailProduct, setDetailProduct] = useState(null);
   const [detailQty, setDetailQty] = useState(1);
@@ -395,7 +485,7 @@ export default function App() {
   const [isEditingPinText, setIsEditingPinText] = useState(false);
   const [isLocatingGps, setIsLocatingGps] = useState(false);
 
-  // Cart & Payments (Pre-loaded with 1 Farmer item + 1 Retail item so multi-vendor flow works immediately)
+  // Cart & Payments
   const [cart, setCart] = useState({ p1: 2, p4: 1 });
   const [useWalletBalance] = useState(false);
   const [appliedPromo] = useState(null);
@@ -417,15 +507,26 @@ export default function App() {
   ]);
   const [orders, setOrders] = useState([]);
 
-  // Seller Post Product States
-  const [fNameEn, setFNameEn] = useState('');
-  const [fNameTe, setFNameTe] = useState('');
+  // Seller Post Product States (Selected from Admin Master Catalog or Custom)
+  const [selectedCatalogId, setSelectedCatalogId] = useState('cat_tomato');
+  const [fNameEn, setFNameEn] = useState('Fresh Tomato');
+  const [fNameTe, setFNameTe] = useState('టమాటా');
   const [fCat, setFCat] = useState('Vegetables');
   const [fQuality, setFQuality] = useState('Grade A');
   const [fQty, setFQty] = useState('100');
   const [fUnit, setFUnit] = useState('Kg');
   const [fPrice, setFPrice] = useState('22');
+  const [fImg, setFImg] = useState('https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=400&q=80');
   const [fAvailTime, setFAvailTime] = useState('Available Now');
+
+  // Admin Master Catalog Upload Form States
+  const [adminTab, setAdminTab] = useState('catalog');
+  const [catNameEn, setCatNameEn] = useState('');
+  const [catNameTe, setCatNameTe] = useState('');
+  const [catCategory, setCatCategory] = useState('Vegetables');
+  const [catUnit, setCatUnit] = useState('Kg');
+  const [catImgPreview, setCatImgPreview] = useState('');
+  const [catImgUrl, setCatImgUrl] = useState('');
 
   // Delivery & Admin States
   const [delivFilter, setDelivFilter] = useState('available');
@@ -433,7 +534,7 @@ export default function App() {
   const [scratchMax] = useState(25);
   const [offersEnabled] = useState(true);
 
-  // 15-Second Ringtone Alert Controller per Role Stop
+// 15-Second Ringtone Alert Controller per Role Stop
   const [isRinging, setIsRinging] = useState(false);
   const lastRungKeyRef = useRef(null);
   const ringTimerRef = useRef(null);
@@ -471,7 +572,7 @@ export default function App() {
       }
     };
 
-playSingleChime();
+    playSingleChime();
     let elapsed = 0;
     ringTimerRef.current = setInterval(() => {
       elapsed += 1;
@@ -483,7 +584,6 @@ playSingleChime();
     }, 1000);
   }, [stopAlertRingtone]);
 
-  // Helper: Find pending stops matching the logged-in seller's role ('farmer' | 'wholesale' | 'retail')
   const getPendingStopsForSeller = useCallback(
     (ord) => {
       if (!currentUser || !['farmer', 'wholesale', 'retail'].includes(currentUser.role)) return [];
@@ -499,7 +599,6 @@ playSingleChime();
     [currentUser]
   );
 
-  // Trigger 15-second ringtone independently for Farmer, Wholesale & Retail when their stop is Pending
   useEffect(() => {
     if (!currentUser || !['farmer', 'wholesale', 'retail'].includes(currentUser.role)) {
       stopAlertRingtone();
@@ -552,7 +651,7 @@ playSingleChime();
     }
   }, [sharedInvoiceData, currentUser, activeTab, selectedRole, authScreen]);
 
-useEffect(() => {
+  useEffect(() => {
     window.history.pushState({ rythuNav: true }, '');
     const onPopState = () => {
       handleHardwareBack();
@@ -589,7 +688,7 @@ useEffect(() => {
     }
   };
 
-  // Real-Time Cloud Firestore Sync
+// Real-Time Cloud Firestore Sync (Orders, Products, Users & Admin Master Catalog)
   useEffect(() => {
     const unsubOrders = onSnapshot(
       collection(db, 'orders'),
@@ -616,6 +715,20 @@ useEffect(() => {
       () => {}
     );
 
+    const unsubCatalog = onSnapshot(
+      collection(db, 'masterCatalog'),
+      (snapshot) => {
+        if (!snapshot.empty) {
+          const liveCat = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+          setMasterCatalog((prev) => {
+            const ids = new Set(liveCat.map((c) => c.id));
+            return [...liveCat, ...prev.filter((c) => !ids.has(c.id))];
+          });
+        }
+      },
+      () => {}
+    );
+
     const unsubUsers = onSnapshot(
       collection(db, 'users'),
       (snapshot) => {
@@ -633,11 +746,12 @@ useEffect(() => {
     return () => {
       unsubOrders();
       unsubProducts();
+      unsubCatalog();
       unsubUsers();
     };
   }, []);
 
-// Continuous Live GPS Broadcast while Delivery Partner is Active
+  // Continuous Live GPS Broadcast while Delivery Partner is Active
   useEffect(() => {
     if (!currentUser || currentUser.role !== 'delivery' || !navigator.geolocation) return;
     const activeAssigned = orders.filter(
@@ -702,7 +816,7 @@ useEffect(() => {
     }
   };
 
-  const sendAutomaticInvoiceEmail = async (ord) => {
+const sendAutomaticInvoiceEmail = async (ord) => {
     const recipientEmail = ord.buyerEmail || currentUser?.email;
     if (!recipientEmail) return;
 
@@ -726,7 +840,7 @@ useEffect(() => {
       )
       .join('');
 
-const invoiceHtml = `
+    const invoiceHtml = `
       <div style="border:1px solid #cbd5e1;padding:16px;border-radius:10px;background:#ffffff;font-family:Arial,sans-serif;font-size:12px;color:#1e293b;">
         <div style="text-align:center;margin-bottom:12px;">
           <img src="https://rythu-market.vercel.app/icon-512.png" width="56" height="56" style="border-radius:50%;border:2px solid #EAB308;" />
@@ -807,7 +921,7 @@ const invoiceHtml = `
     }
   };
 
-const verifyEmailOtpCode = (enteredCode) => {
+  const verifyEmailOtpCode = (enteredCode) => {
     if (!generatedEmailOtp || Date.now() > emailOtpExpiry) {
       setAuthMsg('OTP expired or not requested. Please tap Resend OTP.');
       return false;
@@ -819,7 +933,7 @@ const verifyEmailOtpCode = (enteredCode) => {
     return true;
   };
 
-  const handleDirectLogin = (e) => {
+const handleDirectLogin = (e) => {
     e.preventDefault();
     const raw = loginIdentifier.trim();
     if (!raw) {
@@ -883,7 +997,7 @@ const verifyEmailOtpCode = (enteredCode) => {
     if (ok) setRegOtpSent(true);
   };
 
-const handleCompleteRegistration = (e) => {
+  const handleCompleteRegistration = (e) => {
     e.preventDefault();
     if (!verifyEmailOtpCode(regOtpInput)) return;
 
@@ -945,7 +1059,7 @@ const handleCompleteRegistration = (e) => {
     setTimeout(() => setShowWelcomeSmile(false), 3500);
   };
 
-  const handleStrictLogout = () => {
+const handleStrictLogout = () => {
     stopAlertRingtone();
     setCurrentUser(null);
     setSelectedRole(null);
@@ -974,7 +1088,7 @@ const handleCompleteRegistration = (e) => {
     setMapPinFullAddress(`Lat ${lat.toFixed(5)}, Lng ${lng.toFixed(5)}, Nellore, Andhra Pradesh`);
   };
 
-const handleUseCurrentLocationMap = () => {
+  const handleUseCurrentLocationMap = () => {
     setIsLocatingGps(true);
     setIsEditingPinText(false);
     setActiveTab('mapPin');
@@ -1027,7 +1141,7 @@ const handleUseCurrentLocationMap = () => {
     notify(`Selected Location - ${mapPinTitle}`);
   };
 
-  const handleFarmerEnChange = (val) => {
+const handleFarmerEnChange = (val) => {
     setFNameEn(val);
     const key = val.trim().toLowerCase();
     if (EN_TO_TE[key]) setFNameTe(EN_TO_TE[key]);
@@ -1038,7 +1152,24 @@ const handleUseCurrentLocationMap = () => {
     if (TE_TO_EN[val.trim()]) setFNameEn(TE_TO_EN[val.trim()]);
   };
 
-const handlePublishRoleProduct = (e, roleSource) => {
+  // Select a product from Admin Master Catalog -> Auto-fills English/Telugu Name, Category, Unit & Photo
+  const handleSelectCatalogProduct = (item) => {
+    if (!item) {
+      setSelectedCatalogId('custom');
+      setFNameEn('');
+      setFNameTe('');
+      setFImg('https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=400&q=80');
+      return;
+    }
+    setSelectedCatalogId(item.id);
+    setFNameEn(item.nameEn);
+    setFNameTe(item.nameTe);
+    setFCat(item.cat || 'Vegetables');
+    setFUnit(item.defaultUnit || 'Kg');
+    setFImg(item.img);
+  };
+
+  const handlePublishRoleProduct = (e, roleSource) => {
     e.preventDefault();
     if (!fNameEn.trim() || !fPrice) return;
     const baseRate = Number(fPrice);
@@ -1065,25 +1196,73 @@ const handlePublishRoleProduct = (e, roleSource) => {
       inStock: true,
       desc: `${fQuality} ${fNameEn.trim()} (${fCat}) listed by ${currentUser.name}.`,
       availableFrom: fAvailTime,
-      img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=400&q=80',
+      img: fImg || 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=400&q=80',
     };
     setProducts((prev) => [newProd, ...prev]);
     setDoc(doc(db, 'products', newProd.id), newProd).catch(() => {});
-    setFNameEn('');
-    setFNameTe('');
-    notify(`Published (${fCat} • ${fQuality} • ${fQty} ${fUnit})!`);
+    notify(`Published ${newProd.nameEn} (${fQuality} • ${fQty} ${fUnit})!`);
   };
 
+  // Seller Product Form powered by Admin Master Catalog (Visual Picture Picker + Auto-Fill)
   const renderPostProductForm = (roleSource, submitLabel) => (
     <form onSubmit={(e) => handlePublishRoleProduct(e, roleSource)} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-3">
-      <div className="grid grid-cols-2 gap-2">
-        <div>
-          <label className="text-[10px] font-bold text-slate-400">Product Name (English)</label>
-          <input type="text" required value={fNameEn} onChange={(e) => handleFarmerEnChange(e.target.value)} placeholder="e.g., Tomato" className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-bold" />
+      <div>
+        <div className="flex items-center justify-between mb-1.5">
+          <label className="text-[11px] font-extrabold text-[#15803D]">
+            1. Select Product from Admin Catalog (Tap Picture)
+          </label>
+          <button
+            type="button"
+            onClick={() => handleSelectCatalogProduct(null)}
+            className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${
+              selectedCatalogId === 'custom' ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-600'
+            }`}
+          >
+            + Other Item
+          </button>
         </div>
-        <div>
-          <label className="text-[10px] font-bold text-slate-400">పేరు తెలుగులో (Auto)</label>
-          <input type="text" required value={fNameTe} onChange={(e) => handleFarmerTeChange(e.target.value)} placeholder="ఉదా: టమాటా" className="w-full bg-emerald-50/70 border border-emerald-200 rounded-xl px-3 py-2.5 font-bold text-[#15803D]" />
+
+        <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-0.5">
+          {masterCatalog.map((item) => {
+            const isSel = selectedCatalogId === item.id;
+            return (
+              <button
+                type="button"
+                key={item.id}
+                onClick={() => handleSelectCatalogProduct(item)}
+                className={`rounded-2xl p-2 border text-center transition ${
+                  isSel ? 'border-2 border-[#15803D] bg-emerald-50 shadow-sm' : 'border-slate-200 bg-slate-50/50'
+                }`}
+              >
+                <img src={item.img} alt={item.nameEn} className="h-12 w-12 rounded-xl object-cover mx-auto mb-1" />
+                <p className="text-[10px] font-extrabold text-slate-900 truncate">{item.nameEn}</p>
+                <p className="text-[9px] font-bold text-[#15803D] truncate">{item.nameTe}</p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+{/* Selected Product Preview & Name Fields */}
+      <div className="flex items-center space-x-2.5 bg-emerald-50/50 border border-emerald-200 rounded-2xl p-2.5">
+        <img src={fImg} alt={fNameEn} className="h-12 w-12 rounded-xl object-cover flex-shrink-0 bg-white" />
+        <div className="grid grid-cols-2 gap-1.5 flex-1">
+          <input
+            type="text"
+            required
+            value={fNameEn}
+            onChange={(e) => handleFarmerEnChange(e.target.value)}
+            placeholder="Product Name (EN)"
+            className="w-full bg-white border rounded-xl px-2.5 py-2 font-bold text-xs"
+          />
+          <input
+            type="text"
+            required
+            value={fNameTe}
+            onChange={(e) => handleFarmerTeChange(e.target.value)}
+            placeholder="పేరు తెలుగులో"
+            className="w-full bg-white border rounded-xl px-2.5 py-2 font-bold text-xs text-[#15803D]"
+          />
         </div>
       </div>
 
@@ -1141,7 +1320,7 @@ const handlePublishRoleProduct = (e, roleSource) => {
 
   const fontStyle = { fontFamily: "'Plus Jakarta Sans', 'Noto Sans Telugu', sans-serif" };
 
-  // =========================================================================
+// =========================================================================
   // 0. DIRECT INVOICE PDF PRINT VIEW
   // =========================================================================
   if (sharedInvoiceData) {
@@ -1220,7 +1399,7 @@ const handlePublishRoleProduct = (e, roleSource) => {
     );
   }
 
- // =========================================================================
+// =========================================================================
   // 1. HOME / ROLE ENTRY PAGE + ONE-TIME DEVICE PERMISSIONS DIALOG
   // =========================================================================
   if (!selectedRole) {
@@ -1331,7 +1510,7 @@ const handlePublishRoleProduct = (e, roleSource) => {
               </div>
             </div>
 
- <div className="flex items-center space-x-2">
+<div className="flex items-center space-x-2">
               <button
                 type="button"
                 onClick={() => setLang(lang === 'te' ? 'en' : 'te')}
@@ -1444,7 +1623,7 @@ const handlePublishRoleProduct = (e, roleSource) => {
           </div>
         </div>
 
-<div className="px-3.5 pt-3.5">
+        <div className="px-3.5 pt-3.5">
           <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2.5">
             <div className="flex items-center space-x-1.5 text-xs font-extrabold text-slate-800">
               <Leaf className="h-4 w-4 text-[#15803D]" />
@@ -1479,7 +1658,7 @@ const handlePublishRoleProduct = (e, roleSource) => {
           </div>
         </div>
 
-        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0D4A24] text-white px-6 py-2.5 rounded-t-3xl flex justify-center items-center z-40 shadow-2xl">
+<nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0D4A24] text-white px-6 py-2.5 rounded-t-3xl flex justify-center items-center z-40 shadow-2xl">
           <button
             type="button"
             onClick={() => setSelectedRole(null)}
@@ -1493,7 +1672,7 @@ const handlePublishRoleProduct = (e, roleSource) => {
     );
   }
 
-// =========================================================================
+  // =========================================================================
   // 2. ROLE-SPECIFIC REGISTRATION & DIRECT LOGIN
   // =========================================================================
   if (!currentUser) {
@@ -1636,7 +1815,7 @@ return (
                 </div>
               )}
 
-<button
+              <button
                 type="submit"
                 className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
               >
@@ -1707,7 +1886,7 @@ return (
                 </>
               )}
 
-              {selectedRole === 'farmer' && (
+{selectedRole === 'farmer' && (
                 <>
                   <p className="font-extrabold text-[#15803D]">— Personal Details</p>
                   <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Full Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
@@ -1721,7 +1900,7 @@ return (
                     <input type="text" required value={regDistrict} onChange={(e) => setRegDistrict(e.target.value)} placeholder="District *" className="bg-white border border-slate-200 rounded-xl px-2.5 py-2.5 font-bold" />
                   </div>
 
-<p className="font-extrabold text-[#15803D] pt-1">— Farm Details</p>
+                  <p className="font-extrabold text-[#15803D] pt-1">— Farm Details</p>
                   <input type="text" value={regLandAcres} onChange={(e) => setRegLandAcres(e.target.value)} placeholder="Land Holding (Acres)" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
                   <input type="text" value={regMajorCrops} onChange={(e) => setRegMajorCrops(e.target.value)} placeholder="Major Crops (e.g., Tomato, Paddy)" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
 
@@ -1805,7 +1984,7 @@ return (
                     ))}
                   </div>
 
-   {renderBankAndUpiBlock()}
+                  {renderBankAndUpiBlock()}
 
                   <label className="block border-2 border-dashed border-emerald-300 bg-white rounded-2xl p-3 text-center cursor-pointer">
                     <Camera className="h-5 w-5 text-[#15803D] mx-auto mb-1" />
@@ -1851,7 +2030,7 @@ return (
                 </>
               )}
 
-              {selectedRole === 'admin' && (
+{selectedRole === 'admin' && (
                 <>
                   <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Admin Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
                   <input type="tel" maxLength={10} required value={regMobile} onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, ''))} placeholder="Mobile Number *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
@@ -1915,7 +2094,7 @@ return (
     );
   }
 
-const WelcomeSmileModal = () =>
+  const WelcomeSmileModal = () =>
     showWelcomeSmile ? (
       <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-3xl p-6 text-center max-w-xs w-full space-y-3 shadow-2xl">
@@ -1975,8 +2154,8 @@ const WelcomeSmileModal = () =>
     </div>
   );
 
-// =========================================================================
-  // 3. CUSTOMER STOREFRONT (PARTIAL/FULL ACCEPTANCE + LIVE RIDER TRACKING + CALL/SMS)
+  // =========================================================================
+  // 3. CUSTOMER STOREFRONT
   // =========================================================================
   if (currentUser.role === 'customer') {
     const activeAddr = savedAddresses.find((a) => a.id === activeAddrId) || savedAddresses[0];
@@ -2048,7 +2227,7 @@ const WelcomeSmileModal = () =>
       const riderBaseFee = 30;
       const riderMultiStopBonus = extraStopsCount * 15;
 
-const newOrd = {
+      const newOrd = {
         id: 'RB' + Math.floor(123450 + Math.random() * 800000),
         buyerId: currentUser.id,
         buyerRole: 'customer',
@@ -2115,7 +2294,7 @@ const newOrd = {
       }, 350);
     };
 
-    const handleSimulateCustomerDelivery = (ord) => {
+const handleSimulateCustomerDelivery = (ord) => {
       const isLucky = Math.random() > 0.2;
       const reward = isLucky ? Math.floor(scratchMin + Math.random() * (scratchMax - scratchMin + 1)) : 0;
       const updatedUser = {
@@ -2132,7 +2311,7 @@ const newOrd = {
       setScratchCard({ orderId: ord.id, reward, scratched: false });
     };
 
-if (activeTab === 'selectLocation') {
+    if (activeTab === 'selectLocation') {
       const filteredAddrs = savedAddresses.filter(
         (a) =>
           a.title.toLowerCase().includes(locSearch.toLowerCase()) ||
@@ -2268,7 +2447,7 @@ if (activeTab === 'mapPin') {
       );
     }
 
-const visibleProducts = products.filter((p) => {
+    const visibleProducts = products.filter((p) => {
       const catOk = selectedCat === 'All' || p.cat === selectedCat;
       const q = search.toLowerCase();
       return catOk && (p.nameEn.toLowerCase().includes(q) || p.nameTe.includes(search));
@@ -2314,7 +2493,7 @@ const visibleProducts = products.filter((p) => {
           </div>
         )}
 
-        {activeTab === 'home' && (
+{activeTab === 'home' && (
           <main className="px-4 pt-3.5 space-y-4 text-xs">
             <div className="flex items-center justify-between">
               <button
@@ -2375,7 +2554,7 @@ const visibleProducts = products.filter((p) => {
               />
             </div>
 
-  <div className="grid grid-cols-4 gap-2 text-center">
+            <div className="grid grid-cols-4 gap-2 text-center">
               {TOP_CATEGORIES.map((c) => {
                 const active = selectedCat === c.id;
                 return (
@@ -2484,7 +2663,7 @@ const visibleProducts = products.filter((p) => {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+  <div className="grid grid-cols-2 gap-3">
               {TOP_CATEGORIES.map((cat) => (
                 <button
                   key={cat.id}
@@ -2503,7 +2682,7 @@ const visibleProducts = products.filter((p) => {
           </main>
         )}
 
-{activeTab === 'productDetail' && detailProduct && (
+        {activeTab === 'productDetail' && detailProduct && (
           <main className="bg-white min-h-screen pb-24 text-xs">
             <div className="relative h-64 w-full bg-slate-100">
               <img src={detailProduct.img} alt={detailProduct.nameEn} className="h-full w-full object-cover" />
@@ -2601,7 +2780,7 @@ const visibleProducts = products.filter((p) => {
               <button onClick={() => setActiveTab('selectLocation')} className="text-[#15803D] font-extrabold">Change</button>
             </div>
 
-<div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
+            <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
               <div className="flex items-center justify-between">
                 <h3 className="font-extrabold text-slate-900">Payment Method</h3>
                 <span className="text-[10px] font-bold text-[#15803D]">{merchantUpiId}</span>
@@ -2657,7 +2836,7 @@ const visibleProducts = products.filter((p) => {
           </main>
         )}
 
-        {activeTab === 'upiProcessing' && (
+{activeTab === 'upiProcessing' && (
           <main className="p-4 space-y-4 text-xs">
             <div className="bg-white rounded-3xl p-5 shadow-md border border-emerald-200 text-center space-y-3">
               <h2 className="text-base font-extrabold text-slate-900">Pay ₹{payableTotal} to {merchantUpiId}</h2>
@@ -2702,7 +2881,6 @@ const visibleProducts = products.filter((p) => {
           </main>
         )}
 
-{/* CUSTOMER TRACK ORDER: SHOWS PARTIAL / FULL ACCEPTANCE + LIVE TRACKING + CALL & MESSAGE RIDER */}
         {activeTab === 'trackOrder' && trackingOrder && (
           <main className="pb-10 text-xs">
             <div className="bg-gradient-to-b from-[#15803D] to-[#22C55E] text-white p-5 rounded-b-[32px] shadow-md space-y-2">
@@ -2718,7 +2896,6 @@ const visibleProducts = products.filter((p) => {
             </div>
 
             <div className="p-4 space-y-3.5">
-              {/* Seller Acceptance Breakdown */}
               {(trackingOrder.pickupStops || []).length > 0 && (
                 <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
                   <p className="font-extrabold text-slate-900">
@@ -2748,7 +2925,6 @@ const visibleProducts = products.filter((p) => {
                 </div>
               )}
 
-              {/* Live Delivery Partner Map (Enabled once all accepted sellers' orders are picked up) */}
               {isOutForCustomerDrop ? (
                 <div className="relative h-52 w-full rounded-3xl overflow-hidden border-2 border-[#15803D] shadow-md">
                   <iframe
@@ -2771,8 +2947,7 @@ const visibleProducts = products.filter((p) => {
                 </div>
               )}
 
-              {/* Call & Message Delivery Partner Card */}
-              <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
+  <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="h-11 w-11 rounded-full bg-emerald-100 text-[#15803D] font-extrabold flex items-center justify-center">
                     <Truck className="h-5 w-5" />
@@ -2819,7 +2994,7 @@ const visibleProducts = products.filter((p) => {
           </main>
         )}
 
-{activeTab === 'orders' && (
+        {activeTab === 'orders' && (
           <main className="p-4 space-y-3.5 text-xs">
             <h2 className="text-base font-extrabold text-slate-900">My Orders</h2>
             {orders.filter((o) => o.buyerRole === 'customer').length === 0 ? (
@@ -2875,12 +3050,10 @@ const visibleProducts = products.filter((p) => {
     );
   }
 
-  // =========================================================================
+// =========================================================================
   // INDEPENDENT MULTI-VENDOR ORDER ALERTS & SEQUENTIAL PICKUP TRACKING
-  // (SHOWN ON HOME & ORDERS TAB FOR FARMER, WHOLESALE & RETAIL)
   // =========================================================================
   const renderBroadcastOrderAlertsAndPickupTracking = () => {
-    // 1. Orders with Pending stops matching currentUser's role
     const incomingAlertCards = [];
     orders.forEach((ord) => {
       const pendingStops = getPendingStopsForSeller(ord);
@@ -2889,12 +3062,10 @@ const visibleProducts = products.filter((p) => {
       });
     });
 
-    // 2. Orders where this user accepted a stop (so it shows in their Orders list & gets sequential pickup tracking)
     const myAcceptedStopCards = [];
     orders.forEach((ord) => {
       const stops = ord.pickupStops || buildPickupStopsFromItems(ord.items || []);
       const acceptedStops = stops.filter((s) => s.stopStatus === 'Accepted');
-      // Find which stop the rider is currently picking up next (first accepted stop not yet pickedUp)
       const currentActiveStop = acceptedStops.find((s) => !s.pickedUp);
 
       stops.forEach((st) => {
@@ -2906,9 +3077,8 @@ const visibleProducts = products.filter((p) => {
       });
     });
 
-return (
+    return (
       <div className="space-y-3">
-        {/* Incoming Stop Alerts with 15-Second Ringtone */}
         {incomingAlertCards.length > 0 && (
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs font-extrabold text-amber-800">
@@ -2999,7 +3169,6 @@ return (
           </div>
         )}
 
-{/* Accepted Orders List & Sequential Live Rider Pickup Tracking */}
         {myAcceptedStopCards.map(({ ord, st, isMyTurnForRiderPickup }) => {
           const rLat = ord.driverLat || 14.4390;
           const rLng = ord.driverLng || 79.9810;
@@ -3013,7 +3182,6 @@ return (
               </div>
               <p className="text-[11px] font-bold text-[#15803D]">Items: {st.itemsSummary.join(', ')}</p>
 
-              {/* Show Live Delivery Partner Pickup Map when it's this Seller's turn for pickup */}
               {!st.pickedUp && isMyTurnForRiderPickup && (
                 <div className="space-y-1.5 pt-1">
                   <p className="text-[11px] font-extrabold text-[#15803D]">
@@ -3136,7 +3304,7 @@ return (
           </main>
         )}
 
-{activeTab === 'earnings' && (
+        {activeTab === 'earnings' && (
           <main className="p-4 text-xs">
             <div className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white rounded-3xl p-5 shadow-md">
               <p className="text-emerald-100 font-bold">Total Farm Earnings</p>
@@ -3156,7 +3324,7 @@ return (
 
         {activeTab === 'profile' && renderSharedProfileTab()}
 
-        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-4 py-2 flex justify-between items-center z-40">
+<nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-4 py-2 flex justify-between items-center z-40">
           {[
             { id: 'home', icon: Home, label: 'Home' },
             { id: 'listProduce', icon: Sprout, label: 'My Produce' },
@@ -3213,7 +3381,7 @@ return (
       ];
       const pickupStops = buildPickupStopsFromItems(itemsArr);
 
-const newOrd = {
+      const newOrd = {
         id: (isRetail ? 'RIT-' : 'WS-') + Math.floor(1000 + Math.random() * 8999),
         buyerId: currentUser.id,
         buyerRole: currentUser.role,
@@ -3290,7 +3458,7 @@ const newOrd = {
           </main>
         )}
 
-        {activeTab === 'sellStock' && (
+{activeTab === 'sellStock' && (
           <main className="p-4 space-y-3 text-xs">
             <div className="flex items-center space-x-2">
               <button onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white shadow-sm">
@@ -3304,7 +3472,7 @@ const newOrd = {
           </main>
         )}
 
-{activeTab === 'browse' && (
+        {activeTab === 'browse' && (
           <main className="p-4 space-y-3 text-xs">
             <div className="flex items-center space-x-2">
               <button onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white shadow-sm">
@@ -3428,15 +3596,13 @@ const newOrd = {
   }
 
   // =========================================================================
-  // 6. DELIVERY PARTNER PORTAL (SEQUENTIAL PICKUP -> OUT FOR DELIVERY -> DROP)
+  // 6. DELIVERY PARTNER PORTAL
   // =========================================================================
   if (currentUser.role === 'delivery') {
     const availOrders = orders.filter((o) => o.status !== 'Delivered');
     const delivOrders = orders.filter((o) => o.status === 'Delivered');
     const weeklyCompleted = currentUser.weeklyOrders || 0;
 
-    // Mark individual accepted pickup stop complete -> automatically unlocks next seller's live tracking,
-    // and once all accepted stops are picked up, enables Customer live delivery tracking ('Out for Delivery')!
     const handleMarkOrderPickedUp = (ord, stopIdx) => {
       const stops = [...(ord.pickupStops || [])];
       if (stops[stopIdx]) {
@@ -3488,7 +3654,7 @@ const newOrd = {
       notify(`Delivered! ₹${baseFee} Base + ₹${multiBonus} Multi-Stop Bonus (Total ₹${totalEarned}) credited!`);
     };
 
-return (
+    return (
       <div style={fontStyle} className="min-h-screen bg-[#F5F7F5] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
         {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-extrabold px-4 py-2 rounded-full shadow-lg">{toast}</div>}
 
@@ -3526,7 +3692,7 @@ return (
               </div>
             </div>
 
-            {(delivFilter === 'available' ? availOrders : delivOrders).length === 0 ? (
+{(delivFilter === 'available' ? availOrders : delivOrders).length === 0 ? (
               <div className="bg-white rounded-2xl p-6 text-center text-slate-400 font-bold">No orders in this list.</div>
             ) : (
               (delivFilter === 'available' ? availOrders : delivOrders).map((ord) => {
@@ -3600,7 +3766,7 @@ return (
                         );
                       })}
 
-<p className="text-[10px] font-extrabold text-[#0F5132] uppercase pt-1">
+                      <p className="text-[10px] font-extrabold text-[#0F5132] uppercase pt-1">
                         2. Customer / Buyer Drop Location:
                       </p>
                       <div className="bg-emerald-50/80 rounded-lg p-2 border border-emerald-200 flex items-center justify-between gap-2">
@@ -3691,9 +3857,53 @@ return (
     );
   }
 
+// =========================================================================
+  // 7. MASTER ADMIN HQ (UPLOAD MASTER CATALOG PRODUCTS & PICTURES + USER APPROVALS)
   // =========================================================================
-  // 7. MASTER ADMIN HQ
-  // =========================================================================
+  const handleAdminCatalogPhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const compressed = await compressImageFileToDataUrl(file);
+      setCatImgPreview(compressed);
+      notify('Product photo ready!');
+    } catch {
+      notify('Could not process image file.');
+    }
+  };
+
+  const handleAddMasterCatalogItem = (e) => {
+    e.preventDefault();
+    if (!catNameEn.trim()) return;
+    const finalImg =
+      catImgPreview ||
+      catImgUrl.trim() ||
+      'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=400&q=80';
+
+    const newItem = {
+      id: 'cat_' + Date.now(),
+      nameEn: catNameEn.trim(),
+      nameTe: catNameTe.trim() || EN_TO_TE[catNameEn.trim().toLowerCase()] || catNameEn.trim(),
+      cat: catCategory,
+      defaultUnit: catUnit,
+      img: finalImg,
+    };
+
+    setMasterCatalog((prev) => [newItem, ...prev]);
+    setDoc(doc(db, 'masterCatalog', newItem.id), newItem).catch(() => {});
+    setCatNameEn('');
+    setCatNameTe('');
+    setCatImgPreview('');
+    setCatImgUrl('');
+    notify(`Added "${newItem.nameEn}" to Master Catalog for all Sellers!`);
+  };
+
+  const handleDeleteCatalogItem = (itemId) => {
+    setMasterCatalog((prev) => prev.filter((c) => c.id !== itemId));
+    deleteDoc(doc(db, 'masterCatalog', itemId)).catch(() => {});
+    notify('Removed from Master Catalog');
+  };
+
   return (
     <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
       {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-extrabold px-4 py-2 rounded-full shadow-lg">{toast}</div>}
@@ -3704,37 +3914,153 @@ return (
           <h1 className="text-base font-extrabold mt-0.5">Rythu Basket Control</h1>
         </div>
         <span className="bg-[#EAB308] text-slate-900 text-xs font-extrabold px-2.5 py-1 rounded-full">
-          {users.length} Users
+          {masterCatalog.length} Catalog Items
         </span>
       </header>
 
       {activeTab === 'home' && (
         <main className="p-4 space-y-3 text-xs">
-          {users
-            .filter((u) => u.role === 'farmer' || u.role === 'wholesale' || u.role === 'retail')
-            .map((u) => (
-              <div key={u.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] font-extrabold uppercase bg-emerald-50 text-[#15803D] px-2 py-0.5 rounded">{u.role}</span>
-                  <h4 className="font-extrabold text-sm mt-1">{u.name}</h4>
-                  <p className="text-slate-500">{u.email} • +91 {u.mobile}</p>
+          {/* Admin Sub-Navigation Tabs */}
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setAdminTab('catalog')}
+              className={`py-2.5 rounded-xl font-extrabold border ${adminTab === 'catalog' ? 'bg-[#15803D] text-white border-[#15803D]' : 'bg-white text-slate-700'}`}
+            >
+              Product Catalog ({masterCatalog.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setAdminTab('approvals')}
+              className={`py-2.5 rounded-xl font-extrabold border ${adminTab === 'approvals' ? 'bg-[#15803D] text-white border-[#15803D]' : 'bg-white text-slate-700'}`}
+            >
+              Seller Approvals ({users.filter((u) => u.role !== 'customer' && u.role !== 'admin').length})
+            </button>
+          </div>
+
+          {adminTab === 'catalog' ? (
+            <div className="space-y-3">
+              {/* Upload Master Product & Picture Form */}
+              <form onSubmit={handleAddMasterCatalogItem} className="bg-white rounded-3xl p-4 shadow-sm border border-emerald-100 space-y-3">
+                <div className="flex items-center space-x-1.5 font-extrabold text-[#15803D] text-sm">
+                  <Image className="h-4 w-4" />
+                  <span>Upload Product & Picture to Master Catalog</span>
                 </div>
-                <button
-                  onClick={() => {
-                    setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, approved: !x.approved } : x)));
-                    updateDoc(doc(db, 'users', u.id), { approved: !u.approved }).catch(() => {});
-                    notify('Approval Status Updated!');
-                  }}
-                  className={`px-3.5 py-2 rounded-xl font-extrabold ${u.approved ? 'bg-emerald-50 text-[#15803D]' : 'bg-[#15803D] text-white'}`}
-                >
-                  {u.approved ? 'Approved' : 'Approve'}
+
+<div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    required
+                    value={catNameEn}
+                    onChange={(e) => {
+                      setCatNameEn(e.target.value);
+                      const autoTe = EN_TO_TE[e.target.value.trim().toLowerCase()];
+                      if (autoTe) setCatNameTe(autoTe);
+                    }}
+                    placeholder="Product Name (English) *"
+                    className="bg-slate-50 border rounded-xl px-3 py-2.5 font-bold"
+                  />
+                  <input
+                    type="text"
+                    required
+                    value={catNameTe}
+                    onChange={(e) => setCatNameTe(e.target.value)}
+                    placeholder="పేరు తెలుగులో *"
+                    className="bg-emerald-50/70 border border-emerald-200 rounded-xl px-3 py-2.5 font-bold text-[#15803D]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <select value={catCategory} onChange={(e) => setCatCategory(e.target.value)} className="bg-slate-50 border rounded-xl px-3 py-2.5 font-extrabold">
+                    {PRODUCT_CATEGORIES.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                  <select value={catUnit} onChange={(e) => setCatUnit(e.target.value)} className="bg-slate-50 border rounded-xl px-3 py-2.5 font-extrabold">
+                    <option value="Kg">Default Unit: Kg</option>
+                    <option value="Grams">Default Unit: Grams</option>
+                    <option value="Litres">Default Unit: Litres</option>
+                  </select>
+                </div>
+
+                {/* Upload Picture from Phone Gallery/Camera OR Paste Image URL */}
+                <label className="block border-2 border-dashed border-emerald-300 bg-emerald-50/40 rounded-2xl p-3 text-center cursor-pointer">
+                  {catImgPreview ? (
+                    <img src={catImgPreview} alt="Preview" className="h-20 w-20 rounded-xl object-cover mx-auto mb-1 border" />
+                  ) : (
+                    <Camera className="h-6 w-6 text-[#15803D] mx-auto mb-1" />
+                  )}
+                  <span className="font-extrabold text-[#15803D] block">
+                    {catImgPreview ? 'Change Uploaded Photo' : 'Tap to Upload Product Photo (Gallery / Camera)'}
+                  </span>
+                  <input type="file" accept="image/*" onChange={handleAdminCatalogPhotoUpload} className="hidden" />
+                </label>
+
+                <input
+                  type="url"
+                  value={catImgUrl}
+                  onChange={(e) => setCatImgUrl(e.target.value)}
+                  placeholder="Or paste Image URL (Optional)"
+                  className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-semibold text-[11px]"
+                />
+
+                <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow text-sm">
+                  + Save to Master Catalog (All Sellers Can Use)
                 </button>
+              </form>
+
+              {/* Existing Master Catalog List */}
+              <h3 className="font-extrabold text-slate-900">Saved Master Catalog ({masterCatalog.length})</h3>
+              <div className="space-y-2">
+                {masterCatalog.map((item) => (
+                  <div key={item.id} className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <img src={item.img} alt={item.nameEn} className="h-12 w-12 rounded-xl object-cover bg-slate-100" />
+                      <div>
+                        <h4 className="font-extrabold text-slate-900">{item.nameEn} • {item.nameTe}</h4>
+                        <p className="text-[10px] font-bold text-slate-500">{item.cat} • Unit: {item.defaultUnit}</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteCatalogItem(item.id)}
+                      className="p-2 text-rose-600 bg-rose-50 rounded-xl"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {users
+                .filter((u) => u.role === 'farmer' || u.role === 'wholesale' || u.role === 'retail')
+                .map((u) => (
+                  <div key={u.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] font-extrabold uppercase bg-emerald-50 text-[#15803D] px-2 py-0.5 rounded">{u.role}</span>
+                      <h4 className="font-extrabold text-sm mt-1">{u.name}</h4>
+                      <p className="text-slate-500">{u.email} • +91 {u.mobile}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, approved: !x.approved } : x)));
+                        updateDoc(doc(db, 'users', u.id), { approved: !u.approved }).catch(() => {});
+                        notify('Approval Status Updated!');
+                      }}
+                      className={`px-3.5 py-2 rounded-xl font-extrabold ${u.approved ? 'bg-emerald-50 text-[#15803D]' : 'bg-[#15803D] text-white'}`}
+                    >
+                      {u.approved ? 'Approved' : 'Approve'}
+                    </button>
+                  </div>
+                ))}
+            </div>
+          )}
         </main>
       )}
 
-{activeTab === 'profile' && renderSharedProfileTab()}
+      {activeTab === 'profile' && renderSharedProfileTab()}
 
       <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-12 py-2.5 flex justify-between items-center z-40">
         <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'home' ? 'text-[#15803D]' : 'text-slate-400'}`}>
