@@ -114,7 +114,7 @@ const INITIAL_PRODUCTS = [
     img: 'https://images.unsplash.com/photo-1508747705729-e0613307ab6e?auto=format&fit=crop&w=500&q=80',
   },
   {
- id: 'p3',
+id: 'p3',
     postedByRole: 'farmer',
     farmerId: 'u_farm_3',
     farmerName: 'Rapur Orchards • Nellore',
@@ -189,6 +189,7 @@ const INITIAL_PRODUCTS = [
     img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=500&q=80',
   },
 ];
+
 const PaymentBadge = ({ type }) => {
   if (type === 'phonepe') return <span className="h-8 w-8 rounded-xl bg-[#5F259F] text-white font-black text-xs flex items-center justify-center shadow-sm">पे</span>;
   if (type === 'gpay') return <span className="h-8 w-8 rounded-xl bg-white border border-gray-200 text-[#1A73E8] font-black text-xs flex items-center justify-center shadow-sm">G</span>;
@@ -217,25 +218,46 @@ const buildPaymentLaunchUrl = (mode, upiId, amount) => {
   return `upi://pay?${query}`;
 };
 
+// Build independent Pickup Stops grouped by Seller/Role so Farmer, Retail & Wholesale each get their own alert & acceptance state
 const buildPickupStopsFromItems = (itemsArr) => {
   const stopMap = new Map();
   itemsArr.forEach((item) => {
-    const sellerKey = item.sellerName || 'Rythu Basket Hub, Nellore';
+    const sellerKey = `${item.postedByRole || 'farmer'}__${item.sellerName || 'Rythu Hub'}`;
     if (!stopMap.has(sellerKey)) {
       stopMap.set(sellerKey, {
         stopId: 'stop_' + (stopMap.size + 1),
-        sellerName: sellerKey,
+        sellerId: item.sellerId || null,
+        sellerName: item.sellerName || 'Rythu Basket Hub, Nellore',
         sellerRole: item.postedByRole || 'farmer',
         sellerLat: item.sellerLat || 14.4450,
         sellerLng: item.sellerLng || 79.9850,
         itemsSummary: [`${item.qty} ${item.unit || 'Kg'} ${item.name}`],
+        stopSubtotal: item.price * item.qty,
+        stopStatus: 'Pending', // 'Pending' | 'Accepted' | 'Declined'
+        acceptedByUserId: null,
+        acceptedByUserName: null,
         pickedUp: false,
       });
     } else {
-      stopMap.get(sellerKey).itemsSummary.push(`${item.qty} ${item.unit || 'Kg'} ${item.name}`);
+      const existing = stopMap.get(sellerKey);
+      existing.itemsSummary.push(`${item.qty} ${item.unit || 'Kg'} ${item.name}`);
+      existing.stopSubtotal += item.price * item.qty;
     }
   });
   return Array.from(stopMap.values());
+};
+
+// Compute overall order acceptance status ('Order Placed' | 'Order Partially Accepted' | 'Order Fully Accepted')
+const computeOrderAcceptanceStatus = (stops, currentStatus) => {
+  if (['Partner Assigned', 'Out for Delivery', 'Delivered'].includes(currentStatus)) {
+    return currentStatus;
+  }
+  const activeStops = stops.filter((s) => s.stopStatus !== 'Declined');
+  if (activeStops.length === 0) return 'Order Placed';
+  const acceptedCount = activeStops.filter((s) => s.stopStatus === 'Accepted').length;
+  if (acceptedCount === 0) return 'Order Placed';
+  if (acceptedCount < activeStops.length) return 'Order Partially Accepted';
+  return 'Order Fully Accepted';
 };
 
 export default function App() {
@@ -274,7 +296,7 @@ export default function App() {
     }
   });
 
-const [lang, setLang] = useState('te');
+  const [lang, setLang] = useState('te');
   const [selectedRole, setSelectedRole] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [users, setUsers] = useState(() => {
@@ -343,7 +365,7 @@ const [lang, setLang] = useState('te');
   const [selectedCat, setSelectedCat] = useState('All');
   const [search, setSearch] = useState('');
 
- // Location & Map Pin States
+  // Location & Map Pin States
   const [savedAddresses, setSavedAddresses] = useState([
     {
       id: 'addr1',
@@ -373,7 +395,7 @@ const [lang, setLang] = useState('te');
   const [isEditingPinText, setIsEditingPinText] = useState(false);
   const [isLocatingGps, setIsLocatingGps] = useState(false);
 
-  // Cart & Payments
+  // Cart & Payments (Pre-loaded with 1 Farmer item + 1 Retail item so multi-vendor flow works immediately)
   const [cart, setCart] = useState({ p1: 2, p4: 1 });
   const [useWalletBalance] = useState(false);
   const [appliedPromo] = useState(null);
@@ -395,7 +417,7 @@ const [lang, setLang] = useState('te');
   ]);
   const [orders, setOrders] = useState([]);
 
-  // Seller Post Product States (Category, Quality Grade, Qty, Unit, Price, Availability)
+  // Seller Post Product States
   const [fNameEn, setFNameEn] = useState('');
   const [fNameTe, setFNameTe] = useState('');
   const [fCat, setFCat] = useState('Vegetables');
@@ -411,9 +433,9 @@ const [lang, setLang] = useState('te');
   const [scratchMax] = useState(25);
   const [offersEnabled] = useState(true);
 
-  // 15-Second Ringtone Alert Controller for Farmer / Wholesale / Retail Shops
+  // 15-Second Ringtone Alert Controller per Role Stop
   const [isRinging, setIsRinging] = useState(false);
-  const lastRungOrderIdRef = useRef(null);
+  const lastRungKeyRef = useRef(null);
   const ringTimerRef = useRef(null);
 
   const stopAlertRingtone = useCallback(() => {
@@ -449,7 +471,7 @@ const [lang, setLang] = useState('te');
       }
     };
 
-    playSingleChime();
+playSingleChime();
     let elapsed = 0;
     ringTimerRef.current = setInterval(() => {
       elapsed += 1;
@@ -461,29 +483,40 @@ const [lang, setLang] = useState('te');
     }, 1000);
   }, [stopAlertRingtone]);
 
- // Trigger 15-second ringtone when a new unaccepted order arrives for Farmer / Wholesale / Retail
+  // Helper: Find pending stops matching the logged-in seller's role ('farmer' | 'wholesale' | 'retail')
+  const getPendingStopsForSeller = useCallback(
+    (ord) => {
+      if (!currentUser || !['farmer', 'wholesale', 'retail'].includes(currentUser.role)) return [];
+      if (ord.buyerId === currentUser.id || ord.status === 'Delivered') return [];
+      const stops = ord.pickupStops || buildPickupStopsFromItems(ord.items || []);
+      return stops.filter(
+        (st) =>
+          st.sellerRole === currentUser.role &&
+          st.stopStatus === 'Pending' &&
+          !(ord.declinedBy || []).includes(`${currentUser.id}_${st.stopId}`)
+      );
+    },
+    [currentUser]
+  );
+
+  // Trigger 15-second ringtone independently for Farmer, Wholesale & Retail when their stop is Pending
   useEffect(() => {
     if (!currentUser || !['farmer', 'wholesale', 'retail'].includes(currentUser.role)) {
       stopAlertRingtone();
       return;
     }
-    const openIncoming = orders.filter(
-      (o) =>
-        o.status === 'Order Placed' &&
-        !o.acceptedById &&
-        o.buyerId !== currentUser.id &&
-        !(o.declinedBy || []).includes(currentUser.id)
-    );
-    if (openIncoming.length > 0) {
-      const newest = openIncoming[0];
-      if (lastRungOrderIdRef.current !== newest.id) {
-        lastRungOrderIdRef.current = newest.id;
+    const ordersWithMyPendingStops = orders.filter((o) => getPendingStopsForSeller(o).length > 0);
+    if (ordersWithMyPendingStops.length > 0) {
+      const newest = ordersWithMyPendingStops[0];
+      const ringKey = `${newest.id}_${currentUser.role}`;
+      if (lastRungKeyRef.current !== ringKey) {
+        lastRungKeyRef.current = ringKey;
         play15SecondAlertTone();
       }
     } else {
       stopAlertRingtone();
     }
-  }, [currentUser, orders, play15SecondAlertTone, stopAlertRingtone]);
+  }, [currentUser, orders, getPendingStopsForSeller, play15SecondAlertTone, stopAlertRingtone]);
 
   const notify = (m) => {
     setToast(m);
@@ -519,7 +552,7 @@ const [lang, setLang] = useState('te');
     }
   }, [sharedInvoiceData, currentUser, activeTab, selectedRole, authScreen]);
 
-  useEffect(() => {
+useEffect(() => {
     window.history.pushState({ rythuNav: true }, '');
     const onPopState = () => {
       handleHardwareBack();
@@ -556,7 +589,7 @@ const [lang, setLang] = useState('te');
     }
   };
 
- // Real-Time Cloud Firestore Sync
+  // Real-Time Cloud Firestore Sync
   useEffect(() => {
     const unsubOrders = onSnapshot(
       collection(db, 'orders'),
@@ -604,7 +637,7 @@ const [lang, setLang] = useState('te');
     };
   }, []);
 
-  // Continuous Live GPS Broadcast while Delivery Partner is Active (Both Pickup & Out for Delivery)
+// Continuous Live GPS Broadcast while Delivery Partner is Active
   useEffect(() => {
     if (!currentUser || currentUser.role !== 'delivery' || !navigator.geolocation) return;
     const activeAssigned = orders.filter(
@@ -657,7 +690,7 @@ const [lang, setLang] = useState('te');
         throw new Error(errText || 'Failed to send email');
       }
 
-setGeneratedEmailOtp(code);
+      setGeneratedEmailOtp(code);
       setEmailOtpExpiry(Date.now() + 5 * 60 * 1000);
       notify(`6-Digit OTP sent to ${targetEmail}! Check your Inbox/Spam.`);
       return true;
@@ -693,7 +726,7 @@ setGeneratedEmailOtp(code);
       )
       .join('');
 
-    const invoiceHtml = `
+const invoiceHtml = `
       <div style="border:1px solid #cbd5e1;padding:16px;border-radius:10px;background:#ffffff;font-family:Arial,sans-serif;font-size:12px;color:#1e293b;">
         <div style="text-align:center;margin-bottom:12px;">
           <img src="https://rythu-market.vercel.app/icon-512.png" width="56" height="56" style="border-radius:50%;border:2px solid #EAB308;" />
@@ -774,7 +807,7 @@ setGeneratedEmailOtp(code);
     }
   };
 
-  const verifyEmailOtpCode = (enteredCode) => {
+const verifyEmailOtpCode = (enteredCode) => {
     if (!generatedEmailOtp || Date.now() > emailOtpExpiry) {
       setAuthMsg('OTP expired or not requested. Please tap Resend OTP.');
       return false;
@@ -786,7 +819,7 @@ setGeneratedEmailOtp(code);
     return true;
   };
 
-const handleDirectLogin = (e) => {
+  const handleDirectLogin = (e) => {
     e.preventDefault();
     const raw = loginIdentifier.trim();
     if (!raw) {
@@ -850,7 +883,7 @@ const handleDirectLogin = (e) => {
     if (ok) setRegOtpSent(true);
   };
 
-  const handleCompleteRegistration = (e) => {
+const handleCompleteRegistration = (e) => {
     e.preventDefault();
     if (!verifyEmailOtpCode(regOtpInput)) return;
 
@@ -912,7 +945,7 @@ const handleDirectLogin = (e) => {
     setTimeout(() => setShowWelcomeSmile(false), 3500);
   };
 
-const handleStrictLogout = () => {
+  const handleStrictLogout = () => {
     stopAlertRingtone();
     setCurrentUser(null);
     setSelectedRole(null);
@@ -941,7 +974,7 @@ const handleStrictLogout = () => {
     setMapPinFullAddress(`Lat ${lat.toFixed(5)}, Lng ${lng.toFixed(5)}, Nellore, Andhra Pradesh`);
   };
 
-  const handleUseCurrentLocationMap = () => {
+const handleUseCurrentLocationMap = () => {
     setIsLocatingGps(true);
     setIsEditingPinText(false);
     setActiveTab('mapPin');
@@ -1005,8 +1038,7 @@ const handleStrictLogout = () => {
     if (TE_TO_EN[val.trim()]) setFNameEn(TE_TO_EN[val.trim()]);
   };
 
-  // Publish Produce / Stock with Category, Quality Grade, Qty, Unit & Availability Dropdowns
-  const handlePublishRoleProduct = (e, roleSource) => {
+const handlePublishRoleProduct = (e, roleSource) => {
     e.preventDefault();
     if (!fNameEn.trim() || !fPrice) return;
     const baseRate = Number(fPrice);
@@ -1042,7 +1074,6 @@ const handleStrictLogout = () => {
     notify(`Published (${fCat} • ${fQuality} • ${fQty} ${fUnit})!`);
   };
 
- // Reusable Product Listing Form for Farmer, Wholesale & Retail
   const renderPostProductForm = (roleSource, submitLabel) => (
     <form onSubmit={(e) => handlePublishRoleProduct(e, roleSource)} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-3">
       <div className="grid grid-cols-2 gap-2">
@@ -1056,7 +1087,6 @@ const handleStrictLogout = () => {
         </div>
       </div>
 
-      {/* Category & Quality Grade Dropdowns */}
       <div className="grid grid-cols-2 gap-2">
         <div>
           <label className="text-[10px] font-bold text-slate-400">Category</label>
@@ -1076,7 +1106,6 @@ const handleStrictLogout = () => {
         </div>
       </div>
 
-      {/* Quantity + Unit Dropdown (Kg, Grams, Litres) + Price */}
       <div className="grid grid-cols-2 gap-2">
         <div>
           <label className="text-[10px] font-bold text-slate-400">Quantity & Unit</label>
@@ -1112,7 +1141,7 @@ const handleStrictLogout = () => {
 
   const fontStyle = { fontFamily: "'Plus Jakarta Sans', 'Noto Sans Telugu', sans-serif" };
 
- // =========================================================================
+  // =========================================================================
   // 0. DIRECT INVOICE PDF PRINT VIEW
   // =========================================================================
   if (sharedInvoiceData) {
@@ -1191,7 +1220,7 @@ const handleStrictLogout = () => {
     );
   }
 
-// =========================================================================
+ // =========================================================================
   // 1. HOME / ROLE ENTRY PAGE + ONE-TIME DEVICE PERMISSIONS DIALOG
   // =========================================================================
   if (!selectedRole) {
@@ -1289,7 +1318,7 @@ const handleStrictLogout = () => {
           </div>
         )}
 
-<div className="bg-gradient-to-b from-[#0E5A2B] via-[#15803D] to-[#4ADE80]/30 text-white rounded-b-[36px] px-4 pt-4 pb-6 shadow-lg relative overflow-hidden">
+        <div className="bg-gradient-to-b from-[#0E5A2B] via-[#15803D] to-[#4ADE80]/30 text-white rounded-b-[36px] px-4 pt-4 pb-6 shadow-lg relative overflow-hidden">
           <div className="flex items-center justify-between relative z-10">
             <div className="flex items-center space-x-2.5">
               <div className="h-12 w-12 rounded-full bg-white p-0.5 border-2 border-[#EAB308] shadow overflow-hidden flex-shrink-0">
@@ -1302,7 +1331,7 @@ const handleStrictLogout = () => {
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
+ <div className="flex items-center space-x-2">
               <button
                 type="button"
                 onClick={() => setLang(lang === 'te' ? 'en' : 'te')}
@@ -1394,7 +1423,7 @@ const handleStrictLogout = () => {
           })}
         </div>
 
-<div className="px-3.5 pt-3.5">
+        <div className="px-3.5 pt-3.5">
           <div className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white rounded-2xl p-3.5 shadow-md flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="h-11 w-11 rounded-full bg-white/15 border border-white/25 flex items-center justify-center flex-shrink-0">
@@ -1415,7 +1444,7 @@ const handleStrictLogout = () => {
           </div>
         </div>
 
-        <div className="px-3.5 pt-3.5">
+<div className="px-3.5 pt-3.5">
           <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2.5">
             <div className="flex items-center space-x-1.5 text-xs font-extrabold text-slate-800">
               <Leaf className="h-4 w-4 text-[#15803D]" />
@@ -1545,7 +1574,7 @@ const handleStrictLogout = () => {
       </div>
     );
 
-    return (
+return (
       <div style={fontStyle} className="min-h-screen bg-[#F4F8F4] max-w-md mx-auto text-slate-800 shadow-2xl pb-12">
         {toast && (
           <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-xl text-center">
@@ -1607,14 +1636,14 @@ const handleStrictLogout = () => {
                 </div>
               )}
 
-              <button
+<button
                 type="submit"
                 className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
               >
                 Login Now →
               </button>
 
-<div className="pt-2 text-center">
+              <div className="pt-2 text-center">
                 <button
                   type="button"
                   onClick={() => {
@@ -1692,7 +1721,7 @@ const handleStrictLogout = () => {
                     <input type="text" required value={regDistrict} onChange={(e) => setRegDistrict(e.target.value)} placeholder="District *" className="bg-white border border-slate-200 rounded-xl px-2.5 py-2.5 font-bold" />
                   </div>
 
-                  <p className="font-extrabold text-[#15803D] pt-1">— Farm Details</p>
+<p className="font-extrabold text-[#15803D] pt-1">— Farm Details</p>
                   <input type="text" value={regLandAcres} onChange={(e) => setRegLandAcres(e.target.value)} placeholder="Land Holding (Acres)" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
                   <input type="text" value={regMajorCrops} onChange={(e) => setRegMajorCrops(e.target.value)} placeholder="Major Crops (e.g., Tomato, Paddy)" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
 
@@ -1706,7 +1735,7 @@ const handleStrictLogout = () => {
                 </>
               )}
 
-{selectedRole === 'wholesale' && (
+              {selectedRole === 'wholesale' && (
                 <>
                   <p className="font-extrabold text-[#15803D]">— Business Details</p>
                   <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Business Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
@@ -1776,7 +1805,7 @@ const handleStrictLogout = () => {
                     ))}
                   </div>
 
-                  {renderBankAndUpiBlock()}
+   {renderBankAndUpiBlock()}
 
                   <label className="block border-2 border-dashed border-emerald-300 bg-white rounded-2xl p-3 text-center cursor-pointer">
                     <Camera className="h-5 w-5 text-[#15803D] mx-auto mb-1" />
@@ -1947,7 +1976,7 @@ const WelcomeSmileModal = () =>
   );
 
 // =========================================================================
-  // 3. CUSTOMER STOREFRONT (STAGE-BASED LIVE TRACKING + 'From Farmer' BADGE)
+  // 3. CUSTOMER STOREFRONT (PARTIAL/FULL ACCEPTANCE + LIVE RIDER TRACKING + CALL/SMS)
   // =========================================================================
   if (currentUser.role === 'customer') {
     const activeAddr = savedAddresses.find((a) => a.id === activeAddrId) || savedAddresses[0];
@@ -2002,6 +2031,7 @@ const WelcomeSmileModal = () =>
                 qty,
                 price: p.retailPrice,
                 img: p.img,
+                sellerId: p.farmerId || null,
                 sellerName: p.farmerName,
                 sellerLat: p.sellerLat || 14.4450,
                 sellerLng: p.sellerLng || 79.9850,
@@ -2018,7 +2048,7 @@ const WelcomeSmileModal = () =>
       const riderBaseFee = 30;
       const riderMultiStopBonus = extraStopsCount * 15;
 
-      const newOrd = {
+const newOrd = {
         id: 'RB' + Math.floor(123450 + Math.random() * 800000),
         buyerId: currentUser.id,
         buyerRole: 'customer',
@@ -2037,11 +2067,6 @@ const WelcomeSmileModal = () =>
         total: payableTotal,
         cashback: estimatedCashback,
         status: 'Order Placed',
-        acceptedById: null,
-        acceptedByName: null,
-        acceptedByAddress: null,
-        acceptedByLat: null,
-        acceptedByLng: null,
         declinedBy: [],
         driverName: null,
         driverMobile: null,
@@ -2066,7 +2091,7 @@ const WelcomeSmileModal = () =>
       setCart({});
       setUtrRefInput('');
       setActiveTab('orderPlaced');
-      notify('Order Broadcasted with 15s ringtone to nearby Farms & Shops!');
+      notify(`Order sent to ${pickupStops.length} seller group(s) with 15s alert!`);
     };
 
     const handlePayAndPlaceOrderTrigger = () => {
@@ -2174,7 +2199,7 @@ if (activeTab === 'selectLocation') {
       );
     }
 
-    if (activeTab === 'mapPin') {
+if (activeTab === 'mapPin') {
       return (
         <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto text-slate-800 shadow-2xl pb-10">
           <div className="bg-[#0F5132] px-4 py-4 text-white flex items-center space-x-3 rounded-b-3xl shadow">
@@ -2350,7 +2375,7 @@ const visibleProducts = products.filter((p) => {
               />
             </div>
 
-            <div className="grid grid-cols-4 gap-2 text-center">
+  <div className="grid grid-cols-4 gap-2 text-center">
               {TOP_CATEGORIES.map((c) => {
                 const active = selectedCat === c.id;
                 return (
@@ -2379,7 +2404,7 @@ const visibleProducts = products.filter((p) => {
                 )}
               </div>
 
-{visibleProducts.map((p) => {
+              {visibleProducts.map((p) => {
                 const q = cart[p.id] || 0;
                 const isFarmerItem = (p.postedByRole || 'farmer') === 'farmer';
                 return (
@@ -2478,7 +2503,7 @@ const visibleProducts = products.filter((p) => {
           </main>
         )}
 
-        {activeTab === 'productDetail' && detailProduct && (
+{activeTab === 'productDetail' && detailProduct && (
           <main className="bg-white min-h-screen pb-24 text-xs">
             <div className="relative h-64 w-full bg-slate-100">
               <img src={detailProduct.img} alt={detailProduct.nameEn} className="h-full w-full object-cover" />
@@ -2512,7 +2537,7 @@ const visibleProducts = products.filter((p) => {
           </main>
         )}
 
-{activeTab === 'cart' && (
+        {activeTab === 'cart' && (
           <main className="p-4 space-y-3.5 text-xs">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-extrabold text-slate-900">My Cart</h2>
@@ -2576,7 +2601,7 @@ const visibleProducts = products.filter((p) => {
               <button onClick={() => setActiveTab('selectLocation')} className="text-[#15803D] font-extrabold">Change</button>
             </div>
 
-            <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
+<div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
               <div className="flex items-center justify-between">
                 <h3 className="font-extrabold text-slate-900">Payment Method</h3>
                 <span className="text-[10px] font-bold text-[#15803D]">{merchantUpiId}</span>
@@ -2648,7 +2673,7 @@ const visibleProducts = products.filter((p) => {
           </main>
         )}
 
-{activeTab === 'orderPlaced' && lastPlacedOrder && (
+        {activeTab === 'orderPlaced' && lastPlacedOrder && (
           <main className="p-6 text-center space-y-5 flex flex-col items-center justify-center min-h-[75vh]">
             <div className="h-20 w-20 rounded-full bg-[#15803D] text-white flex items-center justify-center shadow-lg">
               <Check className="h-10 w-10 stroke-[3]" />
@@ -2657,7 +2682,7 @@ const visibleProducts = products.filter((p) => {
               <h2 className="text-xl font-extrabold text-slate-900">Order Placed Successfully!</h2>
               <p className="text-xs font-extrabold text-[#15803D]">Order ID: {lastPlacedOrder.id}</p>
               <p className="text-xs text-slate-500 pt-1">
-                Alert sent to nearby Farms & Shops! Live delivery tracking unlocks once picked up.
+                Sent to {(lastPlacedOrder.pickupStops || []).length} seller group(s). Live tracking activates once picked up!
               </p>
             </div>
             <div className="w-full space-y-2.5 pt-2">
@@ -2677,7 +2702,7 @@ const visibleProducts = products.filter((p) => {
           </main>
         )}
 
-        {/* CUSTOMER TRACK ORDER: SHOWS DELIVERY PARTNER LIVE GPS ONCE PICKED UP ('Out for Delivery') */}
+{/* CUSTOMER TRACK ORDER: SHOWS PARTIAL / FULL ACCEPTANCE + LIVE TRACKING + CALL & MESSAGE RIDER */}
         {activeTab === 'trackOrder' && trackingOrder && (
           <main className="pb-10 text-xs">
             <div className="bg-gradient-to-b from-[#15803D] to-[#22C55E] text-white p-5 rounded-b-[32px] shadow-md space-y-2">
@@ -2687,14 +2712,43 @@ const visibleProducts = products.filter((p) => {
                 </button>
                 <div>
                   <h2 className="text-base font-extrabold">{trackingOrder.status}</h2>
-                  <p className="text-[11px] text-emerald-100">
-                    {trackingOrder.acceptedByName ? `Accepted by: ${trackingOrder.acceptedByName}` : 'Alert sent to nearby Farms & Shops'}
-                  </p>
+                  <p className="text-[11px] text-emerald-100">Order ID: {trackingOrder.id}</p>
                 </div>
               </div>
             </div>
 
             <div className="p-4 space-y-3.5">
+              {/* Seller Acceptance Breakdown */}
+              {(trackingOrder.pickupStops || []).length > 0 && (
+                <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
+                  <p className="font-extrabold text-slate-900">
+                    Seller Acceptance ({trackingOrder.pickupStops.filter((s) => s.stopStatus === 'Accepted').length}/{trackingOrder.pickupStops.length} Accepted)
+                  </p>
+                  {trackingOrder.pickupStops.map((st, idx) => (
+                    <div key={st.stopId} className="flex items-center justify-between text-[11px] border-t pt-1.5">
+                      <div className="min-w-0 pr-2">
+                        <p className="font-extrabold text-slate-800 truncate">
+                          {idx + 1}. {st.acceptedByUserName || st.sellerName} ({st.sellerRole.toUpperCase()})
+                        </p>
+                        <p className="text-[10px] text-slate-500 truncate">{st.itemsSummary.join(', ')}</p>
+                      </div>
+                      <span
+                        className={`font-extrabold px-2 py-0.5 rounded-full text-[10px] flex-shrink-0 ${
+                          st.pickedUp
+                            ? 'bg-emerald-100 text-[#15803D]'
+                            : st.stopStatus === 'Accepted'
+                            ? 'bg-sky-100 text-sky-700'
+                            : 'bg-amber-100 text-amber-800'
+                        }`}
+                      >
+                        {st.pickedUp ? '✓ Picked Up' : st.stopStatus}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Live Delivery Partner Map (Enabled once all accepted sellers' orders are picked up) */}
               {isOutForCustomerDrop ? (
                 <div className="relative h-52 w-full rounded-3xl overflow-hidden border-2 border-[#15803D] shadow-md">
                   <iframe
@@ -2710,14 +2764,46 @@ const visibleProducts = products.filter((p) => {
                 </div>
               ) : (
                 <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-1 text-amber-950">
-                  <p className="font-extrabold">Stage 1: Store & Rider Pickup in Progress</p>
+                  <p className="font-extrabold">Stage 1: Store Acceptance & Pickup in Progress</p>
                   <p className="text-[11px]">
-                    {trackingOrder.status === 'Partner Assigned'
-                      ? `Rider ${trackingOrder.driverName} is heading to ${trackingOrder.acceptedByName} to pick up your order. Live drop tracking starts as soon as picked up!`
-                      : 'Waiting for shop/farmer confirmation & rider pickup.'}
+                    Once all accepted sellers' items are picked up by the delivery partner, live drop tracking will appear here!
                   </p>
                 </div>
               )}
+
+              {/* Call & Message Delivery Partner Card */}
+              <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="h-11 w-11 rounded-full bg-emerald-100 text-[#15803D] font-extrabold flex items-center justify-center">
+                    <Truck className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-slate-400 font-bold">Delivery Partner</p>
+                    <h4 className="font-extrabold text-slate-900">
+                      {trackingOrder.driverName || 'Assigning Delivery Partner...'}
+                    </h4>
+                    {trackingOrder.driverMobile && (
+                      <p className="text-[10px] text-slate-500">+91 {trackingOrder.driverMobile}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex space-x-2">
+                  <a
+                    href={`tel:${trackingOrder.driverMobile || '8328261103'}`}
+                    className="p-2.5 bg-emerald-50 text-[#15803D] border border-emerald-200 rounded-full flex items-center space-x-1 font-extrabold text-[10px]"
+                  >
+                    <Phone className="h-4 w-4" />
+                    <span>Call</span>
+                  </a>
+                  <a
+                    href={`sms:${trackingOrder.driverMobile || '8328261103'}`}
+                    className="p-2.5 bg-sky-50 text-sky-700 border border-sky-200 rounded-full flex items-center space-x-1 font-extrabold text-[10px]"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    <span>Msg</span>
+                  </a>
+                </div>
+              </div>
 
               {trackingOrder.status !== 'Delivered' ? (
                 <button onClick={() => handleSimulateCustomerDelivery(trackingOrder)} className="w-full bg-[#EA580C] text-white font-extrabold py-3.5 rounded-2xl shadow">
@@ -2733,7 +2819,7 @@ const visibleProducts = products.filter((p) => {
           </main>
         )}
 
-        {activeTab === 'orders' && (
+{activeTab === 'orders' && (
           <main className="p-4 space-y-3.5 text-xs">
             <h2 className="text-base font-extrabold text-slate-900">My Orders</h2>
             {orders.filter((o) => o.buyerRole === 'customer').length === 0 ? (
@@ -2747,7 +2833,6 @@ const visibleProducts = products.filter((p) => {
                       <span>{ord.id} • {ord.status}</span>
                       <span>₹{ord.total}</span>
                     </div>
-                    {ord.acceptedByName && <p className="text-[11px] font-bold text-[#15803D]">Fulfilled by: {ord.acceptedByName}</p>}
                     <button onClick={() => { setTrackingOrder(ord); setActiveTab('trackOrder'); }} className="text-[#15803D] font-extrabold">
                       Track Order &gt;
                     </button>
@@ -2790,31 +2875,46 @@ const visibleProducts = products.filter((p) => {
     );
   }
 
-// =========================================================================
-  // BROADCAST ORDER ALERT BOX (15s RINGTONE + ACCEPT/DECLINE) + SELLER PICKUP TRACKING
+  // =========================================================================
+  // INDEPENDENT MULTI-VENDOR ORDER ALERTS & SEQUENTIAL PICKUP TRACKING
+  // (SHOWN ON HOME & ORDERS TAB FOR FARMER, WHOLESALE & RETAIL)
   // =========================================================================
   const renderBroadcastOrderAlertsAndPickupTracking = () => {
-    const openIncomingAlerts = orders.filter(
-      (o) =>
-        o.status === 'Order Placed' &&
-        !o.acceptedById &&
-        o.buyerId !== currentUser.id &&
-        !(o.declinedBy || []).includes(currentUser.id)
-    );
+    // 1. Orders with Pending stops matching currentUser's role
+    const incomingAlertCards = [];
+    orders.forEach((ord) => {
+      const pendingStops = getPendingStopsForSeller(ord);
+      pendingStops.forEach((st) => {
+        incomingAlertCards.push({ ord, st });
+      });
+    });
 
-    const myAcceptedOrders = orders.filter(
-      (o) => o.acceptedById === currentUser.id && o.status !== 'Delivered'
-    );
+    // 2. Orders where this user accepted a stop (so it shows in their Orders list & gets sequential pickup tracking)
+    const myAcceptedStopCards = [];
+    orders.forEach((ord) => {
+      const stops = ord.pickupStops || buildPickupStopsFromItems(ord.items || []);
+      const acceptedStops = stops.filter((s) => s.stopStatus === 'Accepted');
+      // Find which stop the rider is currently picking up next (first accepted stop not yet pickedUp)
+      const currentActiveStop = acceptedStops.find((s) => !s.pickedUp);
 
-    return (
+      stops.forEach((st) => {
+        if (st.stopStatus === 'Accepted' && st.acceptedByUserId === currentUser.id) {
+          const isMyTurnForRiderPickup =
+            currentActiveStop && currentActiveStop.stopId === st.stopId && !st.pickedUp;
+          myAcceptedStopCards.push({ ord, st, isMyTurnForRiderPickup });
+        }
+      });
+    });
+
+return (
       <div className="space-y-3">
-        {/* 1. Incoming Order Alerts with 15-Second Ringtone */}
-        {openIncomingAlerts.length > 0 && (
+        {/* Incoming Stop Alerts with 15-Second Ringtone */}
+        {incomingAlertCards.length > 0 && (
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs font-extrabold text-amber-800">
               <div className="flex items-center space-x-1.5">
                 <Bell className="h-4 w-4 text-[#EA580C] animate-bounce" />
-                <span>Incoming Order Alert ({openIncomingAlerts.length})</span>
+                <span>New {currentUser.role.toUpperCase()} Order Alert ({incomingAlertCards.length})</span>
               </div>
               {isRinging ? (
                 <button
@@ -2837,16 +2937,16 @@ const visibleProducts = products.filter((p) => {
               )}
             </div>
 
-            {openIncomingAlerts.map((ord) => (
-              <div key={ord.id} className="bg-amber-50 border-2 border-amber-400 rounded-2xl p-3.5 shadow-md space-y-2">
+            {incomingAlertCards.map(({ ord, st }) => (
+              <div key={`${ord.id}_${st.stopId}`} className="bg-amber-50 border-2 border-amber-400 rounded-2xl p-3.5 shadow-md space-y-2">
                 <div className="flex justify-between font-extrabold text-slate-900">
-                  <span>Order #{ord.id} • {ord.buyerName} ({ord.buyerRole.toUpperCase()})</span>
-                  <span className="text-[#15803D]">₹{ord.total}</span>
+                  <span>Order #{ord.id} • {ord.buyerName}</span>
+                  <span className="text-[#15803D]">₹{st.stopSubtotal || ord.total}</span>
                 </div>
-                <p className="text-[11px] text-slate-700">
-                  Items: {ord.items.map((i) => `${i.qty} ${i.unit || 'Kg'} ${i.name}`).join(', ')}
+                <p className="text-[11px] font-bold text-slate-800">
+                  Your Items ({currentUser.role.toUpperCase()}): {st.itemsSummary.join(', ')}
                 </p>
-                <p className="text-[10px] text-slate-500">Drop Location: {ord.buyerAddress}</p>
+                <p className="text-[10px] text-slate-500">Customer Drop: {ord.buyerAddress}</p>
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   <button
                     type="button"
@@ -2854,24 +2954,27 @@ const visibleProducts = products.filter((p) => {
                       stopAlertRingtone();
                       const sellerLat = currentUser.lat || mapPinCoords.lat;
                       const sellerLng = currentUser.lng || mapPinCoords.lng;
-                      const updatedStops = (ord.pickupStops || []).map((st) => ({
-                        ...st,
-                        sellerName: `${currentUser.name} • ${currentUser.address}`,
-                        sellerLat,
-                        sellerLng,
-                      }));
+                      const allStops = (ord.pickupStops || buildPickupStopsFromItems(ord.items || [])).map((itemStop) =>
+                        itemStop.stopId === st.stopId
+                          ? {
+                              ...itemStop,
+                              stopStatus: 'Accepted',
+                              acceptedByUserId: currentUser.id,
+                              acceptedByUserName: currentUser.name,
+                              sellerName: `${currentUser.name} • ${currentUser.address}`,
+                              sellerLat,
+                              sellerLng,
+                            }
+                          : itemStop
+                      );
+                      const nextOrderStatus = computeOrderAcceptanceStatus(allStops, ord.status);
                       const updateData = {
-                        status: 'Order Accepted',
-                        acceptedById: currentUser.id,
-                        acceptedByName: `${currentUser.name} (${currentUser.role.toUpperCase()})`,
-                        acceptedByAddress: currentUser.address,
-                        acceptedByLat: sellerLat,
-                        acceptedByLng: sellerLng,
-                        pickupStops: updatedStops,
+                        status: nextOrderStatus,
+                        pickupStops: allStops,
                       };
                       setOrders((prev) => prev.map((o) => (o.id === ord.id ? { ...o, ...updateData } : o)));
                       updateDoc(doc(db, 'orders', ord.id), updateData).catch(() => {});
-                      notify(`Order #${ord.id} Accepted! Pickup Tracking active & alert stopped for others.`);
+                      notify(`Accepted your items in #${ord.id}! Added to your Orders & Pickup Tracking.`);
                     }}
                     className="bg-[#15803D] text-white font-extrabold py-2.5 rounded-xl shadow-sm"
                   >
@@ -2881,10 +2984,10 @@ const visibleProducts = products.filter((p) => {
                     type="button"
                     onClick={() => {
                       stopAlertRingtone();
-                      const nextDeclined = [...(ord.declinedBy || []), currentUser.id];
+                      const nextDeclined = [...(ord.declinedBy || []), `${currentUser.id}_${st.stopId}`];
                       setOrders((prev) => prev.map((o) => (o.id === ord.id ? { ...o, declinedBy: nextDeclined } : o)));
                       updateDoc(doc(db, 'orders', ord.id), { declinedBy: nextDeclined }).catch(() => {});
-                      notify(`Declined Order #${ord.id}`);
+                      notify(`Declined Stop in #${ord.id}`);
                     }}
                     className="bg-white border border-rose-300 text-rose-600 font-extrabold py-2.5 rounded-xl"
                   >
@@ -2896,30 +2999,45 @@ const visibleProducts = products.filter((p) => {
           </div>
         )}
 
-        {/* 2. Live Pickup Tracking Map for Seller Who Accepted the Order */}
-        {myAcceptedOrders.map((ord) => {
+{/* Accepted Orders List & Sequential Live Rider Pickup Tracking */}
+        {myAcceptedStopCards.map(({ ord, st, isMyTurnForRiderPickup }) => {
           const rLat = ord.driverLat || 14.4390;
           const rLng = ord.driverLng || 79.9810;
           return (
-            <div key={ord.id} className="bg-white border-2 border-[#15803D] rounded-2xl p-3.5 shadow-sm space-y-2">
+            <div key={`${ord.id}_${st.stopId}_accepted`} className="bg-white border-2 border-[#15803D] rounded-2xl p-3.5 shadow-sm space-y-2">
               <div className="flex justify-between items-center">
-                <span className="font-extrabold text-[#15803D]">● Live Rider Pickup Tracking (#{ord.id})</span>
-                <span className="text-[10px] font-extrabold bg-emerald-50 text-[#15803D] px-2 py-0.5 rounded">{ord.status}</span>
+                <span className="font-extrabold text-slate-900">Order #{ord.id} • {ord.buyerName}</span>
+                <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${st.pickedUp ? 'bg-emerald-100 text-[#15803D]' : 'bg-amber-100 text-amber-900'}`}>
+                  {st.pickedUp ? '✓ Picked Up by Rider' : isMyTurnForRiderPickup ? '● Rider En Route to You' : 'Queued Next Pickup'}
+                </span>
               </div>
-              <p className="text-[11px] text-slate-600">
-                {ord.driverName
-                  ? `Rider ${ord.driverName} (+91 ${ord.driverMobile}) is arriving to pick up order`
-                  : 'Waiting for Delivery Partner to accept pickup...'}
-              </p>
-              <div className="h-36 w-full rounded-xl overflow-hidden border">
-                <iframe
-                  title={`Pickup Map ${ord.id}`}
-                  width="100%"
-                  height="144"
-                  style={{ border: 0 }}
-                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${rLng - 0.008}%2C${rLat - 0.008}%2C${rLng + 0.008}%2C${rLat + 0.008}&layer=mapnik&marker=${rLat}%2C${rLng}`}
-                />
-              </div>
+              <p className="text-[11px] font-bold text-[#15803D]">Items: {st.itemsSummary.join(', ')}</p>
+
+              {/* Show Live Delivery Partner Pickup Map when it's this Seller's turn for pickup */}
+              {!st.pickedUp && isMyTurnForRiderPickup && (
+                <div className="space-y-1.5 pt-1">
+                  <p className="text-[11px] font-extrabold text-[#15803D]">
+                    {ord.driverName
+                      ? `● Live Rider Pickup Tracking: ${ord.driverName} (+91 ${ord.driverMobile}) • GPS: ${rLat}, ${rLng}`
+                      : 'Waiting for Delivery Partner to accept pickup route...'}
+                  </p>
+                  <div className="h-36 w-full rounded-xl overflow-hidden border border-emerald-200">
+                    <iframe
+                      title={`Pickup Map ${ord.id}_${st.stopId}`}
+                      width="100%"
+                      height="144"
+                      style={{ border: 0 }}
+                      src={`https://www.openstreetmap.org/export/embed.html?bbox=${rLng - 0.008}%2C${rLat - 0.008}%2C${rLng + 0.008}%2C${rLat + 0.008}&layer=mapnik&marker=${rLat}%2C${rLng}`}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {!st.pickedUp && !isMyTurnForRiderPickup && (
+                <p className="text-[10px] text-slate-500">
+                  Rider is picking up the previous accepted stop first — live rider tracking will automatically switch to you right after!
+                </p>
+              )}
             </div>
           );
         })}
@@ -3001,7 +3119,7 @@ const visibleProducts = products.filter((p) => {
 
         {activeTab === 'orders' && (
           <main className="p-4 space-y-3 text-xs">
-            <h2 className="text-base font-extrabold">Orders & Pickup Tracking</h2>
+            <h2 className="text-base font-extrabold">My Farmer Orders & Pickup Tracking</h2>
             {renderBroadcastOrderAlertsAndPickupTracking()}
           </main>
         )}
@@ -3018,7 +3136,7 @@ const visibleProducts = products.filter((p) => {
           </main>
         )}
 
-        {activeTab === 'earnings' && (
+{activeTab === 'earnings' && (
           <main className="p-4 text-xs">
             <div className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white rounded-3xl p-5 shadow-md">
               <p className="text-emerald-100 font-bold">Total Farm Earnings</p>
@@ -3059,8 +3177,8 @@ const visibleProducts = products.filter((p) => {
     );
   }
 
-// =========================================================================
-  // 5. WHOLESALE & RETAIL STORE PORTALS (BULK ORDER LIVE RIDER TRACKING + DROPDOWNS)
+  // =========================================================================
+  // 5. WHOLESALE & RETAIL STORE PORTALS
   // =========================================================================
   if (currentUser.role === 'wholesale' || currentUser.role === 'retail') {
     const isRetail = currentUser.role === 'retail';
@@ -3070,7 +3188,6 @@ const visibleProducts = products.filter((p) => {
       return isRetail ? src === 'farmer' || src === 'wholesale' : src === 'farmer';
     });
 
-    // Bulk orders placed by this Wholesale or Retail store
     const myPlacedBulkOrders = orders.filter((o) => o.buyerId === currentUser.id);
 
     const handlePlaceB2BOrder = (prod) => {
@@ -3087,6 +3204,7 @@ const visibleProducts = products.filter((p) => {
           unit: prod.unit || 'Kg',
           qty,
           price: unitRate,
+          sellerId: prod.farmerId || null,
           sellerName: prod.farmerName,
           sellerLat: prod.sellerLat || 14.4450,
           sellerLng: prod.sellerLng || 79.9850,
@@ -3095,7 +3213,7 @@ const visibleProducts = products.filter((p) => {
       ];
       const pickupStops = buildPickupStopsFromItems(itemsArr);
 
-      const newOrd = {
+const newOrd = {
         id: (isRetail ? 'RIT-' : 'WS-') + Math.floor(1000 + Math.random() * 8999),
         buyerId: currentUser.id,
         buyerRole: currentUser.role,
@@ -3113,8 +3231,6 @@ const visibleProducts = products.filter((p) => {
         total: itemTotal + delivCharge,
         deliveryMode: b2bDeliveryMode === 'pickup' ? 'Pickup at Store / Farm (₹0 Fee)' : `Home Delivery (${prod.distanceKm} km • ₹${delivCharge})`,
         status: 'Order Placed',
-        acceptedById: null,
-        acceptedByName: null,
         declinedBy: [],
         driverName: null,
         driverMobile: null,
@@ -3237,10 +3353,9 @@ const visibleProducts = products.filter((p) => {
 
         {activeTab === 'orders' && (
           <main className="p-4 space-y-3 text-xs">
-            <h2 className="text-base font-extrabold">Orders & Live Tracking</h2>
+            <h2 className="text-base font-extrabold">{currentUser.role.toUpperCase()} Orders & Live Tracking</h2>
             {renderBroadcastOrderAlertsAndPickupTracking()}
 
-            {/* Live Delivery Partner Tracking for Bulk Orders Placed by this Store */}
             {myPlacedBulkOrders.map((ord) => {
               const isPickedUp = ord.status === 'Out for Delivery' || ord.status === 'Delivered';
               const rLat = ord.driverLat || 14.4390;
@@ -3258,7 +3373,6 @@ const visibleProducts = products.filter((p) => {
                     </div>
                   )}
 
-                  {/* Stage 2: Once Rider Picks Up Order, Show Live Delivery Partner Tracking Map to Buyer */}
                   {isPickedUp ? (
                     <div className="space-y-1.5 pt-1">
                       <p className="text-[11px] font-extrabold text-[#15803D]">
@@ -3276,9 +3390,7 @@ const visibleProducts = products.filter((p) => {
                     </div>
                   ) : (
                     <p className="text-[10px] font-bold text-slate-500">
-                      {ord.acceptedByName
-                        ? `Accepted by ${ord.acceptedByName}. Rider tracking starts once picked up.`
-                        : 'Waiting for seller acceptance...'}
+                      Waiting for seller acceptance & rider pickup...
                     </p>
                   )}
 
@@ -3316,21 +3428,27 @@ const visibleProducts = products.filter((p) => {
   }
 
   // =========================================================================
-  // 6. DELIVERY PARTNER PORTAL (ACCESS BOTH SELLER PICKUP & BUYER DROP LOCATIONS)
+  // 6. DELIVERY PARTNER PORTAL (SEQUENTIAL PICKUP -> OUT FOR DELIVERY -> DROP)
   // =========================================================================
   if (currentUser.role === 'delivery') {
     const availOrders = orders.filter((o) => o.status !== 'Delivered');
     const delivOrders = orders.filter((o) => o.status === 'Delivered');
     const weeklyCompleted = currentUser.weeklyOrders || 0;
 
-    // Mark pickup complete -> switches order status to 'Out for Delivery' so buyer sees live tracking!
+    // Mark individual accepted pickup stop complete -> automatically unlocks next seller's live tracking,
+    // and once all accepted stops are picked up, enables Customer live delivery tracking ('Out for Delivery')!
     const handleMarkOrderPickedUp = (ord, stopIdx) => {
       const stops = [...(ord.pickupStops || [])];
       if (stops[stopIdx]) {
         stops[stopIdx] = { ...stops[stopIdx], pickedUp: true };
       }
-      const allPicked = stops.every((s) => s.pickedUp);
-      const nextStatus = allPicked ? 'Out for Delivery' : 'Partner Assigned';
+      const acceptedStops = stops.filter((s) => s.stopStatus === 'Accepted');
+      const allAcceptedPicked =
+        acceptedStops.length > 0
+          ? acceptedStops.every((s) => s.pickedUp)
+          : stops.every((s) => s.pickedUp);
+
+      const nextStatus = allAcceptedPicked ? 'Out for Delivery' : 'Partner Assigned';
 
       setOrders((prev) =>
         prev.map((o) => (o.id === ord.id ? { ...o, pickupStops: stops, status: nextStatus } : o))
@@ -3340,9 +3458,9 @@ const visibleProducts = products.filter((p) => {
         status: nextStatus,
       }).catch(() => {});
       notify(
-        allPicked
-          ? 'All items Picked Up! Live delivery tracking now active for Buyer.'
-          : `Stop ${stopIdx + 1} Picked Up!`
+        allAcceptedPicked
+          ? 'All accepted stops Picked Up! Customer live delivery tracking enabled.'
+          : `Stop ${stopIdx + 1} Picked Up! Next accepted seller now tracking your pickup.`
       );
     };
 
@@ -3370,7 +3488,7 @@ const visibleProducts = products.filter((p) => {
       notify(`Delivered! ₹${baseFee} Base + ₹${multiBonus} Multi-Stop Bonus (Total ₹${totalEarned}) credited!`);
     };
 
-    return (
+return (
       <div style={fontStyle} className="min-h-screen bg-[#F5F7F5] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
         {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-extrabold px-4 py-2 rounded-full shadow-lg">{toast}</div>}
 
@@ -3417,15 +3535,11 @@ const visibleProducts = products.filter((p) => {
                 const multiBonus = ord.riderMultiStopBonus ?? Math.max(0, stops.length - 1) * 15;
                 const riderPayout = baseFee + multiBonus;
                 const isAssignedToMe = ord.status === 'Partner Assigned' || ord.status === 'Out for Delivery';
-                const firstStop = stops[0] || {};
-                const pickupMapQuery = firstStop.sellerLat && firstStop.sellerLng
-                  ? `${firstStop.sellerLat},${firstStop.sellerLng}`
-                  : encodeURIComponent(firstStop.sellerName || ord.acceptedByAddress || 'Nellore');
                 const dropMapQuery = ord.buyerLat && ord.buyerLng
                   ? `${ord.buyerLat},${ord.buyerLng}`
                   : encodeURIComponent(ord.buyerAddress);
 
-return (
+                return (
                   <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2.5">
                     <div className="flex justify-between items-start">
                       <div>
@@ -3444,10 +3558,9 @@ return (
                       </div>
                     </div>
 
-                    {/* BOTH SELLER/FARMER PICKUP LOCATION & CUSTOMER DROP LOCATION ACCESSIBLE */}
                     <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-2">
                       <p className="text-[10px] font-extrabold text-slate-700 uppercase">
-                        1. Farmer / Shop Pickup Location ({stops.length} {stops.length > 1 ? 'Stops' : 'Stop'}):
+                        1. Farmer / Shop Pickup Stops ({stops.length}):
                       </p>
                       {stops.map((st, idx) => {
                         const stMap = st.sellerLat && st.sellerLng
@@ -3457,7 +3570,7 @@ return (
                           <div key={st.stopId} className="bg-white rounded-lg p-2 border border-slate-100 flex items-center justify-between gap-2">
                             <div className="min-w-0 flex-1">
                               <p className="font-extrabold text-[11px] text-slate-900 truncate">
-                                Pickup {idx + 1}: {st.sellerName}
+                                Stop {idx + 1}: {st.acceptedByUserName || st.sellerName} ({st.stopStatus})
                               </p>
                               <p className="text-[10px] text-slate-500 truncate">{st.itemsSummary.join(', ')}</p>
                             </div>
@@ -3487,7 +3600,7 @@ return (
                         );
                       })}
 
-                      <p className="text-[10px] font-extrabold text-[#0F5132] uppercase pt-1">
+<p className="text-[10px] font-extrabold text-[#0F5132] uppercase pt-1">
                         2. Customer / Buyer Drop Location:
                       </p>
                       <div className="bg-emerald-50/80 rounded-lg p-2 border border-emerald-200 flex items-center justify-between gap-2">
@@ -3509,7 +3622,7 @@ return (
 
                     {isAssignedToMe && (
                       <p className="text-[10px] font-extrabold text-[#15803D] bg-emerald-50 px-2.5 py-1 rounded-lg">
-                        ● Live GPS Active ({ord.driverCoords}) • {ord.status === 'Out for Delivery' ? 'Tracking visible to Customer' : 'Tracking visible to Seller'}
+                        ● Live GPS Active ({ord.driverCoords}) • {ord.status === 'Out for Delivery' ? 'Tracking visible to Customer' : 'Sequential Pickup Tracking Active'}
                       </p>
                     )}
 
@@ -3534,7 +3647,7 @@ return (
                               driverLng: initLng,
                               driverCoords: `${initLat}, ${initLng}`,
                             }).catch(() => {});
-                            notify('Accepted! Pickup tracking shared with Seller.');
+                            notify('Accepted! Live pickup tracking sent to 1st accepted seller.');
                           } else {
                             if (ord.b2bOtp) {
                               const entered = window.prompt(`Enter ${ord.buyerRole.toUpperCase()} Delivery OTP (${ord.b2bOtp}):`);
@@ -3562,7 +3675,7 @@ return (
           </main>
         )}
 
-{activeTab === 'profile' && renderSharedProfileTab()}
+        {activeTab === 'profile' && renderSharedProfileTab()}
 
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-12 py-2.5 flex justify-between items-center z-40">
           <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'home' ? 'text-[#15803D]' : 'text-slate-400'}`}>
@@ -3621,7 +3734,7 @@ return (
         </main>
       )}
 
-      {activeTab === 'profile' && renderSharedProfileTab()}
+{activeTab === 'profile' && renderSharedProfileTab()}
 
       <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-12 py-2.5 flex justify-between items-center z-40">
         <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'home' ? 'text-[#15803D]' : 'text-slate-400'}`}>
