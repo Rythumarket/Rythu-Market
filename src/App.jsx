@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Search, ShoppingCart, Plus, Home, ClipboardList, User, MapPin,
   Phone, MessageSquare, Sprout, Store, Truck, ShieldCheck, ChevronRight,
-  ArrowLeft, CheckCircle2, Wallet, Gift, Sparkles, Bell, Globe,
-  LocateFixed, LogOut, Printer, Warehouse, Heart, Clock, ChevronDown,
-  Briefcase, Leaf, Shield, Zap, Grid, Star, Trash2, Check, Mail,
-  TrendingUp, Package, HelpCircle, Navigation, Camera, Landmark, CreditCard
+  ArrowLeft, CheckCircle2, Wallet, Sparkles, Bell, Globe,
+  LocateFixed, LogOut, Printer, Warehouse, Clock, ChevronDown,
+  Briefcase, Leaf, Shield, Zap, Grid, Check, Mail,
+  TrendingUp, Package, HelpCircle, Navigation, Camera, Landmark, Volume2, VolumeX
 } from 'lucide-react';
 import { db } from './firebase';
 import { collection, doc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
@@ -43,18 +43,14 @@ const TE_TO_EN = Object.fromEntries(
   Object.entries(EN_TO_TE).map(([en, te]) => [te, en.charAt(0).toUpperCase() + en.slice(1)])
 );
 
+const PRODUCT_CATEGORIES = ['Vegetables', 'Fruits', 'Staples', 'Leafy Greens'];
+const QUALITY_GRADES = ['Grade A (Export)', 'Grade A', 'Grade B', 'Organic'];
+
 const TOP_CATEGORIES = [
   { id: 'Vegetables', labelEn: 'Vegetables', labelTe: 'కూరగాయలు', img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=160&q=80' },
   { id: 'Fruits', labelEn: 'Fruits', labelTe: 'పండ్లు', img: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=160&q=80' },
   { id: 'Staples', labelEn: 'Groceries', labelTe: 'కిరాణా', img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=160&q=80' },
   { id: 'Leafy Greens', labelEn: 'Farm Fresh', labelTe: 'ఆకుకూరలు', img: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=160&q=80' },
-];
-
-const POPULAR_CIRCLES = [
-  { id: 'p1', name: 'Tomatoes', nameTe: 'టమాటా', img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=160&q=80' },
-  { id: 'p2', name: 'Onions', nameTe: 'ఉల్లి', img: 'https://images.unsplash.com/photo-1508747705729-e0613307ab6e?auto=format&fit=crop&w=160&q=80' },
-  { id: 'p5', name: 'Sona Rice', nameTe: 'బియ్యం', img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=160&q=80' },
-  { id: 'p4', name: 'Green Leafy', nameTe: 'ఆకుకూరలు', img: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=160&q=80' },
 ];
 
 const AVAILABILITY_SLOTS = [
@@ -71,11 +67,14 @@ const INITIAL_PRODUCTS = [
     id: 'p1',
     postedByRole: 'farmer',
     farmerId: 'u_farm_1',
-    farmerName: 'Ramaiah Farm • Kovur',
+    farmerName: 'Ramaiah Farm • Kovur, Nellore',
+    sellerLat: 14.4920,
+    sellerLng: 79.9850,
     distanceKm: 12,
-    nameEn: 'Fresh Tomato (Grade A)',
+    nameEn: 'Fresh Tomato',
     nameTe: 'టమాటా',
     cat: 'Vegetables',
+    quality: 'Grade A',
     unit: 'Kg',
     packLabel: '1 Kg',
     mrp: 48,
@@ -85,8 +84,6 @@ const INITIAL_PRODUCTS = [
     minWholesaleQty: 25,
     stockKg: 500,
     inStock: true,
-    rating: 4.5,
-    reviews: 128,
     desc: 'Fresh and juicy country tomatoes harvested this morning from Kovur farms, Nellore.',
     availableFrom: 'Available Now',
     img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=500&q=80',
@@ -94,12 +91,15 @@ const INITIAL_PRODUCTS = [
   {
     id: 'p2',
     postedByRole: 'farmer',
-    farmerId: 'u_farm_1',
-    farmerName: 'Subba Rao Farm • Buchi',
+    farmerId: 'u_farm_2',
+    farmerName: 'Subba Rao Farm • Buchi, Nellore',
+    sellerLat: 14.5360,
+    sellerLng: 79.8820,
     distanceKm: 18,
-    nameEn: 'Red Onion (Grade A)',
+    nameEn: 'Red Onion',
     nameTe: 'ఉల్లిపాయలు',
     cat: 'Vegetables',
+    quality: 'Grade A',
     unit: 'Kg',
     packLabel: '1 Kg',
     mrp: 44,
@@ -109,21 +109,22 @@ const INITIAL_PRODUCTS = [
     minWholesaleQty: 50,
     stockKg: 800,
     inStock: true,
-    rating: 4.6,
-    reviews: 94,
     desc: 'Farm-cured crisp red onions sourced directly from Buchireddypalem growers.',
     availableFrom: 'Tomorrow Morning 6:00 AM',
     img: 'https://images.unsplash.com/photo-1508747705729-e0613307ab6e?auto=format&fit=crop&w=500&q=80',
   },
   {
-    id: 'p3',
+ id: 'p3',
     postedByRole: 'farmer',
-    farmerId: 'u_farm_1',
+    farmerId: 'u_farm_3',
     farmerName: 'Rapur Orchards • Nellore',
+    sellerLat: 14.1980,
+    sellerLng: 79.5380,
     distanceKm: 32,
     nameEn: 'Banganapalli Mango',
     nameTe: 'మామిడిపండు',
     cat: 'Fruits',
+    quality: 'Grade A (Export)',
     unit: 'Kg',
     packLabel: '1 Kg',
     mrp: 140,
@@ -133,21 +134,22 @@ const INITIAL_PRODUCTS = [
     minWholesaleQty: 20,
     stockKg: 300,
     inStock: true,
-    rating: 4.8,
-    reviews: 210,
     desc: 'Naturally ripened carbide-free Banganapalli mangoes from Rapur orchards.',
     availableFrom: 'Available Now',
     img: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=500&q=80',
   },
   {
-id: 'p4',
+    id: 'p4',
     postedByRole: 'retail',
     farmerId: 'u_ret_1',
-    farmerName: 'Sri Lakshmi Fresh Mart • Nellore',
+    farmerName: 'Sri Lakshmi Fresh Mart • Magunta Layout, Nellore',
+    sellerLat: 14.4426,
+    sellerLng: 79.9865,
     distanceKm: 6,
     nameEn: 'Fresh Spinach (Palakura)',
     nameTe: 'పాలకూర',
     cat: 'Leafy Greens',
+    quality: 'Organic',
     unit: 'Grams',
     packLabel: '500 Grams',
     mrp: 28,
@@ -157,8 +159,6 @@ id: 'p4',
     minWholesaleQty: 15,
     stockKg: 150,
     inStock: true,
-    rating: 4.7,
-    reviews: 76,
     desc: 'Pesticide-free tender green spinach bundles harvested at dawn.',
     availableFrom: 'After 1 Hour',
     img: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=500&q=80',
@@ -167,11 +167,14 @@ id: 'p4',
     id: 'p5',
     postedByRole: 'wholesale',
     farmerId: 'u_ws_1',
-    farmerName: 'Nellore Heritage Wholesale Mills',
+    farmerName: 'Nellore Heritage Wholesale Mills • Stonehousepet',
+    sellerLat: 14.4510,
+    sellerLng: 79.9910,
     distanceKm: 8,
     nameEn: 'Nellore Sona Masuri Rice',
     nameTe: 'సోనా మసూరి బియ్యం',
     cat: 'Staples',
+    quality: 'Grade A',
     unit: 'Kg',
     packLabel: '5 Kg',
     mrp: 340,
@@ -181,14 +184,11 @@ id: 'p4',
     minWholesaleQty: 10,
     stockKg: 1200,
     inStock: true,
-    rating: 4.9,
-    reviews: 315,
     desc: 'Authentic aged Nellore Sona Masuri steam rice direct from local rice mills.',
     availableFrom: 'Available Now',
     img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=500&q=80',
   },
 ];
-
 const PaymentBadge = ({ type }) => {
   if (type === 'phonepe') return <span className="h-8 w-8 rounded-xl bg-[#5F259F] text-white font-black text-xs flex items-center justify-center shadow-sm">पे</span>;
   if (type === 'gpay') return <span className="h-8 w-8 rounded-xl bg-white border border-gray-200 text-[#1A73E8] font-black text-xs flex items-center justify-center shadow-sm">G</span>;
@@ -217,6 +217,27 @@ const buildPaymentLaunchUrl = (mode, upiId, amount) => {
   return `upi://pay?${query}`;
 };
 
+const buildPickupStopsFromItems = (itemsArr) => {
+  const stopMap = new Map();
+  itemsArr.forEach((item) => {
+    const sellerKey = item.sellerName || 'Rythu Basket Hub, Nellore';
+    if (!stopMap.has(sellerKey)) {
+      stopMap.set(sellerKey, {
+        stopId: 'stop_' + (stopMap.size + 1),
+        sellerName: sellerKey,
+        sellerRole: item.postedByRole || 'farmer',
+        sellerLat: item.sellerLat || 14.4450,
+        sellerLng: item.sellerLng || 79.9850,
+        itemsSummary: [`${item.qty} ${item.unit || 'Kg'} ${item.name}`],
+        pickedUp: false,
+      });
+    } else {
+      stopMap.get(sellerKey).itemsSummary.push(`${item.qty} ${item.unit || 'Kg'} ${item.name}`);
+    }
+  });
+  return Array.from(stopMap.values());
+};
+
 export default function App() {
   useEffect(() => {
     const id = 'rythu-google-fonts';
@@ -231,7 +252,6 @@ export default function App() {
 
   const [sharedInvoiceData, setSharedInvoiceData] = useState(null);
 
-  // 1. Open Direct Tax Invoice PDF View when clicked from Customer Email
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const raw = params.get('invoiceData');
@@ -246,7 +266,6 @@ export default function App() {
     }
   }, []);
 
- // 2. One-Time Device Permissions Modal (Location, SMS/Notifications, Phone)
   const [showPermissionPrompt, setShowPermissionPrompt] = useState(() => {
     try {
       return localStorage.getItem('rythu_permissions_granted') !== 'true';
@@ -255,7 +274,7 @@ export default function App() {
     }
   });
 
-  const [lang, setLang] = useState('te');
+const [lang, setLang] = useState('te');
   const [selectedRole, setSelectedRole] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [users, setUsers] = useState(() => {
@@ -276,27 +295,27 @@ export default function App() {
     }
   }, [users]);
 
-  // Auth States: Direct Phone/Email Login (No OTP) + Email OTP Mandatory for Registration
+  // Auth States
   const [authScreen, setAuthScreen] = useState('login');
-  const [loginIdentifier, setLoginIdentifier] = useState(''); // Phone or Email
+  const [loginIdentifier, setLoginIdentifier] = useState('');
   const [generatedEmailOtp, setGeneratedEmailOtp] = useState('');
   const [emailOtpExpiry, setEmailOtpExpiry] = useState(0);
   const [sendingEmail, setSendingEmail] = useState(false);
   const [authMsg, setAuthMsg] = useState('');
 
-  // Role-Specific Registration Form States (Matching Reference 1000044292.png)
-  const [regName, setRegName] = useState(''); // Full Name / Business Name / Store Name
-  const [regOwnerName, setRegOwnerName] = useState(''); // Owner Name for Wholesale/Retail
+  // Role-Specific Registration Form States
+  const [regName, setRegName] = useState('');
+  const [regOwnerName, setRegOwnerName] = useState('');
   const [regMobile, setRegMobile] = useState('');
   const [regEmail, setRegEmail] = useState('');
-  const [regAadhaar, setRegAadhaar] = useState(''); // Optional for Farmer
+  const [regAadhaar, setRegAadhaar] = useState('');
   const [regAddress, setRegAddress] = useState('');
   const [regVillage, setRegVillage] = useState('');
   const [regMandal, setRegMandal] = useState('');
   const [regDistrict, setRegDistrict] = useState('Nellore');
   const [regState, setRegState] = useState('Andhra Pradesh');
   const [regGstNumber, setRegGstNumber] = useState('');
-  const [regStoreType, setRegStoreType] = useState('Distributor'); // Wholesale: Distributor/Wholesaler/Trader | Retail: Grocery Store/Supermarket/Others
+  const [regStoreType, setRegStoreType] = useState('Distributor');
   const [regLandAcres, setRegLandAcres] = useState('');
   const [regMajorCrops, setRegMajorCrops] = useState('Tomato, Paddy, Chillies');
   const [regVehicleType, setRegVehicleType] = useState('Bike / Scooter');
@@ -312,19 +331,17 @@ export default function App() {
   const [regOtpInput, setRegOtpInput] = useState('');
   const [showWelcomeSmile, setShowWelcomeSmile] = useState(false);
 
-  // Navigation & Customer Screens
+  // Navigation & Screens
   const [activeTab, setActiveTab] = useState('home');
   const [detailProduct, setDetailProduct] = useState(null);
   const [detailQty, setDetailQty] = useState(1);
   const [lastPlacedOrder, setLastPlacedOrder] = useState(null);
   const [trackingOrder, setTrackingOrder] = useState(null);
-  const [deliverySlot, setDeliverySlot] = useState('Today, 6:00 PM – 8:00 PM');
-  const [orderListFilter, setOrderListFilter] = useState('All');
+  const [deliverySlot] = useState('Today, 6:00 PM – 8:00 PM');
 
   const [toast, setToast] = useState('');
   const [selectedCat, setSelectedCat] = useState('All');
   const [search, setSearch] = useState('');
-  const [wishlist, setWishlist] = useState(['p1', 'p3']);
 
  // Location & Map Pin States
   const [savedAddresses, setSavedAddresses] = useState([
@@ -352,15 +369,14 @@ export default function App() {
   const [mapPinCoords, setMapPinCoords] = useState({ lat: 14.4426, lng: 79.9865 });
   const [mapPinTitle, setMapPinTitle] = useState('Vedayapalem, Nellore');
   const [mapPinFullAddress, setMapPinFullAddress] = useState('Vedayapalem, Nellore, Andhra Pradesh, 524004');
-  const [mapPinTag, setMapPinTag] = useState('Home');
+  const [mapPinTag] = useState('Home');
   const [isEditingPinText, setIsEditingPinText] = useState(false);
   const [isLocatingGps, setIsLocatingGps] = useState(false);
 
-  // Cart & Payments — ALL PAYMENTS GO TO madhavam.com@ybl
-  const [cart, setCart] = useState({ p1: 2, p3: 1 });
-  const [useWalletBalance, setUseWalletBalance] = useState(false);
-  const [promoInput, setPromoInput] = useState('');
-  const [appliedPromo, setAppliedPromo] = useState(null);
+  // Cart & Payments
+  const [cart, setCart] = useState({ p1: 2, p4: 1 });
+  const [useWalletBalance] = useState(false);
+  const [appliedPromo] = useState(null);
   const [payMode, setPayMode] = useState('phonepe');
   const [utrRefInput, setUtrRefInput] = useState('');
   const [cardNo, setCardNo] = useState('');
@@ -370,7 +386,6 @@ export default function App() {
   const [merchantUpiId] = useState('madhavam.com@ybl');
 
   // B2B States
-  const [b2bSource, setB2bSource] = useState('farmer');
   const [b2bDeliveryMode, setB2bDeliveryMode] = useState('pickup');
 
   // Scratch Card & Notifications
@@ -380,9 +395,11 @@ export default function App() {
   ]);
   const [orders, setOrders] = useState([]);
 
-  // Seller Post Product States (Used by Farmer, Wholesale, Retail)
+  // Seller Post Product States (Category, Quality Grade, Qty, Unit, Price, Availability)
   const [fNameEn, setFNameEn] = useState('');
   const [fNameTe, setFNameTe] = useState('');
+  const [fCat, setFCat] = useState('Vegetables');
+  const [fQuality, setFQuality] = useState('Grade A');
   const [fQty, setFQty] = useState('100');
   const [fUnit, setFUnit] = useState('Kg');
   const [fPrice, setFPrice] = useState('22');
@@ -390,17 +407,90 @@ export default function App() {
 
   // Delivery & Admin States
   const [delivFilter, setDelivFilter] = useState('available');
-  const [scratchMin, setScratchMin] = useState(4);
-  const [scratchMax, setScratchMax] = useState(25);
-  const [offersEnabled, setOffersEnabled] = useState(true);
-  const [adminTab, setAdminTab] = useState('approvals');
+  const [scratchMin] = useState(4);
+  const [scratchMax] = useState(25);
+  const [offersEnabled] = useState(true);
+
+  // 15-Second Ringtone Alert Controller for Farmer / Wholesale / Retail Shops
+  const [isRinging, setIsRinging] = useState(false);
+  const lastRungOrderIdRef = useRef(null);
+  const ringTimerRef = useRef(null);
+
+  const stopAlertRingtone = useCallback(() => {
+    if (ringTimerRef.current) {
+      clearInterval(ringTimerRef.current);
+      ringTimerRef.current = null;
+    }
+    setIsRinging(false);
+  }, []);
+
+  const play15SecondAlertTone = useCallback(() => {
+    stopAlertRingtone();
+    setIsRinging(true);
+
+    const playSingleChime = () => {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        osc.frequency.setValueAtTime(1174.66, ctx.currentTime + 0.18);
+        gain.gain.setValueAtTime(0.25, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.46);
+      } catch {
+        // ignore if autoplay blocked
+      }
+    };
+
+    playSingleChime();
+    let elapsed = 0;
+    ringTimerRef.current = setInterval(() => {
+      elapsed += 1;
+      if (elapsed >= 15) {
+        stopAlertRingtone();
+      } else {
+        playSingleChime();
+      }
+    }, 1000);
+  }, [stopAlertRingtone]);
+
+ // Trigger 15-second ringtone when a new unaccepted order arrives for Farmer / Wholesale / Retail
+  useEffect(() => {
+    if (!currentUser || !['farmer', 'wholesale', 'retail'].includes(currentUser.role)) {
+      stopAlertRingtone();
+      return;
+    }
+    const openIncoming = orders.filter(
+      (o) =>
+        o.status === 'Order Placed' &&
+        !o.acceptedById &&
+        o.buyerId !== currentUser.id &&
+        !(o.declinedBy || []).includes(currentUser.id)
+    );
+    if (openIncoming.length > 0) {
+      const newest = openIncoming[0];
+      if (lastRungOrderIdRef.current !== newest.id) {
+        lastRungOrderIdRef.current = newest.id;
+        play15SecondAlertTone();
+      }
+    } else {
+      stopAlertRingtone();
+    }
+  }, [currentUser, orders, play15SecondAlertTone, stopAlertRingtone]);
 
   const notify = (m) => {
     setToast(m);
     setTimeout(() => setToast(''), 3500);
   };
 
-  // 3. Hardware Back Button Handler (Prevents accidental app close)
+  // Hardware Back Button Handler
   const handleHardwareBack = useCallback(() => {
     if (sharedInvoiceData) {
       window.history.replaceState({}, '', '/');
@@ -438,7 +528,6 @@ export default function App() {
     return () => window.removeEventListener('popstate', onPopState);
   }, [handleHardwareBack]);
 
-// Grant One-Time Permissions (Location + Notifications + Phone Ready)
   const handleGrantDevicePermissions = () => {
     try {
       localStorage.setItem('rythu_permissions_granted', 'true');
@@ -467,7 +556,7 @@ export default function App() {
     }
   };
 
-  // 4. Real-Time Cloud Firestore Sync for Orders, Products & Users
+ // Real-Time Cloud Firestore Sync
   useEffect(() => {
     const unsubOrders = onSnapshot(
       collection(db, 'orders'),
@@ -515,11 +604,13 @@ export default function App() {
     };
   }, []);
 
-  // 5. Continuous Live GPS Broadcast while Delivery Partner is Active
+  // Continuous Live GPS Broadcast while Delivery Partner is Active (Both Pickup & Out for Delivery)
   useEffect(() => {
     if (!currentUser || currentUser.role !== 'delivery' || !navigator.geolocation) return;
     const activeAssigned = orders.filter(
-      (o) => o.driverMobile === currentUser.mobile && o.status === 'Partner Assigned'
+      (o) =>
+        o.driverMobile === currentUser.mobile &&
+        (o.status === 'Partner Assigned' || o.status === 'Out for Delivery')
     );
     if (activeAssigned.length === 0) return;
 
@@ -541,7 +632,6 @@ export default function App() {
     return () => navigator.geolocation.clearWatch(watchId);
   }, [currentUser, orders]);
 
- // SEND REAL 6-DIGIT OTP TO USER EMAIL INBOX (FOR REGISTRATION ONLY)
   const triggerEmailOtp = async (targetEmail, userName) => {
     setSendingEmail(true);
     setAuthMsg('');
@@ -567,7 +657,7 @@ export default function App() {
         throw new Error(errText || 'Failed to send email');
       }
 
-      setGeneratedEmailOtp(code);
+setGeneratedEmailOtp(code);
       setEmailOtpExpiry(Date.now() + 5 * 60 * 1000);
       notify(`6-Digit OTP sent to ${targetEmail}! Check your Inbox/Spam.`);
       return true;
@@ -579,7 +669,6 @@ export default function App() {
     }
   };
 
-  // AUTOMATIC EMAIL INVOICE DISPATCH UPON ORDER DELIVERY
   const sendAutomaticInvoiceEmail = async (ord) => {
     const recipientEmail = ord.buyerEmail || currentUser?.email;
     if (!recipientEmail) return;
@@ -651,7 +740,7 @@ export default function App() {
       </div>
     `;
 
-const invoicePayload = encodeURIComponent(
+    const invoicePayload = encodeURIComponent(
       JSON.stringify({
         id: ord.id,
         date: invoiceDate,
@@ -697,8 +786,7 @@ const invoicePayload = encodeURIComponent(
     return true;
   };
 
-  // DIRECT LOGIN WITH REGISTERED PHONE OR EMAIL (NO OTP NEEDED AFTER REGISTRATION)
-  const handleDirectLogin = (e) => {
+const handleDirectLogin = (e) => {
     e.preventDefault();
     const raw = loginIdentifier.trim();
     if (!raw) {
@@ -726,7 +814,6 @@ const invoicePayload = encodeURIComponent(
     window.history.pushState({ rythuNav: true }, '');
   };
 
-  // REGISTRATION STEP 1: SEND MANDATORY EMAIL OTP
   const handleSendRegisterOtp = async () => {
     const cleanMobile = regMobile.replace(/\D/g, '');
     const cleanEmail = regEmail.trim().toLowerCase();
@@ -763,7 +850,6 @@ const invoicePayload = encodeURIComponent(
     if (ok) setRegOtpSent(true);
   };
 
- // REGISTRATION STEP 2: VERIFY EMAIL OTP & SAVE USER
   const handleCompleteRegistration = (e) => {
     e.preventDefault();
     if (!verifyEmailOtpCode(regOtpInput)) return;
@@ -786,6 +872,8 @@ const invoicePayload = encodeURIComponent(
       email: cleanEmail,
       aadhaarOptional: regAadhaar.trim() || null,
       address: fullLocation,
+      lat: mapPinCoords.lat,
+      lng: mapPinCoords.lng,
       village: regVillage.trim(),
       mandal: regMandal.trim(),
       district: regDistrict.trim(),
@@ -824,7 +912,8 @@ const invoicePayload = encodeURIComponent(
     setTimeout(() => setShowWelcomeSmile(false), 3500);
   };
 
-  const handleStrictLogout = () => {
+const handleStrictLogout = () => {
+    stopAlertRingtone();
     setCurrentUser(null);
     setSelectedRole(null);
     setLoginIdentifier('');
@@ -880,7 +969,7 @@ const invoicePayload = encodeURIComponent(
     );
   };
 
-const handleAdjustPin = async (dLat, dLng) => {
+  const handleAdjustPin = async (dLat, dLng) => {
     const lat = Number((mapPinCoords.lat + dLat).toFixed(5));
     const lng = Number((mapPinCoords.lng + dLng).toFixed(5));
     setMapPinCoords({ lat, lng });
@@ -900,7 +989,7 @@ const handleAdjustPin = async (dLat, dLng) => {
     };
     setSavedAddresses((prev) => [newEntry, ...prev]);
     setActiveAddrId(newId);
-    setCurrentUser((prev) => (prev ? { ...prev, address: mapPinTitle } : prev));
+    setCurrentUser((prev) => (prev ? { ...prev, address: mapPinTitle, lat: mapPinCoords.lat, lng: mapPinCoords.lng } : prev));
     setActiveTab('home');
     notify(`Selected Location - ${mapPinTitle}`);
   };
@@ -916,20 +1005,23 @@ const handleAdjustPin = async (dLat, dLng) => {
     if (TE_TO_EN[val.trim()]) setFNameEn(TE_TO_EN[val.trim()]);
   };
 
-  // Publish Produce / Stock helper for Farmer, Wholesale, and Retail
+  // Publish Produce / Stock with Category, Quality Grade, Qty, Unit & Availability Dropdowns
   const handlePublishRoleProduct = (e, roleSource) => {
     e.preventDefault();
     if (!fNameEn.trim() || !fPrice) return;
     const baseRate = Number(fPrice);
     const newProd = {
       id: 'p_' + Date.now(),
-      postedByRole: roleSource, // 'farmer' | 'wholesale' | 'retail'
+      postedByRole: roleSource,
       farmerId: currentUser.id,
-      farmerName: `${currentUser.name} • 12 km`,
+      farmerName: `${currentUser.name} • ${currentUser.address}`,
+      sellerLat: currentUser.lat || mapPinCoords.lat,
+      sellerLng: currentUser.lng || mapPinCoords.lng,
       distanceKm: 12,
       nameEn: fNameEn.trim(),
       nameTe: fNameTe.trim() || fNameEn.trim(),
-      cat: 'Vegetables',
+      cat: fCat,
+      quality: fQuality,
       unit: fUnit,
       packLabel: `1 ${fUnit}`,
       mrp: baseRate + 16,
@@ -939,9 +1031,7 @@ const handleAdjustPin = async (dLat, dLng) => {
       minWholesaleQty: 25,
       stockKg: Number(fQty),
       inStock: true,
-      rating: 4.8,
-      reviews: 12,
-      desc: `Fresh produce listed by ${currentUser.name} (${roleSource.toUpperCase()}).`,
+      desc: `${fQuality} ${fNameEn.trim()} (${fCat}) listed by ${currentUser.name}.`,
       availableFrom: fAvailTime,
       img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=400&q=80',
     };
@@ -949,13 +1039,81 @@ const handleAdjustPin = async (dLat, dLng) => {
     setDoc(doc(db, 'products', newProd.id), newProd).catch(() => {});
     setFNameEn('');
     setFNameTe('');
-    notify(`Published! Visible to ${roleSource === 'farmer' ? 'Wholesale, Retail & Customers' : roleSource === 'wholesale' ? 'Retailers & Customers' : 'Customers'}.`);
+    notify(`Published (${fCat} • ${fQuality} • ${fQty} ${fUnit})!`);
   };
+
+ // Reusable Product Listing Form for Farmer, Wholesale & Retail
+  const renderPostProductForm = (roleSource, submitLabel) => (
+    <form onSubmit={(e) => handlePublishRoleProduct(e, roleSource)} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-3">
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="text-[10px] font-bold text-slate-400">Product Name (English)</label>
+          <input type="text" required value={fNameEn} onChange={(e) => handleFarmerEnChange(e.target.value)} placeholder="e.g., Tomato" className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-bold" />
+        </div>
+        <div>
+          <label className="text-[10px] font-bold text-slate-400">పేరు తెలుగులో (Auto)</label>
+          <input type="text" required value={fNameTe} onChange={(e) => handleFarmerTeChange(e.target.value)} placeholder="ఉదా: టమాటా" className="w-full bg-emerald-50/70 border border-emerald-200 rounded-xl px-3 py-2.5 font-bold text-[#15803D]" />
+        </div>
+      </div>
+
+      {/* Category & Quality Grade Dropdowns */}
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="text-[10px] font-bold text-slate-400">Category</label>
+          <select value={fCat} onChange={(e) => setFCat(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-extrabold text-slate-800">
+            {PRODUCT_CATEGORIES.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="text-[10px] font-bold text-slate-400">Quality Grade</label>
+          <select value={fQuality} onChange={(e) => setFQuality(e.target.value)} className="w-full bg-emerald-50/60 border border-emerald-200 rounded-xl px-3 py-2.5 font-extrabold text-[#15803D]">
+            {QUALITY_GRADES.map((q) => (
+              <option key={q} value={q}>{q}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Quantity + Unit Dropdown (Kg, Grams, Litres) + Price */}
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="text-[10px] font-bold text-slate-400">Quantity & Unit</label>
+          <div className="flex space-x-1.5">
+            <input type="number" required value={fQty} onChange={(e) => setFQty(e.target.value)} className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-bold" />
+            <select value={fUnit} onChange={(e) => setFUnit(e.target.value)} className="bg-emerald-50 border border-emerald-200 text-[#15803D] rounded-xl px-2.5 py-2.5 font-extrabold">
+              <option value="Kg">Kg</option>
+              <option value="Grams">Grams</option>
+              <option value="Litres">Litres</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label className="text-[10px] font-bold text-slate-400">Price (₹ / {fUnit})</label>
+          <input type="number" required value={fPrice} onChange={(e) => setFPrice(e.target.value)} className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-extrabold text-[#15803D]" />
+        </div>
+      </div>
+
+      <div>
+        <label className="text-[10px] font-bold text-slate-400">Availability Slot</label>
+        <select value={fAvailTime} onChange={(e) => setFAvailTime(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-extrabold text-slate-800 mt-1">
+          {AVAILABILITY_SLOTS.map((slot) => (
+            <option key={slot} value={slot}>{slot}</option>
+          ))}
+        </select>
+      </div>
+
+      <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm">
+        {submitLabel}
+      </button>
+    </form>
+  );
 
   const fontStyle = { fontFamily: "'Plus Jakarta Sans', 'Noto Sans Telugu', sans-serif" };
 
  // =========================================================================
-  // 0. DIRECT INVOICE PDF PRINT VIEW (OPENED FROM EMAIL DOWNLOAD BUTTON)
+  // 0. DIRECT INVOICE PDF PRINT VIEW
   // =========================================================================
   if (sharedInvoiceData) {
     return (
@@ -1096,7 +1254,6 @@ const handleAdjustPin = async (dLat, dLng) => {
 
     return (
       <div style={fontStyle} className="min-h-screen bg-[#F5F7F5] max-w-md mx-auto text-slate-800 shadow-2xl pb-24 relative overflow-x-hidden">
-        {/* ONE-TIME PERMISSIONS PROMPT ON FIRST LAUNCH */}
         {showPermissionPrompt && (
           <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-3xl p-5 max-w-xs w-full space-y-4 shadow-2xl border border-emerald-100">
@@ -1110,15 +1267,15 @@ const handleAdjustPin = async (dLat, dLng) => {
               <div className="space-y-2 text-xs">
                 <div className="flex items-center space-x-2.5 bg-emerald-50/70 p-2.5 rounded-xl">
                   <MapPin className="h-4 w-4 text-[#15803D] flex-shrink-0" />
-                  <span><strong>Precise Location:</strong> Accurate customer & live delivery tracking</span>
+                  <span><strong>Precise Location:</strong> Accurate customer, farm & delivery tracking</span>
                 </div>
                 <div className="flex items-center space-x-2.5 bg-emerald-50/70 p-2.5 rounded-xl">
                   <MessageSquare className="h-4 w-4 text-[#15803D] flex-shrink-0" />
-                  <span><strong>Messages & Alerts:</strong> Instant order & delivery notifications</span>
+                  <span><strong>Messages & Sound Alerts:</strong> 15-sec order ringtone & SMS updates</span>
                 </div>
                 <div className="flex items-center space-x-2.5 bg-emerald-50/70 p-2.5 rounded-xl">
                   <Phone className="h-4 w-4 text-[#15803D] flex-shrink-0" />
-                  <span><strong>Phone Calls:</strong> Direct rider-to-customer call support</span>
+                  <span><strong>Phone Calls:</strong> Direct rider-to-customer & store call support</span>
                 </div>
               </div>
               <button
@@ -1307,8 +1464,8 @@ const handleAdjustPin = async (dLat, dLng) => {
     );
   }
 
- // =========================================================================
-  // 2. ROLE-SPECIFIC REGISTRATION (REF 1000044292.png) & DIRECT LOGIN (NO OTP ON LOGIN)
+// =========================================================================
+  // 2. ROLE-SPECIFIC REGISTRATION & DIRECT LOGIN
   // =========================================================================
   if (!currentUser) {
     const roleMeta = {
@@ -1358,7 +1515,6 @@ const handleAdjustPin = async (dLat, dLng) => {
 
     const RoleHeaderIcon = roleMeta.icon;
 
-    // Bank + UPI Optional/Flexible Section for Farmer, Wholesale, Retail, Delivery
     const renderBankAndUpiBlock = () => (
       <div className="space-y-2.5 pt-1">
         <div className="flex items-center space-x-1.5 text-xs font-extrabold text-[#15803D]">
@@ -1397,7 +1553,6 @@ const handleAdjustPin = async (dLat, dLng) => {
           </div>
         )}
 
-{/* LOGIN SCREEN (DIRECT PHONE OR EMAIL LOGIN — NO OTP REQUIRED AFTER REGISTRATION) */}
         {authScreen === 'login' ? (
           <div className="bg-white min-h-screen">
             <div className="p-4 flex items-center justify-between">
@@ -1459,7 +1614,7 @@ const handleAdjustPin = async (dLat, dLng) => {
                 Login Now →
               </button>
 
-              <div className="pt-2 text-center">
+<div className="pt-2 text-center">
                 <button
                   type="button"
                   onClick={() => {
@@ -1475,9 +1630,7 @@ const handleAdjustPin = async (dLat, dLng) => {
             </form>
           </div>
         ) : (
-/* REGISTRATION SCREEN (MATCHING REFERENCE 1000044292.png THEME FOR ALL ROLES) */
           <div>
-            {/* Illustrated Green-White Top Hero Header */}
             <div className="relative bg-gradient-to-b from-[#DCFCE7] to-[#F4F8F4] pt-3 pb-2">
               <div className="px-4 flex items-center justify-between">
                 <button onClick={() => setAuthScreen('login')} className="p-2 rounded-full bg-white/90 shadow text-slate-700">
@@ -1503,7 +1656,6 @@ const handleAdjustPin = async (dLat, dLng) => {
                 </div>
               )}
 
-              {/* Curved Dark Green Title Ribbon (Ref 1000044292.png) */}
               <div className="mx-3 mt-2 bg-gradient-to-r from-[#0E5A2B] to-[#15803D] text-white rounded-2xl px-4 py-3 flex items-center space-x-3 shadow-md">
                 <div className="h-10 w-10 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
                   <RoleHeaderIcon className="h-5 w-5 text-[#FDE047]" />
@@ -1515,9 +1667,7 @@ const handleAdjustPin = async (dLat, dLng) => {
               </div>
             </div>
 
-            {/* Role-Specific Registration Fields */}
             <form onSubmit={handleCompleteRegistration} className="p-4 space-y-3 text-xs">
-              {/* CUSTOMER REGISTRATION (Kept clean as requested) */}
               {selectedRole === 'customer' && (
                 <>
                   <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Full Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-3 font-bold" />
@@ -1528,7 +1678,6 @@ const handleAdjustPin = async (dLat, dLng) => {
                 </>
               )}
 
-              {/* FARMER REGISTRATION (Ref Card 1 — Aadhaar Optional as requested) */}
               {selectedRole === 'farmer' && (
                 <>
                   <p className="font-extrabold text-[#15803D]">— Personal Details</p>
@@ -1557,8 +1706,7 @@ const handleAdjustPin = async (dLat, dLng) => {
                 </>
               )}
 
-              {/* WHOLESALE REGISTRATION (Ref Card 2) */}
-              {selectedRole === 'wholesale' && (
+{selectedRole === 'wholesale' && (
                 <>
                   <p className="font-extrabold text-[#15803D]">— Business Details</p>
                   <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Business Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
@@ -1601,7 +1749,6 @@ const handleAdjustPin = async (dLat, dLng) => {
                 </>
               )}
 
-{/* RETAIL STORE REGISTRATION (Ref Card 3) */}
               {selectedRole === 'retail' && (
                 <>
                   <p className="font-extrabold text-[#15803D]">— Store Details</p>
@@ -1639,7 +1786,6 @@ const handleAdjustPin = async (dLat, dLng) => {
                 </>
               )}
 
-              {/* DELIVERY PARTNER REGISTRATION (Ref Card 4) */}
               {selectedRole === 'delivery' && (
                 <>
                   <p className="font-extrabold text-[#15803D]">— Personal Details</p>
@@ -1676,7 +1822,6 @@ const handleAdjustPin = async (dLat, dLng) => {
                 </>
               )}
 
-              {/* ADMIN REGISTRATION */}
               {selectedRole === 'admin' && (
                 <>
                   <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Admin Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
@@ -1802,7 +1947,7 @@ const WelcomeSmileModal = () =>
   );
 
 // =========================================================================
-  // 3. CUSTOMER STOREFRONT ('From Farmer' Badge ONLY on Farmer Products)
+  // 3. CUSTOMER STOREFRONT (STAGE-BASED LIVE TRACKING + 'From Farmer' BADGE)
   // =========================================================================
   if (currentUser.role === 'customer') {
     const activeAddr = savedAddresses.find((a) => a.id === activeAddrId) || savedAddresses[0];
@@ -1848,26 +1993,55 @@ const WelcomeSmileModal = () =>
       const itemsArr = Object.entries(cart)
         .map(([id, qty]) => {
           const p = products.find((x) => x.id === id);
-          return p ? { id: p.id, name: p.nameEn, unit: p.unit || 'Kg', qty, price: p.retailPrice, img: p.img } : null;
+          return p
+            ? {
+                id: p.id,
+                name: p.nameEn,
+                quality: p.quality || 'Grade A',
+                unit: p.unit || 'Kg',
+                qty,
+                price: p.retailPrice,
+                img: p.img,
+                sellerName: p.farmerName,
+                sellerLat: p.sellerLat || 14.4450,
+                sellerLng: p.sellerLng || 79.9850,
+                postedByRole: p.postedByRole || 'farmer',
+              }
+            : null;
         })
         .filter(Boolean);
 
       if (itemsArr.length === 0) return;
 
+      const pickupStops = buildPickupStopsFromItems(itemsArr);
+      const extraStopsCount = Math.max(0, pickupStops.length - 1);
+      const riderBaseFee = 30;
+      const riderMultiStopBonus = extraStopsCount * 15;
+
       const newOrd = {
         id: 'RB' + Math.floor(123450 + Math.random() * 800000),
+        buyerId: currentUser.id,
         buyerRole: 'customer',
         buyerName: currentUser.name,
         buyerMobile: currentUser.mobile,
         buyerEmail: currentUser.email,
         buyerAddress: activeAddr.full,
+        buyerLat: activeAddr.lat || mapPinCoords.lat,
+        buyerLng: activeAddr.lng || mapPinCoords.lng,
         deliverySlot,
         items: itemsArr,
+        pickupStops,
+        riderBaseFee,
+        riderMultiStopBonus,
+        totalRiderPayout: riderBaseFee + riderMultiStopBonus,
         total: payableTotal,
         cashback: estimatedCashback,
-        status: 'Order Placed', // Broadcast alert to all nearby Farmers, Wholesale & Retail Shops
+        status: 'Order Placed',
         acceptedById: null,
         acceptedByName: null,
+        acceptedByAddress: null,
+        acceptedByLat: null,
+        acceptedByLng: null,
         declinedBy: [],
         driverName: null,
         driverMobile: null,
@@ -1892,10 +2066,10 @@ const WelcomeSmileModal = () =>
       setCart({});
       setUtrRefInput('');
       setActiveTab('orderPlaced');
-      notify('Order Broadcasted to all nearby Farms & Shops!');
+      notify('Order Broadcasted with 15s ringtone to nearby Farms & Shops!');
     };
 
-const handlePayAndPlaceOrderTrigger = () => {
+    const handlePayAndPlaceOrderTrigger = () => {
       setCardError('');
       if (payMode === 'card') {
         const digits = cardNo.replace(/\s+/g, '');
@@ -1933,7 +2107,7 @@ const handlePayAndPlaceOrderTrigger = () => {
       setScratchCard({ orderId: ord.id, reward, scratched: false });
     };
 
-    if (activeTab === 'selectLocation') {
+if (activeTab === 'selectLocation') {
       const filteredAddrs = savedAddresses.filter(
         (a) =>
           a.title.toLowerCase().includes(locSearch.toLowerCase()) ||
@@ -2010,7 +2184,7 @@ const handlePayAndPlaceOrderTrigger = () => {
             <h1 className="text-sm font-extrabold tracking-wide uppercase">PIN DELIVERY LOCATION</h1>
           </div>
 
-<div className="p-4 space-y-3.5">
+          <div className="p-4 space-y-3.5">
             <div className="relative h-72 w-full rounded-3xl overflow-hidden border-2 border-emerald-200 bg-emerald-50 shadow-md">
               <iframe
                 title="Nellore Location Map"
@@ -2069,8 +2243,7 @@ const handlePayAndPlaceOrderTrigger = () => {
       );
     }
 
- // Customers see Farmer + Wholesaler + Retailer products; ONLY Farmer items show 'From Farmer' badge
-    const visibleProducts = products.filter((p) => {
+const visibleProducts = products.filter((p) => {
       const catOk = selectedCat === 'All' || p.cat === selectedCat;
       const q = search.toLowerCase();
       return catOk && (p.nameEn.toLowerCase().includes(q) || p.nameTe.includes(search));
@@ -2078,6 +2251,7 @@ const handlePayAndPlaceOrderTrigger = () => {
 
     const liveLat = trackingOrder?.driverLat || mapPinCoords.lat;
     const liveLng = trackingOrder?.driverLng || mapPinCoords.lng;
+    const isOutForCustomerDrop = trackingOrder?.status === 'Out for Delivery' || trackingOrder?.status === 'Delivered';
 
     return (
       <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
@@ -2176,7 +2350,7 @@ const handlePayAndPlaceOrderTrigger = () => {
               />
             </div>
 
-<div className="grid grid-cols-4 gap-2 text-center">
+            <div className="grid grid-cols-4 gap-2 text-center">
               {TOP_CATEGORIES.map((c) => {
                 const active = selectedCat === c.id;
                 return (
@@ -2205,7 +2379,7 @@ const handlePayAndPlaceOrderTrigger = () => {
                 )}
               </div>
 
-              {visibleProducts.map((p) => {
+{visibleProducts.map((p) => {
                 const q = cart[p.id] || 0;
                 const isFarmerItem = (p.postedByRole || 'farmer') === 'farmer';
                 return (
@@ -2220,13 +2394,19 @@ const handlePayAndPlaceOrderTrigger = () => {
                     >
                       <img src={p.img} alt={p.nameEn} className="h-16 w-16 rounded-2xl object-cover bg-slate-50" />
                       <div>
-                        {/* STRICTLY SHOW 'From Farmer' ONLY WHEN POSTED BY A FARMER */}
-                        {isFarmerItem && (
-                          <span className="inline-flex items-center space-x-1 bg-emerald-100 text-[#15803D] text-[9px] font-extrabold px-2 py-0.5 rounded-full mb-0.5">
-                            <Sprout className="h-2.5 w-2.5" />
-                            <span>From Farmer</span>
-                          </span>
-                        )}
+                        <div className="flex items-center flex-wrap gap-1 mb-0.5">
+                          {isFarmerItem && (
+                            <span className="inline-flex items-center space-x-1 bg-emerald-100 text-[#15803D] text-[9px] font-extrabold px-2 py-0.5 rounded-full">
+                              <Sprout className="h-2.5 w-2.5" />
+                              <span>From Farmer</span>
+                            </span>
+                          )}
+                          {p.quality && (
+                            <span className="bg-amber-50 text-amber-800 text-[9px] font-extrabold px-1.5 py-0.5 rounded">
+                              {p.quality}
+                            </span>
+                          )}
+                        </div>
                         <h4 className="text-xs font-extrabold text-slate-900">{p.nameEn}</h4>
                         <p className="text-[11px] font-bold text-[#15803D]">{p.nameTe} • {p.packLabel}</p>
                         <div className="mt-1">
@@ -2279,7 +2459,7 @@ const handlePayAndPlaceOrderTrigger = () => {
               />
             </div>
 
- <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               {TOP_CATEGORIES.map((cat) => (
                 <button
                   key={cat.id}
@@ -2314,7 +2494,7 @@ const handlePayAndPlaceOrderTrigger = () => {
                     <span>From Farmer • {detailProduct.farmerName}</span>
                   </span>
                 )}
-                <h2 className="text-xl font-extrabold text-slate-900 mt-2">{detailProduct.nameEn}</h2>
+                <h2 className="text-xl font-extrabold text-slate-900 mt-2">{detailProduct.nameEn} ({detailProduct.quality || 'Grade A'})</h2>
                 <p className="text-sm font-bold text-[#15803D]">{detailProduct.nameTe} • ₹{detailProduct.retailPrice} / {detailProduct.packLabel}</p>
               </div>
               <p className="text-slate-600">{detailProduct.desc}</p>
@@ -2332,7 +2512,7 @@ const handlePayAndPlaceOrderTrigger = () => {
           </main>
         )}
 
-        {activeTab === 'cart' && (
+{activeTab === 'cart' && (
           <main className="p-4 space-y-3.5 text-xs">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-extrabold text-slate-900">My Cart</h2>
@@ -2353,6 +2533,7 @@ const handlePayAndPlaceOrderTrigger = () => {
                         <img src={p.img} alt={p.nameEn} className="h-14 w-14 rounded-xl object-cover" />
                         <div>
                           <h4 className="font-extrabold text-slate-900">{p.nameEn}</h4>
+                          <p className="text-[10px] text-slate-500">{p.farmerName}</p>
                           <p className="text-[#15803D] font-extrabold">₹{p.retailPrice} / {p.packLabel}</p>
                         </div>
                       </div>
@@ -2378,7 +2559,7 @@ const handlePayAndPlaceOrderTrigger = () => {
           </main>
         )}
 
- {activeTab === 'checkout' && (
+        {activeTab === 'checkout' && (
           <main className="p-4 space-y-3.5 text-xs">
             <div className="flex items-center space-x-3">
               <button onClick={() => setActiveTab('cart')} className="p-2 rounded-full bg-white shadow-sm">
@@ -2467,7 +2648,7 @@ const handlePayAndPlaceOrderTrigger = () => {
           </main>
         )}
 
-        {activeTab === 'orderPlaced' && lastPlacedOrder && (
+{activeTab === 'orderPlaced' && lastPlacedOrder && (
           <main className="p-6 text-center space-y-5 flex flex-col items-center justify-center min-h-[75vh]">
             <div className="h-20 w-20 rounded-full bg-[#15803D] text-white flex items-center justify-center shadow-lg">
               <Check className="h-10 w-10 stroke-[3]" />
@@ -2475,7 +2656,9 @@ const handlePayAndPlaceOrderTrigger = () => {
             <div className="space-y-1">
               <h2 className="text-xl font-extrabold text-slate-900">Order Placed Successfully!</h2>
               <p className="text-xs font-extrabold text-[#15803D]">Order ID: {lastPlacedOrder.id}</p>
-              <p className="text-xs text-slate-500 pt-1">Alert sent to all nearby Farms & Shops. Waiting for store confirmation.</p>
+              <p className="text-xs text-slate-500 pt-1">
+                Alert sent to nearby Farms & Shops! Live delivery tracking unlocks once picked up.
+              </p>
             </div>
             <div className="w-full space-y-2.5 pt-2">
               <button
@@ -2485,7 +2668,7 @@ const handlePayAndPlaceOrderTrigger = () => {
                 }}
                 className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
               >
-                Track Order (Live GPS)
+                Track Order Status
               </button>
               <button onClick={() => setActiveTab('home')} className="w-full border border-slate-300 text-slate-800 font-extrabold py-3.5 rounded-2xl text-sm">
                 Continue Shopping
@@ -2494,7 +2677,8 @@ const handlePayAndPlaceOrderTrigger = () => {
           </main>
         )}
 
- {activeTab === 'trackOrder' && trackingOrder && (
+        {/* CUSTOMER TRACK ORDER: SHOWS DELIVERY PARTNER LIVE GPS ONCE PICKED UP ('Out for Delivery') */}
+        {activeTab === 'trackOrder' && trackingOrder && (
           <main className="pb-10 text-xs">
             <div className="bg-gradient-to-b from-[#15803D] to-[#22C55E] text-white p-5 rounded-b-[32px] shadow-md space-y-2">
               <div className="flex items-center space-x-3">
@@ -2511,18 +2695,29 @@ const handlePayAndPlaceOrderTrigger = () => {
             </div>
 
             <div className="p-4 space-y-3.5">
-              <div className="relative h-48 w-full rounded-3xl overflow-hidden border border-emerald-200 shadow-sm">
-                <iframe
-                  title="Live Scooter Route"
-                  width="100%"
-                  height="192"
-                  style={{ border: 0 }}
-                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${liveLng - 0.008}%2C${liveLat - 0.008}%2C${liveLng + 0.008}%2C${liveLat + 0.008}&layer=mapnik&marker=${liveLat}%2C${liveLng}`}
-                />
-                <span className="absolute bottom-2 left-2 bg-slate-900/85 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full">
-                  Live GPS: {liveLat}, {liveLng}
-                </span>
-              </div>
+              {isOutForCustomerDrop ? (
+                <div className="relative h-52 w-full rounded-3xl overflow-hidden border-2 border-[#15803D] shadow-md">
+                  <iframe
+                    title="Delivery Partner Live GPS"
+                    width="100%"
+                    height="208"
+                    style={{ border: 0 }}
+                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${liveLng - 0.008}%2C${liveLat - 0.008}%2C${liveLng + 0.008}%2C${liveLat + 0.008}&layer=mapnik&marker=${liveLat}%2C${liveLng}`}
+                  />
+                  <span className="absolute bottom-2 left-2 bg-slate-900/90 text-white text-[10px] font-extrabold px-3 py-1 rounded-full">
+                    ● Rider Out for Delivery • Live GPS: {liveLat}, {liveLng}
+                  </span>
+                </div>
+              ) : (
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-1 text-amber-950">
+                  <p className="font-extrabold">Stage 1: Store & Rider Pickup in Progress</p>
+                  <p className="text-[11px]">
+                    {trackingOrder.status === 'Partner Assigned'
+                      ? `Rider ${trackingOrder.driverName} is heading to ${trackingOrder.acceptedByName} to pick up your order. Live drop tracking starts as soon as picked up!`
+                      : 'Waiting for shop/farmer confirmation & rider pickup.'}
+                  </p>
+                </div>
+              )}
 
               {trackingOrder.status !== 'Delivered' ? (
                 <button onClick={() => handleSimulateCustomerDelivery(trackingOrder)} className="w-full bg-[#EA580C] text-white font-extrabold py-3.5 rounded-2xl shadow">
@@ -2595,73 +2790,145 @@ const handlePayAndPlaceOrderTrigger = () => {
     );
   }
 
+// =========================================================================
+  // BROADCAST ORDER ALERT BOX (15s RINGTONE + ACCEPT/DECLINE) + SELLER PICKUP TRACKING
   // =========================================================================
-  // BROADCAST CUSTOMER ORDER ALERT BOX (SHOWN TO ALL FARMERS, WHOLESALE & RETAIL SHOPS)
-  // =========================================================================
-  const renderBroadcastOrderAlerts = () => {
-    const openCustomerAlerts = orders.filter(
+  const renderBroadcastOrderAlertsAndPickupTracking = () => {
+    const openIncomingAlerts = orders.filter(
       (o) =>
         o.status === 'Order Placed' &&
         !o.acceptedById &&
+        o.buyerId !== currentUser.id &&
         !(o.declinedBy || []).includes(currentUser.id)
     );
 
-    if (openCustomerAlerts.length === 0) return null;
+    const myAcceptedOrders = orders.filter(
+      (o) => o.acceptedById === currentUser.id && o.status !== 'Delivered'
+    );
 
     return (
-      <div className="space-y-2">
-        <div className="flex items-center space-x-1.5 text-xs font-extrabold text-amber-800">
-          <Bell className="h-4 w-4 text-[#EA580C] animate-bounce" />
-          <span>New Nearby Customer Order Alert ({openCustomerAlerts.length})</span>
-        </div>
-        {openCustomerAlerts.map((ord) => (
-          <div key={ord.id} className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-3.5 shadow-sm space-y-2">
-            <div className="flex justify-between font-extrabold text-slate-900">
-              <span>Order #{ord.id} • {ord.buyerName}</span>
-              <span className="text-[#15803D]">₹{ord.total}</span>
+      <div className="space-y-3">
+        {/* 1. Incoming Order Alerts with 15-Second Ringtone */}
+        {openIncomingAlerts.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs font-extrabold text-amber-800">
+              <div className="flex items-center space-x-1.5">
+                <Bell className="h-4 w-4 text-[#EA580C] animate-bounce" />
+                <span>Incoming Order Alert ({openIncomingAlerts.length})</span>
+              </div>
+              {isRinging ? (
+                <button
+                  type="button"
+                  onClick={stopAlertRingtone}
+                  className="bg-rose-600 text-white px-2.5 py-1 rounded-full text-[10px] flex items-center space-x-1"
+                >
+                  <VolumeX className="h-3 w-3" />
+                  <span>Stop Ring (15s)</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={play15SecondAlertTone}
+                  className="bg-amber-200 text-amber-950 px-2.5 py-1 rounded-full text-[10px] flex items-center space-x-1"
+                >
+                  <Volume2 className="h-3 w-3" />
+                  <span>Ring Alert</span>
+                </button>
+              )}
             </div>
-            <p className="text-[11px] text-slate-700">
-              Items: {ord.items.map((i) => `${i.qty} ${i.unit || 'Kg'} ${i.name}`).join(', ')}
-            </p>
-            <p className="text-[10px] text-slate-500">Deliver to: {ord.buyerAddress}</p>
-            <div className="grid grid-cols-2 gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => {
-                  const updateData = {
-                    status: 'Order Accepted',
-                    acceptedById: currentUser.id,
-                    acceptedByName: `${currentUser.name} (${currentUser.role.toUpperCase()})`,
-                  };
-                  setOrders((prev) => prev.map((o) => (o.id === ord.id ? { ...o, ...updateData } : o)));
-                  updateDoc(doc(db, 'orders', ord.id), updateData).catch(() => {});
-                  notify(`Order #${ord.id} Accepted! Alert stopped for other stores.`);
-                }}
-                className="bg-[#15803D] text-white font-extrabold py-2.5 rounded-xl shadow-sm"
-              >
-                ✓ Accept Order
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const nextDeclined = [...(ord.declinedBy || []), currentUser.id];
-                  setOrders((prev) => prev.map((o) => (o.id === ord.id ? { ...o, declinedBy: nextDeclined } : o)));
-                  updateDoc(doc(db, 'orders', ord.id), { declinedBy: nextDeclined }).catch(() => {});
-                  notify(`Declined Order #${ord.id}`);
-                }}
-                className="bg-white border border-rose-300 text-rose-600 font-extrabold py-2.5 rounded-xl"
-              >
-                ✕ Decline
-              </button>
-            </div>
+
+            {openIncomingAlerts.map((ord) => (
+              <div key={ord.id} className="bg-amber-50 border-2 border-amber-400 rounded-2xl p-3.5 shadow-md space-y-2">
+                <div className="flex justify-between font-extrabold text-slate-900">
+                  <span>Order #{ord.id} • {ord.buyerName} ({ord.buyerRole.toUpperCase()})</span>
+                  <span className="text-[#15803D]">₹{ord.total}</span>
+                </div>
+                <p className="text-[11px] text-slate-700">
+                  Items: {ord.items.map((i) => `${i.qty} ${i.unit || 'Kg'} ${i.name}`).join(', ')}
+                </p>
+                <p className="text-[10px] text-slate-500">Drop Location: {ord.buyerAddress}</p>
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      stopAlertRingtone();
+                      const sellerLat = currentUser.lat || mapPinCoords.lat;
+                      const sellerLng = currentUser.lng || mapPinCoords.lng;
+                      const updatedStops = (ord.pickupStops || []).map((st) => ({
+                        ...st,
+                        sellerName: `${currentUser.name} • ${currentUser.address}`,
+                        sellerLat,
+                        sellerLng,
+                      }));
+                      const updateData = {
+                        status: 'Order Accepted',
+                        acceptedById: currentUser.id,
+                        acceptedByName: `${currentUser.name} (${currentUser.role.toUpperCase()})`,
+                        acceptedByAddress: currentUser.address,
+                        acceptedByLat: sellerLat,
+                        acceptedByLng: sellerLng,
+                        pickupStops: updatedStops,
+                      };
+                      setOrders((prev) => prev.map((o) => (o.id === ord.id ? { ...o, ...updateData } : o)));
+                      updateDoc(doc(db, 'orders', ord.id), updateData).catch(() => {});
+                      notify(`Order #${ord.id} Accepted! Pickup Tracking active & alert stopped for others.`);
+                    }}
+                    className="bg-[#15803D] text-white font-extrabold py-2.5 rounded-xl shadow-sm"
+                  >
+                    ✓ Accept Order
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      stopAlertRingtone();
+                      const nextDeclined = [...(ord.declinedBy || []), currentUser.id];
+                      setOrders((prev) => prev.map((o) => (o.id === ord.id ? { ...o, declinedBy: nextDeclined } : o)));
+                      updateDoc(doc(db, 'orders', ord.id), { declinedBy: nextDeclined }).catch(() => {});
+                      notify(`Declined Order #${ord.id}`);
+                    }}
+                    className="bg-white border border-rose-300 text-rose-600 font-extrabold py-2.5 rounded-xl"
+                  >
+                    ✕ Decline
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        )}
+
+        {/* 2. Live Pickup Tracking Map for Seller Who Accepted the Order */}
+        {myAcceptedOrders.map((ord) => {
+          const rLat = ord.driverLat || 14.4390;
+          const rLng = ord.driverLng || 79.9810;
+          return (
+            <div key={ord.id} className="bg-white border-2 border-[#15803D] rounded-2xl p-3.5 shadow-sm space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="font-extrabold text-[#15803D]">● Live Rider Pickup Tracking (#{ord.id})</span>
+                <span className="text-[10px] font-extrabold bg-emerald-50 text-[#15803D] px-2 py-0.5 rounded">{ord.status}</span>
+              </div>
+              <p className="text-[11px] text-slate-600">
+                {ord.driverName
+                  ? `Rider ${ord.driverName} (+91 ${ord.driverMobile}) is arriving to pick up order`
+                  : 'Waiting for Delivery Partner to accept pickup...'}
+              </p>
+              <div className="h-36 w-full rounded-xl overflow-hidden border">
+                <iframe
+                  title={`Pickup Map ${ord.id}`}
+                  width="100%"
+                  height="144"
+                  style={{ border: 0 }}
+                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${rLng - 0.008}%2C${rLat - 0.008}%2C${rLng + 0.008}%2C${rLat + 0.008}&layer=mapnik&marker=${rLat}%2C${rLng}`}
+                />
+              </div>
+            </div>
+          );
+        })}
       </div>
     );
   };
 
 // =========================================================================
-  // 4. FARMER PORTAL (POSTS VISIBLE TO WHOLESALE, RETAIL & CUSTOMERS)
+  // 4. FARMER PORTAL
   // =========================================================================
   if (currentUser.role === 'farmer') {
     return (
@@ -2679,8 +2946,7 @@ const handlePayAndPlaceOrderTrigger = () => {
 
         {activeTab === 'home' && (
           <main className="p-4 space-y-4 text-xs">
-            {/* LIVE CUSTOMER ORDER ALERTS FOR FARMER */}
-            {renderBroadcastOrderAlerts()}
+            {renderBroadcastOrderAlertsAndPickupTracking()}
 
             <div className="bg-gradient-to-r from-[#DCFCE7] via-[#BBF7D0] to-[#86EFAC] rounded-3xl p-4 shadow-sm flex items-center justify-between">
               <div className="space-y-2 max-w-[58%]">
@@ -2729,66 +2995,14 @@ const handlePayAndPlaceOrderTrigger = () => {
               </button>
               <h2 className="text-base font-extrabold text-slate-900">List Your Produce</h2>
             </div>
-
-            <form onSubmit={(e) => handlePublishRoleProduct(e, 'farmer')} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-3">
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-[10px] font-bold text-slate-400">Product Name (English)</label>
-                  <input type="text" required value={fNameEn} onChange={(e) => handleFarmerEnChange(e.target.value)} placeholder="e.g., Tomato" className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-bold" />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-slate-400">పేరు తెలుగులో (Auto)</label>
-                  <input type="text" required value={fNameTe} onChange={(e) => handleFarmerTeChange(e.target.value)} placeholder="ఉదా: టమాటా" className="w-full bg-emerald-50/70 border border-emerald-200 rounded-xl px-3 py-2.5 font-bold text-[#15803D]" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-[10px] font-bold text-slate-400">Quantity & Unit</label>
-                  <div className="flex space-x-1.5">
-                    <input type="number" required value={fQty} onChange={(e) => setFQty(e.target.value)} className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-bold" />
-                    <select value={fUnit} onChange={(e) => setFUnit(e.target.value)} className="bg-emerald-50 border border-emerald-200 text-[#15803D] rounded-xl px-2.5 py-2.5 font-extrabold">
-                      <option value="Kg">Kg</option>
-                      <option value="Grams">Grams</option>
-                      <option value="Litres">Litres</option>
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-slate-400">Price (₹ / {fUnit})</label>
-                  <input type="number" required value={fPrice} onChange={(e) => setFPrice(e.target.value)} className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-extrabold text-[#15803D]" />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[10px] font-bold text-slate-400">Harvest Availability Slot</label>
-                <select value={fAvailTime} onChange={(e) => setFAvailTime(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-extrabold text-slate-800 mt-1">
-                  {AVAILABILITY_SLOTS.map((slot) => (
-                    <option key={slot} value={slot}>{slot}</option>
-                  ))}
-                </select>
-              </div>
-
-              <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm">
-                Publish to Wholesale, Retail & Customers
-              </button>
-            </form>
+            {renderPostProductForm('farmer', 'Publish to Wholesale, Retail & Customers')}
           </main>
         )}
 
-{activeTab === 'orders' && (
+        {activeTab === 'orders' && (
           <main className="p-4 space-y-3 text-xs">
-            <h2 className="text-base font-extrabold">Orders & Live Alerts</h2>
-            {renderBroadcastOrderAlerts()}
-            {orders.filter((o) => o.acceptedById === currentUser.id).map((ord) => (
-              <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-emerald-200 space-y-1">
-                <div className="flex justify-between font-extrabold">
-                  <span>#{ord.id} • {ord.status}</span>
-                  <span className="text-[#15803D]">₹{ord.total}</span>
-                </div>
-                <p className="text-slate-600">{ord.buyerName} • {ord.items.map((i) => `${i.qty} ${i.unit || 'Kg'} ${i.name}`).join(', ')}</p>
-              </div>
-            ))}
+            <h2 className="text-base font-extrabold">Orders & Pickup Tracking</h2>
+            {renderBroadcastOrderAlertsAndPickupTracking()}
           </main>
         )}
 
@@ -2797,7 +3011,7 @@ const handlePayAndPlaceOrderTrigger = () => {
             <h2 className="text-base font-extrabold">Nellore Mandi Rates</h2>
             {products.map((p) => (
               <div key={p.id} className="bg-white rounded-2xl p-3.5 shadow-sm flex justify-between">
-                <span className="font-extrabold">{p.nameEn} ({p.nameTe})</span>
+                <span className="font-extrabold">{p.nameEn} ({p.quality || 'Grade A'})</span>
                 <span className="font-extrabold text-[#15803D]">₹{p.farmerDirectPrice}/{p.unit || 'Kg'}</span>
               </div>
             ))}
@@ -2846,33 +3060,56 @@ const handlePayAndPlaceOrderTrigger = () => {
   }
 
 // =========================================================================
-  // 5. WHOLESALE & RETAIL STORE PORTALS (HIERARCHY VISIBILITY + ORDER ALERTS)
+  // 5. WHOLESALE & RETAIL STORE PORTALS (BULK ORDER LIVE RIDER TRACKING + DROPDOWNS)
   // =========================================================================
   if (currentUser.role === 'wholesale' || currentUser.role === 'retail') {
     const isRetail = currentUser.role === 'retail';
 
-    // Supply chain visibility:
-    // Wholesale sees Farmer items; Retail sees Farmer + Wholesale items
     const visibleB2BProducts = products.filter((p) => {
       const src = p.postedByRole || 'farmer';
       return isRetail ? src === 'farmer' || src === 'wholesale' : src === 'farmer';
     });
 
+    // Bulk orders placed by this Wholesale or Retail store
+    const myPlacedBulkOrders = orders.filter((o) => o.buyerId === currentUser.id);
+
     const handlePlaceB2BOrder = (prod) => {
       const qty = prod.minWholesaleQty;
-      const unitRate = b2bSource === 'farmer' ? prod.farmerDirectPrice : prod.wholesalePrice;
+      const unitRate = (prod.postedByRole || 'farmer') === 'farmer' ? prod.farmerDirectPrice : prod.wholesalePrice;
       const itemTotal = qty * unitRate;
       const delivCharge = b2bDeliveryMode === 'pickup' ? 0 : Math.round(prod.distanceKm * 5 + qty * 0.5);
       const otp = String(Math.floor(1000 + Math.random() * 9000));
+      const itemsArr = [
+        {
+          id: prod.id,
+          name: prod.nameEn,
+          quality: prod.quality || 'Grade A',
+          unit: prod.unit || 'Kg',
+          qty,
+          price: unitRate,
+          sellerName: prod.farmerName,
+          sellerLat: prod.sellerLat || 14.4450,
+          sellerLng: prod.sellerLng || 79.9850,
+          postedByRole: prod.postedByRole || 'farmer',
+        },
+      ];
+      const pickupStops = buildPickupStopsFromItems(itemsArr);
 
       const newOrd = {
         id: (isRetail ? 'RIT-' : 'WS-') + Math.floor(1000 + Math.random() * 8999),
+        buyerId: currentUser.id,
         buyerRole: currentUser.role,
         buyerName: currentUser.name,
         buyerMobile: currentUser.mobile,
         buyerEmail: currentUser.email,
         buyerAddress: currentUser.address,
-        items: [{ id: prod.id, name: prod.nameEn, unit: prod.unit || 'Kg', qty, price: unitRate }],
+        buyerLat: currentUser.lat || mapPinCoords.lat,
+        buyerLng: currentUser.lng || mapPinCoords.lng,
+        items: itemsArr,
+        pickupStops,
+        riderBaseFee: 30,
+        riderMultiStopBonus: 0,
+        totalRiderPayout: 30,
         total: itemTotal + delivCharge,
         deliveryMode: b2bDeliveryMode === 'pickup' ? 'Pickup at Store / Farm (₹0 Fee)' : `Home Delivery (${prod.distanceKm} km • ₹${delivCharge})`,
         status: 'Order Placed',
@@ -2890,7 +3127,7 @@ const handlePayAndPlaceOrderTrigger = () => {
 
       setOrders((prev) => [newOrd, ...prev]);
       setDoc(doc(db, 'orders', newOrd.id), newOrd).catch(() => {});
-      notify(`B2B Order Placed! Delivery OTP: ${otp}`);
+      notify(`Bulk Order Placed! Live Delivery Tracking unlocks once picked up. OTP: ${otp}`);
       setActiveTab('orders');
     };
 
@@ -2914,8 +3151,7 @@ const handlePayAndPlaceOrderTrigger = () => {
 
         {activeTab === 'home' && (
           <main className="p-4 space-y-4 text-xs">
-            {/* LIVE CUSTOMER ORDER ALERTS FOR WHOLESALE & RETAIL SHOPS */}
-            {renderBroadcastOrderAlerts()}
+            {renderBroadcastOrderAlertsAndPickupTracking()}
 
             <div className="bg-gradient-to-r from-[#0F5132] to-[#16A34A] text-white rounded-3xl p-4 shadow-md flex items-center justify-between">
               <div>
@@ -2925,17 +3161,6 @@ const handlePayAndPlaceOrderTrigger = () => {
                 </h2>
               </div>
               <TrendingUp className="h-10 w-10 text-[#FDE047] opacity-90" />
-            </div>
-
-            <div className="grid grid-cols-2 gap-2.5">
-              <div className="bg-[#EFF6FF] border border-[#BFDBFE] rounded-2xl p-3">
-                <p className="text-[10px] font-bold text-slate-500">Orders</p>
-                <p className="text-base font-extrabold text-[#1D4ED8] mt-0.5">({orders.length})</p>
-              </div>
-              <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-2xl p-3">
-                <p className="text-[10px] font-bold text-slate-500">Products</p>
-                <p className="text-base font-extrabold text-[#B45309] mt-0.5">({visibleB2BProducts.length})</p>
-              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
@@ -2949,7 +3174,6 @@ const handlePayAndPlaceOrderTrigger = () => {
           </main>
         )}
 
- {/* POST PRODUCT FOR RETAILERS & CUSTOMERS */}
         {activeTab === 'sellStock' && (
           <main className="p-4 space-y-3 text-xs">
             <div className="flex items-center space-x-2">
@@ -2957,34 +3181,14 @@ const handlePayAndPlaceOrderTrigger = () => {
                 <ArrowLeft className="h-4 w-4" />
               </button>
               <h2 className="text-base font-extrabold">
-                {isRetail ? 'Post Product for Customers' : 'Post Wholesale Stock (For Retailers & Customers)'}
+                {isRetail ? 'Post Product for Customers' : 'Post Wholesale Stock'}
               </h2>
             </div>
-
-            <form onSubmit={(e) => handlePublishRoleProduct(e, currentUser.role)} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-3">
-              <div className="grid grid-cols-2 gap-2">
-                <input type="text" required value={fNameEn} onChange={(e) => handleFarmerEnChange(e.target.value)} placeholder="Product Name (English)" className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-bold" />
-                <input type="text" required value={fNameTe} onChange={(e) => handleFarmerTeChange(e.target.value)} placeholder="పేరు తెలుగులో" className="w-full bg-emerald-50 border rounded-xl px-3 py-2.5 font-bold text-[#15803D]" />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="flex space-x-1.5">
-                  <input type="number" required value={fQty} onChange={(e) => setFQty(e.target.value)} className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-bold" />
-                  <select value={fUnit} onChange={(e) => setFUnit(e.target.value)} className="bg-emerald-50 border text-[#15803D] rounded-xl px-2.5 font-extrabold">
-                    <option value="Kg">Kg</option>
-                    <option value="Grams">Grams</option>
-                    <option value="Litres">Litres</option>
-                  </select>
-                </div>
-                <input type="number" required value={fPrice} onChange={(e) => setFPrice(e.target.value)} placeholder={`Price ₹ / ${fUnit}`} className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-extrabold text-[#15803D]" />
-              </div>
-              <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md">
-                Publish Product Now
-              </button>
-            </form>
+            {renderPostProductForm(currentUser.role, 'Publish Product Now')}
           </main>
         )}
 
-        {activeTab === 'browse' && (
+{activeTab === 'browse' && (
           <main className="p-4 space-y-3 text-xs">
             <div className="flex items-center space-x-2">
               <button onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white shadow-sm">
@@ -3014,7 +3218,7 @@ const handlePayAndPlaceOrderTrigger = () => {
                     <img src={p.img} alt={p.nameEn} className="h-14 w-14 rounded-xl object-cover" />
                     <div>
                       <span className="text-[9px] font-extrabold uppercase bg-emerald-50 text-[#15803D] px-2 py-0.5 rounded">
-                        From {(p.postedByRole || 'farmer').toUpperCase()}
+                        From {(p.postedByRole || 'farmer').toUpperCase()} • {p.quality || 'Grade A'}
                       </span>
                       <h4 className="font-extrabold text-sm text-slate-900 mt-0.5">{p.nameEn} ({p.nameTe})</h4>
                       <p className="text-[11px] font-extrabold text-[#15803D]">
@@ -3023,7 +3227,7 @@ const handlePayAndPlaceOrderTrigger = () => {
                     </div>
                   </div>
                   <button onClick={() => handlePlaceB2BOrder(p)} className="w-full bg-[#15803D] text-white font-extrabold py-2.5 rounded-xl">
-                    Place Order ({p.minWholesaleQty} {p.unit || 'Kg'} • ₹{rate * p.minWholesaleQty + estDeliv})
+                    Place Bulk Order ({p.minWholesaleQty} {p.unit || 'Kg'} • ₹{rate * p.minWholesaleQty + estDeliv})
                   </button>
                 </div>
               );
@@ -3031,32 +3235,64 @@ const handlePayAndPlaceOrderTrigger = () => {
           </main>
         )}
 
-{activeTab === 'orders' && (
+        {activeTab === 'orders' && (
           <main className="p-4 space-y-3 text-xs">
-            <h2 className="text-base font-extrabold">Orders & Customer Alerts</h2>
-            {renderBroadcastOrderAlerts()}
-            {orders.map((ord) => (
-              <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
-                <div className="flex justify-between font-extrabold">
-                  <span>#{ord.id} • {ord.status}</span>
-                  <span className="text-[#15803D]">₹{ord.total}</span>
-                </div>
-                <p className="text-slate-600">{ord.items.map((i) => `${i.qty} ${i.unit || 'Kg'} ${i.name}`).join(', ')}</p>
-                {ord.b2bOtp && (
-                  <div className="bg-amber-50 border border-amber-200 p-2 rounded-xl font-extrabold text-amber-950">
-                    Delivery Verification OTP: {ord.b2bOtp}
+            <h2 className="text-base font-extrabold">Orders & Live Tracking</h2>
+            {renderBroadcastOrderAlertsAndPickupTracking()}
+
+            {/* Live Delivery Partner Tracking for Bulk Orders Placed by this Store */}
+            {myPlacedBulkOrders.map((ord) => {
+              const isPickedUp = ord.status === 'Out for Delivery' || ord.status === 'Delivered';
+              const rLat = ord.driverLat || 14.4390;
+              const rLng = ord.driverLng || 79.9810;
+              return (
+                <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-200 space-y-2">
+                  <div className="flex justify-between font-extrabold">
+                    <span>My Bulk Order #{ord.id} • {ord.status}</span>
+                    <span className="text-[#15803D]">₹{ord.total}</span>
                   </div>
-                )}
-                <button onClick={() => window.print()} className="w-full bg-slate-900 text-white font-extrabold py-2.5 rounded-xl flex items-center justify-center space-x-1.5">
-                  <Printer className="h-3.5 w-3.5" />
-                  <span>Print / Save PDF Invoice</span>
-                </button>
-              </div>
-            ))}
+                  <p className="text-slate-600">{ord.items.map((i) => `${i.qty} ${i.unit || 'Kg'} ${i.name}`).join(', ')}</p>
+                  {ord.b2bOtp && (
+                    <div className="bg-amber-50 border border-amber-200 p-2 rounded-xl font-extrabold text-amber-950">
+                      Delivery Verification OTP: {ord.b2bOtp}
+                    </div>
+                  )}
+
+                  {/* Stage 2: Once Rider Picks Up Order, Show Live Delivery Partner Tracking Map to Buyer */}
+                  {isPickedUp ? (
+                    <div className="space-y-1.5 pt-1">
+                      <p className="text-[11px] font-extrabold text-[#15803D]">
+                        ● Rider {ord.driverName} Picked Up Order — Live Delivery GPS: {rLat}, {rLng}
+                      </p>
+                      <div className="h-36 w-full rounded-xl overflow-hidden border border-emerald-300">
+                        <iframe
+                          title={`Bulk Drop Map ${ord.id}`}
+                          width="100%"
+                          height="144"
+                          style={{ border: 0 }}
+                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${rLng - 0.008}%2C${rLat - 0.008}%2C${rLng + 0.008}%2C${rLat + 0.008}&layer=mapnik&marker=${rLat}%2C${rLng}`}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-[10px] font-bold text-slate-500">
+                      {ord.acceptedByName
+                        ? `Accepted by ${ord.acceptedByName}. Rider tracking starts once picked up.`
+                        : 'Waiting for seller acceptance...'}
+                    </p>
+                  )}
+
+                  <button onClick={() => window.print()} className="w-full bg-slate-900 text-white font-extrabold py-2.5 rounded-xl flex items-center justify-center space-x-1.5">
+                    <Printer className="h-3.5 w-3.5" />
+                    <span>Print / Save PDF Invoice</span>
+                  </button>
+                </div>
+              );
+            })}
           </main>
         )}
 
-        {activeTab === 'profile' && renderSharedProfileTab()}
+{activeTab === 'profile' && renderSharedProfileTab()}
 
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-6 py-2.5 flex justify-between items-center z-40">
           {[
@@ -3080,14 +3316,42 @@ const handlePayAndPlaceOrderTrigger = () => {
   }
 
   // =========================================================================
-  // 6. DELIVERY PARTNER PORTAL (LIVE MULTI-DEVICE GPS + AUTO EMAIL INVOICE)
+  // 6. DELIVERY PARTNER PORTAL (ACCESS BOTH SELLER PICKUP & BUYER DROP LOCATIONS)
   // =========================================================================
   if (currentUser.role === 'delivery') {
     const availOrders = orders.filter((o) => o.status !== 'Delivered');
     const delivOrders = orders.filter((o) => o.status === 'Delivered');
     const weeklyCompleted = currentUser.weeklyOrders || 0;
 
+    // Mark pickup complete -> switches order status to 'Out for Delivery' so buyer sees live tracking!
+    const handleMarkOrderPickedUp = (ord, stopIdx) => {
+      const stops = [...(ord.pickupStops || [])];
+      if (stops[stopIdx]) {
+        stops[stopIdx] = { ...stops[stopIdx], pickedUp: true };
+      }
+      const allPicked = stops.every((s) => s.pickedUp);
+      const nextStatus = allPicked ? 'Out for Delivery' : 'Partner Assigned';
+
+      setOrders((prev) =>
+        prev.map((o) => (o.id === ord.id ? { ...o, pickupStops: stops, status: nextStatus } : o))
+      );
+      updateDoc(doc(db, 'orders', ord.id), {
+        pickupStops: stops,
+        status: nextStatus,
+      }).catch(() => {});
+      notify(
+        allPicked
+          ? 'All items Picked Up! Live delivery tracking now active for Buyer.'
+          : `Stop ${stopIdx + 1} Picked Up!`
+      );
+    };
+
     const handleCompleteDelivery = (ord) => {
+      const stopsCount = (ord.pickupStops || []).length || 1;
+      const baseFee = ord.riderBaseFee || 30;
+      const multiBonus = ord.riderMultiStopBonus ?? Math.max(0, stopsCount - 1) * 15;
+      const totalEarned = baseFee + multiBonus;
+
       setProducts((prev) =>
         prev.map((p) => {
           const orderedItem = ord.items.find((it) => it.id === p.id);
@@ -3097,9 +3361,13 @@ const handlePayAndPlaceOrderTrigger = () => {
       );
       setOrders((prev) => prev.map((o) => (o.id === ord.id ? { ...o, status: 'Delivered' } : o)));
       updateDoc(doc(db, 'orders', ord.id), { status: 'Delivered' }).catch(() => {});
-      setCurrentUser({ ...currentUser, wallet: (currentUser.wallet || 0) + 40, weeklyOrders: weeklyCompleted + 1 });
+      setCurrentUser({
+        ...currentUser,
+        wallet: (currentUser.wallet || 0) + totalEarned,
+        weeklyOrders: weeklyCompleted + 1,
+      });
       sendAutomaticInvoiceEmail(ord);
-      notify('Delivery Completed! Invoice PDF sent to Customer Email & ₹40 credited.');
+      notify(`Delivered! ₹${baseFee} Base + ₹${multiBonus} Multi-Stop Bonus (Total ₹${totalEarned}) credited!`);
     };
 
     return (
@@ -3120,81 +3388,180 @@ const handlePayAndPlaceOrderTrigger = () => {
               <div>
                 <p className="text-emerald-100 font-bold">Today's Earnings</p>
                 <h2 className="text-2xl font-extrabold mt-0.5">₹{currentUser.wallet || 0}</h2>
+                <p className="text-[10px] text-amber-200 font-bold mt-0.5">₹30 Base + ₹15 Extra Pickup Stop Bonus</p>
               </div>
               <TrendingUp className="h-10 w-10 text-[#FDE047]" />
             </div>
 
-            {availOrders.length === 0 ? (
-              <div className="bg-white rounded-2xl p-6 text-center text-slate-400 font-bold">No active orders yet.</div>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <button onClick={() => setDelivFilter('available')} className={`p-2.5 rounded-2xl border ${delivFilter === 'available' ? 'bg-emerald-50 border-[#15803D]' : 'bg-white'}`}>
+                <p className="text-[10px] text-slate-500 font-bold">Active</p>
+                <p className="text-base font-extrabold text-[#EA580C]">{availOrders.length}</p>
+              </button>
+              <button onClick={() => setDelivFilter('delivered')} className={`p-2.5 rounded-2xl border ${delivFilter === 'delivered' ? 'bg-emerald-50 border-[#15803D]' : 'bg-white'}`}>
+                <p className="text-[10px] text-slate-500 font-bold">Completed</p>
+                <p className="text-base font-extrabold text-[#15803D]">{delivOrders.length}</p>
+              </button>
+              <div className="p-2.5 rounded-2xl border bg-white">
+                <p className="text-[10px] text-slate-500 font-bold">Weekly</p>
+                <p className="text-base font-extrabold text-sky-600">{weeklyCompleted}/100</p>
+              </div>
+            </div>
+
+            {(delivFilter === 'available' ? availOrders : delivOrders).length === 0 ? (
+              <div className="bg-white rounded-2xl p-6 text-center text-slate-400 font-bold">No orders in this list.</div>
             ) : (
-              availOrders.map((ord) => (
-                <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2.5">
-                  <div className="flex justify-between font-extrabold">
-                    <span>#{ord.id} ({ord.buyerRole.toUpperCase()})</span>
-                    <span className="text-[#15803D]">₹{ord.total}</span>
-                  </div>
-                  <p className="font-bold text-slate-700">{ord.buyerName} • +91 {ord.buyerMobile}</p>
-                  <p className="text-slate-500 flex items-center space-x-1">
-                    <MapPin className="h-3.5 w-3.5 text-[#EA580C]" />
-                    <span>{ord.buyerAddress}</span>
-                  </p>
-                  {ord.status === 'Partner Assigned' && (
-                    <p className="text-[10px] font-extrabold text-[#15803D] bg-emerald-50 px-2.5 py-1 rounded-lg">
-                      ● Broadcasting Live GPS ({ord.driverCoords}) to Customer
-                    </p>
-                  )}
-                  <div className="flex space-x-2">
-                    <a
-                      href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(ord.buyerAddress)}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex-1 bg-sky-600 text-white font-extrabold py-2.5 rounded-xl text-center flex items-center justify-center space-x-1"
-                    >
-                      <Navigation className="h-3.5 w-3.5" />
-                      <span>Navigate</span>
-                    </a>
-                    <button
-                      onClick={() => {
-                        if (ord.status !== 'Partner Assigned') {
-                          const initLat = mapPinCoords.lat;
-                          const initLng = mapPinCoords.lng;
-                          setOrders((prev) =>
-                            prev.map((o) =>
-                              o.id === ord.id
-                                ? { ...o, status: 'Partner Assigned', driverName: currentUser.name, driverMobile: currentUser.mobile, driverLat: initLat, driverLng: initLng, driverCoords: `${initLat}, ${initLng}` }
-                                : o
-                            )
-                          );
-                          updateDoc(doc(db, 'orders', ord.id), {
-                            status: 'Partner Assigned',
-                            driverName: currentUser.name,
-                            driverMobile: currentUser.mobile,
-                            driverLat: initLat,
-                            driverLng: initLng,
-                            driverCoords: `${initLat}, ${initLng}`,
-                          }).catch(() => {});
-                          notify('Accepted! Live GPS broadcasting to Customer.');
-                        } else {
-                          if (ord.b2bOtp) {
-                            const entered = window.prompt(`Enter ${ord.buyerRole.toUpperCase()} Delivery OTP (${ord.b2bOtp}):`);
-                            if (entered !== ord.b2bOtp) {
-                              notify('Invalid B2B OTP!');
-                              return;
+              (delivFilter === 'available' ? availOrders : delivOrders).map((ord) => {
+                const stops = ord.pickupStops || buildPickupStopsFromItems(ord.items || []);
+                const baseFee = ord.riderBaseFee || 30;
+                const multiBonus = ord.riderMultiStopBonus ?? Math.max(0, stops.length - 1) * 15;
+                const riderPayout = baseFee + multiBonus;
+                const isAssignedToMe = ord.status === 'Partner Assigned' || ord.status === 'Out for Delivery';
+                const firstStop = stops[0] || {};
+                const pickupMapQuery = firstStop.sellerLat && firstStop.sellerLng
+                  ? `${firstStop.sellerLat},${firstStop.sellerLng}`
+                  : encodeURIComponent(firstStop.sellerName || ord.acceptedByAddress || 'Nellore');
+                const dropMapQuery = ord.buyerLat && ord.buyerLng
+                  ? `${ord.buyerLat},${ord.buyerLng}`
+                  : encodeURIComponent(ord.buyerAddress);
+
+return (
+                  <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2.5">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="font-extrabold text-slate-900">#{ord.id} ({ord.buyerRole.toUpperCase()})</span>
+                        <p className="text-[10px] font-bold text-slate-500">{ord.buyerName} • +91 {ord.buyerMobile}</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="bg-emerald-100 text-[#15803D] font-extrabold px-2.5 py-1 rounded-full text-[11px]">
+                          Earn ₹{riderPayout}
+                        </span>
+                        {multiBonus > 0 && (
+                          <p className="text-[9px] font-extrabold text-[#EA580C] mt-0.5">
+                            +₹{multiBonus} Multi-Stop Bonus
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* BOTH SELLER/FARMER PICKUP LOCATION & CUSTOMER DROP LOCATION ACCESSIBLE */}
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-2">
+                      <p className="text-[10px] font-extrabold text-slate-700 uppercase">
+                        1. Farmer / Shop Pickup Location ({stops.length} {stops.length > 1 ? 'Stops' : 'Stop'}):
+                      </p>
+                      {stops.map((st, idx) => {
+                        const stMap = st.sellerLat && st.sellerLng
+                          ? `${st.sellerLat},${st.sellerLng}`
+                          : encodeURIComponent(st.sellerName);
+                        return (
+                          <div key={st.stopId} className="bg-white rounded-lg p-2 border border-slate-100 flex items-center justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <p className="font-extrabold text-[11px] text-slate-900 truncate">
+                                Pickup {idx + 1}: {st.sellerName}
+                              </p>
+                              <p className="text-[10px] text-slate-500 truncate">{st.itemsSummary.join(', ')}</p>
+                            </div>
+                            <div className="flex items-center space-x-1.5 flex-shrink-0">
+                              <a
+                                href={`https://www.google.com/maps/dir/?api=1&destination=${stMap}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="bg-sky-600 text-white px-2.5 py-1 rounded-lg font-extrabold text-[10px] flex items-center space-x-1"
+                              >
+                                <Navigation className="h-3 w-3" />
+                                <span>Pickup Map</span>
+                              </a>
+                              {isAssignedToMe && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleMarkOrderPickedUp(ord, idx)}
+                                  className={`px-2 py-1 rounded-lg font-extrabold text-[10px] ${
+                                    st.pickedUp ? 'bg-[#15803D] text-white' : 'bg-amber-200 text-amber-950'
+                                  }`}
+                                >
+                                  {st.pickedUp ? '✓ Picked' : 'Mark Picked'}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      <p className="text-[10px] font-extrabold text-[#0F5132] uppercase pt-1">
+                        2. Customer / Buyer Drop Location:
+                      </p>
+                      <div className="bg-emerald-50/80 rounded-lg p-2 border border-emerald-200 flex items-center justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-extrabold text-[11px] text-[#0F5132]">{ord.buyerName}</p>
+                          <p className="text-[10px] text-slate-600 truncate">{ord.buyerAddress}</p>
+                        </div>
+                        <a
+                          href={`https://www.google.com/maps/dir/?api=1&destination=${dropMapQuery}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="bg-[#15803D] text-white px-2.5 py-1.5 rounded-lg font-extrabold text-[10px] flex items-center space-x-1 flex-shrink-0"
+                        >
+                          <Navigation className="h-3 w-3" />
+                          <span>Customer Map</span>
+                        </a>
+                      </div>
+                    </div>
+
+                    {isAssignedToMe && (
+                      <p className="text-[10px] font-extrabold text-[#15803D] bg-emerald-50 px-2.5 py-1 rounded-lg">
+                        ● Live GPS Active ({ord.driverCoords}) • {ord.status === 'Out for Delivery' ? 'Tracking visible to Customer' : 'Tracking visible to Seller'}
+                      </p>
+                    )}
+
+                    {ord.status !== 'Delivered' && (
+                      <button
+                        onClick={() => {
+                          if (!isAssignedToMe) {
+                            const initLat = mapPinCoords.lat;
+                            const initLng = mapPinCoords.lng;
+                            setOrders((prev) =>
+                              prev.map((o) =>
+                                o.id === ord.id
+                                  ? { ...o, status: 'Partner Assigned', driverName: currentUser.name, driverMobile: currentUser.mobile, driverLat: initLat, driverLng: initLng, driverCoords: `${initLat}, ${initLng}` }
+                                  : o
+                              )
+                            );
+                            updateDoc(doc(db, 'orders', ord.id), {
+                              status: 'Partner Assigned',
+                              driverName: currentUser.name,
+                              driverMobile: currentUser.mobile,
+                              driverLat: initLat,
+                              driverLng: initLng,
+                              driverCoords: `${initLat}, ${initLng}`,
+                            }).catch(() => {});
+                            notify('Accepted! Pickup tracking shared with Seller.');
+                          } else {
+                            if (ord.b2bOtp) {
+                              const entered = window.prompt(`Enter ${ord.buyerRole.toUpperCase()} Delivery OTP (${ord.b2bOtp}):`);
+                              if (entered !== ord.b2bOtp) {
+                                notify('Invalid B2B OTP!');
+                                return;
+                              }
                             }
+                            handleCompleteDelivery(ord);
                           }
-                          handleCompleteDelivery(ord);
-                        }
-                      }}
-                      className="flex-1 bg-[#15803D] text-white font-extrabold py-2.5 rounded-xl"
-                    >
-                      {ord.status !== 'Partner Assigned' ? 'Accept Order' : ord.b2bOtp ? 'Verify B2B OTP' : 'Reached Customer'}
-                    </button>
+                        }}
+                        className="w-full bg-[#15803D] text-white font-extrabold py-2.5 rounded-xl"
+                      >
+                        {!isAssignedToMe
+                          ? `Accept Route (Earn ₹${riderPayout})`
+                          : ord.b2bOtp
+                          ? 'Verify B2B OTP & Complete'
+                          : `Complete Delivery (Collect ₹${riderPayout})`}
+                      </button>
+                    )}
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </main>
         )}
+
 {activeTab === 'profile' && renderSharedProfileTab()}
 
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-12 py-2.5 flex justify-between items-center z-40">
