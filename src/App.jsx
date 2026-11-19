@@ -639,16 +639,24 @@ const getPendingStopsForSeller = useCallback(
       () => {}
     );
 
-    const unsubCategories = onSnapshot(
+        const unsubCategories = onSnapshot(
       collection(db, 'categories'),
       (snapshot) => {
         if (!snapshot.empty) {
           const liveCategories = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-          setCategoriesList(liveCategories);
+          setCategoriesList((prev) => {
+            const liveMap = new Map(liveCategories.map((c) => [c.id, c]));
+            const merged = prev.map((c) => liveMap.get(c.id) || c);
+            liveCategories.forEach((lc) => {
+              if (!merged.some((m) => m.id === lc.id)) merged.unshift(lc);
+            });
+            return merged;
+          });
         }
       },
       () => {}
     );
+
 
     const unsubCoupons = onSnapshot(
       collection(db, 'coupons'),
