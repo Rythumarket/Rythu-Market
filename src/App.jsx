@@ -6,7 +6,7 @@ import {
   LocateFixed, LogOut, Printer, Warehouse, ChevronDown,
   Briefcase, Leaf, Shield, Zap, Grid, Check, Tag, Edit3,
   TrendingUp, Package, HelpCircle, Navigation, Camera, Landmark, Volume2, VolumeX, Trash2, Image,
-  Heart, Star, Clock, UserPlus
+  Heart, UserPlus
 } from 'lucide-react';
 import { db } from './firebase';
 import { collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
@@ -297,7 +297,7 @@ export default function App() {
     }
   });
 
-  // PERSISTENT SESSION: Auto-restore logged-in user & role across app restarts until explicit Logout
+// PERSISTENT SESSION: Auto-restore logged-in user & role across app restarts until explicit Logout
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const saved = localStorage.getItem('rythu_active_session_user');
@@ -336,7 +336,7 @@ export default function App() {
     }
   });
 
-// Sub-Admins List (Managed by Master Admin, synced via Firestore)
+  // Sub-Admins List (Managed by Master Admin, synced via Firestore)
   const [subAdmins, setSubAdmins] = useState(() => {
     try {
       const saved = localStorage.getItem('rythu_sub_admins');
@@ -394,7 +394,7 @@ export default function App() {
     }
   });
 
-  const [masterCatalog, setMasterCatalog] = useState(() => {
+const [masterCatalog, setMasterCatalog] = useState(() => {
     try {
       const saved = localStorage.getItem('rythu_master_catalog');
       return saved ? JSON.parse(saved) : DEFAULT_MASTER_CATALOG;
@@ -485,7 +485,7 @@ export default function App() {
   const [regOtpInput, setRegOtpInput] = useState('');
   const [showWelcomeSmile, setShowWelcomeSmile] = useState(false);
 
-  // Profile Edit & Extra Section Drawer
+// Profile Edit & Extra Section Drawer
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileSubView, setProfileSubView] = useState(null);
   const [wishlistIds, setWishlistIds] = useState(['p1', 'p3']);
@@ -533,9 +533,19 @@ export default function App() {
   // B2B States
   const [b2bDeliveryMode, setB2bDeliveryMode] = useState('pickup');
 
-// Scratch Card & Notifications
+  // Scratch Card & Orders
   const [scratchCard, setScratchCard] = useState(null);
   const [orders, setOrders] = useState([]);
+
+  // Broadcast Offer Notifications (Admin -> All Registered Users)
+  const [broadcastOffers, setBroadcastOffers] = useState([]);
+  const [promoMsgText, setPromoMsgText] = useState('');
+  const [promoOfferTag, setPromoOfferTag] = useState('SPECIAL OFFER');
+
+  // Admin Wallet Credit + WhatsApp Alert States
+  const [walletUserId, setWalletUserId] = useState('');
+  const [walletCreditAmt, setWalletCreditAmt] = useState('50');
+  const [walletReason, setWalletReason] = useState('Festive Cashback Gift from Rythu Basket');
 
   // Seller Post Product States
   const [sellerCatalogFilter, setSellerCatalogFilter] = useState('All');
@@ -582,7 +592,7 @@ export default function App() {
   const [subEmail, setSubEmail] = useState('');
   const [subPermissions, setSubPermissions] = useState('Catalogue, Categories, Coupons & Approvals');
 
-  // Delivery & Admin States
+// Delivery & Admin States
   const [delivFilter, setDelivFilter] = useState('available');
   const [scratchMin] = useState(4);
   const [scratchMax] = useState(25);
@@ -624,7 +634,7 @@ export default function App() {
       } catch {}
     };
 
-playSingleChime();
+    playSingleChime();
     let elapsed = 0;
     ringTimerRef.current = setInterval(() => {
       elapsed += 1;
@@ -674,7 +684,7 @@ playSingleChime();
     setTimeout(() => setToast(''), 3500);
   };
 
-  // Hardware Back Button Handler (Does NOT log user out on accidental back press)
+  // Hardware Back Button Handler
   const handleHardwareBack = useCallback(() => {
     if (sharedInvoiceData) {
       window.history.replaceState({}, '', '/');
@@ -742,7 +752,7 @@ playSingleChime();
     }
   };
 
-// Real-Time Cloud Firestore Sync
+  // Real-Time Cloud Firestore Sync
   useEffect(() => {
     const unsubOrders = onSnapshot(
       collection(db, 'orders'),
@@ -769,7 +779,7 @@ playSingleChime();
       () => {}
     );
 
-    const unsubCatalog = onSnapshot(
+const unsubCatalog = onSnapshot(
       collection(db, 'masterCatalog'),
       (snapshot) => {
         if (!snapshot.empty) {
@@ -821,7 +831,7 @@ playSingleChime();
       () => {}
     );
 
-const unsubUsers = onSnapshot(
+    const unsubUsers = onSnapshot(
       collection(db, 'users'),
       (snapshot) => {
         if (!snapshot.empty) {
@@ -829,6 +839,11 @@ const unsubUsers = onSnapshot(
           setUsers((prev) => {
             const ids = new Set(liveUsers.map((u) => u.id));
             return [...liveUsers, ...prev.filter((u) => !ids.has(u.id))];
+          });
+          setCurrentUser((prev) => {
+            if (!prev) return null;
+            const updatedMe = liveUsers.find((u) => u.id === prev.id);
+            return updatedMe ? { ...prev, ...updatedMe } : prev;
           });
         }
       },
@@ -844,7 +859,17 @@ const unsubUsers = onSnapshot(
       () => {}
     );
 
-    return () => {
+    const unsubBroadcasts = onSnapshot(
+      collection(db, 'broadcastOffers'),
+      (snapshot) => {
+        const list = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+        list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        setBroadcastOffers(list);
+      },
+      () => {}
+    );
+
+return () => {
       unsubOrders();
       unsubProducts();
       unsubCatalog();
@@ -852,6 +877,7 @@ const unsubUsers = onSnapshot(
       unsubCoupons();
       unsubUsers();
       unsubSubAdmins();
+      unsubBroadcasts();
     };
   }, []);
 
@@ -908,7 +934,7 @@ const unsubUsers = onSnapshot(
         throw new Error(errText || 'Failed to send email');
       }
 
-setGeneratedEmailOtp(code);
+      setGeneratedEmailOtp(code);
       setEmailOtpExpiry(Date.now() + 5 * 60 * 1000);
       notify(`6-Digit OTP sent to ${targetEmail}! Check your Inbox/Spam.`);
       return true;
@@ -944,7 +970,7 @@ setGeneratedEmailOtp(code);
       )
       .join('');
 
-    const invoiceHtml = `
+const invoiceHtml = `
       <div style="border:1px solid #cbd5e1;padding:16px;border-radius:10px;background:#ffffff;font-family:Arial,sans-serif;font-size:12px;color:#1e293b;">
         <div style="text-align:center;margin-bottom:12px;">
           <img src="https://rythu-market.vercel.app/icon-512.png" width="56" height="56" style="border-radius:50%;border:2px solid #EAB308;" />
@@ -991,7 +1017,7 @@ setGeneratedEmailOtp(code);
       </div>
     `;
 
-const invoicePayload = encodeURIComponent(
+    const invoicePayload = encodeURIComponent(
       JSON.stringify({
         id: ord.id,
         date: invoiceDate,
@@ -1062,7 +1088,7 @@ const invoicePayload = encodeURIComponent(
       return;
     }
 
-    setAuthMsg('');
+setAuthMsg('');
     setCurrentUser(existing);
     setActiveTab('home');
     window.history.pushState({ rythuNav: true }, '');
@@ -1102,7 +1128,7 @@ const invoicePayload = encodeURIComponent(
       return;
     }
 
-const already = users.find(
+    const already = users.find(
       (u) =>
         u.role === selectedRole &&
         (u.mobile === cleanMobile || (u.email || '').toLowerCase() === cleanEmail)
@@ -1172,7 +1198,7 @@ const already = users.find(
       referredBy: regReferralCode.trim() || null,
     };
 
-    setUsers([newUser, ...users]);
+setUsers([newUser, ...users]);
     setDoc(doc(db, 'users', newUser.id), newUser).catch(() => {});
 
     setGeneratedEmailOtp('');
@@ -1197,7 +1223,7 @@ const already = users.find(
     setActiveTab('home');
   };
 
-const handleProfilePhotoPick = async (e) => {
+  const handleProfilePhotoPick = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
@@ -1260,14 +1286,14 @@ const handleProfilePhotoPick = async (e) => {
     );
   };
 
-  const handleAdjustPin = async (dLat, dLng) => {
+const handleAdjustPin = async (dLat, dLng) => {
     const lat = Number((mapPinCoords.lat + dLat).toFixed(5));
     const lng = Number((mapPinCoords.lng + dLng).toFixed(5));
     setMapPinCoords({ lat, lng });
     await fetchAddressFromCoords(lat, lng);
   };
 
-const handleConfirmSetLocation = () => {
+  const handleConfirmSetLocation = () => {
     const newId = 'loc_' + Date.now();
     const newEntry = {
       id: newId,
@@ -1346,7 +1372,7 @@ const handleConfirmSetLocation = () => {
     notify(`Published ${newProd.nameEn} (${fCat} • ${fQuality} • ${fQty} ${fUnit})!`);
   };
 
-const renderPostProductForm = (roleSource, submitLabel) => {
+  const renderPostProductForm = (roleSource, submitLabel) => {
     const q = sellerCatalogSearch.trim().toLowerCase();
     const filteredSellerCatalog = masterCatalog.filter((c) => {
       const catOk = sellerCatalogFilter === 'All' || c.cat === sellerCatalogFilter;
@@ -1358,7 +1384,7 @@ const renderPostProductForm = (roleSource, submitLabel) => {
       return catOk && searchOk;
     });
 
-    return (
+return (
       <form onSubmit={(e) => handlePublishRoleProduct(e, roleSource)} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-3">
         <div>
           <div className="flex items-center justify-between mb-1.5">
@@ -1446,7 +1472,7 @@ const renderPostProductForm = (roleSource, submitLabel) => {
           </div>
         </div>
 
- <div className="grid grid-cols-2 gap-2">
+  <div className="grid grid-cols-2 gap-2">
           <div>
             <label className="text-[10px] font-bold text-slate-400">Category</label>
             <select value={fCat} onChange={(e) => setFCat(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-extrabold text-slate-800">
@@ -1535,7 +1561,7 @@ const renderPostProductForm = (roleSource, submitLabel) => {
           </div>
         </div>
 
-  <table className="w-full text-xs border-collapse border border-slate-200">
+<table className="w-full text-xs border-collapse border border-slate-200">
           <thead>
             <tr className="bg-[#15803D] text-white">
               <th className="p-2 text-left">#</th>
@@ -1630,7 +1656,7 @@ const renderPostProductForm = (roleSource, submitLabel) => {
           </div>
         )}
 
-<div className="bg-gradient-to-b from-[#0E5A2B] via-[#15803D] to-[#4ADE80]/30 text-white rounded-b-[36px] px-4 pt-4 pb-6 shadow-lg relative overflow-hidden">
+        <div className="bg-gradient-to-b from-[#0E5A2B] via-[#15803D] to-[#4ADE80]/30 text-white rounded-b-[36px] px-4 pt-4 pb-6 shadow-lg relative overflow-hidden">
           <div className="flex items-center justify-between relative z-10">
             <div className="flex items-center space-x-2.5">
               <div className="h-12 w-12 rounded-full bg-white p-0.5 border-2 border-[#EAB308] shadow overflow-hidden flex-shrink-0">
@@ -1643,7 +1669,7 @@ const renderPostProductForm = (roleSource, submitLabel) => {
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
+   <div className="flex items-center space-x-2">
               <button
                 type="button"
                 onClick={() => setLang(lang === 'te' ? 'en' : 'te')}
@@ -1729,7 +1755,7 @@ const renderPostProductForm = (roleSource, submitLabel) => {
           })}
         </div>
 
-  <div className="px-3.5 pt-3.5">
+        <div className="px-3.5 pt-3.5">
           <div className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white rounded-2xl p-3.5 shadow-md flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="h-11 w-11 rounded-full bg-white/15 border border-white/25 flex items-center justify-center flex-shrink-0">
@@ -1750,7 +1776,7 @@ const renderPostProductForm = (roleSource, submitLabel) => {
           </div>
         </div>
 
-        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0D4A24] text-white px-6 py-2.5 rounded-t-3xl flex justify-center items-center z-40 shadow-2xl">
+<nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0D4A24] text-white px-6 py-2.5 rounded-t-3xl flex justify-center items-center z-40 shadow-2xl">
           <button
             type="button"
             onClick={() => setSelectedRole(null)}
@@ -1811,7 +1837,7 @@ const renderPostProductForm = (roleSource, submitLabel) => {
       </div>
     );
 
-const renderPinGpsWidget = (label) => (
+    const renderPinGpsWidget = (label) => (
       <div className="bg-white border border-emerald-200 rounded-2xl p-3 flex items-center justify-between">
         <div>
           <p className="font-extrabold text-slate-900">{label} *</p>
@@ -1838,7 +1864,7 @@ const renderPinGpsWidget = (label) => (
       </div>
     );
 
-    return (
+return (
       <div style={fontStyle} className="min-h-screen bg-[#F4F8F4] max-w-md mx-auto text-slate-800 shadow-2xl pb-12">
         {toast && (
           <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-xl text-center">
@@ -1886,7 +1912,7 @@ const renderPinGpsWidget = (label) => (
                 />
               </div>
 
-{authMsg && (
+              {authMsg && (
                 <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-2xl font-bold flex items-center justify-between">
                   <span>{authMsg}</span>
                   {!authMsg.startsWith('Access Denied') && (
@@ -1943,7 +1969,7 @@ const renderPinGpsWidget = (label) => (
                 <span className="w-8" />
               </div>
 
-              <div className="mx-3 mt-2 bg-gradient-to-r from-[#0E5A2B] to-[#15803D] text-white rounded-2xl px-4 py-3 flex items-center space-x-3 shadow-md">
+            <div className="mx-3 mt-2 bg-gradient-to-r from-[#0E5A2B] to-[#15803D] text-white rounded-2xl px-4 py-3 flex items-center space-x-3 shadow-md">
                 <div className="h-10 w-10 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
                   <RoleHeaderIcon className="h-5 w-5 text-[#FDE047]" />
                 </div>
@@ -1955,7 +1981,6 @@ const renderPinGpsWidget = (label) => (
             </div>
 
             <form onSubmit={handleCompleteRegistration} className="p-4 space-y-2.5 text-xs">
-              {/* 1. CUSTOMER REGISTRATION */}
               {selectedRole === 'customer' && (
                 <>
                   <label className="block border-2 border-dashed border-emerald-300 bg-white rounded-2xl p-3 text-center cursor-pointer">
@@ -2001,7 +2026,6 @@ const renderPinGpsWidget = (label) => (
                 </>
               )}
 
-              {/* 2. FARMER REGISTRATION */}
               {selectedRole === 'farmer' && (
                 <>
                   <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Full Name *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
@@ -2022,7 +2046,6 @@ const renderPinGpsWidget = (label) => (
                 </>
               )}
 
-{/* 3. WHOLESALE BUSINESS REGISTRATION */}
               {selectedRole === 'wholesale' && (
                 <>
                   <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Business Name *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
@@ -2050,8 +2073,7 @@ const renderPinGpsWidget = (label) => (
                 </>
               )}
 
-              {/* 4. RETAIL STORE REGISTRATION */}
-              {selectedRole === 'retail' && (
+{selectedRole === 'retail' && (
                 <>
                   <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Shop Name *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
                   <input type="text" required value={regOwnerName} onChange={(e) => setRegOwnerName(e.target.value)} placeholder="Owner Name *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
@@ -2087,7 +2109,6 @@ const renderPinGpsWidget = (label) => (
                 </>
               )}
 
-              {/* 5. DELIVERY PARTNER REGISTRATION */}
               {selectedRole === 'delivery' && (
                 <>
                   <label className="block border-2 border-dashed border-emerald-400 bg-white rounded-2xl p-3 text-center cursor-pointer">
@@ -2149,8 +2170,7 @@ const renderPinGpsWidget = (label) => (
                 </>
               )}
 
-{/* 6. ADMIN / SUB-ADMIN REGISTRATION */}
-              {selectedRole === 'admin' && (
+   {selectedRole === 'admin' && (
                 <>
                   <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Authorized Admin / Sub-Admin Name *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
                   <input type="tel" maxLength={10} required value={regMobile} onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, ''))} placeholder="Authorized Mobile Number *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
@@ -2227,7 +2247,7 @@ const renderPinGpsWidget = (label) => (
       </div>
     ) : null;
 
-// =========================================================================
+  // =========================================================================
   // COMPREHENSIVE ROLE-SPECIFIC PROFILE & ADDITIONAL OPTIONS RENDERER
   // =========================================================================
   const renderSharedProfileTab = () => {
@@ -2285,7 +2305,7 @@ const renderPinGpsWidget = (label) => (
           ]
         : r === 'retail'
         ? [
-            { label: 'My Shop', action: () => setIsEditingProfile(true) },
+{ label: 'My Shop', action: () => setIsEditingProfile(true) },
             { label: 'Purchase from Farmers', action: () => setActiveTab('browse') },
             { label: 'Purchase from Wholesalers', action: () => setActiveTab('browse') },
             { label: 'My Products', action: () => setActiveTab('sellStock') },
@@ -2317,9 +2337,8 @@ const renderPinGpsWidget = (label) => (
             { label: 'Help & Support', action: () => setProfileSubView('Help & Support') },
           ];
 
-return (
+    return (
       <div className="p-4 space-y-3.5 text-xs">
-        {/* Profile Header Card */}
         <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
           <div className="flex items-center space-x-3.5 min-w-0">
             <label className="relative cursor-pointer flex-shrink-0">
@@ -2354,7 +2373,6 @@ return (
           </button>
         </div>
 
-        {/* Delivery Partner Online / Offline Toggle */}
         {r === 'delivery' && (
           <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
             <div>
@@ -2374,8 +2392,7 @@ return (
           </div>
         )}
 
-        {/* Complete Profile Details / Edit Form */}
-        {isEditingProfile ? (
+{isEditingProfile ? (
           <form onSubmit={handleSaveEditedProfile} className="bg-white rounded-3xl p-4 shadow-sm border border-emerald-200 space-y-2.5">
             <h3 className="font-extrabold text-sm text-[#15803D]">Edit Complete Profile Details</h3>
             <input type="text" required value={currentUser.name} onChange={(e) => setCurrentUser({ ...currentUser, name: e.target.value })} placeholder="Name / Business / Shop Name *" className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
@@ -2449,7 +2466,6 @@ return (
           </div>
         )}
 
-{/* Sub-View Panel when clicking any Additional Option */}
         {profileSubView && (
           <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-3.5 space-y-2">
             <div className="flex items-center justify-between">
@@ -2480,8 +2496,7 @@ return (
           </div>
         )}
 
-        {/* Role-Specific Additional Options List */}
-        <div className="bg-white rounded-3xl p-2 shadow-sm border border-slate-100 divide-y divide-slate-100">
+<div className="bg-white rounded-3xl p-2 shadow-sm border border-slate-100 divide-y divide-slate-100">
           {roleMenuOptions.map((opt) => (
             <button
               key={opt.label}
@@ -2662,7 +2677,7 @@ const finalizeCustomerOrder = () => {
       }, 350);
     };
 
-const handleSimulateCustomerDelivery = (ord) => {
+    const handleSimulateCustomerDelivery = (ord) => {
       const isLucky = Math.random() > 0.2;
       const reward = isLucky ? Math.floor(scratchMin + Math.random() * (scratchMax - scratchMin + 1)) : 0;
       const updatedUser = {
@@ -2679,7 +2694,7 @@ const handleSimulateCustomerDelivery = (ord) => {
       setScratchCard({ orderId: ord.id, reward, scratched: false });
     };
 
-    const renderCustomerProductCard = (p) => {
+const renderCustomerProductCard = (p) => {
       const q = cart[p.id] || 0;
       const isFarmerItem = (p.postedByRole || 'farmer') === 'farmer';
       const isWished = wishlistIds.includes(p.id);
@@ -2750,7 +2765,7 @@ const handleSimulateCustomerDelivery = (ord) => {
       );
     };
 
-if (activeTab === 'selectLocation') {
+    if (activeTab === 'selectLocation') {
       const filteredAddrs = savedAddresses.filter(
         (a) =>
           a.title.toLowerCase().includes(locSearch.toLowerCase()) ||
@@ -2817,7 +2832,7 @@ if (activeTab === 'selectLocation') {
       );
     }
 
-    if (activeTab === 'mapPin') {
+if (activeTab === 'mapPin') {
       return (
         <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto text-slate-800 shadow-2xl pb-10">
           <div className="bg-[#0F5132] px-4 py-4 text-white flex items-center space-x-3 rounded-b-3xl shadow">
@@ -2854,7 +2869,7 @@ if (activeTab === 'selectLocation') {
               </div>
             </div>
 
-   <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+            <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm space-y-3">
               <div className="flex items-start justify-between space-x-2">
                 <div className="flex items-start space-x-2 flex-1">
                   <MapPin className="h-5 w-5 text-[#15803D] flex-shrink-0 mt-0.5" />
@@ -2899,7 +2914,8 @@ if (activeTab === 'selectLocation') {
 
     const liveLat = trackingOrder?.driverLat || mapPinCoords.lat;
     const liveLng = trackingOrder?.driverLng || mapPinCoords.lng;
-    const isOutForCustomerDrop = trackingOrder?.status === 'Out for Delivery' || trackingOrder?.status === 'Delivered';
+    // Map shows ONLY while Out for Delivery (hidden after Delivered)
+    const isOutForCustomerDrop = trackingOrder?.status === 'Out for Delivery';
 
     return (
       <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
@@ -2937,7 +2953,7 @@ if (activeTab === 'selectLocation') {
           </div>
         )}
 
-        {activeTab === 'home' && (
+{activeTab === 'home' && (
           <main className="px-4 pt-3.5 space-y-4 text-xs">
             <div className="flex items-center justify-between">
               <button
@@ -2970,11 +2986,16 @@ if (activeTab === 'selectLocation') {
                 </button>
                 <button onClick={() => setActiveTab('orders')} className="h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center relative">
                   <Bell className="h-4 w-4 text-slate-700" />
+                  {broadcastOffers.length > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-rose-500 text-white text-[8px] font-extrabold flex items-center justify-center">
+                      {broadcastOffers.length}
+                    </span>
+                  )}
                 </button>
               </div>
             </div>
 
-   <div className="bg-white border-2 border-emerald-100 rounded-2xl px-3.5 py-2.5 flex items-center shadow-sm">
+            <div className="bg-white border-2 border-emerald-100 rounded-2xl px-3.5 py-2.5 flex items-center shadow-sm">
               <Search className="h-4 w-4 text-[#15803D] mr-2 flex-shrink-0" />
               <input
                 type="text"
@@ -2987,6 +3008,38 @@ if (activeTab === 'selectLocation') {
                 <button type="button" onClick={() => setSearch('')} className="text-slate-400 font-extrabold ml-1">✕</button>
               )}
             </div>
+
+            {/* HORIZONTAL SUGGESTIONS CAROUSEL WHEN A CATEGORY IS SELECTED ON HOME PAGE */}
+            {selectedCat !== 'All' && (
+              <section className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-extrabold text-[#0F5132]">Suggested in {selectedCat}</h3>
+                  <button type="button" onClick={() => setSelectedCat('All')} className="text-[10px] font-extrabold text-rose-600">
+                    Clear ✕
+                  </button>
+                </div>
+                <div className="flex space-x-2.5 overflow-x-auto pb-1">
+                  {products
+                    .filter((p) => p.cat === selectedCat)
+                    .map((item) => (
+                      <div key={item.id} className="flex-shrink-0 w-32 bg-white rounded-2xl p-2 border border-emerald-100 shadow-sm space-y-1">
+                        <img src={item.img} alt={item.nameEn} className="h-16 w-full rounded-xl object-cover" />
+                        <p className="text-[10px] font-extrabold text-slate-900 truncate">{item.nameEn}</p>
+                        <div className="flex items-center justify-between pt-0.5">
+                          <span className="text-xs font-extrabold text-[#15803D]">₹{item.retailPrice}</span>
+                          <button
+                            type="button"
+                            onClick={() => setCart({ ...cart, [item.id]: (cart[item.id] || 0) + 1 })}
+                            className="bg-[#15803D] text-white text-[10px] font-extrabold px-2 py-1 rounded-lg"
+                          >
+                            + Add
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </section>
+            )}
 
             <section className="space-y-2">
               <div className="flex items-center justify-between">
@@ -3053,7 +3106,7 @@ if (activeTab === 'selectLocation') {
               </section>
             )}
 
-            <section className="space-y-2">
+<section className="space-y-2">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-extrabold text-slate-900">Categories</h2>
                 <button type="button" onClick={() => setActiveTab('categories')} className="text-[11px] font-extrabold text-[#15803D]">
@@ -3130,30 +3183,50 @@ if (activeTab === 'selectLocation') {
           </main>
         )}
 
-{activeTab === 'categories' && (
-          <main className="p-4 space-y-4 text-xs">
-            <div className="flex items-center space-x-3">
-              <button onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white shadow-sm">
-                <ArrowLeft className="h-4 w-4" />
-              </button>
-              <h2 className="text-base font-extrabold text-slate-900">All Categories ({categoriesList.length})</h2>
+{/* CATEGORIES TAB: LEFT VERTICAL CATEGORIES RAIL + RIGHT SIDE RELATED PRODUCTS */}
+        {activeTab === 'categories' && (
+          <main className="flex h-[calc(100vh-64px)] bg-white text-xs overflow-hidden">
+            <div className="w-24 bg-slate-50 border-r border-slate-200 overflow-y-auto py-2 space-y-1">
+              {categoriesList.map((cat) => {
+                const activeCatName = selectedCat === 'All' ? categoriesList[0]?.labelEn : selectedCat;
+                const isActive = activeCatName === cat.labelEn;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setSelectedCat(cat.labelEn)}
+                    className={`w-full px-1.5 py-2.5 flex flex-col items-center text-center relative transition ${
+                      isActive ? 'bg-white text-[#15803D] font-extrabold' : 'text-slate-600 font-semibold'
+                    }`}
+                  >
+                    {isActive && <span className="absolute left-0 top-2 bottom-2 w-1 bg-[#15803D] rounded-r" />}
+                    <img src={cat.img} alt={cat.labelEn} className="h-11 w-11 rounded-xl object-cover mb-1 border border-slate-200" />
+                    <span className="text-[9px] leading-tight line-clamp-2">{cat.labelEn}</span>
+                  </button>
+                );
+              })}
             </div>
 
-            <div className="grid grid-cols-3 gap-2.5">
-              {categoriesList.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => {
-                    setSelectedCat(cat.labelEn);
-                    setActiveTab('home');
-                  }}
-                  className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 text-center space-y-1.5 hover:border-[#15803D]"
-                >
-                  <img src={cat.img} alt={cat.labelEn} className="h-16 w-16 rounded-2xl object-cover mx-auto" />
-                  <h3 className="text-[10px] font-extrabold text-slate-900 line-clamp-2 leading-tight">{cat.labelEn}</h3>
-                  <p className="text-[9px] font-bold text-[#15803D] truncate">{cat.labelTe}</p>
-                </button>
-              ))}
+            <div className="flex-1 overflow-y-auto p-3 space-y-2.5 bg-[#F8FAFC]">
+              {(() => {
+                const currentCat = selectedCat === 'All' ? categoriesList[0]?.labelEn : selectedCat;
+                const catProducts = products.filter((p) => p.cat === currentCat);
+                return (
+                  <>
+                    <div className="flex items-center justify-between border-b pb-1.5">
+                      <h2 className="text-sm font-extrabold text-slate-900">{currentCat}</h2>
+                      <span className="text-[10px] font-bold text-[#15803D]">{catProducts.length} items</span>
+                    </div>
+                    {catProducts.length === 0 ? (
+                      <div className="bg-white rounded-2xl p-6 text-center text-slate-400 font-bold">
+                        No products listed in {currentCat} yet.
+                      </div>
+                    ) : (
+                      catProducts.map((p) => renderCustomerProductCard(p))
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </main>
         )}
@@ -3192,7 +3265,7 @@ if (activeTab === 'selectLocation') {
           </main>
         )}
 
-        {activeTab === 'cart' && (
+{activeTab === 'cart' && (
           <main className="p-4 space-y-3.5 text-xs">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-extrabold text-slate-900">My Cart</h2>
@@ -3275,7 +3348,7 @@ if (activeTab === 'selectLocation') {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
+<div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
               <div className="flex items-center justify-between">
                 <h3 className="font-extrabold text-slate-900">Payment Method</h3>
                 <span className="text-[10px] font-bold text-[#15803D]">{merchantUpiId}</span>
@@ -3308,7 +3381,7 @@ if (activeTab === 'selectLocation') {
               {cardError && <p className="text-rose-600 font-bold">{cardError}</p>}
             </div>
 
-  <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-1.5">
+            <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-1.5">
               <div className="flex justify-between"><span>Subtotal</span><span className="font-bold">₹{subtotal}</span></div>
               {autoTierDiscount > 0 && <div className="flex justify-between text-[#15803D] font-extrabold"><span>{autoTierLabel}</span><span>-₹{autoTierDiscount}</span></div>}
               {promoDeduction > 0 && <div className="flex justify-between text-[#15803D] font-extrabold"><span>Coupon ({appliedCouponObj.code})</span><span>-₹{promoDeduction}</span></div>}
@@ -3377,7 +3450,7 @@ if (activeTab === 'selectLocation') {
           </main>
         )}
 
-        {activeTab === 'trackOrder' && trackingOrder && (
+{activeTab === 'trackOrder' && trackingOrder && (
           <main className="pb-10 text-xs">
             <div className="bg-gradient-to-b from-[#15803D] to-[#22C55E] text-white p-5 rounded-b-[32px] shadow-md space-y-2">
               <div className="flex items-center space-x-3">
@@ -3421,72 +3494,96 @@ if (activeTab === 'selectLocation') {
                 </div>
               )}
 
-              {isOutForCustomerDrop ? (
-                <LiveScooterMap
-                  lat={liveLat}
-                  lng={liveLng}
-                  title="Delivery Partner Live Scooter"
-                  height={208}
-                  badgeText={`🛵 Rider Out for Delivery • GPS: ${liveLat}, ${liveLng}`}
-                />
-              ) : (
-                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-1 text-amber-950">
-                  <p className="font-extrabold">Stage 1: Store Acceptance & Pickup in Progress</p>
-                  <p className="text-[11px]">
-                    Once all accepted sellers' items are picked up by the delivery partner, live scooter tracking will appear here!
-                  </p>
-                </div>
+              {/* LIVE SCOOTER TRACKING ONLY WHILE OUT FOR DELIVERY (HIDDEN AFTER DELIVERED) */}
+              {trackingOrder.status !== 'Delivered' && (
+                <>
+                  {isOutForCustomerDrop ? (
+                    <LiveScooterMap
+                      lat={liveLat}
+                      lng={liveLng}
+                      title="Delivery Partner Live Scooter"
+                      height={208}
+                      badgeText={`🛵 Rider Out for Delivery • GPS: ${liveLat}, ${liveLng}`}
+                    />
+                  ) : (
+                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-1 text-amber-950">
+                      <p className="font-extrabold">Stage 1: Store Acceptance & Pickup in Progress</p>
+                      <p className="text-[11px]">
+                        Once all accepted sellers' items are picked up by the delivery partner, live scooter tracking will appear here!
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="h-11 w-11 rounded-full bg-emerald-100 text-[#15803D] font-extrabold flex items-center justify-center text-xl">
+                        🛵
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-slate-400 font-bold">Delivery Partner</p>
+                        <h4 className="font-extrabold text-slate-900">
+                          {trackingOrder.driverName || 'Assigning Delivery Partner...'}
+                        </h4>
+                        {trackingOrder.driverMobile && (
+                          <p className="text-[10px] text-slate-500">+91 {trackingOrder.driverMobile}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex space-x-2">
+                      <a
+                        href={`tel:${trackingOrder.driverMobile || '8328261103'}`}
+                        className="p-2.5 bg-emerald-50 text-[#15803D] border border-emerald-200 rounded-full flex items-center space-x-1 font-extrabold text-[10px]"
+                      >
+                        <Phone className="h-4 w-4" />
+                        <span>Call</span>
+                      </a>
+                      <a
+                        href={`sms:${trackingOrder.driverMobile || '8328261103'}`}
+                        className="p-2.5 bg-sky-50 text-sky-700 border border-sky-200 rounded-full flex items-center space-x-1 font-extrabold text-[10px]"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        <span>Msg</span>
+                      </a>
+                    </div>
+                  </div>
+                </>
               )}
 
-              <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="h-11 w-11 rounded-full bg-emerald-100 text-[#15803D] font-extrabold flex items-center justify-center text-xl">
-                    🛵
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-slate-400 font-bold">Delivery Partner</p>
-                    <h4 className="font-extrabold text-slate-900">
-                      {trackingOrder.driverName || 'Assigning Delivery Partner...'}
-                    </h4>
-                    {trackingOrder.driverMobile && (
-                      <p className="text-[10px] text-slate-500">+91 {trackingOrder.driverMobile}</p>
-                    )}
-                  </div>
-                </div>
-                <div className="flex space-x-2">
-                  <a
-                    href={`tel:${trackingOrder.driverMobile || '8328261103'}`}
-                    className="p-2.5 bg-emerald-50 text-[#15803D] border border-emerald-200 rounded-full flex items-center space-x-1 font-extrabold text-[10px]"
-                  >
-                    <Phone className="h-4 w-4" />
-                    <span>Call</span>
-                  </a>
-                  <a
-                    href={`sms:${trackingOrder.driverMobile || '8328261103'}`}
-                    className="p-2.5 bg-sky-50 text-sky-700 border border-sky-200 rounded-full flex items-center space-x-1 font-extrabold text-[10px]"
-                  >
-                    <MessageSquare className="h-4 w-4" />
-                    <span>Msg</span>
-                  </a>
-                </div>
-              </div>
-
-    {trackingOrder.status !== 'Delivered' ? (
+              {trackingOrder.status !== 'Delivered' ? (
                 <button onClick={() => handleSimulateCustomerDelivery(trackingOrder)} className="w-full bg-[#EA580C] text-white font-extrabold py-3.5 rounded-2xl shadow">
                   Complete Delivery (Auto Email Invoice PDF)
                 </button>
               ) : (
-                <button onClick={() => window.print()} className="w-full bg-slate-900 text-white font-extrabold py-3.5 rounded-2xl shadow flex items-center justify-center space-x-2">
-                  <Printer className="h-4 w-4" />
-                  <span>Download / Print Invoice PDF</span>
-                </button>
+                <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-center space-y-1">
+                  <p className="font-extrabold text-[#15803D] text-sm">✓ Order Delivered Successfully!</p>
+                  <p className="text-[11px] text-slate-600">
+                    Official Tax Invoice has been emailed to <strong>{currentUser.email}</strong>.
+                  </p>
+                </div>
               )}
             </div>
           </main>
         )}
 
-        {activeTab === 'orders' && (
+{activeTab === 'orders' && (
           <main className="p-4 space-y-3.5 text-xs">
+            {/* ADMIN BROADCAST OFFERS & NOTIFICATIONS */}
+            {broadcastOffers.length > 0 && (
+              <div className="space-y-2">
+                <h3 className="text-xs font-extrabold text-[#15803D] flex items-center space-x-1">
+                  <Bell className="h-4 w-4 text-[#EA580C]" />
+                  <span>Latest Offers & Notifications ({broadcastOffers.length})</span>
+                </h3>
+                {broadcastOffers.map((bo) => (
+                  <div key={bo.id} className="bg-gradient-to-r from-amber-50 to-emerald-50 border border-amber-300 rounded-2xl p-3 shadow-sm">
+                    <span className="bg-[#15803D] text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full">{bo.tag}</span>
+                    <p className="text-xs font-extrabold text-slate-900 mt-1">{bo.message}</p>
+                    <p className="text-[9px] text-slate-500 mt-0.5">{bo.date}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <h2 className="text-base font-extrabold text-slate-900">My Orders</h2>
             {orders.filter((o) => o.buyerRole === 'customer').length === 0 ? (
               <div className="bg-white rounded-3xl p-8 text-center font-bold text-slate-400">No orders placed yet.</div>
@@ -3500,7 +3597,7 @@ if (activeTab === 'selectLocation') {
                       <span>₹{ord.total}</span>
                     </div>
                     <button onClick={() => { setTrackingOrder(ord); setActiveTab('trackOrder'); }} className="text-[#15803D] font-extrabold">
-                      Track Order &gt;
+                      {ord.status === 'Delivered' ? 'View Order Summary >' : 'Track Order >'}
                     </button>
                   </div>
                 ))
@@ -3541,7 +3638,7 @@ if (activeTab === 'selectLocation') {
     );
   }
 
- // =========================================================================
+// =========================================================================
   // INDEPENDENT MULTI-VENDOR ORDER ALERTS & SEQUENTIAL PICKUP TRACKING
   // =========================================================================
   const renderBroadcastOrderAlertsAndPickupTracking = () => {
@@ -4008,13 +4105,13 @@ const newOrd = {
           </main>
         )}
 
-    {activeTab === 'orders' && (
+{activeTab === 'orders' && (
           <main className="p-4 space-y-3 text-xs">
             <h2 className="text-base font-extrabold">{currentUser.role.toUpperCase()} Orders & Live Tracking</h2>
             {renderBroadcastOrderAlertsAndPickupTracking()}
 
             {myPlacedBulkOrders.map((ord) => {
-              const isPickedUp = ord.status === 'Out for Delivery' || ord.status === 'Delivered';
+              const isPickedUp = ord.status === 'Out for Delivery';
               const rLat = ord.driverLat || 14.4390;
               const rLng = ord.driverLng || 79.9810;
               return (
@@ -4024,7 +4121,7 @@ const newOrd = {
                     <span className="text-[#15803D]">₹{ord.total}</span>
                   </div>
                   <p className="text-slate-600">{ord.items.map((i) => `${i.qty} ${i.unit || 'Kg'} ${i.name}`).join(', ')}</p>
-                  {ord.b2bOtp && (
+                  {ord.b2bOtp && ord.status !== 'Delivered' && (
                     <div className="bg-amber-50 border border-amber-200 p-2 rounded-xl font-extrabold text-amber-950">
                       Delivery Verification OTP: {ord.b2bOtp}
                     </div>
@@ -4043,16 +4140,13 @@ const newOrd = {
                         badgeText={`🛵 Live Delivery GPS: ${rLat}, ${rLng}`}
                       />
                     </div>
-                  ) : (
+                  ) : ord.status !== 'Delivered' ? (
                     <p className="text-[10px] font-bold text-slate-500">
                       Waiting for seller acceptance & rider pickup...
                     </p>
+                  ) : (
+                    <p className="text-[11px] font-extrabold text-[#15803D]">✓ Delivered & Invoice Sent to Email</p>
                   )}
-
-                  <button onClick={() => window.print()} className="w-full bg-slate-900 text-white font-extrabold py-2.5 rounded-xl flex items-center justify-center space-x-1.5">
-                    <Printer className="h-3.5 w-3.5" />
-                    <span>Print / Save PDF Invoice</span>
-                  </button>
                 </div>
               );
             })}
@@ -4082,7 +4176,7 @@ const newOrd = {
     );
   }
 
-// =========================================================================
+  // =========================================================================
   // 6. DELIVERY PARTNER PORTAL
   // =========================================================================
   if (currentUser.role === 'delivery') {
@@ -4117,7 +4211,7 @@ const newOrd = {
       );
     };
 
-    const handleCompleteDelivery = (ord) => {
+const handleCompleteDelivery = (ord) => {
       const stopsCount = (ord.pickupStops || []).length || 1;
       const baseFee = ord.riderBaseFee || 30;
       const multiBonus = ord.riderMultiStopBonus ?? Math.max(0, stopsCount - 1) * 15;
@@ -4211,7 +4305,7 @@ const newOrd = {
                       </div>
                     </div>
 
-    <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-2">
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-2">
                       <p className="text-[10px] font-extrabold text-slate-700 uppercase">
                         1. Farmer / Shop Pickup Stops ({stops.length}):
                       </p>
@@ -4253,7 +4347,7 @@ const newOrd = {
                         );
                       })}
 
-                      <p className="text-[10px] font-extrabold text-[#0F5132] uppercase pt-1">
+<p className="text-[10px] font-extrabold text-[#0F5132] uppercase pt-1">
                         2. Customer / Buyer Drop Location:
                       </p>
                       <div className="bg-emerald-50/80 rounded-lg p-2 border border-emerald-200 flex items-center justify-between gap-2">
@@ -4344,7 +4438,7 @@ const newOrd = {
     );
   }
 
-// =========================================================================
+  // =========================================================================
   // 7. MASTER ADMIN & SUB-ADMIN HQ
   // =========================================================================
   const handleAdminCatalogPhotoUpload = async (e) => {
@@ -4359,7 +4453,7 @@ const newOrd = {
     }
   };
 
-  const handleAddMasterCatalogItem = (e) => {
+const handleAddMasterCatalogItem = (e) => {
     e.preventDefault();
     if (!catNameEn.trim()) return;
     const finalImg =
@@ -4436,13 +4530,13 @@ const newOrd = {
     notify(editingCatId ? 'Category Updated Across All Pages!' : 'New Category Added!');
   };
 
-  const handleDeleteCategory = (catId) => {
+const handleDeleteCategory = (catId) => {
     setCategoriesList((prev) => prev.filter((c) => c.id !== catId));
     deleteDoc(doc(db, 'categories', catId)).catch(() => {});
     notify('Category Deleted');
   };
 
-const handleSaveCoupon = (e) => {
+  const handleSaveCoupon = (e) => {
     e.preventDefault();
     if (!cpCode.trim() || !cpTitle.trim()) return;
     const couponObj = {
@@ -4551,6 +4645,20 @@ const handleSaveCoupon = (e) => {
             >
               Approvals ({users.filter((u) => u.role !== 'customer' && u.role !== 'admin').length})
             </button>
+            <button
+              type="button"
+              onClick={() => setAdminTab('broadcast')}
+              className={`py-2.5 rounded-xl font-extrabold border ${adminTab === 'broadcast' ? 'bg-[#EA580C] text-white border-[#EA580C]' : 'bg-orange-50 text-orange-900 border-orange-200'}`}
+            >
+              Send Offer Alerts ({broadcastOffers.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setAdminTab('walletCredit')}
+              className={`py-2.5 rounded-xl font-extrabold border ${adminTab === 'walletCredit' ? 'bg-[#0F5132] text-white border-[#0F5132]' : 'bg-emerald-50 text-emerald-950 border-emerald-200'}`}
+            >
+              Credit Customer Wallet
+            </button>
           </div>
 
           {isCurrentUserMasterAdmin && (
@@ -4566,23 +4674,143 @@ const handleSaveCoupon = (e) => {
             </button>
           )}
 
-   {adminTab === 'subadmins' && isCurrentUserMasterAdmin && (
+  {/* A. SEND OFFER NOTIFICATION TO ALL REGISTERED USERS */}
+          {adminTab === 'broadcast' && (
+            <div className="space-y-3">
+              <div className="bg-white p-4 rounded-3xl border border-orange-200 shadow-sm space-y-2.5">
+                <h3 className="font-extrabold text-sm text-[#EA580C]">Send Offer Notification to All Registered Users</h3>
+                <input
+                  type="text"
+                  value={promoOfferTag}
+                  onChange={(e) => setPromoOfferTag(e.target.value.toUpperCase())}
+                  placeholder="Offer Tag (e.g., HUNGRY SPECIAL)"
+                  className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-extrabold"
+                />
+                <textarea
+                  rows={3}
+                  value={promoMsgText}
+                  onChange={(e) => setPromoMsgText(e.target.value)}
+                  placeholder='e.g., "Aakali avuthunda? Aithe neekosam fresh noodles & fruits wait chesthunnaayi, ipude order chesuko!"'
+                  className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-bold"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!promoMsgText.trim()) return;
+                    const newOffer = {
+                      id: 'bo_' + Date.now(),
+                      tag: promoOfferTag || 'OFFER',
+                      message: promoMsgText.trim(),
+                      createdAt: Date.now(),
+                      date: new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
+                    };
+                    setBroadcastOffers((prev) => [newOffer, ...prev]);
+                    setDoc(doc(db, 'broadcastOffers', newOffer.id), newOffer).catch(() => {});
+                    setPromoMsgText('');
+                    notify('Offer Notification Sent to All Users!');
+                  }}
+                  className="w-full bg-[#EA580C] text-white font-extrabold py-3 rounded-2xl shadow text-sm"
+                >
+                  Send Notification to All Users 🔔
+                </button>
+              </div>
+
+              {broadcastOffers.map((bo) => (
+                <div key={bo.id} className="bg-white p-3 rounded-2xl border flex items-center justify-between">
+                  <div>
+                    <span className="text-[9px] font-extrabold bg-amber-100 text-amber-900 px-2 py-0.5 rounded">{bo.tag}</span>
+                    <p className="font-bold text-slate-800 mt-1">{bo.message}</p>
+                    <p className="text-[9px] text-slate-400">{bo.date}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBroadcastOffers((prev) => prev.filter((x) => x.id !== bo.id));
+                      deleteDoc(doc(db, 'broadcastOffers', bo.id)).catch(() => {});
+                    }}
+                    className="p-2 text-rose-600 bg-rose-50 rounded-xl"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* B. CREDIT CUSTOMER WALLET + WHATSAPP NOTIFICATION */}
+          {adminTab === 'walletCredit' && (
+            <div className="space-y-3 bg-white p-4 rounded-3xl border border-emerald-200 shadow-sm">
+              <h3 className="font-extrabold text-sm text-[#15803D]">Credit Cashback / Bonus to Customer Wallet</h3>
+              <select
+                value={walletUserId}
+                onChange={(e) => setWalletUserId(e.target.value)}
+                className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-extrabold"
+              >
+                <option value="">-- Select Registered Customer --</option>
+                {users
+                  .filter((u) => u.role === 'customer')
+                  .map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} (+91 {c.mobile}) • Wallet: ₹{c.wallet || 0}
+                    </option>
+                  ))}
+              </select>
+
+              <input
+                type="number"
+                value={walletCreditAmt}
+                onChange={(e) => setWalletCreditAmt(e.target.value)}
+                placeholder="Amount to Credit (₹)"
+                className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-extrabold text-[#15803D]"
+              />
+              <input
+                type="text"
+                value={walletReason}
+                onChange={(e) => setWalletReason(e.target.value)}
+                placeholder="Reason / Offer Note"
+                className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-bold"
+              />
+
+              <button
+                type="button"
+                onClick={() => {
+                  const targetUser = users.find((u) => u.id === walletUserId);
+                  const amt = Number(walletCreditAmt);
+                  if (!targetUser || amt <= 0) {
+                    notify('Select a customer and enter valid amount!');
+                    return;
+                  }
+                  const newWalletBal = (targetUser.wallet || 0) + amt;
+                  setUsers((prev) => prev.map((u) => (u.id === targetUser.id ? { ...u, wallet: newWalletBal } : u)));
+                  updateDoc(doc(db, 'users', targetUser.id), { wallet: newWalletBal }).catch(() => {});
+
+                  const waText = encodeURIComponent(
+                    `Namaste ${targetUser.name}! ₹${amt} has been credited to your Rythu Basket Wallet (${walletReason}). Updated Balance: ₹${newWalletBal}. Order fresh now: https://rythu-market.vercel.app`
+                  );
+                  notify(`₹${amt} Credited to ${targetUser.name}'s Wallet!`);
+                  window.open(`https://wa.me/91${targetUser.mobile}?text=${waText}`, '_blank');
+                }}
+                className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow text-sm"
+              >
+                Credit Wallet & Send WhatsApp Alert 💬
+              </button>
+            </div>
+          )}
+
+{adminTab === 'subadmins' && isCurrentUserMasterAdmin && (
             <div className="space-y-3">
               <form onSubmit={handleGrantSubAdminAccess} className="bg-white rounded-3xl p-4 shadow-sm border border-amber-300 space-y-2.5">
                 <h3 className="font-extrabold text-sm text-slate-900 flex items-center space-x-1.5">
                   <UserPlus className="h-4 w-4 text-[#15803D]" />
                   <span>Grant Sub-Admin Access to Staff / Partner</span>
                 </h3>
-                <p className="text-[11px] text-slate-500">
-                  Added person can login under <strong>Admin</strong> role using their Mobile or Email ID.
-                </p>
                 <input type="text" required value={subName} onChange={(e) => setSubName(e.target.value)} placeholder="Sub-Admin Full Name *" className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-bold" />
                 <div className="grid grid-cols-2 gap-2">
                   <input type="tel" maxLength={10} value={subMobile} onChange={(e) => setSubMobile(e.target.value.replace(/\D/g, ''))} placeholder="Mobile Number (10 digits)" className="bg-slate-50 border rounded-xl px-3 py-2.5 font-bold" />
                   <input type="email" value={subEmail} onChange={(e) => setSubEmail(e.target.value)} placeholder="Email ID (For OTP Reg)" className="bg-slate-50 border rounded-xl px-3 py-2.5 font-bold" />
                 </div>
                 <select value={subPermissions} onChange={(e) => setSubPermissions(e.target.value)} className="w-full bg-emerald-50/60 border border-emerald-200 rounded-xl px-3 py-2.5 font-extrabold text-[#15803D]">
-                  <option value="Catalogue, Categories, Coupons & Approvals">Access: Full Operations (Catalogue, Categories, Coupons, Approvals)</option>
+                  <option value="Catalogue, Categories, Coupons & Approvals">Access: Full Operations</option>
                   <option value="Catalogue & Categories Only">Access: Catalogue & Categories Only</option>
                   <option value="Seller Approvals & Coupons">Access: Seller Approvals & Coupons</option>
                 </select>
@@ -4684,7 +4912,7 @@ const handleSaveCoupon = (e) => {
                   className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-semibold text-[11px]"
                 />
 
-                <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow text-sm">
+   <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow text-sm">
                   + Save to Master Catalogue
                 </button>
               </form>
@@ -4712,7 +4940,7 @@ const handleSaveCoupon = (e) => {
             </div>
           )}
 
-{adminTab === 'categories' && (
+          {adminTab === 'categories' && (
             <div className="space-y-3">
               <form onSubmit={handleSaveCategory} className="bg-white rounded-3xl p-4 shadow-sm border border-emerald-100 space-y-3">
                 <div className="flex items-center justify-between">
@@ -4777,7 +5005,7 @@ const handleSaveCoupon = (e) => {
                   <input type="file" accept="image/*" onChange={handleAdminCategoryPhotoUpload} className="hidden" />
                 </label>
 
-                <input
+   <input
                   type="url"
                   value={newCatImgUrl}
                   onChange={(e) => setNewCatImgUrl(e.target.value)}
@@ -4832,7 +5060,7 @@ const handleSaveCoupon = (e) => {
             </div>
           )}
 
-   {adminTab === 'coupons' && (
+          {adminTab === 'coupons' && (
             <div className="space-y-3">
               <form onSubmit={handleSaveCoupon} className="bg-white rounded-3xl p-4 shadow-sm border border-amber-200 space-y-3">
                 <div className="flex items-center justify-between">
@@ -4904,7 +5132,7 @@ const handleSaveCoupon = (e) => {
                   </div>
                 </div>
 
-                <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow text-sm">
+     <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow text-sm">
                   {editingCouponId ? 'Update Coupon' : '+ Publish Coupon to Customer Page'}
                 </button>
               </form>
@@ -4962,7 +5190,7 @@ const handleSaveCoupon = (e) => {
             </div>
           )}
 
-   {adminTab === 'approvals' && (
+          {adminTab === 'approvals' && (
             <div className="space-y-2.5">
               {users
                 .filter((u) => u.role === 'farmer' || u.role === 'wholesale' || u.role === 'retail')
