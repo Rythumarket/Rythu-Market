@@ -279,14 +279,26 @@ export default function App() {
   const [products, setProducts] = useState(INITIAL_PRODUCTS);
 
   // Admin-Managed Categories, Master Catalog & Coupons (Synced via Firestore)
-  const [categoriesList, setCategoriesList] = useState(() => {
+    const [categoriesList, setCategoriesList] = useState(() => {
     try {
       const saved = localStorage.getItem('rythu_managed_categories');
-      return saved ? JSON.parse(saved) : DEFAULT_CATEGORIES;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const savedMap = new Map(parsed.map((c) => [c.id, c]));
+          const merged = DEFAULT_CATEGORIES.map((def) => savedMap.get(def.id) || def);
+          parsed.forEach((p) => {
+            if (!merged.some((m) => m.id === p.id)) merged.unshift(p);
+          });
+          return merged;
+        }
+      }
+      return DEFAULT_CATEGORIES;
     } catch {
       return DEFAULT_CATEGORIES;
     }
   });
+
 
   const [masterCatalog, setMasterCatalog] = useState(() => {
     try {
