@@ -3,7 +3,7 @@ import {
   Search, ShoppingCart, Plus, Home, ClipboardList, User, MapPin,
   Phone, MessageSquare, Sprout, Store, Truck, ShieldCheck, ChevronRight,
   ArrowLeft, CheckCircle2, Wallet, Sparkles, Bell, Globe,
-  LocateFixed, LogOut, Warehouse, ChevronDown,
+  LocateFixed, LogOut, Printer, Warehouse, ChevronDown,
   Briefcase, Leaf, Shield, Zap, Grid, Check, Tag, Edit3,
   TrendingUp, Package, HelpCircle, Navigation, Camera, Landmark, Volume2, VolumeX, Trash2, Image
 } from 'lucide-react';
@@ -15,6 +15,10 @@ const EMAILJS_SERVICE_ID = 'service_auf6gch';
 const EMAILJS_TEMPLATE_ID = 'template_z42k41l';
 const EMAILJS_INVOICE_TEMPLATE_ID = 'template_fhx6p4e';
 const EMAILJS_PUBLIC_KEY = 'Y1UQmUcSoEzEtFR1m';
+
+// STRICTLY AUTHORIZED ADMINS ONLY (Only these mobiles/emails can access Master Admin HQ)
+const AUTHORIZED_ADMIN_MOBILES = ['8328261103'];
+const AUTHORIZED_ADMIN_EMAILS = ['madhavam.com@gmail.com', 'madhavareddy2516@gmail.com'];
 
 // Role Hero Images
 const FARMER_HERO_IMG = 'https://images.pexels.com/photos/2889440/pexels-photo-2889440.jpeg?auto=compress&cs=tinysrgb&w=500';
@@ -77,7 +81,6 @@ const DEFAULT_MASTER_CATALOG = [
   { id: 'cat_tomato', nameEn: 'Fresh Tomato', nameTe: 'టమాటా', cat: 'Vegetables', defaultUnit: 'Kg', img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=400&q=80' },
   { id: 'cat_onion', nameEn: 'Red Onion', nameTe: 'ఉల్లిపాయలు', cat: 'Vegetables', defaultUnit: 'Kg', img: 'https://images.unsplash.com/photo-1508747705729-e0613307ab6e?auto=format&fit=crop&w=400&q=80' },
   { id: 'cat_mango', nameEn: 'Banganapalli Mango', nameTe: 'మామిడిపండు', cat: 'Fruits', defaultUnit: 'Kg', img: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=400&q=80' },
-  { id: 'cat_banana', nameEn: 'Yelakki Banana', nameTe: 'అరటిపండు', cat: 'Fruits', defaultUnit: 'Kg', img: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&w=400&q=80' },
   { id: 'cat_spinach', nameEn: 'Fresh Spinach (Palakura)', nameTe: 'పాలకూర', cat: 'Leafy Greens', defaultUnit: 'Grams', img: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=400&q=80' },
   { id: 'cat_milk', nameEn: 'Fresh Farm Buffalo Milk', nameTe: 'చిక్కటి గేదె పాలు', cat: 'Dairy products', defaultUnit: 'Litres', img: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=400&q=80' },
   { id: 'cat_rice', nameEn: 'Nellore Sona Masuri Rice', nameTe: 'సోనా మసూరి బియ్యం', cat: 'Atta, rice, Oils and dals', defaultUnit: 'Kg', img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=400&q=80' },
@@ -101,7 +104,6 @@ const INITIAL_PRODUCTS = [
   { id: 'p1', postedByRole: 'farmer', farmerId: 'u_farm_1', farmerName: 'Ramaiah Farm • Kovur, Nellore', sellerLat: 14.4920, sellerLng: 79.9850, distanceKm: 12, nameEn: 'Fresh Tomato', nameTe: 'టమాటా', cat: 'Vegetables', quality: 'Grade A', unit: 'Kg', packLabel: '1 Kg', mrp: 48, retailPrice: 36, farmerDirectPrice: 24, wholesalePrice: 28, minWholesaleQty: 25, stockKg: 500, inStock: true, desc: 'Fresh and juicy country tomatoes harvested this morning from Kovur farms, Nellore.', availableFrom: 'Available Now', img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=500&q=80' },
   { id: 'p2', postedByRole: 'farmer', farmerId: 'u_farm_2', farmerName: 'Subba Rao Farm • Buchi, Nellore', sellerLat: 14.5360, sellerLng: 79.8820, distanceKm: 18, nameEn: 'Red Onion', nameTe: 'ఉల్లిపాయలు', cat: 'Vegetables', quality: 'Grade A', unit: 'Kg', packLabel: '1 Kg', mrp: 44, retailPrice: 34, farmerDirectPrice: 22, wholesalePrice: 26, minWholesaleQty: 50, stockKg: 800, inStock: true, desc: 'Farm-cured crisp red onions sourced directly from Buchireddypalem growers.', availableFrom: 'Tomorrow Morning 6:00 AM', img: 'https://images.unsplash.com/photo-1508747705729-e0613307ab6e?auto=format&fit=crop&w=500&q=80' },
   { id: 'p3', postedByRole: 'farmer', farmerId: 'u_farm_3', farmerName: 'Rapur Orchards • Nellore', sellerLat: 14.1980, sellerLng: 79.5380, distanceKm: 32, nameEn: 'Banganapalli Mango', nameTe: 'మామిడిపండు', cat: 'Fruits', quality: 'Grade A (Export)', unit: 'Kg', packLabel: '1 Kg', mrp: 140, retailPrice: 110, farmerDirectPrice: 85, wholesalePrice: 95, minWholesaleQty: 20, stockKg: 300, inStock: true, desc: 'Naturally ripened carbide-free Banganapalli mangoes from Rapur orchards.', availableFrom: 'Available Now', img: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=500&q=80' },
-  { id: 'p_banana', postedByRole: 'farmer', farmerId: 'u_farm_3', farmerName: 'Kovur Banana Farms • Nellore', sellerLat: 14.4910, sellerLng: 79.9840, distanceKm: 10, nameEn: 'Yelakki Banana (1 Dozen)', nameTe: 'అరటిపండు', cat: 'Fruits', quality: 'Grade A', unit: 'Kg', packLabel: '1 Kg', mrp: 70, retailPrice: 55, farmerDirectPrice: 40, wholesalePrice: 45, minWholesaleQty: 20, stockKg: 250, inStock: true, desc: 'Sweet farm-ripened Yelakki bananas direct from Nellore orchards.', availableFrom: 'Available Now', img: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&w=500&q=80' },
   { id: 'p4', postedByRole: 'retail', farmerId: 'u_ret_1', farmerName: 'Sri Lakshmi Fresh Mart • Magunta Layout, Nellore', sellerLat: 14.4426, sellerLng: 79.9865, distanceKm: 6, nameEn: 'Fresh Spinach (Palakura)', nameTe: 'పాలకూర', cat: 'Leafy Greens', quality: 'Organic', unit: 'Grams', packLabel: '500 Grams', mrp: 28, retailPrice: 20, farmerDirectPrice: 14, wholesalePrice: 16, minWholesaleQty: 15, stockKg: 150, inStock: true, desc: 'Pesticide-free tender green spinach bundles harvested at dawn.', availableFrom: 'After 1 Hour', img: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=500&q=80' },
   { id: 'p_dairy_1', postedByRole: 'farmer', farmerId: 'u_farm_4', farmerName: 'Gokulam Dairy Farm • Nellore', sellerLat: 14.4480, sellerLng: 79.9820, distanceKm: 5, nameEn: 'Pure Farm Buffalo Milk', nameTe: 'చిక్కటి గేదె పాలు', cat: 'Dairy products', quality: 'Organic', unit: 'Litres', packLabel: '1 Litre', mrp: 80, retailPrice: 68, farmerDirectPrice: 56, wholesalePrice: 60, minWholesaleQty: 20, stockKg: 200, inStock: true, desc: 'Unadulterated fresh morning buffalo milk from Nellore dairy farms.', availableFrom: 'Available Now', img: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=500&q=80' },
   { id: 'p5', postedByRole: 'wholesale', farmerId: 'u_ws_1', farmerName: 'Nellore Heritage Wholesale Mills • Stonehousepet', sellerLat: 14.4510, sellerLng: 79.9910, distanceKm: 8, nameEn: 'Nellore Sona Masuri Rice', nameTe: 'సోనా మసూరి బియ్యం', cat: 'Atta, rice, Oils and dals', quality: 'Grade A', unit: 'Kg', packLabel: '5 Kg', mrp: 340, retailPrice: 285, farmerDirectPrice: 250, wholesalePrice: 265, minWholesaleQty: 10, stockKg: 1200, inStock: true, desc: 'Authentic aged Nellore Sona Masuri steam rice direct from local rice mills.', availableFrom: 'Available Now', img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=500&q=80' },
@@ -147,7 +149,7 @@ const PaymentBadge = ({ type }) => {
   );
 };
 
-// Live Scooter Overlay Map Component (Only shown while active, hidden after Delivered)
+// Live Scooter Overlay Map Component
 const LiveScooterMap = ({ lat, lng, title, height = 200, badgeText }) => (
   <div className="relative w-full rounded-3xl overflow-hidden border-2 border-[#15803D] shadow-md" style={{ height }}>
     <iframe
@@ -177,6 +179,14 @@ const LiveScooterMap = ({ lat, lng, title, height = 200, badgeText }) => (
 
 const isValidIndianMobile = (num) => /^[6-9]\d{9}$/.test(num);
 const isValidEmail = (em) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em.trim());
+
+const isAuthorizedAdmin = (mobileStr = '', emailStr = '') => {
+  const cleanM = mobileStr.replace(/\D/g, '');
+  const cleanE = emailStr.trim().toLowerCase();
+  const okMobile = cleanM.length === 10 && AUTHORIZED_ADMIN_MOBILES.includes(cleanM);
+  const okEmail = cleanE !== '' && AUTHORIZED_ADMIN_EMAILS.some((em) => em.toLowerCase() === cleanE);
+  return okMobile || okEmail;
+};
 
 const buildPaymentLaunchUrl = (mode, upiId, amount) => {
   const pa = encodeURIComponent(upiId);
@@ -252,11 +262,13 @@ export default function App() {
         const parsed = JSON.parse(decodeURIComponent(raw));
         setSharedInvoiceData(parsed);
         setTimeout(() => window.print(), 800);
-      } catch {}
+      } catch {
+        // ignore
+      }
     }
   }, []);
 
-const [showPermissionPrompt, setShowPermissionPrompt] = useState(() => {
+  const [showPermissionPrompt, setShowPermissionPrompt] = useState(() => {
     try {
       return localStorage.getItem('rythu_permissions_granted') !== 'true';
     } catch {
@@ -277,6 +289,7 @@ const [showPermissionPrompt, setShowPermissionPrompt] = useState(() => {
   });
   const [products, setProducts] = useState(INITIAL_PRODUCTS);
 
+// Admin-Managed Categories (Always merged with DEFAULT_CATEGORIES so none disappear)
   const [categoriesList, setCategoriesList] = useState(() => {
     try {
       const saved = localStorage.getItem('rythu_managed_categories');
@@ -309,7 +322,18 @@ const [showPermissionPrompt, setShowPermissionPrompt] = useState(() => {
   const [couponsList, setCouponsList] = useState(() => {
     try {
       const saved = localStorage.getItem('rythu_managed_coupons');
-      return saved ? JSON.parse(saved) : DEFAULT_COUPONS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const savedMap = new Map(parsed.map((c) => [c.id, c]));
+          const merged = DEFAULT_COUPONS.map((def) => savedMap.get(def.id) || def);
+          parsed.forEach((p) => {
+            if (!merged.some((m) => m.id === p.id)) merged.unshift(p);
+          });
+          return merged;
+        }
+      }
+      return DEFAULT_COUPONS;
     } catch {
       return DEFAULT_COUPONS;
     }
@@ -376,12 +400,10 @@ const [showPermissionPrompt, setShowPermissionPrompt] = useState(() => {
   const [deliverySlot] = useState('Today, 6:00 PM – 8:00 PM');
 
   const [toast, setToast] = useState('');
-  // Separate states for Home inline category expansion vs Categories tab split-view
-  const [homeExpandedCat, setHomeExpandedCat] = useState(null); // { section: 'daily' | 'grid', catName: string }
-  const [catTabSelectedCat, setCatTabSelectedCat] = useState(null); // null = full grid, string = left vertical bar + right product list
+  const [selectedCat, setSelectedCat] = useState('All');
   const [search, setSearch] = useState('');
 
-  // Location & Map Pin States
+// Location & Map Pin States
   const [savedAddresses, setSavedAddresses] = useState([
     { id: 'addr1', tag: 'Home', title: 'Vedayapalem Main Road', full: 'Vedayapalem, Nellore, Andhra Pradesh - 524004', distance: '57 m', lat: 14.4285, lng: 79.9692 },
     { id: 'addr2', tag: 'Office', title: 'Magunta Layout, Nellore', full: 'Magunta Layout Main Road, Dargamitta, Nellore - 524003', distance: '2.5 kms', lat: 14.4426, lng: 79.9865 },
@@ -395,8 +417,8 @@ const [showPermissionPrompt, setShowPermissionPrompt] = useState(() => {
   const [isEditingPinText, setIsEditingPinText] = useState(false);
   const [isLocatingGps, setIsLocatingGps] = useState(false);
 
-  // Cart & Payments
-  const [cart, setCart] = useState({ p1: 2, p4: 1 });
+  // Cart starts empty ({}) on customer login
+  const [cart, setCart] = useState({});
   const [useWalletBalance] = useState(false);
   const [promoInput, setPromoInput] = useState('');
   const [appliedCouponObj, setAppliedCouponObj] = useState(null);
@@ -549,7 +571,7 @@ const [showPermissionPrompt, setShowPermissionPrompt] = useState(() => {
     setTimeout(() => setToast(''), 3500);
   };
 
-// Hardware Back Button Handler
+  // Hardware Back Button Handler
   const handleHardwareBack = useCallback(() => {
     if (sharedInvoiceData) {
       window.history.replaceState({}, '', '/');
@@ -557,11 +579,6 @@ const [showPermissionPrompt, setShowPermissionPrompt] = useState(() => {
       return;
     }
     if (currentUser) {
-      if (activeTab === 'categories' && catTabSelectedCat) {
-        setCatTabSelectedCat(null);
-        window.history.pushState({ rythuNav: true }, '');
-        return;
-      }
       if (activeTab !== 'home') {
         setActiveTab('home');
         window.history.pushState({ rythuNav: true }, '');
@@ -581,9 +598,9 @@ const [showPermissionPrompt, setShowPermissionPrompt] = useState(() => {
       setSelectedRole(null);
       window.history.pushState({ rythuNav: true }, '');
     }
-  }, [sharedInvoiceData, currentUser, activeTab, catTabSelectedCat, selectedRole, authScreen]);
+  }, [sharedInvoiceData, currentUser, activeTab, selectedRole, authScreen]);
 
-  useEffect(() => {
+useEffect(() => {
     window.history.pushState({ rythuNav: true }, '');
     const onPopState = () => {
       handleHardwareBack();
@@ -674,7 +691,7 @@ const [showPermissionPrompt, setShowPermissionPrompt] = useState(() => {
       () => {}
     );
 
-const unsubCoupons = onSnapshot(
+    const unsubCoupons = onSnapshot(
       collection(db, 'coupons'),
       (snapshot) => {
         if (!snapshot.empty) {
@@ -693,7 +710,7 @@ const unsubCoupons = onSnapshot(
       () => {}
     );
 
-    const unsubUsers = onSnapshot(
+const unsubUsers = onSnapshot(
       collection(db, 'users'),
       (snapshot) => {
         if (!snapshot.empty) {
@@ -782,7 +799,7 @@ const unsubCoupons = onSnapshot(
     }
   };
 
-const sendAutomaticInvoiceEmail = async (ord) => {
+  const sendAutomaticInvoiceEmail = async (ord) => {
     const recipientEmail = ord.buyerEmail || currentUser?.email;
     if (!recipientEmail) return;
 
@@ -806,7 +823,7 @@ const sendAutomaticInvoiceEmail = async (ord) => {
       )
       .join('');
 
-    const invoiceHtml = `
+const invoiceHtml = `
       <div style="border:1px solid #cbd5e1;padding:16px;border-radius:10px;background:#ffffff;font-family:Arial,sans-serif;font-size:12px;color:#1e293b;">
         <div style="text-align:center;margin-bottom:12px;">
           <img src="https://rythu-market.vercel.app/icon-512.png" width="56" height="56" style="border-radius:50%;border:2px solid #EAB308;" />
@@ -897,6 +914,7 @@ const sendAutomaticInvoiceEmail = async (ord) => {
     return true;
   };
 
+  // Direct Login with Strict Admin Authorization Gate
   const handleDirectLogin = (e) => {
     e.preventDefault();
     const raw = loginIdentifier.trim();
@@ -906,6 +924,11 @@ const sendAutomaticInvoiceEmail = async (ord) => {
     }
     const digitsOnly = raw.replace(/\D/g, '');
     const lowerEmail = raw.toLowerCase();
+
+    if (selectedRole === 'admin' && !isAuthorizedAdmin(digitsOnly, lowerEmail)) {
+      setAuthMsg('Access Denied: Only authorized administrators can access Master Admin HQ.');
+      return;
+    }
 
     const existing = users.find(
       (u) =>
@@ -925,9 +948,15 @@ const sendAutomaticInvoiceEmail = async (ord) => {
     window.history.pushState({ rythuNav: true }, '');
   };
 
-const handleSendRegisterOtp = async () => {
+// Registration Step 1 with Strict Admin Authorization Gate
+  const handleSendRegisterOtp = async () => {
     const cleanMobile = regMobile.replace(/\D/g, '');
     const cleanEmail = regEmail.trim().toLowerCase();
+
+    if (selectedRole === 'admin' && !isAuthorizedAdmin(cleanMobile, cleanEmail)) {
+      setAuthMsg('Access Denied: This Mobile / Email is not authorized for Admin access.');
+      return;
+    }
 
     if (!regName.trim()) {
       setAuthMsg('Please enter Name / Store Name.');
@@ -1008,7 +1037,7 @@ const handleSendRegisterOtp = async () => {
     setUsers([newUser, ...users]);
     setDoc(doc(db, 'users', newUser.id), newUser).catch(() => {});
 
-if (needsApproval) {
+    if (needsApproval) {
       setNotifications((prev) => [
         `New ${selectedRole.toUpperCase()} registration (${newUser.name} • ${cleanEmail}) awaiting Admin approval.`,
         ...prev,
@@ -1033,7 +1062,7 @@ if (needsApproval) {
     setActiveTab('home');
   };
 
-  const fetchAddressFromCoords = async (lat, lng) => {
+const fetchAddressFromCoords = async (lat, lng) => {
     try {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
@@ -1130,7 +1159,7 @@ if (needsApproval) {
     setFImg(item.img);
   };
 
-const handlePublishRoleProduct = (e, roleSource) => {
+  const handlePublishRoleProduct = (e, roleSource) => {
     e.preventDefault();
     if (!fNameEn.trim() || !fPrice) return;
     const baseRate = Number(fPrice);
@@ -1164,7 +1193,7 @@ const handlePublishRoleProduct = (e, roleSource) => {
     notify(`Published ${newProd.nameEn} (${fCat} • ${fQuality} • ${fQty} ${fUnit})!`);
   };
 
-  // Seller Product Form
+// Seller Product Form with Search Bar + Category Dropdown + Admin Catalog Picker
   const renderPostProductForm = (roleSource, submitLabel) => {
     const q = sellerCatalogSearch.trim().toLowerCase();
     const filteredSellerCatalog = masterCatalog.filter((c) => {
@@ -1224,7 +1253,7 @@ const handlePublishRoleProduct = (e, roleSource) => {
             </select>
           </div>
 
-<div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-0.5">
+          <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-0.5">
             {filteredSellerCatalog.map((item) => {
               const isSel = selectedCatalogId === item.id;
               return (
@@ -1286,7 +1315,7 @@ const handlePublishRoleProduct = (e, roleSource) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
+<div className="grid grid-cols-2 gap-2">
           <div>
             <label className="text-[10px] font-bold text-slate-400">Quantity & Unit</label>
             <div className="flex space-x-1.5">
@@ -1322,7 +1351,7 @@ const handlePublishRoleProduct = (e, roleSource) => {
 
   const fontStyle = { fontFamily: "'Plus Jakarta Sans', 'Noto Sans Telugu', sans-serif" };
 
-// =========================================================================
+  // =========================================================================
   // 0. DIRECT INVOICE PDF PRINT VIEW
   // =========================================================================
   if (sharedInvoiceData) {
@@ -1522,7 +1551,7 @@ const handlePublishRoleProduct = (e, roleSource) => {
           </div>
         </div>
 
-        <div className="px-3.5 pt-4 grid grid-cols-2 gap-2.5">
+  <div className="px-3.5 pt-4 grid grid-cols-2 gap-2.5">
           {roleCards.map((r) => {
             const Icon = r.icon;
             return (
@@ -1556,7 +1585,7 @@ const handlePublishRoleProduct = (e, roleSource) => {
           })}
         </div>
 
-  <div className="px-3.5 pt-3.5">
+        <div className="px-3.5 pt-3.5">
           <div className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white rounded-2xl p-3.5 shadow-md flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="h-11 w-11 rounded-full bg-white/15 border border-white/25 flex items-center justify-center flex-shrink-0">
@@ -1626,8 +1655,8 @@ const handlePublishRoleProduct = (e, roleSource) => {
     );
   }
 
- // =========================================================================
-  // 2. ROLE-SPECIFIC REGISTRATION & DIRECT LOGIN
+// =========================================================================
+  // 2. ROLE-SPECIFIC REGISTRATION & DIRECT LOGIN (WITH ADMIN ACCESS LOCK)
   // =========================================================================
   if (!currentUser) {
     const roleMeta = {
@@ -1636,7 +1665,7 @@ const handlePublishRoleProduct = (e, roleSource) => {
       retail: { title: 'Retail Store Registration', subtitle: 'Grow your store with Rythu Basket', cta: 'Register as Retail Store →', hero: RETAIL_HERO_IMG, icon: Store },
       delivery: { title: 'Delivery Partner Registration', subtitle: 'Deliver Freshness, Earn More', cta: 'Register as Delivery Partner →', hero: DELIVERY_HERO_IMG, icon: Truck },
       customer: { title: 'Create Account', subtitle: 'Verify your Email inbox with 6-digit OTP to join', cta: 'Create Customer Account →', hero: FARMER_HERO_IMG, icon: ShoppingCart },
-      admin: { title: 'Admin Registration', subtitle: 'Master Marketplace Administration', cta: 'Register as Admin →', hero: FARMER_HERO_IMG, icon: ShieldCheck },
+      admin: { title: 'Authorized Admin Access', subtitle: 'Restricted to Approved Rythu Basket Administrators', cta: 'Register Authorized Admin →', hero: FARMER_HERO_IMG, icon: ShieldCheck },
     }[selectedRole];
 
     const RoleHeaderIcon = roleMeta.icon;
@@ -1695,9 +1724,13 @@ const handlePublishRoleProduct = (e, roleSource) => {
                 <img src="/icon-512.png" alt="Rythu Basket" className="h-full w-full object-cover rounded-full" />
               </div>
               <h1 className="text-xl font-extrabold text-[#15803D]">Rythu Basket</h1>
-              <h2 className="text-lg font-extrabold text-slate-900">Welcome Back!</h2>
+              <h2 className="text-lg font-extrabold text-slate-900">
+                {selectedRole === 'admin' ? 'Restricted Admin Portal' : 'Welcome Back!'}
+              </h2>
               <p className="text-xs text-slate-500">
-                Login directly with your registered <strong>Mobile Number</strong> or <strong>Email ID</strong> (No OTP needed)
+                {selectedRole === 'admin'
+                  ? 'Authorized Admin Mobile Number or Email ID required'
+                  : 'Login directly with your registered Mobile Number or Email ID (No OTP needed)'}
               </p>
             </div>
 
@@ -1717,23 +1750,25 @@ const handlePublishRoleProduct = (e, roleSource) => {
                 />
               </div>
 
-{authMsg && (
+              {authMsg && (
                 <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-2xl font-bold flex items-center justify-between">
                   <span>{authMsg}</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAuthScreen('register');
-                      setAuthMsg('');
-                    }}
-                    className="bg-red-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-extrabold ml-2 flex-shrink-0"
-                  >
-                    Register
-                  </button>
+                  {!authMsg.startsWith('Access Denied') && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuthScreen('register');
+                        setAuthMsg('');
+                      }}
+                      className="bg-red-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-extrabold ml-2 flex-shrink-0"
+                    >
+                      Register
+                    </button>
+                  )}
                 </div>
               )}
 
-              <button
+<button
                 type="submit"
                 className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
               >
@@ -1832,7 +1867,7 @@ const handlePublishRoleProduct = (e, roleSource) => {
                 </>
               )}
 
-              {selectedRole === 'wholesale' && (
+{selectedRole === 'wholesale' && (
                 <>
                   <p className="font-extrabold text-[#15803D]">— Business Details</p>
                   <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Business Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
@@ -1875,7 +1910,7 @@ const handlePublishRoleProduct = (e, roleSource) => {
                 </>
               )}
 
-   {selectedRole === 'retail' && (
+              {selectedRole === 'retail' && (
                 <>
                   <p className="font-extrabold text-[#15803D]">— Store Details</p>
                   <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Store Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
@@ -1948,11 +1983,11 @@ const handlePublishRoleProduct = (e, roleSource) => {
                 </>
               )}
 
-              {selectedRole === 'admin' && (
+   {selectedRole === 'admin' && (
                 <>
-                  <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Admin Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
-                  <input type="tel" maxLength={10} required value={regMobile} onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, ''))} placeholder="Mobile Number *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
-                  <input type="email" required value={regEmail} onChange={(e) => { setRegEmail(e.target.value); setRegOtpSent(false); }} placeholder="Admin Email ID (Mandatory for OTP) *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Authorized Admin Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="tel" maxLength={10} required value={regMobile} onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, ''))} placeholder="Authorized Admin Mobile (8328261103) *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="email" required value={regEmail} onChange={(e) => { setRegEmail(e.target.value); setRegOtpSent(false); }} placeholder="Authorized Admin Gmail ID *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
                   <input type="text" required value={regAddress} onChange={(e) => setRegAddress(e.target.value)} placeholder="Office Location *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
                 </>
               )}
@@ -2012,7 +2047,7 @@ const handlePublishRoleProduct = (e, roleSource) => {
     );
   }
 
-const WelcomeSmileModal = () =>
+  const WelcomeSmileModal = () =>
     showWelcomeSmile ? (
       <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-3xl p-6 text-center max-w-xs w-full space-y-3 shadow-2xl">
@@ -2025,7 +2060,7 @@ const WelcomeSmileModal = () =>
       </div>
     ) : null;
 
-  const renderSharedProfileTab = () => (
+const renderSharedProfileTab = () => (
     <div className="p-4 space-y-3.5 text-xs">
       <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex items-center space-x-3.5">
         <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-[#15803D] to-[#22C55E] text-white font-extrabold text-xl flex items-center justify-center shadow">
@@ -2073,7 +2108,7 @@ const WelcomeSmileModal = () =>
   );
 
   // =========================================================================
-  // 3. CUSTOMER STOREFRONT (INLINE EXPANDABLE CATEGORIES + SPLIT CATEGORIES TAB)
+  // 3. CUSTOMER STOREFRONT (EMPTY INITIAL CART + DAILY ESSENTIALS + COUPONS + CATEGORIES)
   // =========================================================================
   if (currentUser.role === 'customer') {
     const activeAddr = savedAddresses.find((a) => a.id === activeAddrId) || savedAddresses[0];
@@ -2096,7 +2131,7 @@ const WelcomeSmileModal = () =>
       }
     }
 
-const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
+    const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
     const walletDeduction = useWalletBalance ? Math.min(currentUser.wallet || 0, Math.max(0, subtotal - autoTierDiscount)) : 0;
     const promoDeduction =
       appliedCouponObj && subtotal >= (appliedCouponObj.minOrder || 0)
@@ -2113,7 +2148,7 @@ const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
         ? 20
         : 5;
 
-    const paymentAppLaunchUrl = buildPaymentLaunchUrl(payMode, merchantUpiId, payableTotal);
+const paymentAppLaunchUrl = buildPaymentLaunchUrl(payMode, merchantUpiId, payableTotal);
     const genericUpiQr = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(
       `upi://pay?pa=${encodeURIComponent(merchantUpiId)}&pn=${encodeURIComponent('Rythu Basket Nellore')}&am=${payableTotal}&cu=INR`
     )}`;
@@ -2194,7 +2229,7 @@ const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
         date: 'Today, ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
 
-const updatedUser = {
+      const updatedUser = {
         ...currentUser,
         wallet: (currentUser.wallet || 0) - walletDeduction,
         ordersCompleted: (currentUser.ordersCompleted || 0) + 1,
@@ -2231,7 +2266,7 @@ const updatedUser = {
       }, 350);
     };
 
-    const handleSimulateCustomerDelivery = (ord) => {
+const handleSimulateCustomerDelivery = (ord) => {
       const isLucky = Math.random() > 0.2;
       const reward = isLucky ? Math.floor(scratchMin + Math.random() * (scratchMax - scratchMin + 1)) : 0;
       const updatedUser = {
@@ -2248,61 +2283,6 @@ const updatedUser = {
       setScratchCard({ orderId: ord.id, reward, scratched: false });
     };
 
-    // Compact Horizontal Product Card (Used inside Home inline category drawer)
-    const renderHorizontalProductCard = (p) => {
-      const q = cart[p.id] || 0;
-      const isFarmerItem = (p.postedByRole || 'farmer') === 'farmer';
-      return (
-        <div
-          key={p.id}
-          className="flex-shrink-0 w-36 bg-white rounded-2xl p-2.5 border border-emerald-200 shadow-sm flex flex-col justify-between"
-        >
-          <div
-            onClick={() => {
-              setDetailProduct(p);
-              setDetailQty(q || 1);
-              setActiveTab('productDetail');
-            }}
-            className="cursor-pointer"
-          >
-            <div className="relative h-20 w-full rounded-xl overflow-hidden bg-slate-50 mb-1.5">
-              <img src={p.img} alt={p.nameEn} className="h-full w-full object-cover" />
-              {isFarmerItem && (
-                <span className="absolute top-1 left-1 bg-[#15803D] text-white text-[8px] font-extrabold px-1.5 py-0.5 rounded-full">
-                  From Farmer
-                </span>
-              )}
-            </div>
-            <h4 className="text-[11px] font-extrabold text-slate-900 line-clamp-1">{p.nameEn}</h4>
-            <p className="text-[9px] font-bold text-[#15803D] truncate">{p.nameTe} • {p.packLabel}</p>
-          </div>
-
-          <div className="flex items-center justify-between pt-1.5 mt-1 border-t border-slate-100">
-            <div>
-              <span className="text-xs font-extrabold text-slate-900">₹{p.retailPrice}</span>
-              <span className="text-[9px] text-slate-400 line-through ml-1">₹{p.mrp}</span>
-            </div>
-            {q === 0 ? (
-              <button
-                type="button"
-                onClick={() => setCart({ ...cart, [p.id]: 1 })}
-                className="bg-[#15803D] text-white font-extrabold text-[10px] px-2.5 py-1 rounded-lg"
-              >
-                Add +
-              </button>
-            ) : (
-              <div className="flex items-center bg-[#15803D] text-white rounded-lg px-1.5 py-0.5 space-x-1.5 text-[10px] font-extrabold">
-                <button type="button" onClick={() => setCart((c) => { const n = { ...c }; if (n[p.id] <= 1) delete n[p.id]; else n[p.id]--; return n; })}>-</button>
-                <span>{q}</span>
-                <button type="button" onClick={() => setCart({ ...cart, [p.id]: q + 1 })}>+</button>
-              </div>
-            )}
-          </div>
-        </div>
-      );
-    };
-
-// Standard Vertical List Product Card
     const renderCustomerProductCard = (p) => {
       const q = cart[p.id] || 0;
       const isFarmerItem = (p.postedByRole || 'farmer') === 'farmer';
@@ -2360,34 +2340,6 @@ const updatedUser = {
       );
     };
 
-    // Inline Horizontal Product Drawer rendered directly below the selected category on Home page
-    const renderHomeInlineHorizontalDrawer = (catName) => {
-      const catItems = products.filter((p) => p.cat === catName);
-      return (
-        <div className="bg-emerald-50/90 border-2 border-[#15803D]/30 rounded-2xl p-3 space-y-2 transition-all">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-extrabold text-[#0F5132]">
-              {catName} ({catItems.length} Available)
-            </span>
-            <button
-              type="button"
-              onClick={() => setHomeExpandedCat(null)}
-              className="text-[10px] font-extrabold text-slate-600 bg-white px-2 py-0.5 rounded-full border"
-            >
-              Close ✕
-            </button>
-          </div>
-          {catItems.length === 0 ? (
-            <p className="text-[11px] text-slate-500 font-bold py-2">No items listed in {catName} yet.</p>
-          ) : (
-            <div className="flex space-x-2.5 overflow-x-auto pb-1">
-              {catItems.map((p) => renderHorizontalProductCard(p))}
-            </div>
-          )}
-        </div>
-      );
-    };
-
     if (activeTab === 'selectLocation') {
       const filteredAddrs = savedAddresses.filter(
         (a) =>
@@ -2395,7 +2347,7 @@ const updatedUser = {
           a.full.toLowerCase().includes(locSearch.toLowerCase())
       );
 
-return (
+      return (
         <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto text-slate-800 shadow-2xl pb-10">
           <div className="bg-[#0F5132] px-4 py-4 text-white flex items-center space-x-3 rounded-b-3xl shadow">
             <button type="button" onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white/15">
@@ -2416,7 +2368,7 @@ return (
               />
             </div>
 
-            <button
+   <button
               type="button"
               onClick={handleUseCurrentLocationMap}
               className="w-full border-2 border-[#15803D] bg-emerald-50 rounded-2xl py-3.5 px-4 flex items-center justify-center space-x-2 text-[#15803D] font-extrabold text-xs shadow-sm"
@@ -2492,7 +2444,7 @@ return (
               </div>
             </div>
 
-  <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+            <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm space-y-3">
               <div className="flex items-start justify-between space-x-2">
                 <div className="flex items-start space-x-2 flex-1">
                   <MapPin className="h-5 w-5 text-[#15803D] flex-shrink-0 mt-0.5" />
@@ -2535,18 +2487,9 @@ return (
     const dailyEssentialCats = categoriesList.filter((c) => c.isDailyEssential !== false).slice(0, 4);
     const activeCoupons = couponsList.filter((c) => c.active);
 
-    // Split categoriesList into rows of 3 so selecting a category in the grid opens horizontal products right below its row!
-    const categoryRows = [];
-    for (let i = 0; i < categoriesList.length; i += 3) {
-      categoryRows.push(categoriesList.slice(i, i + 3));
-    }
-
-    const liveLat = trackingOrder?.driverLat || mapPinCoords.lat;
+const liveLat = trackingOrder?.driverLat || mapPinCoords.lat;
     const liveLng = trackingOrder?.driverLng || mapPinCoords.lng;
-    const isPartnerAssignedOrEnRoute =
-      trackingOrder?.status === 'Partner Assigned' || trackingOrder?.status === 'Out for Delivery';
-    const isOutForCustomerDrop = trackingOrder?.status === 'Out for Delivery';
-    const isOrderDelivered = trackingOrder?.status === 'Delivered';
+    const isOutForCustomerDrop = trackingOrder?.status === 'Out for Delivery' || trackingOrder?.status === 'Delivered';
 
     return (
       <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
@@ -2584,9 +2527,9 @@ return (
           </div>
         )}
 
-{/* HOME PAGE */}
         {activeTab === 'home' && (
           <main className="px-4 pt-3.5 space-y-4 text-xs">
+            {/* Top Bar: Location + Wallet */}
             <div className="flex items-center justify-between">
               <button
                 type="button"
@@ -2622,7 +2565,7 @@ return (
               </div>
             </div>
 
-            {/* Top Products Search Bar */}
+            {/* 1. TOP PRODUCTS SEARCH BAR */}
             <div className="bg-white border-2 border-emerald-100 rounded-2xl px-3.5 py-2.5 flex items-center shadow-sm">
               <Search className="h-4 w-4 text-[#15803D] mr-2 flex-shrink-0" />
               <input
@@ -2637,244 +2580,181 @@ return (
               )}
             </div>
 
-            {search.trim() !== '' ? (
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-extrabold text-slate-900">Search Results ({searchedProducts.length})</h3>
-                  <button onClick={() => setSearch('')} className="text-[11px] font-extrabold text-[#15803D]">Clear</button>
-                </div>
-                {searchedProducts.map((p) => renderCustomerProductCard(p))}
+            {/* 2. DAILY ESSENTIALS SECTION */}
+            <section className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-extrabold text-slate-900">Daily essentials</h2>
+                <span className="text-[10px] font-bold text-[#15803D]">Morning Fresh</span>
               </div>
-            ) : (
-              <>
-                {/* 1. DAILY ESSENTIALS (Tapping opens horizontal list directly below, pushing Coupons & Categories down) */}
-                <section className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-sm font-extrabold text-slate-900">Daily essentials</h2>
-                    <span className="text-[10px] font-bold text-[#15803D]">Morning Fresh</span>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2">
-                    {dailyEssentialCats.map((item) => {
-                      const isOpen = homeExpandedCat?.section === 'daily' && homeExpandedCat?.catName === item.labelEn;
-                      return (
-                        <button
-                          key={item.id}
-                          type="button"
-                          onClick={() =>
-                            setHomeExpandedCat(isOpen ? null : { section: 'daily', catName: item.labelEn })
-                          }
-                          className={`rounded-2xl p-2 border text-center transition shadow-sm ${
-                            isOpen
-                              ? 'bg-emerald-50 border-2 border-[#15803D]'
-                              : 'bg-gradient-to-b from-emerald-50/70 to-white border-emerald-100'
-                          }`}
-                        >
-                          <div className="h-14 w-14 rounded-xl bg-white p-1 mx-auto mb-1.5 shadow-sm overflow-hidden">
-                            <img src={item.img} alt={item.labelEn} className="h-full w-full object-cover rounded-lg" />
-                          </div>
-                          <p className="text-[10px] font-extrabold text-slate-900 line-clamp-2 leading-tight">
-                            {item.labelEn}
-                          </p>
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Horizontal Product List directly under Daily essentials when selected */}
-                  {homeExpandedCat?.section === 'daily' &&
-                    renderHomeInlineHorizontalDrawer(homeExpandedCat.catName)}
-                </section>
-
-                {/* 2. OFFERS & COUPONS */}
-                {activeCoupons.length > 0 && (
-                  <section className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-sm font-extrabold text-slate-900 flex items-center space-x-1">
-                        <Tag className="h-4 w-4 text-[#EA580C]" />
-                        <span>Offers & Coupons</span>
-                      </h2>
-                      <span className="text-[10px] font-bold text-slate-400">Tap to Copy</span>
-                    </div>
-                    <div className="flex space-x-2.5 overflow-x-auto pb-1">
-                      {activeCoupons.map((cp) => (
-                        <button
-                          key={cp.id}
-                          type="button"
-                          onClick={() => {
-                            setPromoInput(cp.code);
-                            setAppliedCouponObj(cp);
-                            notify(`Coupon ${cp.code} selected for Checkout (-₹${cp.discount})!`);
-                          }}
-                          className="flex-shrink-0 w-56 bg-gradient-to-r from-[#FFFBEB] via-[#FEF3C7] to-[#FDE68A] border border-amber-300 rounded-2xl p-3 text-left shadow-sm space-y-1"
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="bg-[#15803D] text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full">
-                              {cp.badge || 'OFFER'}
-                            </span>
-                            <span className="font-mono font-extrabold text-[11px] text-[#0F5132] bg-white px-2 py-0.5 rounded border border-emerald-200">
-                              {cp.code}
-                            </span>
-                          </div>
-                          <p className="text-xs font-extrabold text-slate-900 truncate pt-0.5">{cp.title}</p>
-                          <p className="text-[10px] font-semibold text-slate-600 truncate">{cp.subtitle}</p>
-                        </button>
-                      ))}
-                    </div>
-                  </section>
-                )}
-
-{/* 3. CATEGORIES GRID (Selecting a category opens horizontal list directly under its row, pushing lower rows down) */}
-                <section className="space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-sm font-extrabold text-slate-900">Categories</h2>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCatTabSelectedCat(null);
-                        setActiveTab('categories');
-                      }}
-                      className="text-[11px] font-extrabold text-[#15803D]"
-                    >
-                      See All ({categoriesList.length}) &gt;
-                    </button>
-                  </div>
-
-                  {categoryRows.map((row, rIdx) => {
-                    const activeInThisRow =
-                      homeExpandedCat?.section === 'grid' &&
-                      row.some((c) => c.labelEn === homeExpandedCat.catName);
-
-                    return (
-                      <div key={rIdx} className="space-y-2">
-                        <div className="grid grid-cols-3 gap-2">
-                          {row.map((cat) => {
-                            const isSel =
-                              homeExpandedCat?.section === 'grid' &&
-                              homeExpandedCat?.catName === cat.labelEn;
-                            return (
-                              <button
-                                key={cat.id}
-                                type="button"
-                                onClick={() =>
-                                  setHomeExpandedCat(isSel ? null : { section: 'grid', catName: cat.labelEn })
-                                }
-                                className={`rounded-2xl p-2.5 border text-center transition ${
-                                  isSel
-                                    ? 'border-2 border-[#15803D] bg-emerald-50 shadow-sm'
-                                    : 'border-slate-100 bg-white shadow-sm'
-                                }`}
-                              >
-                                <img src={cat.img} alt={cat.labelEn} className="h-14 w-14 rounded-2xl object-cover mx-auto mb-1.5" />
-                                <p className="text-[10px] font-extrabold text-slate-900 line-clamp-2 leading-tight">{cat.labelEn}</p>
-                                <p className="text-[9px] font-bold text-[#15803D] truncate mt-0.5">{cat.labelTe}</p>
-                              </button>
-                            );
-                          })}
-                        </div>
-
-                        {activeInThisRow && renderHomeInlineHorizontalDrawer(homeExpandedCat.catName)}
-                      </div>
-                    );
-                  })}
-                </section>
-              </>
-            )}
-          </main>
-        )}
-
-        {/* CATEGORIES TAB:
-            - Default (catTabSelectedCat === null): Full 3-column grid of all categories
-            - When any category is selected: Left side vertical categories rail + Right side available products list (stays inside Categories tab!) */}
-        {activeTab === 'categories' && (
-          <main className="min-h-[85vh] text-xs">
-            <div className="bg-white px-4 py-3.5 border-b border-slate-100 flex items-center justify-between sticky top-0 z-20">
-              <div className="flex items-center space-x-2.5">
-                <button
-                  type="button"
-                  onClick={() => (catTabSelectedCat ? setCatTabSelectedCat(null) : setActiveTab('home'))}
-                  className="p-2 rounded-full bg-slate-100 text-slate-700"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </button>
-                <h2 className="text-base font-extrabold text-slate-900">
-                  {catTabSelectedCat || `All Categories (${categoriesList.length})`}
-                </h2>
-              </div>
-              {catTabSelectedCat && (
-                <button
-                  type="button"
-                  onClick={() => setCatTabSelectedCat(null)}
-                  className="text-[11px] font-extrabold text-[#15803D] bg-emerald-50 px-2.5 py-1 rounded-full"
-                >
-                  All Grid
-                </button>
-              )}
-            </div>
-
-            {!catTabSelectedCat ? (
-              <div className="p-4 grid grid-cols-3 gap-2.5">
-                {categoriesList.map((cat) => (
+              <div className="grid grid-cols-4 gap-2">
+                {dailyEssentialCats.map((item) => (
                   <button
-                    key={cat.id}
+                    key={item.id}
                     type="button"
-                    onClick={() => setCatTabSelectedCat(cat.labelEn)}
-                    className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 text-center space-y-1.5 hover:border-[#15803D] transition"
+                    onClick={() => setSelectedCat(selectedCat === item.labelEn ? 'All' : item.labelEn)}
+                    className={`rounded-2xl p-2 border text-center transition shadow-sm ${
+                      selectedCat === item.labelEn
+                        ? 'bg-emerald-50 border-2 border-[#15803D]'
+                        : 'bg-gradient-to-b from-emerald-50/70 to-white border-emerald-100'
+                    }`}
                   >
-                    <img src={cat.img} alt={cat.labelEn} className="h-16 w-16 rounded-2xl object-cover mx-auto" />
-                    <h3 className="text-[10px] font-extrabold text-slate-900 line-clamp-2 leading-tight">{cat.labelEn}</h3>
-                    <p className="text-[9px] font-bold text-[#15803D] truncate">{cat.labelTe}</p>
+                    <div className="h-14 w-14 rounded-xl bg-white p-1 mx-auto mb-1.5 shadow-sm overflow-hidden">
+                      <img src={item.img} alt={item.labelEn} className="h-full w-full object-cover rounded-lg" />
+                    </div>
+                    <p className="text-[10px] font-extrabold text-slate-900 line-clamp-2 leading-tight">
+                      {item.labelEn}
+                    </p>
                   </button>
                 ))}
               </div>
-            ) : (
-              /* Split View: Left Vertical Categories Sidebar + Right Products List */
-              <div className="flex min-h-[80vh]">
-                {/* Left Vertical Categories Rail */}
-                <aside className="w-24 bg-white border-r border-slate-200 flex-shrink-0 overflow-y-auto py-2 space-y-1">
-                  {categoriesList.map((cat) => {
-                    const active = catTabSelectedCat === cat.labelEn;
-                    return (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        onClick={() => setCatTabSelectedCat(cat.labelEn)}
-                        className={`w-full px-1.5 py-2.5 flex flex-col items-center text-center border-l-4 transition ${
-                          active
-                            ? 'border-[#15803D] bg-emerald-50/80 text-[#15803D]'
-                            : 'border-transparent text-slate-600 hover:bg-slate-50'
-                        }`}
-                      >
-                        <img src={cat.img} alt={cat.labelEn} className="h-11 w-11 rounded-xl object-cover mb-1 border border-slate-100" />
-                        <span className="text-[9px] font-extrabold line-clamp-2 leading-tight">{cat.labelEn}</span>
-                      </button>
-                    );
-                  })}
-                </aside>
+            </section>
 
-{/* Right Side Available Products List */}
-                <section className="flex-1 p-3 space-y-2.5 overflow-y-auto">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-extrabold text-slate-900">{catTabSelectedCat}</h3>
-                    <span className="text-[10px] font-bold text-[#15803D]">
-                      {products.filter((p) => p.cat === catTabSelectedCat).length} Items
-                    </span>
-                  </div>
-                  {products.filter((p) => p.cat === catTabSelectedCat).length === 0 ? (
-                    <div className="bg-white rounded-2xl p-6 text-center text-slate-400 font-bold">
-                      No products available in {catTabSelectedCat} right now.
-                    </div>
-                  ) : (
-                    products
-                      .filter((p) => p.cat === catTabSelectedCat)
-                      .map((p) => renderCustomerProductCard(p))
-                  )}
-                </section>
+{/* 3. OFFERS AND COUPONS SECTION */}
+            {activeCoupons.length > 0 && (
+              <section className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-extrabold text-slate-900 flex items-center space-x-1">
+                    <Tag className="h-4 w-4 text-[#EA580C]" />
+                    <span>Offers & Coupons</span>
+                  </h2>
+                  <span className="text-[10px] font-bold text-slate-400">Tap to Copy</span>
+                </div>
+                <div className="flex space-x-2.5 overflow-x-auto pb-1">
+                  {activeCoupons.map((cp) => (
+                    <button
+                      key={cp.id}
+                      type="button"
+                      onClick={() => {
+                        setPromoInput(cp.code);
+                        setAppliedCouponObj(cp);
+                        notify(`Coupon ${cp.code} selected for Checkout (-₹${cp.discount})!`);
+                      }}
+                      className="flex-shrink-0 w-56 bg-gradient-to-r from-[#FFFBEB] via-[#FEF3C7] to-[#FDE68A] border border-amber-300 rounded-2xl p-3 text-left shadow-sm space-y-1"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="bg-[#15803D] text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full">
+                          {cp.badge || 'OFFER'}
+                        </span>
+                        <span className="font-mono font-extrabold text-[11px] text-[#0F5132] bg-white px-2 py-0.5 rounded border border-emerald-200">
+                          {cp.code}
+                        </span>
+                      </div>
+                      <p className="text-xs font-extrabold text-slate-900 truncate pt-0.5">{cp.title}</p>
+                      <p className="text-[10px] font-semibold text-slate-600 truncate">{cp.subtitle}</p>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* 4. CATEGORIES GRID SECTION */}
+            <section className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-extrabold text-slate-900">Categories</h2>
+                <button type="button" onClick={() => setActiveTab('categories')} className="text-[11px] font-extrabold text-[#15803D]">
+                  See All ({categoriesList.length}) &gt;
+                </button>
               </div>
+              <div className="grid grid-cols-3 gap-2">
+                {categoriesList.map((cat) => {
+                  const isSel = selectedCat === cat.labelEn;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setSelectedCat(isSel ? 'All' : cat.labelEn)}
+                      className={`rounded-2xl p-2.5 border text-center transition ${
+                        isSel ? 'border-2 border-[#15803D] bg-emerald-50 shadow-sm' : 'border-slate-100 bg-white shadow-sm'
+                      }`}
+                    >
+                      <img src={cat.img} alt={cat.labelEn} className="h-14 w-14 rounded-2xl object-cover mx-auto mb-1.5" />
+                      <p className="text-[10px] font-extrabold text-slate-900 line-clamp-2 leading-tight">{cat.labelEn}</p>
+                      <p className="text-[9px] font-bold text-[#15803D] truncate mt-0.5">{cat.labelTe}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            {/* 5. SECTION-WISE PRODUCTS LIST */}
+            {selectedCat !== 'All' || search.trim() !== '' ? (
+              <div className="space-y-2.5 pt-1">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-extrabold text-slate-900">
+                    {selectedCat !== 'All' ? selectedCat : `Search Results (${searchedProducts.length})`}
+                  </h3>
+                  <button
+                    onClick={() => {
+                      setSelectedCat('All');
+                      setSearch('');
+                    }}
+                    className="text-[11px] font-extrabold text-[#15803D]"
+                  >
+                    Show All Sections
+                  </button>
+                </div>
+                {searchedProducts
+                  .filter((p) => selectedCat === 'All' || p.cat === selectedCat)
+                  .map((p) => renderCustomerProductCard(p))}
+              </div>
+            ) : (
+              categoriesList.map((catObj) => {
+                const catItems = products.filter((p) => p.cat === catObj.labelEn);
+                if (catItems.length === 0) return null;
+                return (
+                  <section key={catObj.id} className="space-y-2.5 pt-1">
+                    <div className="flex items-center justify-between border-b border-emerald-100 pb-1.5">
+                      <div>
+                        <h3 className="text-sm font-extrabold text-slate-900">{catObj.labelEn}</h3>
+                        <p className="text-[10px] font-bold text-[#15803D]">{catObj.labelTe}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedCat(catObj.labelEn)}
+                        className="text-[11px] font-extrabold text-[#15803D] bg-emerald-50 px-2.5 py-1 rounded-full"
+                      >
+                        See All ({catItems.length})
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {catItems.map((p) => renderCustomerProductCard(p))}
+                    </div>
+                  </section>
+                );
+              })
             )}
           </main>
         )}
 
-        {activeTab === 'productDetail' && detailProduct && (
+        {activeTab === 'categories' && (
+          <main className="p-4 space-y-4 text-xs">
+            <div className="flex items-center space-x-3">
+              <button onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white shadow-sm">
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+              <h2 className="text-base font-extrabold text-slate-900">All Categories ({categoriesList.length})</h2>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2.5">
+              {categoriesList.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => {
+                    setSelectedCat(cat.labelEn);
+                    setActiveTab('home');
+                  }}
+                  className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 text-center space-y-1.5 hover:border-[#15803D]"
+                >
+                  <img src={cat.img} alt={cat.labelEn} className="h-16 w-16 rounded-2xl object-cover mx-auto" />
+                  <h3 className="text-[10px] font-extrabold text-slate-900 line-clamp-2 leading-tight">{cat.labelEn}</h3>
+                  <p className="text-[9px] font-bold text-[#15803D] truncate">{cat.labelTe}</p>
+                </button>
+              ))}
+            </div>
+          </main>
+        )}
+
+{activeTab === 'productDetail' && detailProduct && (
           <main className="bg-white min-h-screen pb-24 text-xs">
             <div className="relative h-64 w-full bg-slate-100">
               <img src={detailProduct.img} alt={detailProduct.nameEn} className="h-full w-full object-cover" />
@@ -2955,7 +2835,7 @@ return (
           </main>
         )}
 
-  {activeTab === 'checkout' && (
+        {activeTab === 'checkout' && (
           <main className="p-4 space-y-3.5 text-xs">
             <div className="flex items-center space-x-3">
               <button onClick={() => setActiveTab('cart')} className="p-2 rounded-full bg-white shadow-sm">
@@ -2991,7 +2871,7 @@ return (
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
+   <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
               <div className="flex items-center justify-between">
                 <h3 className="font-extrabold text-slate-900">Payment Method</h3>
                 <span className="text-[10px] font-bold text-[#15803D]">{merchantUpiId}</span>
@@ -3048,7 +2928,7 @@ return (
           </main>
         )}
 
-{activeTab === 'upiProcessing' && (
+        {activeTab === 'upiProcessing' && (
           <main className="p-4 space-y-4 text-xs">
             <div className="bg-white rounded-3xl p-5 shadow-md border border-emerald-200 text-center space-y-3">
               <h2 className="text-base font-extrabold text-slate-900">Pay ₹{payableTotal} to {merchantUpiId}</h2>
@@ -3093,9 +2973,6 @@ return (
           </main>
         )}
 
-        {/* TRACK ORDER PAGE:
-            - Before Delivery: Live Scooter Tracking (once picked up) + Call/Msg enabled ONLY once Delivery Partner is assigned
-            - After Delivered: Tracking map, Call/Msg buttons & Print Invoice PDF button are completely hidden! */}
         {activeTab === 'trackOrder' && trackingOrder && (
           <main className="pb-10 text-xs">
             <div className="bg-gradient-to-b from-[#15803D] to-[#22C55E] text-white p-5 rounded-b-[32px] shadow-md space-y-2">
@@ -3111,127 +2988,99 @@ return (
             </div>
 
             <div className="p-4 space-y-3.5">
-              {isOrderDelivered ? (
-                /* AFTER DELIVERED: Clean Delivered Confirmation + Ordered Products Details Only (No Tracking, No Call/Msg, No Print Button) */
-                <div className="bg-white rounded-3xl p-4 shadow-sm border border-emerald-200 space-y-3">
-                  <div className="flex items-center space-x-2.5 text-[#15803D]">
-                    <CheckCircle2 className="h-6 w-6 flex-shrink-0" />
-                    <div>
-                      <h3 className="text-sm font-extrabold">Order Delivered Successfully</h3>
-                      <p className="text-[10px] text-slate-500">Tax Invoice sent to {trackingOrder.buyerEmail}</p>
-                    </div>
-                  </div>
-                  <div className="border-t pt-2.5 space-y-1.5">
-                    <p className="text-[10px] font-extrabold text-slate-400 uppercase">Delivered Products</p>
-                    {(trackingOrder.items || []).map((it, idx) => (
-                      <div key={idx} className="flex justify-between font-bold text-slate-800">
-                        <span>{it.name} ({it.qty} {it.unit || 'Kg'})</span>
-                        <span>₹{it.price * it.qty}</span>
+              {(trackingOrder.pickupStops || []).length > 0 && (
+                <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
+                  <p className="font-extrabold text-slate-900">
+                    Seller Acceptance ({trackingOrder.pickupStops.filter((s) => s.stopStatus === 'Accepted').length}/{trackingOrder.pickupStops.length} Accepted)
+                  </p>
+                  {trackingOrder.pickupStops.map((st, idx) => (
+                    <div key={st.stopId} className="flex items-center justify-between text-[11px] border-t pt-1.5">
+                      <div className="min-w-0 pr-2">
+                        <p className="font-extrabold text-slate-800 truncate">
+                          {idx + 1}. {st.acceptedByUserName || st.sellerName} ({st.sellerRole.toUpperCase()})
+                        </p>
+                        <p className="text-[10px] text-slate-500 truncate">{st.itemsSummary.join(', ')}</p>
                       </div>
-                    ))}
-                    <div className="border-t pt-2 flex justify-between font-extrabold text-sm text-[#15803D]">
-                      <span>Total Paid</span>
-                      <span>₹{trackingOrder.total}</span>
+                      <span
+                        className={`font-extrabold px-2 py-0.5 rounded-full text-[10px] flex-shrink-0 ${
+                          st.pickedUp
+                            ? 'bg-emerald-100 text-[#15803D]'
+                            : st.stopStatus === 'Accepted'
+                            ? 'bg-sky-100 text-sky-700'
+                            : 'bg-amber-100 text-amber-800'
+                        }`}
+                      >
+                        {st.pickedUp ? '✓ Picked Up' : st.stopStatus}
+                      </span>
                     </div>
-                  </div>
+                  ))}
                 </div>
+              )}
+
+{isOutForCustomerDrop ? (
+                <LiveScooterMap
+                  lat={liveLat}
+                  lng={liveLng}
+                  title="Delivery Partner Live Scooter"
+                  height={208}
+                  badgeText={`🛵 Rider Out for Delivery • GPS: ${liveLat}, ${liveLng}`}
+                />
               ) : (
-                <>
-                  {(trackingOrder.pickupStops || []).length > 0 && (
-                    <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
-                      <p className="font-extrabold text-slate-900">
-                        Seller Acceptance ({trackingOrder.pickupStops.filter((s) => s.stopStatus === 'Accepted').length}/{trackingOrder.pickupStops.length} Accepted)
-                      </p>
-                      {trackingOrder.pickupStops.map((st, idx) => (
-                        <div key={st.stopId} className="flex items-center justify-between text-[11px] border-t pt-1.5">
-                          <div className="min-w-0 pr-2">
-                            <p className="font-extrabold text-slate-800 truncate">
-                              {idx + 1}. {st.acceptedByUserName || st.sellerName} ({st.sellerRole.toUpperCase()})
-                            </p>
-                            <p className="text-[10px] text-slate-500 truncate">{st.itemsSummary.join(', ')}</p>
-                          </div>
-                          <span
-                            className={`font-extrabold px-2 py-0.5 rounded-full text-[10px] flex-shrink-0 ${
-                              st.pickedUp
-                                ? 'bg-emerald-100 text-[#15803D]'
-                                : st.stopStatus === 'Accepted'
-                                ? 'bg-sky-100 text-sky-700'
-                                : 'bg-amber-100 text-amber-800'
-                            }`}
-                          >
-                            {st.pickedUp ? '✓ Picked Up' : st.stopStatus}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-1 text-amber-950">
+                  <p className="font-extrabold">Stage 1: Store Acceptance & Pickup in Progress</p>
+                  <p className="text-[11px]">
+                    Once all accepted sellers' items are picked up by the delivery partner, live scooter tracking will appear here!
+                  </p>
+                </div>
+              )}
 
-                  {isOutForCustomerDrop ? (
-                    <LiveScooterMap
-                      lat={liveLat}
-                      lng={liveLng}
-                      title="Delivery Partner Live Scooter"
-                      height={208}
-                      badgeText={`🛵 Rider Out for Delivery • GPS: ${liveLat}, ${liveLng}`}
-                    />
-                  ) : (
-                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-1 text-amber-950">
-                      <p className="font-extrabold">Stage 1: Store Acceptance & Pickup in Progress</p>
-                      <p className="text-[11px]">
-                        Once all accepted sellers' items are picked up by the delivery partner, live scooter tracking will appear here!
-                      </p>
-                    </div>
-                  )}
-
-    {/* Delivery Partner Card: Call & Msg buttons enabled ONLY once Delivery Partner is assigned */}
-                  <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="h-11 w-11 rounded-full bg-emerald-100 text-[#15803D] font-extrabold flex items-center justify-center text-xl">
-                        🛵
-                      </div>
-                      <div>
-                        <p className="text-[10px] text-slate-400 font-bold">Delivery Partner</p>
-                        <h4 className="font-extrabold text-slate-900">
-                          {trackingOrder.driverName || 'Assigning Delivery Partner...'}
-                        </h4>
-                        {trackingOrder.driverMobile && (
-                          <p className="text-[10px] text-slate-500">+91 {trackingOrder.driverMobile}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {isPartnerAssignedOrEnRoute && trackingOrder.driverMobile && (
-                      <div className="flex space-x-2">
-                        <a
-                          href={`tel:${trackingOrder.driverMobile}`}
-                          className="p-2.5 bg-emerald-50 text-[#15803D] border border-emerald-200 rounded-full flex items-center space-x-1 font-extrabold text-[10px]"
-                        >
-                          <Phone className="h-4 w-4" />
-                          <span>Call</span>
-                        </a>
-                        <a
-                          href={`sms:${trackingOrder.driverMobile}`}
-                          className="p-2.5 bg-sky-50 text-sky-700 border border-sky-200 rounded-full flex items-center space-x-1 font-extrabold text-[10px]"
-                        >
-                          <MessageSquare className="h-4 w-4" />
-                          <span>Msg</span>
-                        </a>
-                      </div>
+              <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="h-11 w-11 rounded-full bg-emerald-100 text-[#15803D] font-extrabold flex items-center justify-center text-xl">
+                    🛵
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-slate-400 font-bold">Delivery Partner</p>
+                    <h4 className="font-extrabold text-slate-900">
+                      {trackingOrder.driverName || 'Assigning Delivery Partner...'}
+                    </h4>
+                    {trackingOrder.driverMobile && (
+                      <p className="text-[10px] text-slate-500">+91 {trackingOrder.driverMobile}</p>
                     )}
                   </div>
+                </div>
+                <div className="flex space-x-2">
+                  <a
+                    href={`tel:${trackingOrder.driverMobile || '8328261103'}`}
+                    className="p-2.5 bg-emerald-50 text-[#15803D] border border-emerald-200 rounded-full flex items-center space-x-1 font-extrabold text-[10px]"
+                  >
+                    <Phone className="h-4 w-4" />
+                    <span>Call</span>
+                  </a>
+                  <a
+                    href={`sms:${trackingOrder.driverMobile || '8328261103'}`}
+                    className="p-2.5 bg-sky-50 text-sky-700 border border-sky-200 rounded-full flex items-center space-x-1 font-extrabold text-[10px]"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    <span>Msg</span>
+                  </a>
+                </div>
+              </div>
 
-                  <button onClick={() => handleSimulateCustomerDelivery(trackingOrder)} className="w-full bg-[#EA580C] text-white font-extrabold py-3.5 rounded-2xl shadow">
-                    Complete Delivery (Auto Email Invoice PDF)
-                  </button>
-                </>
+              {trackingOrder.status !== 'Delivered' ? (
+                <button onClick={() => handleSimulateCustomerDelivery(trackingOrder)} className="w-full bg-[#EA580C] text-white font-extrabold py-3.5 rounded-2xl shadow">
+                  Complete Delivery (Auto Email Invoice PDF)
+                </button>
+              ) : (
+                <button onClick={() => window.print()} className="w-full bg-slate-900 text-white font-extrabold py-3.5 rounded-2xl shadow flex items-center justify-center space-x-2">
+                  <Printer className="h-4 w-4" />
+                  <span>Download / Print Invoice PDF</span>
+                </button>
               )}
             </div>
           </main>
         )}
 
-        {/* MY ORDERS PAGE (CUSTOMER):
-            - Active Orders: Shows 'Track Order >'
-            - Delivered Orders: Shows Ordered Products Details instead of Track Order */}
         {activeTab === 'orders' && (
           <main className="p-4 space-y-3.5 text-xs">
             <h2 className="text-base font-extrabold text-slate-900">My Orders</h2>
@@ -3240,52 +3089,29 @@ return (
             ) : (
               orders
                 .filter((o) => o.buyerRole === 'customer')
-                .map((ord) => {
-                  const isDelivered = ord.status === 'Delivered';
-                  return (
-                    <div key={ord.id} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-2">
-                      <div className="flex justify-between font-extrabold">
-                        <span>{ord.id} • <span className={isDelivered ? 'text-[#15803D]' : 'text-amber-700'}>{ord.status}</span></span>
-                        <span>₹{ord.total}</span>
-                      </div>
-
-                      {isDelivered ? (
-                        <div className="bg-slate-50 rounded-2xl p-2.5 border border-slate-100 space-y-1">
-                          <p className="text-[10px] font-extrabold text-slate-400 uppercase">Ordered Products</p>
-                          {(ord.items || []).map((it, idx) => (
-                            <div key={idx} className="flex justify-between text-[11px] font-bold text-slate-700">
-                              <span>{it.name} × {it.qty} {it.unit || 'Kg'}</span>
-                              <span>₹{it.price * it.qty}</span>
-                            </div>
-                          ))}
-                          <p className="text-[10px] text-slate-400 pt-1">{ord.date}</p>
-                        </div>
-                      ) : (
-                        <button onClick={() => { setTrackingOrder(ord); setActiveTab('trackOrder'); }} className="text-[#15803D] font-extrabold">
-                          Track Order &gt;
-                        </button>
-                      )}
+                .map((ord) => (
+                  <div key={ord.id} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-2">
+                    <div className="flex justify-between font-extrabold">
+                      <span>{ord.id} • {ord.status}</span>
+                      <span>₹{ord.total}</span>
                     </div>
-                  );
-                })
+                    <button onClick={() => { setTrackingOrder(ord); setActiveTab('trackOrder'); }} className="text-[#15803D] font-extrabold">
+                      Track Order &gt;
+                    </button>
+                  </div>
+                ))
             )}
           </main>
         )}
 
-{activeTab === 'profile' && renderSharedProfileTab()}
+        {activeTab === 'profile' && renderSharedProfileTab()}
 
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-slate-200 px-4 py-2 flex justify-between items-center z-40 shadow-lg">
           <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'home' ? 'text-[#15803D]' : 'text-slate-400'}`}>
             <Home className="h-5 w-5 mb-0.5" />
             <span>Home</span>
           </button>
-          <button
-            onClick={() => {
-              setCatTabSelectedCat(null);
-              setActiveTab('categories');
-            }}
-            className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'categories' ? 'text-[#15803D]' : 'text-slate-400'}`}
-          >
+          <button onClick={() => setActiveTab('categories')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'categories' ? 'text-[#15803D]' : 'text-slate-400'}`}>
             <Grid className="h-5 w-5 mb-0.5" />
             <span>Categories</span>
           </button>
@@ -3325,7 +3151,6 @@ return (
 
     const myAcceptedStopCards = [];
     orders.forEach((ord) => {
-      if (ord.status === 'Delivered') return;
       const stops = ord.pickupStops || buildPickupStopsFromItems(ord.items || []);
       const acceptedStops = stops.filter((s) => s.stopStatus === 'Accepted');
       const currentActiveStop = acceptedStops.find((s) => !s.pickedUp);
@@ -3431,7 +3256,7 @@ return (
           </div>
         )}
 
-{myAcceptedStopCards.map(({ ord, st, isMyTurnForRiderPickup }) => {
+   {myAcceptedStopCards.map(({ ord, st, isMyTurnForRiderPickup }) => {
           const rLat = ord.driverLat || 14.4390;
           const rLng = ord.driverLng || 79.9810;
           return (
@@ -3641,7 +3466,7 @@ return (
       ];
       const pickupStops = buildPickupStopsFromItems(itemsArr);
 
-const newOrd = {
+      const newOrd = {
         id: (isRetail ? 'RIT-' : 'WS-') + Math.floor(1000 + Math.random() * 8999),
         buyerId: currentUser.id,
         buyerRole: currentUser.role,
@@ -3675,7 +3500,7 @@ const newOrd = {
       setActiveTab('orders');
     };
 
-    return (
+return (
       <div style={fontStyle} className="min-h-screen bg-[#F5F7F5] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
         <WelcomeSmileModal />
         {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-extrabold px-4 py-2 rounded-full shadow-lg">{toast}</div>}
@@ -3718,7 +3543,7 @@ const newOrd = {
           </main>
         )}
 
-{activeTab === 'sellStock' && (
+        {activeTab === 'sellStock' && (
           <main className="p-4 space-y-3 text-xs">
             <div className="flex items-center space-x-2">
               <button onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white shadow-sm">
@@ -3779,74 +3604,58 @@ const newOrd = {
           </main>
         )}
 
-        {/* MY ORDERS PAGE (WHOLESALE & RETAIL):
-            - Active Bulk Orders: Shows live scooter tracking once picked up + B2B OTP
-            - Delivered Bulk Orders: Shows Ordered Products Details only (No tracking map, no print invoice button) */}
         {activeTab === 'orders' && (
           <main className="p-4 space-y-3 text-xs">
-            <h2 className="text-base font-extrabold">{currentUser.role.toUpperCase()} My Orders</h2>
+            <h2 className="text-base font-extrabold">{currentUser.role.toUpperCase()} Orders & Live Tracking</h2>
             {renderBroadcastOrderAlertsAndPickupTracking()}
 
             {myPlacedBulkOrders.map((ord) => {
-              const isDelivered = ord.status === 'Delivered';
-              const isPickedUp = ord.status === 'Out for Delivery';
+              const isPickedUp = ord.status === 'Out for Delivery' || ord.status === 'Delivered';
               const rLat = ord.driverLat || 14.4390;
               const rLng = ord.driverLng || 79.9810;
-
               return (
                 <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-200 space-y-2">
                   <div className="flex justify-between font-extrabold">
-                    <span>Order #{ord.id} • <span className={isDelivered ? 'text-[#15803D]' : 'text-amber-700'}>{ord.status}</span></span>
+                    <span>My Bulk Order #{ord.id} • {ord.status}</span>
                     <span className="text-[#15803D]">₹{ord.total}</span>
                   </div>
+                  <p className="text-slate-600">{ord.items.map((i) => `${i.qty} ${i.unit || 'Kg'} ${i.name}`).join(', ')}</p>
+                  {ord.b2bOtp && (
+                    <div className="bg-amber-50 border border-amber-200 p-2 rounded-xl font-extrabold text-amber-950">
+                      Delivery Verification OTP: {ord.b2bOtp}
+                    </div>
+                  )}
 
-                  {isDelivered ? (
-                    <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-100 space-y-1">
-                      <p className="text-[10px] font-extrabold text-slate-400 uppercase">Delivered Products</p>
-                      {(ord.items || []).map((it, idx) => (
-                        <div key={idx} className="flex justify-between text-[11px] font-bold text-slate-700">
-                          <span>{it.name} × {it.qty} {it.unit || 'Kg'}</span>
-                          <span>₹{it.price * it.qty}</span>
-                        </div>
-                      ))}
-                      <p className="text-[10px] text-slate-400 pt-1">{ord.date}</p>
+                  {isPickedUp ? (
+                    <div className="space-y-1.5 pt-1">
+                      <p className="text-[11px] font-extrabold text-[#15803D]">
+                        🛵 Rider {ord.driverName} Picked Up Order — Live Delivery GPS: {rLat}, {rLng}
+                      </p>
+                      <LiveScooterMap
+                        lat={rLat}
+                        lng={rLng}
+                        title={`Bulk Drop Map ${ord.id}`}
+                        height={148}
+                        badgeText={`🛵 Live Delivery GPS: ${rLat}, ${rLng}`}
+                      />
                     </div>
                   ) : (
-                    <>
-                      <p className="text-slate-600">{ord.items.map((i) => `${i.qty} ${i.unit || 'Kg'} ${i.name}`).join(', ')}</p>
-                      {ord.b2bOtp && (
-                        <div className="bg-amber-50 border border-amber-200 p-2 rounded-xl font-extrabold text-amber-950">
-                          Delivery Verification OTP: {ord.b2bOtp}
-                        </div>
-                      )}
-
-                      {isPickedUp ? (
-                        <div className="space-y-1.5 pt-1">
-                          <p className="text-[11px] font-extrabold text-[#15803D]">
-                            🛵 Rider {ord.driverName} Out for Delivery • Live GPS: {rLat}, {rLng}
-                          </p>
-                          <LiveScooterMap
-                            lat={rLat}
-                            lng={rLng}
-                            title={`Bulk Drop Map ${ord.id}`}
-                            height={148}
-                            badgeText={`🛵 Live Delivery GPS: ${rLat}, ${rLng}`}
-                          />
-                        </div>
-                      ) : (
-                        <p className="text-[10px] font-bold text-slate-500">
-                          Tracking active until delivery — live scooter map starts once picked up.
-                        </p>
-                      )}
-                    </>
+                    <p className="text-[10px] font-bold text-slate-500">
+                      Waiting for seller acceptance & rider pickup...
+                    </p>
                   )}
+
+                  <button onClick={() => window.print()} className="w-full bg-slate-900 text-white font-extrabold py-2.5 rounded-xl flex items-center justify-center space-x-1.5">
+                    <Printer className="h-3.5 w-3.5" />
+                    <span>Print / Save PDF Invoice</span>
+                  </button>
                 </div>
               );
             })}
           </main>
         )}
 
-{activeTab === 'profile' && renderSharedProfileTab()}
+        {activeTab === 'profile' && renderSharedProfileTab()}
 
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-6 py-2.5 flex justify-between items-center z-40">
           {[
@@ -3928,7 +3737,7 @@ const newOrd = {
       notify(`Delivered! ₹${baseFee} Base + ₹${multiBonus} Multi-Stop Bonus (Total ₹${totalEarned}) credited!`);
     };
 
-return (
+    return (
       <div style={fontStyle} className="min-h-screen bg-[#F5F7F5] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
         {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-extrabold px-4 py-2 rounded-full shadow-lg">{toast}</div>}
 
@@ -3998,7 +3807,7 @@ return (
                       </div>
                     </div>
 
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-2">
+   <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-2">
                       <p className="text-[10px] font-extrabold text-slate-700 uppercase">
                         1. Farmer / Shop Pickup Stops ({stops.length}):
                       </p>
@@ -4040,7 +3849,7 @@ return (
                         );
                       })}
 
-<p className="text-[10px] font-extrabold text-[#0F5132] uppercase pt-1">
+                      <p className="text-[10px] font-extrabold text-[#0F5132] uppercase pt-1">
                         2. Customer / Buyer Drop Location:
                       </p>
                       <div className="bg-emerald-50/80 rounded-lg p-2 border border-emerald-200 flex items-center justify-between gap-2">
@@ -4131,7 +3940,6 @@ return (
     );
   }
 
-
   // =========================================================================
   // 7. MASTER ADMIN HQ (MANAGE CATALOGUE + MANAGE CATEGORIES + MANAGE COUPONS + APPROVALS)
   // =========================================================================
@@ -4179,7 +3987,6 @@ return (
     notify('Removed from Master Catalog');
   };
 
-  // Admin Category Icon Photo Upload
   const handleAdminCategoryPhotoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -4192,8 +3999,7 @@ return (
     }
   };
 
-  // Add or Update Category (Syncs immediately to Customer & Seller pages)
-    const handleSaveCategory = (e) => {
+  const handleSaveCategory = (e) => {
     e.preventDefault();
     if (!newCatEn.trim()) return;
     const finalImg =
@@ -4214,7 +4020,6 @@ return (
       : [catObj, ...categoriesList];
 
     setCategoriesList(nextList);
-    // Sync all categories to Firestore so no default category ever disappears
     nextList.forEach((item) => {
       setDoc(doc(db, 'categories', item.id), item).catch(() => {});
     });
@@ -4227,9 +4032,13 @@ return (
     notify(editingCatId ? 'Category Updated Across All Pages!' : 'New Category Added!');
   };
 
+  const handleDeleteCategory = (catId) => {
+    setCategoriesList((prev) => prev.filter((c) => c.id !== catId));
+    deleteDoc(doc(db, 'categories', catId)).catch(() => {});
+    notify('Category Deleted');
+  };
 
-// Add or Update Coupon / Offer (Syncs immediately to Customer Home & Checkout)
-  const handleSaveCoupon = (e) => {
+const handleSaveCoupon = (e) => {
     e.preventDefault();
     if (!cpCode.trim() || !cpTitle.trim()) return;
     const couponObj = {
@@ -4243,13 +4052,15 @@ return (
       active: true,
     };
 
-    setCouponsList((prev) => {
-      if (editingCouponId) {
-        return prev.map((c) => (c.id === editingCouponId ? couponObj : c));
-      }
-      return [couponObj, ...prev];
+    const nextCoupons = editingCouponId
+      ? couponsList.map((c) => (c.id === editingCouponId ? couponObj : c))
+      : [couponObj, ...couponsList];
+
+    setCouponsList(nextCoupons);
+    nextCoupons.forEach((cp) => {
+      setDoc(doc(db, 'coupons', cp.id), cp).catch(() => {});
     });
-    setDoc(doc(db, 'coupons', couponObj.id), couponObj).catch(() => {});
+
     setEditingCouponId(null);
     setCpCode('');
     setCpTitle('');
@@ -4274,13 +4085,12 @@ return (
           <h1 className="text-base font-extrabold mt-0.5">Rythu Basket Control</h1>
         </div>
         <span className="bg-[#EAB308] text-slate-900 text-xs font-extrabold px-2.5 py-1 rounded-full">
-          Live Sync
+          Verified Admin
         </span>
       </header>
 
       {activeTab === 'home' && (
         <main className="p-4 space-y-3 text-xs">
-          {/* 4 Admin Management Tabs */}
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
@@ -4312,8 +4122,7 @@ return (
             </button>
           </div>
 
-          {/* 1. MANAGE CATALOGUE */}
-          {adminTab === 'catalogue' && (
+{adminTab === 'catalogue' && (
             <div className="space-y-3">
               <form onSubmit={handleAddMasterCatalogItem} className="bg-white rounded-3xl p-4 shadow-sm border border-emerald-100 space-y-3">
                 <div className="flex items-center space-x-1.5 font-extrabold text-[#15803D] text-sm">
@@ -4357,7 +4166,7 @@ return (
                   </select>
                 </div>
 
-<label className="block border-2 border-dashed border-emerald-300 bg-emerald-50/40 rounded-2xl p-3 text-center cursor-pointer">
+                <label className="block border-2 border-dashed border-emerald-300 bg-emerald-50/40 rounded-2xl p-3 text-center cursor-pointer">
                   {catImgPreview ? (
                     <img src={catImgPreview} alt="Preview" className="h-20 w-20 rounded-xl object-cover mx-auto mb-1 border" />
                   ) : (
@@ -4405,8 +4214,7 @@ return (
             </div>
           )}
 
-          {/* 2. MANAGE CATEGORIES (ADD NEW, EDIT NAME/TELUGU, CHANGE CATEGORY ICON/PHOTO) */}
-          {adminTab === 'categories' && (
+  {adminTab === 'categories' && (
             <div className="space-y-3">
               <form onSubmit={handleSaveCategory} className="bg-white rounded-3xl p-4 shadow-sm border border-emerald-100 space-y-3">
                 <div className="flex items-center justify-between">
@@ -4479,7 +4287,7 @@ return (
                   className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-semibold text-[11px]"
                 />
 
-  <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow text-sm">
+                <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow text-sm">
                   {editingCatId ? 'Update Category Everywhere' : '+ Add Category'}
                 </button>
               </form>
@@ -4526,8 +4334,7 @@ return (
             </div>
           )}
 
-          {/* 3. MANAGE COUPONS & OFFERS (SYNCED LIVE TO CUSTOMER HOME & CHECKOUT) */}
-          {adminTab === 'coupons' && (
+{adminTab === 'coupons' && (
             <div className="space-y-3">
               <form onSubmit={handleSaveCoupon} className="bg-white rounded-3xl p-4 shadow-sm border border-amber-200 space-y-3">
                 <div className="flex items-center justify-between">
@@ -4604,7 +4411,7 @@ return (
                 </button>
               </form>
 
-<div className="space-y-2">
+              <div className="space-y-2">
                 {couponsList.map((cp) => (
                   <div key={cp.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
                     <div>
@@ -4657,8 +4464,7 @@ return (
             </div>
           )}
 
-          {/* 4. SELLER APPROVALS */}
-          {adminTab === 'approvals' && (
+   {adminTab === 'approvals' && (
             <div className="space-y-2.5">
               {users
                 .filter((u) => u.role === 'farmer' || u.role === 'wholesale' || u.role === 'retail')
