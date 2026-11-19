@@ -3947,7 +3947,7 @@ return (
   };
 
   // Add or Update Category (Syncs immediately to Customer & Seller pages)
-  const handleSaveCategory = (e) => {
+    const handleSaveCategory = (e) => {
     e.preventDefault();
     if (!newCatEn.trim()) return;
     const finalImg =
@@ -3963,13 +3963,16 @@ return (
       img: finalImg,
     };
 
-    setCategoriesList((prev) => {
-      if (editingCatId) {
-        return prev.map((c) => (c.id === editingCatId ? catObj : c));
-      }
-      return [catObj, ...prev];
+    const nextList = editingCatId
+      ? categoriesList.map((c) => (c.id === editingCatId ? catObj : c))
+      : [catObj, ...categoriesList];
+
+    setCategoriesList(nextList);
+    // Sync all categories to Firestore so no default category ever disappears
+    nextList.forEach((item) => {
+      setDoc(doc(db, 'categories', item.id), item).catch(() => {});
     });
-    setDoc(doc(db, 'categories', catObj.id), catObj).catch(() => {});
+
     setEditingCatId(null);
     setNewCatEn('');
     setNewCatTe('');
@@ -3978,11 +3981,6 @@ return (
     notify(editingCatId ? 'Category Updated Across All Pages!' : 'New Category Added!');
   };
 
-  const handleDeleteCategory = (catId) => {
-    setCategoriesList((prev) => prev.filter((c) => c.id !== catId));
-    deleteDoc(doc(db, 'categories', catId)).catch(() => {});
-    notify('Category Deleted');
-  };
 
 // Add or Update Coupon / Offer (Syncs immediately to Customer Home & Checkout)
   const handleSaveCoupon = (e) => {
