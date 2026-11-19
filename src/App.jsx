@@ -3,7 +3,7 @@ import {
   Search, ShoppingCart, Plus, Home, ClipboardList, User, MapPin,
   Phone, MessageSquare, Sprout, Store, Truck, ShieldCheck, ChevronRight,
   ArrowLeft, CheckCircle2, Wallet, Sparkles, Bell, Globe,
-  LocateFixed, LogOut, Printer, Warehouse, ChevronDown,
+  LocateFixed, LogOut, Warehouse, ChevronDown,
   Briefcase, Leaf, Shield, Zap, Grid, Check, Tag, Edit3,
   TrendingUp, Package, HelpCircle, Navigation, Camera, Landmark, Volume2, VolumeX, Trash2, Image
 } from 'lucide-react';
@@ -77,6 +77,7 @@ const DEFAULT_MASTER_CATALOG = [
   { id: 'cat_tomato', nameEn: 'Fresh Tomato', nameTe: 'టమాటా', cat: 'Vegetables', defaultUnit: 'Kg', img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=400&q=80' },
   { id: 'cat_onion', nameEn: 'Red Onion', nameTe: 'ఉల్లిపాయలు', cat: 'Vegetables', defaultUnit: 'Kg', img: 'https://images.unsplash.com/photo-1508747705729-e0613307ab6e?auto=format&fit=crop&w=400&q=80' },
   { id: 'cat_mango', nameEn: 'Banganapalli Mango', nameTe: 'మామిడిపండు', cat: 'Fruits', defaultUnit: 'Kg', img: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=400&q=80' },
+  { id: 'cat_banana', nameEn: 'Yelakki Banana', nameTe: 'అరటిపండు', cat: 'Fruits', defaultUnit: 'Kg', img: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&w=400&q=80' },
   { id: 'cat_spinach', nameEn: 'Fresh Spinach (Palakura)', nameTe: 'పాలకూర', cat: 'Leafy Greens', defaultUnit: 'Grams', img: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=400&q=80' },
   { id: 'cat_milk', nameEn: 'Fresh Farm Buffalo Milk', nameTe: 'చిక్కటి గేదె పాలు', cat: 'Dairy products', defaultUnit: 'Litres', img: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=400&q=80' },
   { id: 'cat_rice', nameEn: 'Nellore Sona Masuri Rice', nameTe: 'సోనా మసూరి బియ్యం', cat: 'Atta, rice, Oils and dals', defaultUnit: 'Kg', img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=400&q=80' },
@@ -100,6 +101,7 @@ const INITIAL_PRODUCTS = [
   { id: 'p1', postedByRole: 'farmer', farmerId: 'u_farm_1', farmerName: 'Ramaiah Farm • Kovur, Nellore', sellerLat: 14.4920, sellerLng: 79.9850, distanceKm: 12, nameEn: 'Fresh Tomato', nameTe: 'టమాటా', cat: 'Vegetables', quality: 'Grade A', unit: 'Kg', packLabel: '1 Kg', mrp: 48, retailPrice: 36, farmerDirectPrice: 24, wholesalePrice: 28, minWholesaleQty: 25, stockKg: 500, inStock: true, desc: 'Fresh and juicy country tomatoes harvested this morning from Kovur farms, Nellore.', availableFrom: 'Available Now', img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=500&q=80' },
   { id: 'p2', postedByRole: 'farmer', farmerId: 'u_farm_2', farmerName: 'Subba Rao Farm • Buchi, Nellore', sellerLat: 14.5360, sellerLng: 79.8820, distanceKm: 18, nameEn: 'Red Onion', nameTe: 'ఉల్లిపాయలు', cat: 'Vegetables', quality: 'Grade A', unit: 'Kg', packLabel: '1 Kg', mrp: 44, retailPrice: 34, farmerDirectPrice: 22, wholesalePrice: 26, minWholesaleQty: 50, stockKg: 800, inStock: true, desc: 'Farm-cured crisp red onions sourced directly from Buchireddypalem growers.', availableFrom: 'Tomorrow Morning 6:00 AM', img: 'https://images.unsplash.com/photo-1508747705729-e0613307ab6e?auto=format&fit=crop&w=500&q=80' },
   { id: 'p3', postedByRole: 'farmer', farmerId: 'u_farm_3', farmerName: 'Rapur Orchards • Nellore', sellerLat: 14.1980, sellerLng: 79.5380, distanceKm: 32, nameEn: 'Banganapalli Mango', nameTe: 'మామిడిపండు', cat: 'Fruits', quality: 'Grade A (Export)', unit: 'Kg', packLabel: '1 Kg', mrp: 140, retailPrice: 110, farmerDirectPrice: 85, wholesalePrice: 95, minWholesaleQty: 20, stockKg: 300, inStock: true, desc: 'Naturally ripened carbide-free Banganapalli mangoes from Rapur orchards.', availableFrom: 'Available Now', img: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=500&q=80' },
+  { id: 'p_banana', postedByRole: 'farmer', farmerId: 'u_farm_3', farmerName: 'Kovur Banana Farms • Nellore', sellerLat: 14.4910, sellerLng: 79.9840, distanceKm: 10, nameEn: 'Yelakki Banana (1 Dozen)', nameTe: 'అరటిపండు', cat: 'Fruits', quality: 'Grade A', unit: 'Kg', packLabel: '1 Kg', mrp: 70, retailPrice: 55, farmerDirectPrice: 40, wholesalePrice: 45, minWholesaleQty: 20, stockKg: 250, inStock: true, desc: 'Sweet farm-ripened Yelakki bananas direct from Nellore orchards.', availableFrom: 'Available Now', img: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&w=500&q=80' },
   { id: 'p4', postedByRole: 'retail', farmerId: 'u_ret_1', farmerName: 'Sri Lakshmi Fresh Mart • Magunta Layout, Nellore', sellerLat: 14.4426, sellerLng: 79.9865, distanceKm: 6, nameEn: 'Fresh Spinach (Palakura)', nameTe: 'పాలకూర', cat: 'Leafy Greens', quality: 'Organic', unit: 'Grams', packLabel: '500 Grams', mrp: 28, retailPrice: 20, farmerDirectPrice: 14, wholesalePrice: 16, minWholesaleQty: 15, stockKg: 150, inStock: true, desc: 'Pesticide-free tender green spinach bundles harvested at dawn.', availableFrom: 'After 1 Hour', img: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=500&q=80' },
   { id: 'p_dairy_1', postedByRole: 'farmer', farmerId: 'u_farm_4', farmerName: 'Gokulam Dairy Farm • Nellore', sellerLat: 14.4480, sellerLng: 79.9820, distanceKm: 5, nameEn: 'Pure Farm Buffalo Milk', nameTe: 'చిక్కటి గేదె పాలు', cat: 'Dairy products', quality: 'Organic', unit: 'Litres', packLabel: '1 Litre', mrp: 80, retailPrice: 68, farmerDirectPrice: 56, wholesalePrice: 60, minWholesaleQty: 20, stockKg: 200, inStock: true, desc: 'Unadulterated fresh morning buffalo milk from Nellore dairy farms.', availableFrom: 'Available Now', img: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=500&q=80' },
   { id: 'p5', postedByRole: 'wholesale', farmerId: 'u_ws_1', farmerName: 'Nellore Heritage Wholesale Mills • Stonehousepet', sellerLat: 14.4510, sellerLng: 79.9910, distanceKm: 8, nameEn: 'Nellore Sona Masuri Rice', nameTe: 'సోనా మసూరి బియ్యం', cat: 'Atta, rice, Oils and dals', quality: 'Grade A', unit: 'Kg', packLabel: '5 Kg', mrp: 340, retailPrice: 285, farmerDirectPrice: 250, wholesalePrice: 265, minWholesaleQty: 10, stockKg: 1200, inStock: true, desc: 'Authentic aged Nellore Sona Masuri steam rice direct from local rice mills.', availableFrom: 'Available Now', img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=500&q=80' },
@@ -145,7 +147,7 @@ const PaymentBadge = ({ type }) => {
   );
 };
 
-// Live Scooter Overlay Map Component
+// Live Scooter Overlay Map Component (Only shown while active, hidden after Delivered)
 const LiveScooterMap = ({ lat, lng, title, height = 200, badgeText }) => (
   <div className="relative w-full rounded-3xl overflow-hidden border-2 border-[#15803D] shadow-md" style={{ height }}>
     <iframe
@@ -155,7 +157,6 @@ const LiveScooterMap = ({ lat, lng, title, height = 200, badgeText }) => (
       style={{ border: 0 }}
       src={`https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.008}%2C${lat - 0.008}%2C${lng + 0.008}%2C${lat + 0.008}&layer=mapnik&marker=${lat}%2C${lng}`}
     />
-    {/* Animated Scooter Icon Badge at Map Center */}
     <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
       <div className="relative flex flex-col items-center -mt-6">
         <span className="bg-[#0F5132] text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full shadow mb-0.5">
@@ -251,13 +252,11 @@ export default function App() {
         const parsed = JSON.parse(decodeURIComponent(raw));
         setSharedInvoiceData(parsed);
         setTimeout(() => window.print(), 800);
-      } catch {
-        // ignore
-      }
+      } catch {}
     }
   }, []);
 
-  const [showPermissionPrompt, setShowPermissionPrompt] = useState(() => {
+const [showPermissionPrompt, setShowPermissionPrompt] = useState(() => {
     try {
       return localStorage.getItem('rythu_permissions_granted') !== 'true';
     } catch {
@@ -278,8 +277,7 @@ export default function App() {
   });
   const [products, setProducts] = useState(INITIAL_PRODUCTS);
 
-  // Admin-Managed Categories, Master Catalog & Coupons (Synced via Firestore)
-    const [categoriesList, setCategoriesList] = useState(() => {
+  const [categoriesList, setCategoriesList] = useState(() => {
     try {
       const saved = localStorage.getItem('rythu_managed_categories');
       if (saved) {
@@ -298,7 +296,6 @@ export default function App() {
       return DEFAULT_CATEGORIES;
     }
   });
-
 
   const [masterCatalog, setMasterCatalog] = useState(() => {
     try {
@@ -334,7 +331,7 @@ export default function App() {
     try { localStorage.setItem('rythu_registered_users', JSON.stringify(users)); } catch {}
   }, [users]);
 
-// Auth States
+  // Auth States
   const [authScreen, setAuthScreen] = useState('login');
   const [loginIdentifier, setLoginIdentifier] = useState('');
   const [generatedEmailOtp, setGeneratedEmailOtp] = useState('');
@@ -379,7 +376,9 @@ export default function App() {
   const [deliverySlot] = useState('Today, 6:00 PM – 8:00 PM');
 
   const [toast, setToast] = useState('');
-  const [selectedCat, setSelectedCat] = useState('All');
+  // Separate states for Home inline category expansion vs Categories tab split-view
+  const [homeExpandedCat, setHomeExpandedCat] = useState(null); // { section: 'daily' | 'grid', catName: string }
+  const [catTabSelectedCat, setCatTabSelectedCat] = useState(null); // null = full grid, string = left vertical bar + right product list
   const [search, setSearch] = useState('');
 
   // Location & Map Pin States
@@ -419,7 +418,7 @@ export default function App() {
   ]);
   const [orders, setOrders] = useState([]);
 
-  // Seller Post Product States (Search + Category Dropdown + Catalog Picker)
+  // Seller Post Product States
   const [sellerCatalogFilter, setSellerCatalogFilter] = useState('All');
   const [sellerCatalogSearch, setSellerCatalogSearch] = useState('');
   const [selectedCatalogId, setSelectedCatalogId] = useState('cat_tomato');
@@ -434,7 +433,7 @@ export default function App() {
   const [fAvailTime, setFAvailTime] = useState('Available Now');
 
   // Admin Management Tabs & Form States
-  const [adminTab, setAdminTab] = useState('catalogue'); // 'catalogue' | 'categories' | 'coupons' | 'approvals'
+  const [adminTab, setAdminTab] = useState('catalogue');
   const [catNameEn, setCatNameEn] = useState('');
   const [catNameTe, setCatNameTe] = useState('');
   const [catCategory, setCatCategory] = useState('Vegetables');
@@ -512,7 +511,7 @@ export default function App() {
     }, 1000);
   }, [stopAlertRingtone]);
 
-const getPendingStopsForSeller = useCallback(
+  const getPendingStopsForSeller = useCallback(
     (ord) => {
       if (!currentUser || !['farmer', 'wholesale', 'retail'].includes(currentUser.role)) return [];
       if (ord.buyerId === currentUser.id || ord.status === 'Delivered') return [];
@@ -550,7 +549,7 @@ const getPendingStopsForSeller = useCallback(
     setTimeout(() => setToast(''), 3500);
   };
 
-  // Hardware Back Button Handler
+// Hardware Back Button Handler
   const handleHardwareBack = useCallback(() => {
     if (sharedInvoiceData) {
       window.history.replaceState({}, '', '/');
@@ -558,6 +557,11 @@ const getPendingStopsForSeller = useCallback(
       return;
     }
     if (currentUser) {
+      if (activeTab === 'categories' && catTabSelectedCat) {
+        setCatTabSelectedCat(null);
+        window.history.pushState({ rythuNav: true }, '');
+        return;
+      }
       if (activeTab !== 'home') {
         setActiveTab('home');
         window.history.pushState({ rythuNav: true }, '');
@@ -577,7 +581,7 @@ const getPendingStopsForSeller = useCallback(
       setSelectedRole(null);
       window.history.pushState({ rythuNav: true }, '');
     }
-  }, [sharedInvoiceData, currentUser, activeTab, selectedRole, authScreen]);
+  }, [sharedInvoiceData, currentUser, activeTab, catTabSelectedCat, selectedRole, authScreen]);
 
   useEffect(() => {
     window.history.pushState({ rythuNav: true }, '');
@@ -610,7 +614,7 @@ const getPendingStopsForSeller = useCallback(
     }
   };
 
-  // Real-Time Cloud Firestore Sync (Orders, Products, Master Catalog, Categories, Coupons, Users)
+  // Real-Time Cloud Firestore Sync
   useEffect(() => {
     const unsubOrders = onSnapshot(
       collection(db, 'orders'),
@@ -651,14 +655,15 @@ const getPendingStopsForSeller = useCallback(
       () => {}
     );
 
-        const unsubCategories = onSnapshot(
+    const unsubCategories = onSnapshot(
       collection(db, 'categories'),
       (snapshot) => {
         if (!snapshot.empty) {
           const liveCategories = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
           setCategoriesList((prev) => {
+            const baseList = prev.length >= DEFAULT_CATEGORIES.length ? prev : DEFAULT_CATEGORIES;
             const liveMap = new Map(liveCategories.map((c) => [c.id, c]));
-            const merged = prev.map((c) => liveMap.get(c.id) || c);
+            const merged = baseList.map((c) => liveMap.get(c.id) || c);
             liveCategories.forEach((lc) => {
               if (!merged.some((m) => m.id === lc.id)) merged.unshift(lc);
             });
@@ -669,13 +674,20 @@ const getPendingStopsForSeller = useCallback(
       () => {}
     );
 
-
-    const unsubCoupons = onSnapshot(
+const unsubCoupons = onSnapshot(
       collection(db, 'coupons'),
       (snapshot) => {
         if (!snapshot.empty) {
           const liveCoupons = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-          setCouponsList(liveCoupons);
+          setCouponsList((prev) => {
+            const baseList = prev.length >= DEFAULT_COUPONS.length ? prev : DEFAULT_COUPONS;
+            const liveMap = new Map(liveCoupons.map((c) => [c.id, c]));
+            const merged = baseList.map((c) => liveMap.get(c.id) || c);
+            liveCoupons.forEach((lc) => {
+              if (!merged.some((m) => m.id === lc.id)) merged.unshift(lc);
+            });
+            return merged;
+          });
         }
       },
       () => {}
@@ -733,7 +745,7 @@ const getPendingStopsForSeller = useCallback(
     return () => navigator.geolocation.clearWatch(watchId);
   }, [currentUser, orders]);
 
-const triggerEmailOtp = async (targetEmail, userName) => {
+  const triggerEmailOtp = async (targetEmail, userName) => {
     setSendingEmail(true);
     setAuthMsg('');
     const code = String(Math.floor(100000 + Math.random() * 900000));
@@ -873,7 +885,7 @@ const sendAutomaticInvoiceEmail = async (ord) => {
     } catch {}
   };
 
-const verifyEmailOtpCode = (enteredCode) => {
+  const verifyEmailOtpCode = (enteredCode) => {
     if (!generatedEmailOtp || Date.now() > emailOtpExpiry) {
       setAuthMsg('OTP expired or not requested. Please tap Resend OTP.');
       return false;
@@ -913,7 +925,7 @@ const verifyEmailOtpCode = (enteredCode) => {
     window.history.pushState({ rythuNav: true }, '');
   };
 
-  const handleSendRegisterOtp = async () => {
+const handleSendRegisterOtp = async () => {
     const cleanMobile = regMobile.replace(/\D/g, '');
     const cleanEmail = regEmail.trim().toLowerCase();
 
@@ -962,7 +974,7 @@ const verifyEmailOtpCode = (enteredCode) => {
         ? `${regVillage || regAddress}, ${regMandal || ''}, ${regDistrict || 'Nellore'}`.replace(/,\s*,/g, ',')
         : regAddress.trim() || `${regVillage || 'Nellore'}, ${regState}`;
 
-const newUser = {
+    const newUser = {
       id: 'u_' + Date.now(),
       role: selectedRole,
       name: regName.trim(),
@@ -996,7 +1008,7 @@ const newUser = {
     setUsers([newUser, ...users]);
     setDoc(doc(db, 'users', newUser.id), newUser).catch(() => {});
 
-    if (needsApproval) {
+if (needsApproval) {
       setNotifications((prev) => [
         `New ${selectedRole.toUpperCase()} registration (${newUser.name} • ${cleanEmail}) awaiting Admin approval.`,
         ...prev,
@@ -1091,7 +1103,7 @@ const newUser = {
     notify(`Selected Location - ${mapPinTitle}`);
   };
 
-const handleFarmerEnChange = (val) => {
+  const handleFarmerEnChange = (val) => {
     setFNameEn(val);
     const key = val.trim().toLowerCase();
     if (EN_TO_TE[key]) setFNameTe(EN_TO_TE[key]);
@@ -1118,7 +1130,7 @@ const handleFarmerEnChange = (val) => {
     setFImg(item.img);
   };
 
-  const handlePublishRoleProduct = (e, roleSource) => {
+const handlePublishRoleProduct = (e, roleSource) => {
     e.preventDefault();
     if (!fNameEn.trim() || !fPrice) return;
     const baseRate = Number(fPrice);
@@ -1152,7 +1164,7 @@ const handleFarmerEnChange = (val) => {
     notify(`Published ${newProd.nameEn} (${fCat} • ${fQuality} • ${fQty} ${fUnit})!`);
   };
 
-  // Seller Product Form with Search Bar + Category Dropdown + Admin Catalog Picker
+  // Seller Product Form
   const renderPostProductForm = (roleSource, submitLabel) => {
     const q = sellerCatalogSearch.trim().toLowerCase();
     const filteredSellerCatalog = masterCatalog.filter((c) => {
@@ -1183,7 +1195,6 @@ const handleFarmerEnChange = (val) => {
             </button>
           </div>
 
-          {/* Search Bar + Category Dropdown Side by Side */}
           <div className="grid grid-cols-2 gap-2 mb-2">
             <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2">
               <Search className="h-3.5 w-3.5 text-slate-400 mr-1.5 flex-shrink-0" />
@@ -1213,7 +1224,7 @@ const handleFarmerEnChange = (val) => {
             </select>
           </div>
 
- <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-0.5">
+<div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-0.5">
             {filteredSellerCatalog.map((item) => {
               const isSel = selectedCatalogId === item.id;
               return (
@@ -1234,7 +1245,6 @@ const handleFarmerEnChange = (val) => {
           </div>
         </div>
 
-        {/* Selected Product Preview & Editable Name Fields */}
         <div className="flex items-center space-x-2.5 bg-emerald-50/50 border border-emerald-200 rounded-2xl p-2.5">
           <img src={fImg} alt={fNameEn} className="h-12 w-12 rounded-xl object-cover flex-shrink-0 bg-white" />
           <div className="grid grid-cols-2 gap-1.5 flex-1">
@@ -1312,7 +1322,7 @@ const handleFarmerEnChange = (val) => {
 
   const fontStyle = { fontFamily: "'Plus Jakarta Sans', 'Noto Sans Telugu', sans-serif" };
 
-  // =========================================================================
+// =========================================================================
   // 0. DIRECT INVOICE PDF PRINT VIEW
   // =========================================================================
   if (sharedInvoiceData) {
@@ -1346,7 +1356,7 @@ const handleFarmerEnChange = (val) => {
           </div>
         </div>
 
-<table className="w-full text-xs border-collapse border border-slate-200">
+        <table className="w-full text-xs border-collapse border border-slate-200">
           <thead>
             <tr className="bg-[#15803D] text-white">
               <th className="p-2 text-left">#</th>
@@ -1441,7 +1451,7 @@ const handleFarmerEnChange = (val) => {
           </div>
         )}
 
-<div className="bg-gradient-to-b from-[#0E5A2B] via-[#15803D] to-[#4ADE80]/30 text-white rounded-b-[36px] px-4 pt-4 pb-6 shadow-lg relative overflow-hidden">
+        <div className="bg-gradient-to-b from-[#0E5A2B] via-[#15803D] to-[#4ADE80]/30 text-white rounded-b-[36px] px-4 pt-4 pb-6 shadow-lg relative overflow-hidden">
           <div className="flex items-center justify-between relative z-10">
             <div className="flex items-center space-x-2.5">
               <div className="h-12 w-12 rounded-full bg-white p-0.5 border-2 border-[#EAB308] shadow overflow-hidden flex-shrink-0">
@@ -1546,7 +1556,7 @@ const handleFarmerEnChange = (val) => {
           })}
         </div>
 
-        <div className="px-3.5 pt-3.5">
+  <div className="px-3.5 pt-3.5">
           <div className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white rounded-2xl p-3.5 shadow-md flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="h-11 w-11 rounded-full bg-white/15 border border-white/25 flex items-center justify-center flex-shrink-0">
@@ -1567,7 +1577,7 @@ const handleFarmerEnChange = (val) => {
           </div>
         </div>
 
-   <div className="px-3.5 pt-3.5">
+        <div className="px-3.5 pt-3.5">
           <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2.5">
             <div className="flex items-center space-x-1.5 text-xs font-extrabold text-slate-800">
               <Leaf className="h-4 w-4 text-[#15803D]" />
@@ -1616,7 +1626,7 @@ const handleFarmerEnChange = (val) => {
     );
   }
 
-  // =========================================================================
+ // =========================================================================
   // 2. ROLE-SPECIFIC REGISTRATION & DIRECT LOGIN
   // =========================================================================
   if (!currentUser) {
@@ -1865,7 +1875,7 @@ const handleFarmerEnChange = (val) => {
                 </>
               )}
 
-{selectedRole === 'retail' && (
+   {selectedRole === 'retail' && (
                 <>
                   <p className="font-extrabold text-[#15803D]">— Store Details</p>
                   <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Store Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
@@ -2062,8 +2072,8 @@ const WelcomeSmileModal = () =>
     </div>
   );
 
-// =========================================================================
-  // 3. CUSTOMER STOREFRONT (TOP SEARCH + DAILY ESSENTIALS + OFFERS/COUPONS + CATEGORIES)
+  // =========================================================================
+  // 3. CUSTOMER STOREFRONT (INLINE EXPANDABLE CATEGORIES + SPLIT CATEGORIES TAB)
   // =========================================================================
   if (currentUser.role === 'customer') {
     const activeAddr = savedAddresses.find((a) => a.id === activeAddrId) || savedAddresses[0];
@@ -2086,7 +2096,7 @@ const WelcomeSmileModal = () =>
       }
     }
 
-    const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
+const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
     const walletDeduction = useWalletBalance ? Math.min(currentUser.wallet || 0, Math.max(0, subtotal - autoTierDiscount)) : 0;
     const promoDeduction =
       appliedCouponObj && subtotal >= (appliedCouponObj.minOrder || 0)
@@ -2238,6 +2248,61 @@ const updatedUser = {
       setScratchCard({ orderId: ord.id, reward, scratched: false });
     };
 
+    // Compact Horizontal Product Card (Used inside Home inline category drawer)
+    const renderHorizontalProductCard = (p) => {
+      const q = cart[p.id] || 0;
+      const isFarmerItem = (p.postedByRole || 'farmer') === 'farmer';
+      return (
+        <div
+          key={p.id}
+          className="flex-shrink-0 w-36 bg-white rounded-2xl p-2.5 border border-emerald-200 shadow-sm flex flex-col justify-between"
+        >
+          <div
+            onClick={() => {
+              setDetailProduct(p);
+              setDetailQty(q || 1);
+              setActiveTab('productDetail');
+            }}
+            className="cursor-pointer"
+          >
+            <div className="relative h-20 w-full rounded-xl overflow-hidden bg-slate-50 mb-1.5">
+              <img src={p.img} alt={p.nameEn} className="h-full w-full object-cover" />
+              {isFarmerItem && (
+                <span className="absolute top-1 left-1 bg-[#15803D] text-white text-[8px] font-extrabold px-1.5 py-0.5 rounded-full">
+                  From Farmer
+                </span>
+              )}
+            </div>
+            <h4 className="text-[11px] font-extrabold text-slate-900 line-clamp-1">{p.nameEn}</h4>
+            <p className="text-[9px] font-bold text-[#15803D] truncate">{p.nameTe} • {p.packLabel}</p>
+          </div>
+
+          <div className="flex items-center justify-between pt-1.5 mt-1 border-t border-slate-100">
+            <div>
+              <span className="text-xs font-extrabold text-slate-900">₹{p.retailPrice}</span>
+              <span className="text-[9px] text-slate-400 line-through ml-1">₹{p.mrp}</span>
+            </div>
+            {q === 0 ? (
+              <button
+                type="button"
+                onClick={() => setCart({ ...cart, [p.id]: 1 })}
+                className="bg-[#15803D] text-white font-extrabold text-[10px] px-2.5 py-1 rounded-lg"
+              >
+                Add +
+              </button>
+            ) : (
+              <div className="flex items-center bg-[#15803D] text-white rounded-lg px-1.5 py-0.5 space-x-1.5 text-[10px] font-extrabold">
+                <button type="button" onClick={() => setCart((c) => { const n = { ...c }; if (n[p.id] <= 1) delete n[p.id]; else n[p.id]--; return n; })}>-</button>
+                <span>{q}</span>
+                <button type="button" onClick={() => setCart({ ...cart, [p.id]: q + 1 })}>+</button>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    };
+
+// Standard Vertical List Product Card
     const renderCustomerProductCard = (p) => {
       const q = cart[p.id] || 0;
       const isFarmerItem = (p.postedByRole || 'farmer') === 'farmer';
@@ -2295,14 +2360,42 @@ const updatedUser = {
       );
     };
 
-if (activeTab === 'selectLocation') {
+    // Inline Horizontal Product Drawer rendered directly below the selected category on Home page
+    const renderHomeInlineHorizontalDrawer = (catName) => {
+      const catItems = products.filter((p) => p.cat === catName);
+      return (
+        <div className="bg-emerald-50/90 border-2 border-[#15803D]/30 rounded-2xl p-3 space-y-2 transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-extrabold text-[#0F5132]">
+              {catName} ({catItems.length} Available)
+            </span>
+            <button
+              type="button"
+              onClick={() => setHomeExpandedCat(null)}
+              className="text-[10px] font-extrabold text-slate-600 bg-white px-2 py-0.5 rounded-full border"
+            >
+              Close ✕
+            </button>
+          </div>
+          {catItems.length === 0 ? (
+            <p className="text-[11px] text-slate-500 font-bold py-2">No items listed in {catName} yet.</p>
+          ) : (
+            <div className="flex space-x-2.5 overflow-x-auto pb-1">
+              {catItems.map((p) => renderHorizontalProductCard(p))}
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    if (activeTab === 'selectLocation') {
       const filteredAddrs = savedAddresses.filter(
         (a) =>
           a.title.toLowerCase().includes(locSearch.toLowerCase()) ||
           a.full.toLowerCase().includes(locSearch.toLowerCase())
       );
 
-      return (
+return (
         <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto text-slate-800 shadow-2xl pb-10">
           <div className="bg-[#0F5132] px-4 py-4 text-white flex items-center space-x-3 rounded-b-3xl shadow">
             <button type="button" onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white/15">
@@ -2399,7 +2492,7 @@ if (activeTab === 'selectLocation') {
               </div>
             </div>
 
-            <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+  <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm space-y-3">
               <div className="flex items-start justify-between space-x-2">
                 <div className="flex items-start space-x-2 flex-1">
                   <MapPin className="h-5 w-5 text-[#15803D] flex-shrink-0 mt-0.5" />
@@ -2431,7 +2524,7 @@ if (activeTab === 'selectLocation') {
       );
     }
 
-const q = search.toLowerCase();
+    const q = search.toLowerCase();
     const searchedProducts = products.filter(
       (p) =>
         p.nameEn.toLowerCase().includes(q) ||
@@ -2442,9 +2535,18 @@ const q = search.toLowerCase();
     const dailyEssentialCats = categoriesList.filter((c) => c.isDailyEssential !== false).slice(0, 4);
     const activeCoupons = couponsList.filter((c) => c.active);
 
+    // Split categoriesList into rows of 3 so selecting a category in the grid opens horizontal products right below its row!
+    const categoryRows = [];
+    for (let i = 0; i < categoriesList.length; i += 3) {
+      categoryRows.push(categoriesList.slice(i, i + 3));
+    }
+
     const liveLat = trackingOrder?.driverLat || mapPinCoords.lat;
     const liveLng = trackingOrder?.driverLng || mapPinCoords.lng;
-    const isOutForCustomerDrop = trackingOrder?.status === 'Out for Delivery' || trackingOrder?.status === 'Delivered';
+    const isPartnerAssignedOrEnRoute =
+      trackingOrder?.status === 'Partner Assigned' || trackingOrder?.status === 'Out for Delivery';
+    const isOutForCustomerDrop = trackingOrder?.status === 'Out for Delivery';
+    const isOrderDelivered = trackingOrder?.status === 'Delivered';
 
     return (
       <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
@@ -2482,9 +2584,9 @@ const q = search.toLowerCase();
           </div>
         )}
 
+{/* HOME PAGE */}
         {activeTab === 'home' && (
           <main className="px-4 pt-3.5 space-y-4 text-xs">
-            {/* Top Bar: Location + Wallet */}
             <div className="flex items-center justify-between">
               <button
                 type="button"
@@ -2520,7 +2622,7 @@ const q = search.toLowerCase();
               </div>
             </div>
 
-            {/* 1. TOP PRODUCTS SEARCH BAR */}
+            {/* Top Products Search Bar */}
             <div className="bg-white border-2 border-emerald-100 rounded-2xl px-3.5 py-2.5 flex items-center shadow-sm">
               <Search className="h-4 w-4 text-[#15803D] mr-2 flex-shrink-0" />
               <input
@@ -2535,178 +2637,240 @@ const q = search.toLowerCase();
               )}
             </div>
 
-            {/* 2. DAILY ESSENTIALS SECTION */}
-            <section className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-extrabold text-slate-900">Daily essentials</h2>
-                <span className="text-[10px] font-bold text-[#15803D]">Morning Fresh</span>
-              </div>
-              <div className="grid grid-cols-4 gap-2">
-                {dailyEssentialCats.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setSelectedCat(selectedCat === item.labelEn ? 'All' : item.labelEn)}
-                    className={`rounded-2xl p-2 border text-center transition shadow-sm ${
-                      selectedCat === item.labelEn
-                        ? 'bg-emerald-50 border-2 border-[#15803D]'
-                        : 'bg-gradient-to-b from-emerald-50/70 to-white border-emerald-100'
-                    }`}
-                  >
-                    <div className="h-14 w-14 rounded-xl bg-white p-1 mx-auto mb-1.5 shadow-sm overflow-hidden">
-                      <img src={item.img} alt={item.labelEn} className="h-full w-full object-cover rounded-lg" />
-                    </div>
-                    <p className="text-[10px] font-extrabold text-slate-900 line-clamp-2 leading-tight">
-                      {item.labelEn}
-                    </p>
-                  </button>
-                ))}
-              </div>
-            </section>
-
-            {/* 3. OFFERS AND COUPONS SECTION (MANAGED BY ADMIN) */}
-            {activeCoupons.length > 0 && (
-              <section className="space-y-2">
+            {search.trim() !== '' ? (
+              <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-sm font-extrabold text-slate-900 flex items-center space-x-1">
-                    <Tag className="h-4 w-4 text-[#EA580C]" />
-                    <span>Offers & Coupons</span>
-                  </h2>
-                  <span className="text-[10px] font-bold text-slate-400">Tap to Copy</span>
+                  <h3 className="text-sm font-extrabold text-slate-900">Search Results ({searchedProducts.length})</h3>
+                  <button onClick={() => setSearch('')} className="text-[11px] font-extrabold text-[#15803D]">Clear</button>
                 </div>
-                <div className="flex space-x-2.5 overflow-x-auto pb-1">
-                  {activeCoupons.map((cp) => (
-                    <button
-                      key={cp.id}
-                      type="button"
-                      onClick={() => {
-                        setPromoInput(cp.code);
-                        setAppliedCouponObj(cp);
-                        notify(`Coupon ${cp.code} selected for Checkout (-₹${cp.discount})!`);
-                      }}
-                      className="flex-shrink-0 w-56 bg-gradient-to-r from-[#FFFBEB] via-[#FEF3C7] to-[#FDE68A] border border-amber-300 rounded-2xl p-3 text-left shadow-sm space-y-1"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="bg-[#15803D] text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full">
-                          {cp.badge || 'OFFER'}
-                        </span>
-                        <span className="font-mono font-extrabold text-[11px] text-[#0F5132] bg-white px-2 py-0.5 rounded border border-emerald-200">
-                          {cp.code}
-                        </span>
-                      </div>
-                      <p className="text-xs font-extrabold text-slate-900 truncate pt-0.5">{cp.title}</p>
-                      <p className="text-[10px] font-semibold text-slate-600 truncate">{cp.subtitle}</p>
-                    </button>
-                  ))}
-                </div>
-              </section>
-            )}
-
-  {/* 4. CATEGORIES GRID SECTION */}
-            <section className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-extrabold text-slate-900">Categories</h2>
-                <button type="button" onClick={() => setActiveTab('categories')} className="text-[11px] font-extrabold text-[#15803D]">
-                  See All ({categoriesList.length}) &gt;
-                </button>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                {categoriesList.map((cat) => {
-                  const isSel = selectedCat === cat.labelEn;
-                  return (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => setSelectedCat(isSel ? 'All' : cat.labelEn)}
-                      className={`rounded-2xl p-2.5 border text-center transition ${
-                        isSel ? 'border-2 border-[#15803D] bg-emerald-50 shadow-sm' : 'border-slate-100 bg-white shadow-sm'
-                      }`}
-                    >
-                      <img src={cat.img} alt={cat.labelEn} className="h-14 w-14 rounded-2xl object-cover mx-auto mb-1.5" />
-                      <p className="text-[10px] font-extrabold text-slate-900 line-clamp-2 leading-tight">{cat.labelEn}</p>
-                      <p className="text-[9px] font-bold text-[#15803D] truncate mt-0.5">{cat.labelTe}</p>
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-
-            {/* 5. SECTION-WISE PRODUCTS LIST */}
-            {selectedCat !== 'All' || search.trim() !== '' ? (
-              <div className="space-y-2.5 pt-1">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-extrabold text-slate-900">
-                    {selectedCat !== 'All' ? selectedCat : `Search Results (${searchedProducts.length})`}
-                  </h3>
-                  <button
-                    onClick={() => {
-                      setSelectedCat('All');
-                      setSearch('');
-                    }}
-                    className="text-[11px] font-extrabold text-[#15803D]"
-                  >
-                    Show All Sections
-                  </button>
-                </div>
-                {searchedProducts
-                  .filter((p) => selectedCat === 'All' || p.cat === selectedCat)
-                  .map((p) => renderCustomerProductCard(p))}
+                {searchedProducts.map((p) => renderCustomerProductCard(p))}
               </div>
             ) : (
-              categoriesList.map((catObj) => {
-                const catItems = products.filter((p) => p.cat === catObj.labelEn);
-                if (catItems.length === 0) return null;
-                return (
-                  <section key={catObj.id} className="space-y-2.5 pt-1">
-                    <div className="flex items-center justify-between border-b border-emerald-100 pb-1.5">
-                      <div>
-                        <h3 className="text-sm font-extrabold text-slate-900">{catObj.labelEn}</h3>
-                        <p className="text-[10px] font-bold text-[#15803D]">{catObj.labelTe}</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedCat(catObj.labelEn)}
-                        className="text-[11px] font-extrabold text-[#15803D] bg-emerald-50 px-2.5 py-1 rounded-full"
-                      >
-                        See All ({catItems.length})
-                      </button>
+              <>
+                {/* 1. DAILY ESSENTIALS (Tapping opens horizontal list directly below, pushing Coupons & Categories down) */}
+                <section className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-sm font-extrabold text-slate-900">Daily essentials</h2>
+                    <span className="text-[10px] font-bold text-[#15803D]">Morning Fresh</span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {dailyEssentialCats.map((item) => {
+                      const isOpen = homeExpandedCat?.section === 'daily' && homeExpandedCat?.catName === item.labelEn;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() =>
+                            setHomeExpandedCat(isOpen ? null : { section: 'daily', catName: item.labelEn })
+                          }
+                          className={`rounded-2xl p-2 border text-center transition shadow-sm ${
+                            isOpen
+                              ? 'bg-emerald-50 border-2 border-[#15803D]'
+                              : 'bg-gradient-to-b from-emerald-50/70 to-white border-emerald-100'
+                          }`}
+                        >
+                          <div className="h-14 w-14 rounded-xl bg-white p-1 mx-auto mb-1.5 shadow-sm overflow-hidden">
+                            <img src={item.img} alt={item.labelEn} className="h-full w-full object-cover rounded-lg" />
+                          </div>
+                          <p className="text-[10px] font-extrabold text-slate-900 line-clamp-2 leading-tight">
+                            {item.labelEn}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Horizontal Product List directly under Daily essentials when selected */}
+                  {homeExpandedCat?.section === 'daily' &&
+                    renderHomeInlineHorizontalDrawer(homeExpandedCat.catName)}
+                </section>
+
+                {/* 2. OFFERS & COUPONS */}
+                {activeCoupons.length > 0 && (
+                  <section className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-sm font-extrabold text-slate-900 flex items-center space-x-1">
+                        <Tag className="h-4 w-4 text-[#EA580C]" />
+                        <span>Offers & Coupons</span>
+                      </h2>
+                      <span className="text-[10px] font-bold text-slate-400">Tap to Copy</span>
                     </div>
-                    <div className="space-y-2">
-                      {catItems.map((p) => renderCustomerProductCard(p))}
+                    <div className="flex space-x-2.5 overflow-x-auto pb-1">
+                      {activeCoupons.map((cp) => (
+                        <button
+                          key={cp.id}
+                          type="button"
+                          onClick={() => {
+                            setPromoInput(cp.code);
+                            setAppliedCouponObj(cp);
+                            notify(`Coupon ${cp.code} selected for Checkout (-₹${cp.discount})!`);
+                          }}
+                          className="flex-shrink-0 w-56 bg-gradient-to-r from-[#FFFBEB] via-[#FEF3C7] to-[#FDE68A] border border-amber-300 rounded-2xl p-3 text-left shadow-sm space-y-1"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="bg-[#15803D] text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full">
+                              {cp.badge || 'OFFER'}
+                            </span>
+                            <span className="font-mono font-extrabold text-[11px] text-[#0F5132] bg-white px-2 py-0.5 rounded border border-emerald-200">
+                              {cp.code}
+                            </span>
+                          </div>
+                          <p className="text-xs font-extrabold text-slate-900 truncate pt-0.5">{cp.title}</p>
+                          <p className="text-[10px] font-semibold text-slate-600 truncate">{cp.subtitle}</p>
+                        </button>
+                      ))}
                     </div>
                   </section>
-                );
-              })
+                )}
+
+{/* 3. CATEGORIES GRID (Selecting a category opens horizontal list directly under its row, pushing lower rows down) */}
+                <section className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-sm font-extrabold text-slate-900">Categories</h2>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCatTabSelectedCat(null);
+                        setActiveTab('categories');
+                      }}
+                      className="text-[11px] font-extrabold text-[#15803D]"
+                    >
+                      See All ({categoriesList.length}) &gt;
+                    </button>
+                  </div>
+
+                  {categoryRows.map((row, rIdx) => {
+                    const activeInThisRow =
+                      homeExpandedCat?.section === 'grid' &&
+                      row.some((c) => c.labelEn === homeExpandedCat.catName);
+
+                    return (
+                      <div key={rIdx} className="space-y-2">
+                        <div className="grid grid-cols-3 gap-2">
+                          {row.map((cat) => {
+                            const isSel =
+                              homeExpandedCat?.section === 'grid' &&
+                              homeExpandedCat?.catName === cat.labelEn;
+                            return (
+                              <button
+                                key={cat.id}
+                                type="button"
+                                onClick={() =>
+                                  setHomeExpandedCat(isSel ? null : { section: 'grid', catName: cat.labelEn })
+                                }
+                                className={`rounded-2xl p-2.5 border text-center transition ${
+                                  isSel
+                                    ? 'border-2 border-[#15803D] bg-emerald-50 shadow-sm'
+                                    : 'border-slate-100 bg-white shadow-sm'
+                                }`}
+                              >
+                                <img src={cat.img} alt={cat.labelEn} className="h-14 w-14 rounded-2xl object-cover mx-auto mb-1.5" />
+                                <p className="text-[10px] font-extrabold text-slate-900 line-clamp-2 leading-tight">{cat.labelEn}</p>
+                                <p className="text-[9px] font-bold text-[#15803D] truncate mt-0.5">{cat.labelTe}</p>
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {activeInThisRow && renderHomeInlineHorizontalDrawer(homeExpandedCat.catName)}
+                      </div>
+                    );
+                  })}
+                </section>
+              </>
             )}
           </main>
         )}
 
-        {/* CATEGORIES TAB (MATCHING HOME CATEGORIES VISUAL LAYOUT) */}
+        {/* CATEGORIES TAB:
+            - Default (catTabSelectedCat === null): Full 3-column grid of all categories
+            - When any category is selected: Left side vertical categories rail + Right side available products list (stays inside Categories tab!) */}
         {activeTab === 'categories' && (
-          <main className="p-4 space-y-4 text-xs">
-            <div className="flex items-center space-x-3">
-              <button onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white shadow-sm">
-                <ArrowLeft className="h-4 w-4" />
-              </button>
-              <h2 className="text-base font-extrabold text-slate-900">All Categories ({categoriesList.length})</h2>
+          <main className="min-h-[85vh] text-xs">
+            <div className="bg-white px-4 py-3.5 border-b border-slate-100 flex items-center justify-between sticky top-0 z-20">
+              <div className="flex items-center space-x-2.5">
+                <button
+                  type="button"
+                  onClick={() => (catTabSelectedCat ? setCatTabSelectedCat(null) : setActiveTab('home'))}
+                  className="p-2 rounded-full bg-slate-100 text-slate-700"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </button>
+                <h2 className="text-base font-extrabold text-slate-900">
+                  {catTabSelectedCat || `All Categories (${categoriesList.length})`}
+                </h2>
+              </div>
+              {catTabSelectedCat && (
+                <button
+                  type="button"
+                  onClick={() => setCatTabSelectedCat(null)}
+                  className="text-[11px] font-extrabold text-[#15803D] bg-emerald-50 px-2.5 py-1 rounded-full"
+                >
+                  All Grid
+                </button>
+              )}
             </div>
 
-            <div className="grid grid-cols-3 gap-2.5">
-              {categoriesList.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => {
-                    setSelectedCat(cat.labelEn);
-                    setActiveTab('home');
-                  }}
-                  className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 text-center space-y-1.5 hover:border-[#15803D]"
-                >
-                  <img src={cat.img} alt={cat.labelEn} className="h-16 w-16 rounded-2xl object-cover mx-auto" />
-                  <h3 className="text-[10px] font-extrabold text-slate-900 line-clamp-2 leading-tight">{cat.labelEn}</h3>
-                  <p className="text-[9px] font-bold text-[#15803D] truncate">{cat.labelTe}</p>
-                </button>
-              ))}
-            </div>
+            {!catTabSelectedCat ? (
+              <div className="p-4 grid grid-cols-3 gap-2.5">
+                {categoriesList.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setCatTabSelectedCat(cat.labelEn)}
+                    className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 text-center space-y-1.5 hover:border-[#15803D] transition"
+                  >
+                    <img src={cat.img} alt={cat.labelEn} className="h-16 w-16 rounded-2xl object-cover mx-auto" />
+                    <h3 className="text-[10px] font-extrabold text-slate-900 line-clamp-2 leading-tight">{cat.labelEn}</h3>
+                    <p className="text-[9px] font-bold text-[#15803D] truncate">{cat.labelTe}</p>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              /* Split View: Left Vertical Categories Sidebar + Right Products List */
+              <div className="flex min-h-[80vh]">
+                {/* Left Vertical Categories Rail */}
+                <aside className="w-24 bg-white border-r border-slate-200 flex-shrink-0 overflow-y-auto py-2 space-y-1">
+                  {categoriesList.map((cat) => {
+                    const active = catTabSelectedCat === cat.labelEn;
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setCatTabSelectedCat(cat.labelEn)}
+                        className={`w-full px-1.5 py-2.5 flex flex-col items-center text-center border-l-4 transition ${
+                          active
+                            ? 'border-[#15803D] bg-emerald-50/80 text-[#15803D]'
+                            : 'border-transparent text-slate-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        <img src={cat.img} alt={cat.labelEn} className="h-11 w-11 rounded-xl object-cover mb-1 border border-slate-100" />
+                        <span className="text-[9px] font-extrabold line-clamp-2 leading-tight">{cat.labelEn}</span>
+                      </button>
+                    );
+                  })}
+                </aside>
+
+{/* Right Side Available Products List */}
+                <section className="flex-1 p-3 space-y-2.5 overflow-y-auto">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-extrabold text-slate-900">{catTabSelectedCat}</h3>
+                    <span className="text-[10px] font-bold text-[#15803D]">
+                      {products.filter((p) => p.cat === catTabSelectedCat).length} Items
+                    </span>
+                  </div>
+                  {products.filter((p) => p.cat === catTabSelectedCat).length === 0 ? (
+                    <div className="bg-white rounded-2xl p-6 text-center text-slate-400 font-bold">
+                      No products available in {catTabSelectedCat} right now.
+                    </div>
+                  ) : (
+                    products
+                      .filter((p) => p.cat === catTabSelectedCat)
+                      .map((p) => renderCustomerProductCard(p))
+                  )}
+                </section>
+              </div>
+            )}
           </main>
         )}
 
@@ -2744,7 +2908,7 @@ const q = search.toLowerCase();
           </main>
         )}
 
-   {activeTab === 'cart' && (
+        {activeTab === 'cart' && (
           <main className="p-4 space-y-3.5 text-xs">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-extrabold text-slate-900">My Cart</h2>
@@ -2791,7 +2955,7 @@ const q = search.toLowerCase();
           </main>
         )}
 
-        {activeTab === 'checkout' && (
+  {activeTab === 'checkout' && (
           <main className="p-4 space-y-3.5 text-xs">
             <div className="flex items-center space-x-3">
               <button onClick={() => setActiveTab('cart')} className="p-2 rounded-full bg-white shadow-sm">
@@ -2808,7 +2972,6 @@ const q = search.toLowerCase();
               <button onClick={() => setActiveTab('selectLocation')} className="text-[#15803D] font-extrabold">Change</button>
             </div>
 
-            {/* Coupon Apply Section */}
             <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
               <div className="flex space-x-2">
                 <input
@@ -2930,6 +3093,9 @@ const q = search.toLowerCase();
           </main>
         )}
 
+        {/* TRACK ORDER PAGE:
+            - Before Delivery: Live Scooter Tracking (once picked up) + Call/Msg enabled ONLY once Delivery Partner is assigned
+            - After Delivered: Tracking map, Call/Msg buttons & Print Invoice PDF button are completely hidden! */}
         {activeTab === 'trackOrder' && trackingOrder && (
           <main className="pb-10 text-xs">
             <div className="bg-gradient-to-b from-[#15803D] to-[#22C55E] text-white p-5 rounded-b-[32px] shadow-md space-y-2">
@@ -2945,100 +3111,127 @@ const q = search.toLowerCase();
             </div>
 
             <div className="p-4 space-y-3.5">
-              {(trackingOrder.pickupStops || []).length > 0 && (
-                <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
-                  <p className="font-extrabold text-slate-900">
-                    Seller Acceptance ({trackingOrder.pickupStops.filter((s) => s.stopStatus === 'Accepted').length}/{trackingOrder.pickupStops.length} Accepted)
-                  </p>
-                  {trackingOrder.pickupStops.map((st, idx) => (
-                    <div key={st.stopId} className="flex items-center justify-between text-[11px] border-t pt-1.5">
-                      <div className="min-w-0 pr-2">
-                        <p className="font-extrabold text-slate-800 truncate">
-                          {idx + 1}. {st.acceptedByUserName || st.sellerName} ({st.sellerRole.toUpperCase()})
-                        </p>
-                        <p className="text-[10px] text-slate-500 truncate">{st.itemsSummary.join(', ')}</p>
-                      </div>
-                      <span
-                        className={`font-extrabold px-2 py-0.5 rounded-full text-[10px] flex-shrink-0 ${
-                          st.pickedUp
-                            ? 'bg-emerald-100 text-[#15803D]'
-                            : st.stopStatus === 'Accepted'
-                            ? 'bg-sky-100 text-sky-700'
-                            : 'bg-amber-100 text-amber-800'
-                        }`}
-                      >
-                        {st.pickedUp ? '✓ Picked Up' : st.stopStatus}
-                      </span>
+              {isOrderDelivered ? (
+                /* AFTER DELIVERED: Clean Delivered Confirmation + Ordered Products Details Only (No Tracking, No Call/Msg, No Print Button) */
+                <div className="bg-white rounded-3xl p-4 shadow-sm border border-emerald-200 space-y-3">
+                  <div className="flex items-center space-x-2.5 text-[#15803D]">
+                    <CheckCircle2 className="h-6 w-6 flex-shrink-0" />
+                    <div>
+                      <h3 className="text-sm font-extrabold">Order Delivered Successfully</h3>
+                      <p className="text-[10px] text-slate-500">Tax Invoice sent to {trackingOrder.buyerEmail}</p>
                     </div>
-                  ))}
-                </div>
-              )}
-
-   {/* LIVE SCOOTER ICON MAP */}
-              {isOutForCustomerDrop ? (
-                <LiveScooterMap
-                  lat={liveLat}
-                  lng={liveLng}
-                  title="Delivery Partner Live Scooter"
-                  height={208}
-                  badgeText={`🛵 Rider Out for Delivery • GPS: ${liveLat}, ${liveLng}`}
-                />
-              ) : (
-                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-1 text-amber-950">
-                  <p className="font-extrabold">Stage 1: Store Acceptance & Pickup in Progress</p>
-                  <p className="text-[11px]">
-                    Once all accepted sellers' items are picked up by the delivery partner, live scooter tracking will appear here!
-                  </p>
-                </div>
-              )}
-
-              <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="h-11 w-11 rounded-full bg-emerald-100 text-[#15803D] font-extrabold flex items-center justify-center text-xl">
-                    🛵
                   </div>
-                  <div>
-                    <p className="text-[10px] text-slate-400 font-bold">Delivery Partner</p>
-                    <h4 className="font-extrabold text-slate-900">
-                      {trackingOrder.driverName || 'Assigning Delivery Partner...'}
-                    </h4>
-                    {trackingOrder.driverMobile && (
-                      <p className="text-[10px] text-slate-500">+91 {trackingOrder.driverMobile}</p>
+                  <div className="border-t pt-2.5 space-y-1.5">
+                    <p className="text-[10px] font-extrabold text-slate-400 uppercase">Delivered Products</p>
+                    {(trackingOrder.items || []).map((it, idx) => (
+                      <div key={idx} className="flex justify-between font-bold text-slate-800">
+                        <span>{it.name} ({it.qty} {it.unit || 'Kg'})</span>
+                        <span>₹{it.price * it.qty}</span>
+                      </div>
+                    ))}
+                    <div className="border-t pt-2 flex justify-between font-extrabold text-sm text-[#15803D]">
+                      <span>Total Paid</span>
+                      <span>₹{trackingOrder.total}</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {(trackingOrder.pickupStops || []).length > 0 && (
+                    <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
+                      <p className="font-extrabold text-slate-900">
+                        Seller Acceptance ({trackingOrder.pickupStops.filter((s) => s.stopStatus === 'Accepted').length}/{trackingOrder.pickupStops.length} Accepted)
+                      </p>
+                      {trackingOrder.pickupStops.map((st, idx) => (
+                        <div key={st.stopId} className="flex items-center justify-between text-[11px] border-t pt-1.5">
+                          <div className="min-w-0 pr-2">
+                            <p className="font-extrabold text-slate-800 truncate">
+                              {idx + 1}. {st.acceptedByUserName || st.sellerName} ({st.sellerRole.toUpperCase()})
+                            </p>
+                            <p className="text-[10px] text-slate-500 truncate">{st.itemsSummary.join(', ')}</p>
+                          </div>
+                          <span
+                            className={`font-extrabold px-2 py-0.5 rounded-full text-[10px] flex-shrink-0 ${
+                              st.pickedUp
+                                ? 'bg-emerald-100 text-[#15803D]'
+                                : st.stopStatus === 'Accepted'
+                                ? 'bg-sky-100 text-sky-700'
+                                : 'bg-amber-100 text-amber-800'
+                            }`}
+                          >
+                            {st.pickedUp ? '✓ Picked Up' : st.stopStatus}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {isOutForCustomerDrop ? (
+                    <LiveScooterMap
+                      lat={liveLat}
+                      lng={liveLng}
+                      title="Delivery Partner Live Scooter"
+                      height={208}
+                      badgeText={`🛵 Rider Out for Delivery • GPS: ${liveLat}, ${liveLng}`}
+                    />
+                  ) : (
+                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-1 text-amber-950">
+                      <p className="font-extrabold">Stage 1: Store Acceptance & Pickup in Progress</p>
+                      <p className="text-[11px]">
+                        Once all accepted sellers' items are picked up by the delivery partner, live scooter tracking will appear here!
+                      </p>
+                    </div>
+                  )}
+
+    {/* Delivery Partner Card: Call & Msg buttons enabled ONLY once Delivery Partner is assigned */}
+                  <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="h-11 w-11 rounded-full bg-emerald-100 text-[#15803D] font-extrabold flex items-center justify-center text-xl">
+                        🛵
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-slate-400 font-bold">Delivery Partner</p>
+                        <h4 className="font-extrabold text-slate-900">
+                          {trackingOrder.driverName || 'Assigning Delivery Partner...'}
+                        </h4>
+                        {trackingOrder.driverMobile && (
+                          <p className="text-[10px] text-slate-500">+91 {trackingOrder.driverMobile}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {isPartnerAssignedOrEnRoute && trackingOrder.driverMobile && (
+                      <div className="flex space-x-2">
+                        <a
+                          href={`tel:${trackingOrder.driverMobile}`}
+                          className="p-2.5 bg-emerald-50 text-[#15803D] border border-emerald-200 rounded-full flex items-center space-x-1 font-extrabold text-[10px]"
+                        >
+                          <Phone className="h-4 w-4" />
+                          <span>Call</span>
+                        </a>
+                        <a
+                          href={`sms:${trackingOrder.driverMobile}`}
+                          className="p-2.5 bg-sky-50 text-sky-700 border border-sky-200 rounded-full flex items-center space-x-1 font-extrabold text-[10px]"
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                          <span>Msg</span>
+                        </a>
+                      </div>
                     )}
                   </div>
-                </div>
-                <div className="flex space-x-2">
-                  <a
-                    href={`tel:${trackingOrder.driverMobile || '8328261103'}`}
-                    className="p-2.5 bg-emerald-50 text-[#15803D] border border-emerald-200 rounded-full flex items-center space-x-1 font-extrabold text-[10px]"
-                  >
-                    <Phone className="h-4 w-4" />
-                    <span>Call</span>
-                  </a>
-                  <a
-                    href={`sms:${trackingOrder.driverMobile || '8328261103'}`}
-                    className="p-2.5 bg-sky-50 text-sky-700 border border-sky-200 rounded-full flex items-center space-x-1 font-extrabold text-[10px]"
-                  >
-                    <MessageSquare className="h-4 w-4" />
-                    <span>Msg</span>
-                  </a>
-                </div>
-              </div>
 
-              {trackingOrder.status !== 'Delivered' ? (
-                <button onClick={() => handleSimulateCustomerDelivery(trackingOrder)} className="w-full bg-[#EA580C] text-white font-extrabold py-3.5 rounded-2xl shadow">
-                  Complete Delivery (Auto Email Invoice PDF)
-                </button>
-              ) : (
-                <button onClick={() => window.print()} className="w-full bg-slate-900 text-white font-extrabold py-3.5 rounded-2xl shadow flex items-center justify-center space-x-2">
-                  <Printer className="h-4 w-4" />
-                  <span>Download / Print Invoice PDF</span>
-                </button>
+                  <button onClick={() => handleSimulateCustomerDelivery(trackingOrder)} className="w-full bg-[#EA580C] text-white font-extrabold py-3.5 rounded-2xl shadow">
+                    Complete Delivery (Auto Email Invoice PDF)
+                  </button>
+                </>
               )}
             </div>
           </main>
         )}
 
+        {/* MY ORDERS PAGE (CUSTOMER):
+            - Active Orders: Shows 'Track Order >'
+            - Delivered Orders: Shows Ordered Products Details instead of Track Order */}
         {activeTab === 'orders' && (
           <main className="p-4 space-y-3.5 text-xs">
             <h2 className="text-base font-extrabold text-slate-900">My Orders</h2>
@@ -3047,29 +3240,52 @@ const q = search.toLowerCase();
             ) : (
               orders
                 .filter((o) => o.buyerRole === 'customer')
-                .map((ord) => (
-                  <div key={ord.id} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-2">
-                    <div className="flex justify-between font-extrabold">
-                      <span>{ord.id} • {ord.status}</span>
-                      <span>₹{ord.total}</span>
+                .map((ord) => {
+                  const isDelivered = ord.status === 'Delivered';
+                  return (
+                    <div key={ord.id} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-2">
+                      <div className="flex justify-between font-extrabold">
+                        <span>{ord.id} • <span className={isDelivered ? 'text-[#15803D]' : 'text-amber-700'}>{ord.status}</span></span>
+                        <span>₹{ord.total}</span>
+                      </div>
+
+                      {isDelivered ? (
+                        <div className="bg-slate-50 rounded-2xl p-2.5 border border-slate-100 space-y-1">
+                          <p className="text-[10px] font-extrabold text-slate-400 uppercase">Ordered Products</p>
+                          {(ord.items || []).map((it, idx) => (
+                            <div key={idx} className="flex justify-between text-[11px] font-bold text-slate-700">
+                              <span>{it.name} × {it.qty} {it.unit || 'Kg'}</span>
+                              <span>₹{it.price * it.qty}</span>
+                            </div>
+                          ))}
+                          <p className="text-[10px] text-slate-400 pt-1">{ord.date}</p>
+                        </div>
+                      ) : (
+                        <button onClick={() => { setTrackingOrder(ord); setActiveTab('trackOrder'); }} className="text-[#15803D] font-extrabold">
+                          Track Order &gt;
+                        </button>
+                      )}
                     </div>
-                    <button onClick={() => { setTrackingOrder(ord); setActiveTab('trackOrder'); }} className="text-[#15803D] font-extrabold">
-                      Track Order &gt;
-                    </button>
-                  </div>
-                ))
+                  );
+                })
             )}
           </main>
         )}
 
-        {activeTab === 'profile' && renderSharedProfileTab()}
+{activeTab === 'profile' && renderSharedProfileTab()}
 
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-slate-200 px-4 py-2 flex justify-between items-center z-40 shadow-lg">
           <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'home' ? 'text-[#15803D]' : 'text-slate-400'}`}>
             <Home className="h-5 w-5 mb-0.5" />
             <span>Home</span>
           </button>
-          <button onClick={() => setActiveTab('categories')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'categories' ? 'text-[#15803D]' : 'text-slate-400'}`}>
+          <button
+            onClick={() => {
+              setCatTabSelectedCat(null);
+              setActiveTab('categories');
+            }}
+            className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'categories' ? 'text-[#15803D]' : 'text-slate-400'}`}
+          >
             <Grid className="h-5 w-5 mb-0.5" />
             <span>Categories</span>
           </button>
@@ -3096,7 +3312,7 @@ const q = search.toLowerCase();
   }
 
 // =========================================================================
-  // INDEPENDENT MULTI-VENDOR ORDER ALERTS & SEQUENTIAL PICKUP TRACKING (WITH SCOOTER ICON)
+  // INDEPENDENT MULTI-VENDOR ORDER ALERTS & SEQUENTIAL PICKUP TRACKING
   // =========================================================================
   const renderBroadcastOrderAlertsAndPickupTracking = () => {
     const incomingAlertCards = [];
@@ -3109,6 +3325,7 @@ const q = search.toLowerCase();
 
     const myAcceptedStopCards = [];
     orders.forEach((ord) => {
+      if (ord.status === 'Delivered') return;
       const stops = ord.pickupStops || buildPickupStopsFromItems(ord.items || []);
       const acceptedStops = stops.filter((s) => s.stopStatus === 'Accepted');
       const currentActiveStop = acceptedStops.find((s) => !s.pickedUp);
@@ -3214,7 +3431,7 @@ const q = search.toLowerCase();
           </div>
         )}
 
-        {myAcceptedStopCards.map(({ ord, st, isMyTurnForRiderPickup }) => {
+{myAcceptedStopCards.map(({ ord, st, isMyTurnForRiderPickup }) => {
           const rLat = ord.driverLat || 14.4390;
           const rLng = ord.driverLng || 79.9810;
           return (
@@ -3316,7 +3533,7 @@ const q = search.toLowerCase();
           </main>
         )}
 
-        {activeTab === 'listProduce' && (
+{activeTab === 'listProduce' && (
           <main className="p-4 space-y-3.5 text-xs">
             <div className="flex items-center space-x-2">
               <button onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white shadow-sm">
@@ -3424,7 +3641,7 @@ const q = search.toLowerCase();
       ];
       const pickupStops = buildPickupStopsFromItems(itemsArr);
 
-      const newOrd = {
+const newOrd = {
         id: (isRetail ? 'RIT-' : 'WS-') + Math.floor(1000 + Math.random() * 8999),
         buyerId: currentUser.id,
         buyerRole: currentUser.role,
@@ -3458,7 +3675,7 @@ const q = search.toLowerCase();
       setActiveTab('orders');
     };
 
-return (
+    return (
       <div style={fontStyle} className="min-h-screen bg-[#F5F7F5] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
         <WelcomeSmileModal />
         {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-extrabold px-4 py-2 rounded-full shadow-lg">{toast}</div>}
@@ -3501,7 +3718,7 @@ return (
           </main>
         )}
 
-        {activeTab === 'sellStock' && (
+{activeTab === 'sellStock' && (
           <main className="p-4 space-y-3 text-xs">
             <div className="flex items-center space-x-2">
               <button onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white shadow-sm">
@@ -3562,58 +3779,74 @@ return (
           </main>
         )}
 
-{activeTab === 'orders' && (
+        {/* MY ORDERS PAGE (WHOLESALE & RETAIL):
+            - Active Bulk Orders: Shows live scooter tracking once picked up + B2B OTP
+            - Delivered Bulk Orders: Shows Ordered Products Details only (No tracking map, no print invoice button) */}
+        {activeTab === 'orders' && (
           <main className="p-4 space-y-3 text-xs">
-            <h2 className="text-base font-extrabold">{currentUser.role.toUpperCase()} Orders & Live Tracking</h2>
+            <h2 className="text-base font-extrabold">{currentUser.role.toUpperCase()} My Orders</h2>
             {renderBroadcastOrderAlertsAndPickupTracking()}
 
             {myPlacedBulkOrders.map((ord) => {
-              const isPickedUp = ord.status === 'Out for Delivery' || ord.status === 'Delivered';
+              const isDelivered = ord.status === 'Delivered';
+              const isPickedUp = ord.status === 'Out for Delivery';
               const rLat = ord.driverLat || 14.4390;
               const rLng = ord.driverLng || 79.9810;
+
               return (
                 <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-200 space-y-2">
                   <div className="flex justify-between font-extrabold">
-                    <span>My Bulk Order #{ord.id} • {ord.status}</span>
+                    <span>Order #{ord.id} • <span className={isDelivered ? 'text-[#15803D]' : 'text-amber-700'}>{ord.status}</span></span>
                     <span className="text-[#15803D]">₹{ord.total}</span>
                   </div>
-                  <p className="text-slate-600">{ord.items.map((i) => `${i.qty} ${i.unit || 'Kg'} ${i.name}`).join(', ')}</p>
-                  {ord.b2bOtp && (
-                    <div className="bg-amber-50 border border-amber-200 p-2 rounded-xl font-extrabold text-amber-950">
-                      Delivery Verification OTP: {ord.b2bOtp}
-                    </div>
-                  )}
 
-                  {isPickedUp ? (
-                    <div className="space-y-1.5 pt-1">
-                      <p className="text-[11px] font-extrabold text-[#15803D]">
-                        🛵 Rider {ord.driverName} Picked Up Order — Live Delivery GPS: {rLat}, {rLng}
-                      </p>
-                      <LiveScooterMap
-                        lat={rLat}
-                        lng={rLng}
-                        title={`Bulk Drop Map ${ord.id}`}
-                        height={148}
-                        badgeText={`🛵 Live Delivery GPS: ${rLat}, ${rLng}`}
-                      />
+                  {isDelivered ? (
+                    <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-100 space-y-1">
+                      <p className="text-[10px] font-extrabold text-slate-400 uppercase">Delivered Products</p>
+                      {(ord.items || []).map((it, idx) => (
+                        <div key={idx} className="flex justify-between text-[11px] font-bold text-slate-700">
+                          <span>{it.name} × {it.qty} {it.unit || 'Kg'}</span>
+                          <span>₹{it.price * it.qty}</span>
+                        </div>
+                      ))}
+                      <p className="text-[10px] text-slate-400 pt-1">{ord.date}</p>
                     </div>
                   ) : (
-                    <p className="text-[10px] font-bold text-slate-500">
-                      Waiting for seller acceptance & rider pickup...
-                    </p>
-                  )}
+                    <>
+                      <p className="text-slate-600">{ord.items.map((i) => `${i.qty} ${i.unit || 'Kg'} ${i.name}`).join(', ')}</p>
+                      {ord.b2bOtp && (
+                        <div className="bg-amber-50 border border-amber-200 p-2 rounded-xl font-extrabold text-amber-950">
+                          Delivery Verification OTP: {ord.b2bOtp}
+                        </div>
+                      )}
 
-                  <button onClick={() => window.print()} className="w-full bg-slate-900 text-white font-extrabold py-2.5 rounded-xl flex items-center justify-center space-x-1.5">
-                    <Printer className="h-3.5 w-3.5" />
-                    <span>Print / Save PDF Invoice</span>
-                  </button>
+                      {isPickedUp ? (
+                        <div className="space-y-1.5 pt-1">
+                          <p className="text-[11px] font-extrabold text-[#15803D]">
+                            🛵 Rider {ord.driverName} Out for Delivery • Live GPS: {rLat}, {rLng}
+                          </p>
+                          <LiveScooterMap
+                            lat={rLat}
+                            lng={rLng}
+                            title={`Bulk Drop Map ${ord.id}`}
+                            height={148}
+                            badgeText={`🛵 Live Delivery GPS: ${rLat}, ${rLng}`}
+                          />
+                        </div>
+                      ) : (
+                        <p className="text-[10px] font-bold text-slate-500">
+                          Tracking active until delivery — live scooter map starts once picked up.
+                        </p>
+                      )}
+                    </>
+                  )}
                 </div>
               );
             })}
           </main>
         )}
 
-        {activeTab === 'profile' && renderSharedProfileTab()}
+{activeTab === 'profile' && renderSharedProfileTab()}
 
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-6 py-2.5 flex justify-between items-center z-40">
           {[
@@ -3636,7 +3869,7 @@ return (
     );
   }
 
-// =========================================================================
+  // =========================================================================
   // 6. DELIVERY PARTNER PORTAL
   // =========================================================================
   if (currentUser.role === 'delivery') {
@@ -3695,7 +3928,7 @@ return (
       notify(`Delivered! ₹${baseFee} Base + ₹${multiBonus} Multi-Stop Bonus (Total ₹${totalEarned}) credited!`);
     };
 
-    return (
+return (
       <div style={fontStyle} className="min-h-screen bg-[#F5F7F5] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
         {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-extrabold px-4 py-2 rounded-full shadow-lg">{toast}</div>}
 
@@ -3746,7 +3979,7 @@ return (
                   ? `${ord.buyerLat},${ord.buyerLng}`
                   : encodeURIComponent(ord.buyerAddress);
 
-return (
+                return (
                   <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2.5">
                     <div className="flex justify-between items-start">
                       <div>
@@ -3807,7 +4040,7 @@ return (
                         );
                       })}
 
-                      <p className="text-[10px] font-extrabold text-[#0F5132] uppercase pt-1">
+<p className="text-[10px] font-extrabold text-[#0F5132] uppercase pt-1">
                         2. Customer / Buyer Drop Location:
                       </p>
                       <div className="bg-emerald-50/80 rounded-lg p-2 border border-emerald-200 flex items-center justify-between gap-2">
@@ -3897,6 +4130,7 @@ return (
       </div>
     );
   }
+
 
   // =========================================================================
   // 7. MASTER ADMIN HQ (MANAGE CATALOGUE + MANAGE CATEGORIES + MANAGE COUPONS + APPROVALS)
