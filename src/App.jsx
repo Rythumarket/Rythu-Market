@@ -4,7 +4,7 @@ import {
   Phone, MessageSquare, Sprout, Store, Truck, ShieldCheck, ChevronRight,
   ArrowLeft, CheckCircle2, Wallet, Sparkles, Bell, Globe,
   LocateFixed, LogOut, Printer, Warehouse, ChevronDown,
-  Briefcase, Leaf, Shield, Zap, Grid, Check,
+  Briefcase, Leaf, Shield, Zap, Grid, Check, Tag, Edit3,
   TrendingUp, Package, HelpCircle, Navigation, Camera, Landmark, Volume2, VolumeX, Trash2, Image
 } from 'lucide-react';
 import { db } from './firebase';
@@ -35,73 +35,56 @@ const EN_TO_TE = {
   chillies: 'పచ్చిమిర్చి',
   rice: 'సోనా మసూరి బియ్యం',
   milk: 'చిక్కటి పాలు',
-  eggs: 'నాటు కోడి గుడ్లు',
-  chicken: 'నాటు కోడి',
+  curd: 'పెరుగు',
+  ghee: 'నెయ్యి',
+  atta: 'గోధుమ పిండి',
+  oil: 'వంట నూనె',
+  dal: 'కందిపప్పు',
+  masala: 'మసాలా దినుసులు',
+  cashew: 'జీడిపప్పు',
+  tea: 'టీ పొడి',
+  coffee: 'కాఫీ పొడి',
+  icecream: 'ఐస్ క్రీమ్',
+  juice: 'పండ్ల రసం',
 };
 
 const TE_TO_EN = Object.fromEntries(
   Object.entries(EN_TO_TE).map(([en, te]) => [te, en.charAt(0).toUpperCase() + en.slice(1)])
 );
 
-const PRODUCT_CATEGORIES = ['Vegetables', 'Fruits', 'Staples', 'Leafy Greens'];
+const DEFAULT_CATEGORIES = [
+  { id: 'Vegetables', labelEn: 'Vegetables', labelTe: 'కూరగాయలు', isDailyEssential: true, img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=200&q=80' },
+  { id: 'Fruits', labelEn: 'Fruits', labelTe: 'పండ్లు', isDailyEssential: true, img: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=200&q=80' },
+  { id: 'Leafy Greens', labelEn: 'Leafy Greens', labelTe: 'ఆకుకూరలు', isDailyEssential: false, img: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=200&q=80' },
+  { id: 'Dairy products', labelEn: 'Dairy products', labelTe: 'పాల ఉత్పత్తులు', isDailyEssential: true, img: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=200&q=80' },
+  { id: 'Atta, rice, Oils and dals', labelEn: 'Atta, rice, Oils and dals', labelTe: 'పిండి, బియ్యం, నూనెలు & పప్పులు', isDailyEssential: true, img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=200&q=80' },
+  { id: 'Masala and Dry fruits', labelEn: 'Masala and Dry fruits', labelTe: 'మసాలా & డ్రై ఫ్రూట్స్', isDailyEssential: false, img: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=200&q=80' },
+  { id: 'Packaged food', labelEn: 'Packaged food', labelTe: 'ప్యాకేజ్డ్ ఫుడ్', isDailyEssential: false, img: 'https://images.unsplash.com/photo-1621939514649-280e2ee25f60?auto=format&fit=crop&w=200&q=80' },
+  { id: 'Tea, Coffee and more', labelEn: 'Tea, Coffee and more', labelTe: 'టీ, కాఫీ & మరిన్ని', isDailyEssential: false, img: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=200&q=80' },
+  { id: 'Icecreams and more', labelEn: 'Icecreams and more', labelTe: 'ఐస్ క్రీమ్స్ & మరిన్ని', isDailyEssential: false, img: 'https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?auto=format&fit=crop&w=200&q=80' },
+  { id: 'Cold drinks and Juices', labelEn: 'Cold drinks and Juices', labelTe: 'కూల్ డ్రింక్స్ & జ్యూస్‌లు', isDailyEssential: false, img: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=200&q=80' },
+];
+
+const DEFAULT_COUPONS = [
+  { id: 'cp_1', code: 'RYTHU30', title: 'Flat ₹30 OFF on Fresh Orders', subtitle: 'Valid on orders above ₹149', discount: 30, minOrder: 149, active: true, badge: 'POPULAR' },
+  { id: 'cp_2', code: 'FARM50', title: 'Flat ₹50 OFF Direct Farm Basket', subtitle: 'Valid on orders above ₹299', discount: 50, minOrder: 299, active: true, badge: 'MEGA SAVER' },
+  { id: 'cp_3', code: 'DAIRY20', title: '₹20 Cashback on Morning Milk & Dairy', subtitle: 'Valid on orders above ₹99', discount: 20, minOrder: 99, active: true, badge: 'MORNING' },
+];
+
 const QUALITY_GRADES = ['Grade A (Export)', 'Grade A', 'Grade B', 'Organic'];
 
 const DEFAULT_MASTER_CATALOG = [
-  {
-    id: 'cat_tomato',
-    nameEn: 'Fresh Tomato',
-    nameTe: 'టమాటా',
-    cat: 'Vegetables',
-    defaultUnit: 'Kg',
-    img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=400&q=80',
-  },
-  {
-    id: 'cat_onion',
-    nameEn: 'Red Onion',
-    nameTe: 'ఉల్లిపాయలు',
-    cat: 'Vegetables',
-    defaultUnit: 'Kg',
-    img: 'https://images.unsplash.com/photo-1508747705729-e0613307ab6e?auto=format&fit=crop&w=400&q=80',
-  },
-  {
-    id: 'cat_mango',
-    nameEn: 'Banganapalli Mango',
-    nameTe: 'మామిడిపండు',
-    cat: 'Fruits',
-    defaultUnit: 'Kg',
-    img: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=400&q=80',
-  },
-  {
-    id: 'cat_spinach',
-    nameEn: 'Fresh Spinach (Palakura)',
-    nameTe: 'పాలకూర',
-    cat: 'Leafy Greens',
-    defaultUnit: 'Grams',
-    img: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=400&q=80',
-  },
-  {
-    id: 'cat_rice',
-    nameEn: 'Nellore Sona Masuri Rice',
-    nameTe: 'సోనా మసూరి బియ్యం',
-    cat: 'Staples',
-    defaultUnit: 'Kg',
-    img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=400&q=80',
-  },
-  {
-    id: 'cat_potato',
-    nameEn: 'Fresh Potato',
-    nameTe: 'బంగాళాదుంప',
-    cat: 'Vegetables',
-    defaultUnit: 'Kg',
-    img: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80',
-  },
-];
-
-const TOP_CATEGORIES = [
-  { id: 'Vegetables', labelEn: 'Vegetables', labelTe: 'కూరగాయలు', img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=160&q=80' },
-  { id: 'Fruits', labelEn: 'Fruits', labelTe: 'పండ్లు', img: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=160&q=80' },
-  { id: 'Staples', labelEn: 'Groceries', labelTe: 'కిరాణా', img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=160&q=80' },
-  { id: 'Leafy Greens', labelEn: 'Farm Fresh', labelTe: 'ఆకుకూరలు', img: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=160&q=80' },
+  { id: 'cat_tomato', nameEn: 'Fresh Tomato', nameTe: 'టమాటా', cat: 'Vegetables', defaultUnit: 'Kg', img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=400&q=80' },
+  { id: 'cat_onion', nameEn: 'Red Onion', nameTe: 'ఉల్లిపాయలు', cat: 'Vegetables', defaultUnit: 'Kg', img: 'https://images.unsplash.com/photo-1508747705729-e0613307ab6e?auto=format&fit=crop&w=400&q=80' },
+  { id: 'cat_mango', nameEn: 'Banganapalli Mango', nameTe: 'మామిడిపండు', cat: 'Fruits', defaultUnit: 'Kg', img: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=400&q=80' },
+  { id: 'cat_spinach', nameEn: 'Fresh Spinach (Palakura)', nameTe: 'పాలకూర', cat: 'Leafy Greens', defaultUnit: 'Grams', img: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=400&q=80' },
+  { id: 'cat_milk', nameEn: 'Fresh Farm Buffalo Milk', nameTe: 'చిక్కటి గేదె పాలు', cat: 'Dairy products', defaultUnit: 'Litres', img: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=400&q=80' },
+  { id: 'cat_rice', nameEn: 'Nellore Sona Masuri Rice', nameTe: 'సోనా మసూరి బియ్యం', cat: 'Atta, rice, Oils and dals', defaultUnit: 'Kg', img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=400&q=80' },
+  { id: 'cat_masala', nameEn: 'Guntur Chilli & Cashew Pack', nameTe: 'మసాలా & జీడిపప్పు', cat: 'Masala and Dry fruits', defaultUnit: 'Grams', img: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=400&q=80' },
+  { id: 'cat_packaged', nameEn: 'Crispy Mixture & Snacks', nameTe: 'ప్యాకేజ్డ్ స్నాక్స్', cat: 'Packaged food', defaultUnit: 'Grams', img: 'https://images.unsplash.com/photo-1621939514649-280e2ee25f60?auto=format&fit=crop&w=400&q=80' },
+  { id: 'cat_tea', nameEn: 'Assam Gold Tea & Filter Coffee', nameTe: 'టీ & ఫిల్టర్ కాఫీ', cat: 'Tea, Coffee and more', defaultUnit: 'Grams', img: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=400&q=80' },
+  { id: 'cat_icecream', nameEn: 'Vanilla & Mango Family Pack Ice Cream', nameTe: 'ఐస్ క్రీమ్ ఫ్యామిలీ ప్యాక్', cat: 'Icecreams and more', defaultUnit: 'Litres', img: 'https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?auto=format&fit=crop&w=400&q=80' },
+  { id: 'cat_juice', nameEn: 'Fresh Mango Juice & Cold Drink', nameTe: 'మామిడి జ్యూస్ & కూల్ డ్రింక్', cat: 'Cold drinks and Juices', defaultUnit: 'Litres', img: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=400&q=80' },
 ];
 
 const AVAILABILITY_SLOTS = [
@@ -114,134 +97,19 @@ const AVAILABILITY_SLOTS = [
 ];
 
 const INITIAL_PRODUCTS = [
-  {
-    id: 'p1',
-    postedByRole: 'farmer',
-    farmerId: 'u_farm_1',
-    farmerName: 'Ramaiah Farm • Kovur, Nellore',
-    sellerLat: 14.4920,
-    sellerLng: 79.9850,
-    distanceKm: 12,
-    nameEn: 'Fresh Tomato',
-    nameTe: 'టమాటా',
-    cat: 'Vegetables',
-    quality: 'Grade A',
-    unit: 'Kg',
-    packLabel: '1 Kg',
-    mrp: 48,
-    retailPrice: 36,
-    farmerDirectPrice: 24,
-    wholesalePrice: 28,
-    minWholesaleQty: 25,
-    stockKg: 500,
-    inStock: true,
-    desc: 'Fresh and juicy country tomatoes harvested this morning from Kovur farms, Nellore.',
-    availableFrom: 'Available Now',
-    img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=500&q=80',
-  },
-  {
-    id: 'p2',
-    postedByRole: 'farmer',
-    farmerId: 'u_farm_2',
-    farmerName: 'Subba Rao Farm • Buchi, Nellore',
-    sellerLat: 14.5360,
-    sellerLng: 79.8820,
-    distanceKm: 18,
-    nameEn: 'Red Onion',
-    nameTe: 'ఉల్లిపాయలు',
-    cat: 'Vegetables',
-    quality: 'Grade A',
-    unit: 'Kg',
-    packLabel: '1 Kg',
-    mrp: 44,
-    retailPrice: 34,
-    farmerDirectPrice: 22,
-    wholesalePrice: 26,
-    minWholesaleQty: 50,
-    stockKg: 800,
-    inStock: true,
-    desc: 'Farm-cured crisp red onions sourced directly from Buchireddypalem growers.',
-    availableFrom: 'Tomorrow Morning 6:00 AM',
-    img: 'https://images.unsplash.com/photo-1508747705729-e0613307ab6e?auto=format&fit=crop&w=500&q=80',
-  },
-  {
-id: 'p3',
-    postedByRole: 'farmer',
-    farmerId: 'u_farm_3',
-    farmerName: 'Rapur Orchards • Nellore',
-    sellerLat: 14.1980,
-    sellerLng: 79.5380,
-    distanceKm: 32,
-    nameEn: 'Banganapalli Mango',
-    nameTe: 'మామిడిపండు',
-    cat: 'Fruits',
-    quality: 'Grade A (Export)',
-    unit: 'Kg',
-    packLabel: '1 Kg',
-    mrp: 140,
-    retailPrice: 110,
-    farmerDirectPrice: 85,
-    wholesalePrice: 95,
-    minWholesaleQty: 20,
-    stockKg: 300,
-    inStock: true,
-    desc: 'Naturally ripened carbide-free Banganapalli mangoes from Rapur orchards.',
-    availableFrom: 'Available Now',
-    img: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=500&q=80',
-  },
-  {
-    id: 'p4',
-    postedByRole: 'retail',
-    farmerId: 'u_ret_1',
-    farmerName: 'Sri Lakshmi Fresh Mart • Magunta Layout, Nellore',
-    sellerLat: 14.4426,
-    sellerLng: 79.9865,
-    distanceKm: 6,
-    nameEn: 'Fresh Spinach (Palakura)',
-    nameTe: 'పాలకూర',
-    cat: 'Leafy Greens',
-    quality: 'Organic',
-    unit: 'Grams',
-    packLabel: '500 Grams',
-    mrp: 28,
-    retailPrice: 20,
-    farmerDirectPrice: 14,
-    wholesalePrice: 16,
-    minWholesaleQty: 15,
-    stockKg: 150,
-    inStock: true,
-    desc: 'Pesticide-free tender green spinach bundles harvested at dawn.',
-    availableFrom: 'After 1 Hour',
-    img: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=500&q=80',
-  },
-  {
-    id: 'p5',
-    postedByRole: 'wholesale',
-    farmerId: 'u_ws_1',
-    farmerName: 'Nellore Heritage Wholesale Mills • Stonehousepet',
-    sellerLat: 14.4510,
-    sellerLng: 79.9910,
-    distanceKm: 8,
-    nameEn: 'Nellore Sona Masuri Rice',
-    nameTe: 'సోనా మసూరి బియ్యం',
-    cat: 'Staples',
-    quality: 'Grade A',
-    unit: 'Kg',
-    packLabel: '5 Kg',
-    mrp: 340,
-    retailPrice: 285,
-    farmerDirectPrice: 250,
-    wholesalePrice: 265,
-    minWholesaleQty: 10,
-    stockKg: 1200,
-    inStock: true,
-    desc: 'Authentic aged Nellore Sona Masuri steam rice direct from local rice mills.',
-    availableFrom: 'Available Now',
-    img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=500&q=80',
-  },
+  { id: 'p1', postedByRole: 'farmer', farmerId: 'u_farm_1', farmerName: 'Ramaiah Farm • Kovur, Nellore', sellerLat: 14.4920, sellerLng: 79.9850, distanceKm: 12, nameEn: 'Fresh Tomato', nameTe: 'టమాటా', cat: 'Vegetables', quality: 'Grade A', unit: 'Kg', packLabel: '1 Kg', mrp: 48, retailPrice: 36, farmerDirectPrice: 24, wholesalePrice: 28, minWholesaleQty: 25, stockKg: 500, inStock: true, desc: 'Fresh and juicy country tomatoes harvested this morning from Kovur farms, Nellore.', availableFrom: 'Available Now', img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=500&q=80' },
+  { id: 'p2', postedByRole: 'farmer', farmerId: 'u_farm_2', farmerName: 'Subba Rao Farm • Buchi, Nellore', sellerLat: 14.5360, sellerLng: 79.8820, distanceKm: 18, nameEn: 'Red Onion', nameTe: 'ఉల్లిపాయలు', cat: 'Vegetables', quality: 'Grade A', unit: 'Kg', packLabel: '1 Kg', mrp: 44, retailPrice: 34, farmerDirectPrice: 22, wholesalePrice: 26, minWholesaleQty: 50, stockKg: 800, inStock: true, desc: 'Farm-cured crisp red onions sourced directly from Buchireddypalem growers.', availableFrom: 'Tomorrow Morning 6:00 AM', img: 'https://images.unsplash.com/photo-1508747705729-e0613307ab6e?auto=format&fit=crop&w=500&q=80' },
+  { id: 'p3', postedByRole: 'farmer', farmerId: 'u_farm_3', farmerName: 'Rapur Orchards • Nellore', sellerLat: 14.1980, sellerLng: 79.5380, distanceKm: 32, nameEn: 'Banganapalli Mango', nameTe: 'మామిడిపండు', cat: 'Fruits', quality: 'Grade A (Export)', unit: 'Kg', packLabel: '1 Kg', mrp: 140, retailPrice: 110, farmerDirectPrice: 85, wholesalePrice: 95, minWholesaleQty: 20, stockKg: 300, inStock: true, desc: 'Naturally ripened carbide-free Banganapalli mangoes from Rapur orchards.', availableFrom: 'Available Now', img: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=500&q=80' },
+  { id: 'p4', postedByRole: 'retail', farmerId: 'u_ret_1', farmerName: 'Sri Lakshmi Fresh Mart • Magunta Layout, Nellore', sellerLat: 14.4426, sellerLng: 79.9865, distanceKm: 6, nameEn: 'Fresh Spinach (Palakura)', nameTe: 'పాలకూర', cat: 'Leafy Greens', quality: 'Organic', unit: 'Grams', packLabel: '500 Grams', mrp: 28, retailPrice: 20, farmerDirectPrice: 14, wholesalePrice: 16, minWholesaleQty: 15, stockKg: 150, inStock: true, desc: 'Pesticide-free tender green spinach bundles harvested at dawn.', availableFrom: 'After 1 Hour', img: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=500&q=80' },
+  { id: 'p_dairy_1', postedByRole: 'farmer', farmerId: 'u_farm_4', farmerName: 'Gokulam Dairy Farm • Nellore', sellerLat: 14.4480, sellerLng: 79.9820, distanceKm: 5, nameEn: 'Pure Farm Buffalo Milk', nameTe: 'చిక్కటి గేదె పాలు', cat: 'Dairy products', quality: 'Organic', unit: 'Litres', packLabel: '1 Litre', mrp: 80, retailPrice: 68, farmerDirectPrice: 56, wholesalePrice: 60, minWholesaleQty: 20, stockKg: 200, inStock: true, desc: 'Unadulterated fresh morning buffalo milk from Nellore dairy farms.', availableFrom: 'Available Now', img: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=500&q=80' },
+  { id: 'p5', postedByRole: 'wholesale', farmerId: 'u_ws_1', farmerName: 'Nellore Heritage Wholesale Mills • Stonehousepet', sellerLat: 14.4510, sellerLng: 79.9910, distanceKm: 8, nameEn: 'Nellore Sona Masuri Rice', nameTe: 'సోనా మసూరి బియ్యం', cat: 'Atta, rice, Oils and dals', quality: 'Grade A', unit: 'Kg', packLabel: '5 Kg', mrp: 340, retailPrice: 285, farmerDirectPrice: 250, wholesalePrice: 265, minWholesaleQty: 10, stockKg: 1200, inStock: true, desc: 'Authentic aged Nellore Sona Masuri steam rice direct from local rice mills.', availableFrom: 'Available Now', img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=500&q=80' },
+  { id: 'p_masala_1', postedByRole: 'wholesale', farmerId: 'u_ws_1', farmerName: 'Nellore Spice & Dry Fruit Traders', sellerLat: 14.4510, sellerLng: 79.9910, distanceKm: 7, nameEn: 'Premium Cashew & Garam Masala Pack', nameTe: 'జీడిపప్పు & గరం మసాలా', cat: 'Masala and Dry fruits', quality: 'Grade A (Export)', unit: 'Grams', packLabel: '250 Grams', mrp: 240, retailPrice: 195, farmerDirectPrice: 165, wholesalePrice: 175, minWholesaleQty: 10, stockKg: 300, inStock: true, desc: 'Whole W240 cashews and aromatic home-ground spices.', availableFrom: 'Available Now', img: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=500&q=80' },
+  { id: 'p_pkg_1', postedByRole: 'retail', farmerId: 'u_ret_1', farmerName: 'Sri Lakshmi Fresh Mart • Magunta Layout, Nellore', sellerLat: 14.4426, sellerLng: 79.9865, distanceKm: 4, nameEn: 'Nellore Karam Mixture & Biscuits', nameTe: 'కారం మిక్చర్ & బిస్కెట్లు', cat: 'Packaged food', quality: 'Grade A', unit: 'Grams', packLabel: '500 Grams', mrp: 120, retailPrice: 95, farmerDirectPrice: 80, wholesalePrice: 85, minWholesaleQty: 15, stockKg: 250, inStock: true, desc: 'Freshly packed crunchy savory mixture and bakery biscuits.', availableFrom: 'Available Now', img: 'https://images.unsplash.com/photo-1621939514649-280e2ee25f60?auto=format&fit=crop&w=500&q=80' },
+  { id: 'p_tea_1', postedByRole: 'retail', farmerId: 'u_ret_1', farmerName: 'Sri Lakshmi Fresh Mart • Magunta Layout, Nellore', sellerLat: 14.4426, sellerLng: 79.9865, distanceKm: 4, nameEn: 'Strong Dust Tea & Filter Coffee Powder', nameTe: 'టీ పొడి & ఫిల్టర్ కాఫీ', cat: 'Tea, Coffee and more', quality: 'Grade A', unit: 'Grams', packLabel: '250 Grams', mrp: 150, retailPrice: 125, farmerDirectPrice: 105, wholesalePrice: 112, minWholesaleQty: 12, stockKg: 180, inStock: true, desc: 'Rich aroma Assam tea dust and Chikmagalur filter coffee blend.', availableFrom: 'Available Now', img: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=500&q=80' },
+  { id: 'p_ice_1', postedByRole: 'retail', farmerId: 'u_ret_1', farmerName: 'Sri Lakshmi Fresh Mart • Magunta Layout, Nellore', sellerLat: 14.4426, sellerLng: 79.9865, distanceKm: 4, nameEn: 'Alphonso Mango & Vanilla Ice Cream Tub', nameTe: 'మామిడి & వెనీలా ఐస్ క్రీమ్', cat: 'Icecreams and more', quality: 'Grade A', unit: 'Litres', packLabel: '1 Litre', mrp: 220, retailPrice: 185, farmerDirectPrice: 155, wholesalePrice: 165, minWholesaleQty: 10, stockKg: 90, inStock: true, desc: 'Creamy real-milk Alphonso mango and vanilla family tub.', availableFrom: 'Available Now', img: 'https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?auto=format&fit=crop&w=500&q=80' },
+  { id: 'p_juice_1', postedByRole: 'retail', farmerId: 'u_ret_1', farmerName: 'Sri Lakshmi Fresh Mart • Magunta Layout, Nellore', sellerLat: 14.4426, sellerLng: 79.9865, distanceKm: 4, nameEn: 'Chilled Mango Pulp Juice & Cola Pack', nameTe: 'మామిడి జ్యూస్ & కూల్ డ్రింక్', cat: 'Cold drinks and Juices', quality: 'Grade A', unit: 'Litres', packLabel: '1 Litre', mrp: 90, retailPrice: 75, farmerDirectPrice: 60, wholesalePrice: 65, minWholesaleQty: 20, stockKg: 300, inStock: true, desc: 'Refreshing chilled fruit juice and carbonated cold drinks.', availableFrom: 'Available Now', img: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=500&q=80' },
 ];
 
-// Compress uploaded image file to lightweight base64 data URL for instant Firestore storage
 const compressImageFileToDataUrl = (file) =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -276,6 +144,35 @@ const PaymentBadge = ({ type }) => {
     </span>
   );
 };
+
+// Live Scooter Overlay Map Component
+const LiveScooterMap = ({ lat, lng, title, height = 200, badgeText }) => (
+  <div className="relative w-full rounded-3xl overflow-hidden border-2 border-[#15803D] shadow-md" style={{ height }}>
+    <iframe
+      title={title}
+      width="100%"
+      height={height}
+      style={{ border: 0 }}
+      src={`https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.008}%2C${lat - 0.008}%2C${lng + 0.008}%2C${lat + 0.008}&layer=mapnik&marker=${lat}%2C${lng}`}
+    />
+    {/* Animated Scooter Icon Badge at Map Center */}
+    <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+      <div className="relative flex flex-col items-center -mt-6">
+        <span className="bg-[#0F5132] text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full shadow mb-0.5">
+          Rider Live
+        </span>
+        <div className="h-10 w-10 rounded-full bg-white border-2 border-[#15803D] shadow-lg flex items-center justify-center text-xl animate-bounce">
+          🛵
+        </div>
+      </div>
+    </div>
+    {badgeText && (
+      <span className="absolute bottom-2 left-2 bg-slate-900/90 text-white text-[10px] font-extrabold px-3 py-1 rounded-full">
+        {badgeText}
+      </span>
+    )}
+  </div>
+);
 
 const isValidIndianMobile = (num) => /^[6-9]\d{9}$/.test(num);
 const isValidEmail = (em) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em.trim());
@@ -381,7 +278,16 @@ export default function App() {
   });
   const [products, setProducts] = useState(INITIAL_PRODUCTS);
 
-  // Admin Master Product Catalog (Synced across all devices via Firestore)
+  // Admin-Managed Categories, Master Catalog & Coupons (Synced via Firestore)
+  const [categoriesList, setCategoriesList] = useState(() => {
+    try {
+      const saved = localStorage.getItem('rythu_managed_categories');
+      return saved ? JSON.parse(saved) : DEFAULT_CATEGORIES;
+    } catch {
+      return DEFAULT_CATEGORIES;
+    }
+  });
+
   const [masterCatalog, setMasterCatalog] = useState(() => {
     try {
       const saved = localStorage.getItem('rythu_master_catalog');
@@ -391,23 +297,32 @@ export default function App() {
     }
   });
 
-  useEffect(() => {
+  const [couponsList, setCouponsList] = useState(() => {
     try {
-      localStorage.setItem('rythu_master_catalog', JSON.stringify(masterCatalog));
+      const saved = localStorage.getItem('rythu_managed_coupons');
+      return saved ? JSON.parse(saved) : DEFAULT_COUPONS;
     } catch {
-      // ignore
+      return DEFAULT_COUPONS;
     }
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem('rythu_managed_categories', JSON.stringify(categoriesList)); } catch {}
+  }, [categoriesList]);
+
+  useEffect(() => {
+    try { localStorage.setItem('rythu_master_catalog', JSON.stringify(masterCatalog)); } catch {}
   }, [masterCatalog]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem('rythu_registered_users', JSON.stringify(users));
-    } catch {
-      // ignore
-    }
+    try { localStorage.setItem('rythu_managed_coupons', JSON.stringify(couponsList)); } catch {}
+  }, [couponsList]);
+
+  useEffect(() => {
+    try { localStorage.setItem('rythu_registered_users', JSON.stringify(users)); } catch {}
   }, [users]);
 
-  // Auth States
+// Auth States
   const [authScreen, setAuthScreen] = useState('login');
   const [loginIdentifier, setLoginIdentifier] = useState('');
   const [generatedEmailOtp, setGeneratedEmailOtp] = useState('');
@@ -443,7 +358,7 @@ export default function App() {
   const [regOtpInput, setRegOtpInput] = useState('');
   const [showWelcomeSmile, setShowWelcomeSmile] = useState(false);
 
-// Navigation & Screens
+  // Navigation & Screens
   const [activeTab, setActiveTab] = useState('home');
   const [detailProduct, setDetailProduct] = useState(null);
   const [detailQty, setDetailQty] = useState(1);
@@ -457,24 +372,8 @@ export default function App() {
 
   // Location & Map Pin States
   const [savedAddresses, setSavedAddresses] = useState([
-    {
-      id: 'addr1',
-      tag: 'Home',
-      title: 'Vedayapalem Main Road',
-      full: 'Vedayapalem, Nellore, Andhra Pradesh - 524004',
-      distance: '57 m',
-      lat: 14.4285,
-      lng: 79.9692,
-    },
-    {
-      id: 'addr2',
-      tag: 'Office',
-      title: 'Magunta Layout, Nellore',
-      full: 'Magunta Layout Main Road, Dargamitta, Nellore - 524003',
-      distance: '2.5 kms',
-      lat: 14.4426,
-      lng: 79.9865,
-    },
+    { id: 'addr1', tag: 'Home', title: 'Vedayapalem Main Road', full: 'Vedayapalem, Nellore, Andhra Pradesh - 524004', distance: '57 m', lat: 14.4285, lng: 79.9692 },
+    { id: 'addr2', tag: 'Office', title: 'Magunta Layout, Nellore', full: 'Magunta Layout Main Road, Dargamitta, Nellore - 524003', distance: '2.5 kms', lat: 14.4426, lng: 79.9865 },
   ]);
   const [activeAddrId, setActiveAddrId] = useState('addr1');
   const [locSearch, setLocSearch] = useState('');
@@ -488,7 +387,8 @@ export default function App() {
   // Cart & Payments
   const [cart, setCart] = useState({ p1: 2, p4: 1 });
   const [useWalletBalance] = useState(false);
-  const [appliedPromo] = useState(null);
+  const [promoInput, setPromoInput] = useState('');
+  const [appliedCouponObj, setAppliedCouponObj] = useState(null);
   const [payMode, setPayMode] = useState('phonepe');
   const [utrRefInput, setUtrRefInput] = useState('');
   const [cardNo, setCardNo] = useState('');
@@ -507,7 +407,9 @@ export default function App() {
   ]);
   const [orders, setOrders] = useState([]);
 
-  // Seller Post Product States (Selected from Admin Master Catalog or Custom)
+  // Seller Post Product States (Search + Category Dropdown + Catalog Picker)
+  const [sellerCatalogFilter, setSellerCatalogFilter] = useState('All');
+  const [sellerCatalogSearch, setSellerCatalogSearch] = useState('');
   const [selectedCatalogId, setSelectedCatalogId] = useState('cat_tomato');
   const [fNameEn, setFNameEn] = useState('Fresh Tomato');
   const [fNameTe, setFNameTe] = useState('టమాటా');
@@ -519,8 +421,8 @@ export default function App() {
   const [fImg, setFImg] = useState('https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=400&q=80');
   const [fAvailTime, setFAvailTime] = useState('Available Now');
 
-  // Admin Master Catalog Upload Form States
-  const [adminTab, setAdminTab] = useState('catalog');
+  // Admin Management Tabs & Form States
+  const [adminTab, setAdminTab] = useState('catalogue'); // 'catalogue' | 'categories' | 'coupons' | 'approvals'
   const [catNameEn, setCatNameEn] = useState('');
   const [catNameTe, setCatNameTe] = useState('');
   const [catCategory, setCatCategory] = useState('Vegetables');
@@ -528,13 +430,29 @@ export default function App() {
   const [catImgPreview, setCatImgPreview] = useState('');
   const [catImgUrl, setCatImgUrl] = useState('');
 
+  // Admin Manage Categories Form States
+  const [editingCatId, setEditingCatId] = useState(null);
+  const [newCatEn, setNewCatEn] = useState('');
+  const [newCatTe, setNewCatTe] = useState('');
+  const [newCatDaily, setNewCatDaily] = useState(true);
+  const [newCatImgPreview, setNewCatImgPreview] = useState('');
+  const [newCatImgUrl, setNewCatImgUrl] = useState('');
+
+  // Admin Manage Coupons Form States
+  const [editingCouponId, setEditingCouponId] = useState(null);
+  const [cpCode, setCpCode] = useState('');
+  const [cpTitle, setCpTitle] = useState('');
+  const [cpDiscount, setCpDiscount] = useState('30');
+  const [cpMinOrder, setCpMinOrder] = useState('149');
+  const [cpBadge, setCpBadge] = useState('OFFER');
+
   // Delivery & Admin States
   const [delivFilter, setDelivFilter] = useState('available');
   const [scratchMin] = useState(4);
   const [scratchMax] = useState(25);
   const [offersEnabled] = useState(true);
 
-// 15-Second Ringtone Alert Controller per Role Stop
+  // 15-Second Ringtone Alert Controller
   const [isRinging, setIsRinging] = useState(false);
   const lastRungKeyRef = useRef(null);
   const ringTimerRef = useRef(null);
@@ -567,9 +485,7 @@ export default function App() {
         gain.connect(ctx.destination);
         osc.start();
         osc.stop(ctx.currentTime + 0.46);
-      } catch {
-        // ignore if autoplay blocked
-      }
+      } catch {}
     };
 
     playSingleChime();
@@ -584,7 +500,7 @@ export default function App() {
     }, 1000);
   }, [stopAlertRingtone]);
 
-  const getPendingStopsForSeller = useCallback(
+const getPendingStopsForSeller = useCallback(
     (ord) => {
       if (!currentUser || !['farmer', 'wholesale', 'retail'].includes(currentUser.role)) return [];
       if (ord.buyerId === currentUser.id || ord.status === 'Delivered') return [];
@@ -661,11 +577,7 @@ export default function App() {
   }, [handleHardwareBack]);
 
   const handleGrantDevicePermissions = () => {
-    try {
-      localStorage.setItem('rythu_permissions_granted', 'true');
-    } catch {
-      // ignore
-    }
+    try { localStorage.setItem('rythu_permissions_granted', 'true'); } catch {}
     setShowPermissionPrompt(false);
 
     if ('Notification' in window && Notification.permission === 'default') {
@@ -680,15 +592,13 @@ export default function App() {
           await fetchAddressFromCoords(lat, lng);
           notify('Location, Message & Phone permissions enabled!');
         },
-        () => {
-          notify('Permissions saved!');
-        },
+        () => notify('Permissions saved!'),
         { enableHighAccuracy: true, timeout: 8000 }
       );
     }
   };
 
-// Real-Time Cloud Firestore Sync (Orders, Products, Users & Admin Master Catalog)
+  // Real-Time Cloud Firestore Sync (Orders, Products, Master Catalog, Categories, Coupons, Users)
   useEffect(() => {
     const unsubOrders = onSnapshot(
       collection(db, 'orders'),
@@ -729,6 +639,28 @@ export default function App() {
       () => {}
     );
 
+    const unsubCategories = onSnapshot(
+      collection(db, 'categories'),
+      (snapshot) => {
+        if (!snapshot.empty) {
+          const liveCategories = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+          setCategoriesList(liveCategories);
+        }
+      },
+      () => {}
+    );
+
+    const unsubCoupons = onSnapshot(
+      collection(db, 'coupons'),
+      (snapshot) => {
+        if (!snapshot.empty) {
+          const liveCoupons = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+          setCouponsList(liveCoupons);
+        }
+      },
+      () => {}
+    );
+
     const unsubUsers = onSnapshot(
       collection(db, 'users'),
       (snapshot) => {
@@ -747,6 +679,8 @@ export default function App() {
       unsubOrders();
       unsubProducts();
       unsubCatalog();
+      unsubCategories();
+      unsubCoupons();
       unsubUsers();
     };
   }, []);
@@ -779,7 +713,7 @@ export default function App() {
     return () => navigator.geolocation.clearWatch(watchId);
   }, [currentUser, orders]);
 
-  const triggerEmailOtp = async (targetEmail, userName) => {
+const triggerEmailOtp = async (targetEmail, userName) => {
     setSendingEmail(true);
     setAuthMsg('');
     const code = String(Math.floor(100000 + Math.random() * 900000));
@@ -916,12 +850,10 @@ const sendAutomaticInvoiceEmail = async (ord) => {
         }),
       });
       notify(`Official Tax Invoice sent to ${recipientEmail}!`);
-    } catch {
-      // silent
-    }
+    } catch {}
   };
 
-  const verifyEmailOtpCode = (enteredCode) => {
+const verifyEmailOtpCode = (enteredCode) => {
     if (!generatedEmailOtp || Date.now() > emailOtpExpiry) {
       setAuthMsg('OTP expired or not requested. Please tap Resend OTP.');
       return false;
@@ -933,7 +865,7 @@ const sendAutomaticInvoiceEmail = async (ord) => {
     return true;
   };
 
-const handleDirectLogin = (e) => {
+  const handleDirectLogin = (e) => {
     e.preventDefault();
     const raw = loginIdentifier.trim();
     if (!raw) {
@@ -1010,7 +942,7 @@ const handleDirectLogin = (e) => {
         ? `${regVillage || regAddress}, ${regMandal || ''}, ${regDistrict || 'Nellore'}`.replace(/,\s*,/g, ',')
         : regAddress.trim() || `${regVillage || 'Nellore'}, ${regState}`;
 
-    const newUser = {
+const newUser = {
       id: 'u_' + Date.now(),
       role: selectedRole,
       name: regName.trim(),
@@ -1059,7 +991,7 @@ const handleDirectLogin = (e) => {
     setTimeout(() => setShowWelcomeSmile(false), 3500);
   };
 
-const handleStrictLogout = () => {
+  const handleStrictLogout = () => {
     stopAlertRingtone();
     setCurrentUser(null);
     setSelectedRole(null);
@@ -1081,9 +1013,7 @@ const handleStrictLogout = () => {
         setMapPinFullAddress(data.display_name);
         return;
       }
-    } catch {
-      // fallback
-    }
+    } catch {}
     setMapPinTitle(`Nellore Pinned (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
     setMapPinFullAddress(`Lat ${lat.toFixed(5)}, Lng ${lng.toFixed(5)}, Nellore, Andhra Pradesh`);
   };
@@ -1152,7 +1082,6 @@ const handleFarmerEnChange = (val) => {
     if (TE_TO_EN[val.trim()]) setFNameEn(TE_TO_EN[val.trim()]);
   };
 
-  // Select a product from Admin Master Catalog -> Auto-fills English/Telugu Name, Category, Unit & Photo
   const handleSelectCatalogProduct = (item) => {
     if (!item) {
       setSelectedCatalogId('custom');
@@ -1200,127 +1129,170 @@ const handleFarmerEnChange = (val) => {
     };
     setProducts((prev) => [newProd, ...prev]);
     setDoc(doc(db, 'products', newProd.id), newProd).catch(() => {});
-    notify(`Published ${newProd.nameEn} (${fQuality} • ${fQty} ${fUnit})!`);
+    notify(`Published ${newProd.nameEn} (${fCat} • ${fQuality} • ${fQty} ${fUnit})!`);
   };
 
-  // Seller Product Form powered by Admin Master Catalog (Visual Picture Picker + Auto-Fill)
-  const renderPostProductForm = (roleSource, submitLabel) => (
-    <form onSubmit={(e) => handlePublishRoleProduct(e, roleSource)} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-3">
-      <div>
-        <div className="flex items-center justify-between mb-1.5">
-          <label className="text-[11px] font-extrabold text-[#15803D]">
-            1. Select Product from Admin Catalog (Tap Picture)
-          </label>
-          <button
-            type="button"
-            onClick={() => handleSelectCatalogProduct(null)}
-            className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${
-              selectedCatalogId === 'custom' ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-600'
-            }`}
-          >
-            + Other Item
-          </button>
-        </div>
+  // Seller Product Form with Search Bar + Category Dropdown + Admin Catalog Picker
+  const renderPostProductForm = (roleSource, submitLabel) => {
+    const q = sellerCatalogSearch.trim().toLowerCase();
+    const filteredSellerCatalog = masterCatalog.filter((c) => {
+      const catOk = sellerCatalogFilter === 'All' || c.cat === sellerCatalogFilter;
+      const searchOk =
+        !q ||
+        c.nameEn.toLowerCase().includes(q) ||
+        c.nameTe.includes(sellerCatalogSearch.trim()) ||
+        c.cat.toLowerCase().includes(q);
+      return catOk && searchOk;
+    });
 
-        <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-0.5">
-          {masterCatalog.map((item) => {
-            const isSel = selectedCatalogId === item.id;
-            return (
-              <button
-                type="button"
-                key={item.id}
-                onClick={() => handleSelectCatalogProduct(item)}
-                className={`rounded-2xl p-2 border text-center transition ${
-                  isSel ? 'border-2 border-[#15803D] bg-emerald-50 shadow-sm' : 'border-slate-200 bg-slate-50/50'
-                }`}
-              >
-                <img src={item.img} alt={item.nameEn} className="h-12 w-12 rounded-xl object-cover mx-auto mb-1" />
-                <p className="text-[10px] font-extrabold text-slate-900 truncate">{item.nameEn}</p>
-                <p className="text-[9px] font-bold text-[#15803D] truncate">{item.nameTe}</p>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-{/* Selected Product Preview & Name Fields */}
-      <div className="flex items-center space-x-2.5 bg-emerald-50/50 border border-emerald-200 rounded-2xl p-2.5">
-        <img src={fImg} alt={fNameEn} className="h-12 w-12 rounded-xl object-cover flex-shrink-0 bg-white" />
-        <div className="grid grid-cols-2 gap-1.5 flex-1">
-          <input
-            type="text"
-            required
-            value={fNameEn}
-            onChange={(e) => handleFarmerEnChange(e.target.value)}
-            placeholder="Product Name (EN)"
-            className="w-full bg-white border rounded-xl px-2.5 py-2 font-bold text-xs"
-          />
-          <input
-            type="text"
-            required
-            value={fNameTe}
-            onChange={(e) => handleFarmerTeChange(e.target.value)}
-            placeholder="పేరు తెలుగులో"
-            className="w-full bg-white border rounded-xl px-2.5 py-2 font-bold text-xs text-[#15803D]"
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-2">
+    return (
+      <form onSubmit={(e) => handlePublishRoleProduct(e, roleSource)} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-3">
         <div>
-          <label className="text-[10px] font-bold text-slate-400">Category</label>
-          <select value={fCat} onChange={(e) => setFCat(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-extrabold text-slate-800">
-            {PRODUCT_CATEGORIES.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="text-[10px] font-bold text-slate-400">Quality Grade</label>
-          <select value={fQuality} onChange={(e) => setFQuality(e.target.value)} className="w-full bg-emerald-50/60 border border-emerald-200 rounded-xl px-3 py-2.5 font-extrabold text-[#15803D]">
-            {QUALITY_GRADES.map((q) => (
-              <option key={q} value={q}>{q}</option>
-            ))}
-          </select>
-        </div>
-      </div>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-[11px] font-extrabold text-[#15803D]">
+              1. Search or Select from Admin Catalog ({masterCatalog.length})
+            </label>
+            <button
+              type="button"
+              onClick={() => handleSelectCatalogProduct(null)}
+              className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${
+                selectedCatalogId === 'custom' ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-600'
+              }`}
+            >
+              + Custom Item
+            </button>
+          </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        <div>
-          <label className="text-[10px] font-bold text-slate-400">Quantity & Unit</label>
-          <div className="flex space-x-1.5">
-            <input type="number" required value={fQty} onChange={(e) => setFQty(e.target.value)} className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-bold" />
-            <select value={fUnit} onChange={(e) => setFUnit(e.target.value)} className="bg-emerald-50 border border-emerald-200 text-[#15803D] rounded-xl px-2.5 py-2.5 font-extrabold">
-              <option value="Kg">Kg</option>
-              <option value="Grams">Grams</option>
-              <option value="Litres">Litres</option>
+          {/* Search Bar + Category Dropdown Side by Side */}
+          <div className="grid grid-cols-2 gap-2 mb-2">
+            <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2">
+              <Search className="h-3.5 w-3.5 text-slate-400 mr-1.5 flex-shrink-0" />
+              <input
+                type="text"
+                value={sellerCatalogSearch}
+                onChange={(e) => {
+                  setSellerCatalogSearch(e.target.value);
+                  if (e.target.value.trim()) {
+                    handleFarmerEnChange(e.target.value);
+                  }
+                }}
+                placeholder="Search item..."
+                className="w-full bg-transparent text-[11px] font-bold focus:outline-none"
+              />
+            </div>
+
+            <select
+              value={sellerCatalogFilter}
+              onChange={(e) => setSellerCatalogFilter(e.target.value)}
+              className="bg-emerald-50/70 border border-emerald-200 rounded-xl px-2.5 py-2 font-extrabold text-[11px] text-[#0F5132]"
+            >
+              <option value="All">All Categories</option>
+              {categoriesList.map((c) => (
+                <option key={c.id} value={c.labelEn}>{c.labelEn}</option>
+              ))}
+            </select>
+          </div>
+
+ <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-0.5">
+            {filteredSellerCatalog.map((item) => {
+              const isSel = selectedCatalogId === item.id;
+              return (
+                <button
+                  type="button"
+                  key={item.id}
+                  onClick={() => handleSelectCatalogProduct(item)}
+                  className={`rounded-2xl p-2 border text-center transition ${
+                    isSel ? 'border-2 border-[#15803D] bg-emerald-50 shadow-sm' : 'border-slate-200 bg-slate-50/50'
+                  }`}
+                >
+                  <img src={item.img} alt={item.nameEn} className="h-12 w-12 rounded-xl object-cover mx-auto mb-1" />
+                  <p className="text-[10px] font-extrabold text-slate-900 truncate">{item.nameEn}</p>
+                  <p className="text-[9px] font-bold text-[#15803D] truncate">{item.nameTe}</p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Selected Product Preview & Editable Name Fields */}
+        <div className="flex items-center space-x-2.5 bg-emerald-50/50 border border-emerald-200 rounded-2xl p-2.5">
+          <img src={fImg} alt={fNameEn} className="h-12 w-12 rounded-xl object-cover flex-shrink-0 bg-white" />
+          <div className="grid grid-cols-2 gap-1.5 flex-1">
+            <input
+              type="text"
+              required
+              value={fNameEn}
+              onChange={(e) => handleFarmerEnChange(e.target.value)}
+              placeholder="Product Name (EN)"
+              className="w-full bg-white border rounded-xl px-2.5 py-2 font-bold text-xs"
+            />
+            <input
+              type="text"
+              required
+              value={fNameTe}
+              onChange={(e) => handleFarmerTeChange(e.target.value)}
+              placeholder="పేరు తెలుగులో"
+              className="w-full bg-white border rounded-xl px-2.5 py-2 font-bold text-xs text-[#15803D]"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="text-[10px] font-bold text-slate-400">Category</label>
+            <select value={fCat} onChange={(e) => setFCat(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-extrabold text-slate-800">
+              {categoriesList.map((c) => (
+                <option key={c.id} value={c.labelEn}>{c.labelEn}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-[10px] font-bold text-slate-400">Quality Grade</label>
+            <select value={fQuality} onChange={(e) => setFQuality(e.target.value)} className="w-full bg-emerald-50/60 border border-emerald-200 rounded-xl px-3 py-2.5 font-extrabold text-[#15803D]">
+              {QUALITY_GRADES.map((q) => (
+                <option key={q} value={q}>{q}</option>
+              ))}
             </select>
           </div>
         </div>
-        <div>
-          <label className="text-[10px] font-bold text-slate-400">Price (₹ / {fUnit})</label>
-          <input type="number" required value={fPrice} onChange={(e) => setFPrice(e.target.value)} className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-extrabold text-[#15803D]" />
+
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="text-[10px] font-bold text-slate-400">Quantity & Unit</label>
+            <div className="flex space-x-1.5">
+              <input type="number" required value={fQty} onChange={(e) => setFQty(e.target.value)} className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-bold" />
+              <select value={fUnit} onChange={(e) => setFUnit(e.target.value)} className="bg-emerald-50 border border-emerald-200 text-[#15803D] rounded-xl px-2.5 py-2.5 font-extrabold">
+                <option value="Kg">Kg</option>
+                <option value="Grams">Grams</option>
+                <option value="Litres">Litres</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="text-[10px] font-bold text-slate-400">Price (₹ / {fUnit})</label>
+            <input type="number" required value={fPrice} onChange={(e) => setFPrice(e.target.value)} className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-extrabold text-[#15803D]" />
+          </div>
         </div>
-      </div>
 
-      <div>
-        <label className="text-[10px] font-bold text-slate-400">Availability Slot</label>
-        <select value={fAvailTime} onChange={(e) => setFAvailTime(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-extrabold text-slate-800 mt-1">
-          {AVAILABILITY_SLOTS.map((slot) => (
-            <option key={slot} value={slot}>{slot}</option>
-          ))}
-        </select>
-      </div>
+        <div>
+          <label className="text-[10px] font-bold text-slate-400">Availability Slot</label>
+          <select value={fAvailTime} onChange={(e) => setFAvailTime(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-extrabold text-slate-800 mt-1">
+            {AVAILABILITY_SLOTS.map((slot) => (
+              <option key={slot} value={slot}>{slot}</option>
+            ))}
+          </select>
+        </div>
 
-      <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm">
-        {submitLabel}
-      </button>
-    </form>
-  );
+        <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm">
+          {submitLabel}
+        </button>
+      </form>
+    );
+  };
 
   const fontStyle = { fontFamily: "'Plus Jakarta Sans', 'Noto Sans Telugu', sans-serif" };
 
-// =========================================================================
+  // =========================================================================
   // 0. DIRECT INVOICE PDF PRINT VIEW
   // =========================================================================
   if (sharedInvoiceData) {
@@ -1354,7 +1326,7 @@ const handleFarmerEnChange = (val) => {
           </div>
         </div>
 
-        <table className="w-full text-xs border-collapse border border-slate-200">
+<table className="w-full text-xs border-collapse border border-slate-200">
           <thead>
             <tr className="bg-[#15803D] text-white">
               <th className="p-2 text-left">#</th>
@@ -1399,65 +1371,17 @@ const handleFarmerEnChange = (val) => {
     );
   }
 
-// =========================================================================
+  // =========================================================================
   // 1. HOME / ROLE ENTRY PAGE + ONE-TIME DEVICE PERMISSIONS DIALOG
   // =========================================================================
   if (!selectedRole) {
     const roleCards = [
-      {
-        id: 'customer',
-        te: 'వినియోగదారులు',
-        en: 'Shop for Fresh Produce',
-        bg: 'bg-[#ECFDF5] border-[#BBF7D0]',
-        badgeBg: 'bg-[#DCFCE7] text-[#15803D]',
-        arrowBg: 'bg-[#D1FAE5] text-[#15803D]',
-        icon: ShoppingCart,
-      },
-      {
-        id: 'farmer',
-        te: 'రైతు విభాగం',
-        en: 'Farmers Section',
-        bg: 'bg-[#FFFBEB] border-[#FDE68A]',
-        badgeBg: 'bg-[#FEF3C7] text-[#B45309]',
-        arrowBg: 'bg-[#FDE68A] text-[#B45309]',
-        icon: Sprout,
-      },
-      {
-        id: 'retail',
-        te: 'రిటైల్ షాపులు',
-        en: 'Retail Shops',
-        bg: 'bg-[#FFF7ED] border-[#FED7AA]',
-        badgeBg: 'bg-[#FFEDD5] text-[#C2410C]',
-        arrowBg: 'bg-[#FED7AA] text-[#C2410C]',
-        icon: Store,
-      },
-      {
-        id: 'wholesale',
-        te: 'హోల్‌సేల్ మండీ',
-        en: 'Wholesale Market',
-        bg: 'bg-[#EFF6FF] border-[#BFDBFE]',
-        badgeBg: 'bg-[#DBEAFE] text-[#1D4ED8]',
-        arrowBg: 'bg-[#BFDBFE] text-[#1D4ED8]',
-        icon: Warehouse,
-      },
-      {
-        id: 'delivery',
-        te: 'డెలివరీ & ట్రాకింగ్',
-        en: 'Delivery Fleet',
-        bg: 'bg-[#F5F3FF] border-[#DDD6FE]',
-        badgeBg: 'bg-[#EDE9FE] text-[#6D28D9]',
-        arrowBg: 'bg-[#DDD6FE] text-[#6D28D9]',
-        icon: Truck,
-      },
-      {
-        id: 'admin',
-        te: 'అడ్మిన్ (Admin)',
-        en: 'Admin Login',
-        bg: 'bg-[#F0FDFA] border-[#99F6E4]',
-        badgeBg: 'bg-[#CCFBF1] text-[#0F766E]',
-        arrowBg: 'bg-[#99F6E4] text-[#0F766E]',
-        icon: ShieldCheck,
-      },
+      { id: 'customer', te: 'వినియోగదారులు', en: 'Shop for Fresh Produce', bg: 'bg-[#ECFDF5] border-[#BBF7D0]', badgeBg: 'bg-[#DCFCE7] text-[#15803D]', arrowBg: 'bg-[#D1FAE5] text-[#15803D]', icon: ShoppingCart },
+      { id: 'farmer', te: 'రైతు విభాగం', en: 'Farmers Section', bg: 'bg-[#FFFBEB] border-[#FDE68A]', badgeBg: 'bg-[#FEF3C7] text-[#B45309]', arrowBg: 'bg-[#FDE68A] text-[#B45309]', icon: Sprout },
+      { id: 'retail', te: 'రిటైల్ షాపులు', en: 'Retail Shops', bg: 'bg-[#FFF7ED] border-[#FED7AA]', badgeBg: 'bg-[#FFEDD5] text-[#C2410C]', arrowBg: 'bg-[#FED7AA] text-[#C2410C]', icon: Store },
+      { id: 'wholesale', te: 'హోల్‌సేల్ మండీ', en: 'Wholesale Market', bg: 'bg-[#EFF6FF] border-[#BFDBFE]', badgeBg: 'bg-[#DBEAFE] text-[#1D4ED8]', arrowBg: 'bg-[#BFDBFE] text-[#1D4ED8]', icon: Warehouse },
+      { id: 'delivery', te: 'డెలివరీ & ట్రాకింగ్', en: 'Delivery Fleet', bg: 'bg-[#F5F3FF] border-[#DDD6FE]', badgeBg: 'bg-[#EDE9FE] text-[#6D28D9]', arrowBg: 'bg-[#DDD6FE] text-[#6D28D9]', icon: Truck },
+      { id: 'admin', te: 'అడ్మిన్ (Admin)', en: 'Admin Login', bg: 'bg-[#F0FDFA] border-[#99F6E4]', badgeBg: 'bg-[#CCFBF1] text-[#0F766E]', arrowBg: 'bg-[#99F6E4] text-[#0F766E]', icon: ShieldCheck },
     ];
 
     return (
@@ -1497,7 +1421,7 @@ const handleFarmerEnChange = (val) => {
           </div>
         )}
 
-        <div className="bg-gradient-to-b from-[#0E5A2B] via-[#15803D] to-[#4ADE80]/30 text-white rounded-b-[36px] px-4 pt-4 pb-6 shadow-lg relative overflow-hidden">
+<div className="bg-gradient-to-b from-[#0E5A2B] via-[#15803D] to-[#4ADE80]/30 text-white rounded-b-[36px] px-4 pt-4 pb-6 shadow-lg relative overflow-hidden">
           <div className="flex items-center justify-between relative z-10">
             <div className="flex items-center space-x-2.5">
               <div className="h-12 w-12 rounded-full bg-white p-0.5 border-2 border-[#EAB308] shadow overflow-hidden flex-shrink-0">
@@ -1510,7 +1434,7 @@ const handleFarmerEnChange = (val) => {
               </div>
             </div>
 
-<div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2">
               <button
                 type="button"
                 onClick={() => setLang(lang === 'te' ? 'en' : 'te')}
@@ -1623,7 +1547,7 @@ const handleFarmerEnChange = (val) => {
           </div>
         </div>
 
-        <div className="px-3.5 pt-3.5">
+   <div className="px-3.5 pt-3.5">
           <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2.5">
             <div className="flex items-center space-x-1.5 text-xs font-extrabold text-slate-800">
               <Leaf className="h-4 w-4 text-[#15803D]" />
@@ -1658,7 +1582,7 @@ const handleFarmerEnChange = (val) => {
           </div>
         </div>
 
-<nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0D4A24] text-white px-6 py-2.5 rounded-t-3xl flex justify-center items-center z-40 shadow-2xl">
+        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0D4A24] text-white px-6 py-2.5 rounded-t-3xl flex justify-center items-center z-40 shadow-2xl">
           <button
             type="button"
             onClick={() => setSelectedRole(null)}
@@ -1677,48 +1601,12 @@ const handleFarmerEnChange = (val) => {
   // =========================================================================
   if (!currentUser) {
     const roleMeta = {
-      farmer: {
-        title: 'Farmer Registration',
-        subtitle: 'Sell your fresh produce directly to buyers',
-        cta: 'Register as Farmer →',
-        hero: FARMER_HERO_IMG,
-        icon: Sprout,
-      },
-      wholesale: {
-        title: 'Wholesale Registration',
-        subtitle: 'Buy in bulk at the best prices',
-        cta: 'Register as Wholesale →',
-        hero: WHOLESALE_HERO_IMG,
-        icon: Warehouse,
-      },
-      retail: {
-        title: 'Retail Store Registration',
-        subtitle: 'Grow your store with Rythu Basket',
-        cta: 'Register as Retail Store →',
-        hero: RETAIL_HERO_IMG,
-        icon: Store,
-      },
-      delivery: {
-        title: 'Delivery Partner Registration',
-        subtitle: 'Deliver Freshness, Earn More',
-        cta: 'Register as Delivery Partner →',
-        hero: DELIVERY_HERO_IMG,
-        icon: Truck,
-      },
-      customer: {
-        title: 'Create Account',
-        subtitle: 'Verify your Email inbox with 6-digit OTP to join',
-        cta: 'Create Customer Account →',
-        hero: FARMER_HERO_IMG,
-        icon: ShoppingCart,
-      },
-      admin: {
-        title: 'Admin Registration',
-        subtitle: 'Master Marketplace Administration',
-        cta: 'Register as Admin →',
-        hero: FARMER_HERO_IMG,
-        icon: ShieldCheck,
-      },
+      farmer: { title: 'Farmer Registration', subtitle: 'Sell your fresh produce directly to buyers', cta: 'Register as Farmer →', hero: FARMER_HERO_IMG, icon: Sprout },
+      wholesale: { title: 'Wholesale Registration', subtitle: 'Buy in bulk at the best prices', cta: 'Register as Wholesale →', hero: WHOLESALE_HERO_IMG, icon: Warehouse },
+      retail: { title: 'Retail Store Registration', subtitle: 'Grow your store with Rythu Basket', cta: 'Register as Retail Store →', hero: RETAIL_HERO_IMG, icon: Store },
+      delivery: { title: 'Delivery Partner Registration', subtitle: 'Deliver Freshness, Earn More', cta: 'Register as Delivery Partner →', hero: DELIVERY_HERO_IMG, icon: Truck },
+      customer: { title: 'Create Account', subtitle: 'Verify your Email inbox with 6-digit OTP to join', cta: 'Create Customer Account →', hero: FARMER_HERO_IMG, icon: ShoppingCart },
+      admin: { title: 'Admin Registration', subtitle: 'Master Marketplace Administration', cta: 'Register as Admin →', hero: FARMER_HERO_IMG, icon: ShieldCheck },
     }[selectedRole];
 
     const RoleHeaderIcon = roleMeta.icon;
@@ -1753,7 +1641,7 @@ const handleFarmerEnChange = (val) => {
       </div>
     );
 
-return (
+    return (
       <div style={fontStyle} className="min-h-screen bg-[#F4F8F4] max-w-md mx-auto text-slate-800 shadow-2xl pb-12">
         {toast && (
           <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-xl text-center">
@@ -1799,7 +1687,7 @@ return (
                 />
               </div>
 
-              {authMsg && (
+{authMsg && (
                 <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-2xl font-bold flex items-center justify-between">
                   <span>{authMsg}</span>
                   <button
@@ -1886,7 +1774,7 @@ return (
                 </>
               )}
 
-{selectedRole === 'farmer' && (
+              {selectedRole === 'farmer' && (
                 <>
                   <p className="font-extrabold text-[#15803D]">— Personal Details</p>
                   <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Full Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
@@ -1957,7 +1845,7 @@ return (
                 </>
               )}
 
-              {selectedRole === 'retail' && (
+{selectedRole === 'retail' && (
                 <>
                   <p className="font-extrabold text-[#15803D]">— Store Details</p>
                   <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Store Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
@@ -2030,7 +1918,7 @@ return (
                 </>
               )}
 
-{selectedRole === 'admin' && (
+              {selectedRole === 'admin' && (
                 <>
                   <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Admin Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
                   <input type="tel" maxLength={10} required value={regMobile} onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, ''))} placeholder="Mobile Number *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
@@ -2094,7 +1982,7 @@ return (
     );
   }
 
-  const WelcomeSmileModal = () =>
+const WelcomeSmileModal = () =>
     showWelcomeSmile ? (
       <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-3xl p-6 text-center max-w-xs w-full space-y-3 shadow-2xl">
@@ -2154,8 +2042,8 @@ return (
     </div>
   );
 
-  // =========================================================================
-  // 3. CUSTOMER STOREFRONT
+// =========================================================================
+  // 3. CUSTOMER STOREFRONT (TOP SEARCH + DAILY ESSENTIALS + OFFERS/COUPONS + CATEGORIES)
   // =========================================================================
   if (currentUser.role === 'customer') {
     const activeAddr = savedAddresses.find((a) => a.id === activeAddrId) || savedAddresses[0];
@@ -2180,7 +2068,10 @@ return (
 
     const deliveryFee = subtotal === 0 ? 0 : subtotal >= 99 ? 0 : 20;
     const walletDeduction = useWalletBalance ? Math.min(currentUser.wallet || 0, Math.max(0, subtotal - autoTierDiscount)) : 0;
-    const promoDeduction = appliedPromo ? 30 : 0;
+    const promoDeduction =
+      appliedCouponObj && subtotal >= (appliedCouponObj.minOrder || 0)
+        ? Number(appliedCouponObj.discount || 0)
+        : 0;
     const payableTotal = Math.max(0, subtotal + deliveryFee - autoTierDiscount - promoDeduction - walletDeduction);
 
     const estimatedCashback =
@@ -2196,6 +2087,22 @@ return (
     const genericUpiQr = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(
       `upi://pay?pa=${encodeURIComponent(merchantUpiId)}&pn=${encodeURIComponent('Rythu Basket Nellore')}&am=${payableTotal}&cu=INR`
     )}`;
+
+    const handleApplyCouponCode = (codeStr) => {
+      const clean = codeStr.trim().toUpperCase();
+      const found = couponsList.find((c) => c.active && c.code.toUpperCase() === clean);
+      if (!found) {
+        notify('Invalid or inactive coupon code.');
+        return;
+      }
+      if (subtotal < (found.minOrder || 0)) {
+        notify(`Add ₹${found.minOrder - subtotal} more to apply ${found.code}!`);
+        return;
+      }
+      setAppliedCouponObj(found);
+      setPromoInput(found.code);
+      notify(`Coupon ${found.code} Applied (-₹${found.discount})!`);
+    };
 
     const finalizeCustomerOrder = () => {
       const itemsArr = Object.entries(cart)
@@ -2257,7 +2164,7 @@ return (
         date: 'Today, ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
 
-      const updatedUser = {
+const updatedUser = {
         ...currentUser,
         wallet: (currentUser.wallet || 0) - walletDeduction,
         ordersCompleted: (currentUser.ordersCompleted || 0) + 1,
@@ -2294,7 +2201,7 @@ return (
       }, 350);
     };
 
-const handleSimulateCustomerDelivery = (ord) => {
+    const handleSimulateCustomerDelivery = (ord) => {
       const isLucky = Math.random() > 0.2;
       const reward = isLucky ? Math.floor(scratchMin + Math.random() * (scratchMax - scratchMin + 1)) : 0;
       const updatedUser = {
@@ -2311,7 +2218,64 @@ const handleSimulateCustomerDelivery = (ord) => {
       setScratchCard({ orderId: ord.id, reward, scratched: false });
     };
 
-    if (activeTab === 'selectLocation') {
+    const renderCustomerProductCard = (p) => {
+      const q = cart[p.id] || 0;
+      const isFarmerItem = (p.postedByRole || 'farmer') === 'farmer';
+      return (
+        <div key={p.id} className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex items-center justify-between">
+          <div
+            onClick={() => {
+              setDetailProduct(p);
+              setDetailQty(q || 1);
+              setActiveTab('productDetail');
+            }}
+            className="flex items-center space-x-3 flex-1 cursor-pointer"
+          >
+            <img src={p.img} alt={p.nameEn} className="h-16 w-16 rounded-2xl object-cover bg-slate-50" />
+            <div>
+              <div className="flex items-center flex-wrap gap-1 mb-0.5">
+                {isFarmerItem && (
+                  <span className="inline-flex items-center space-x-1 bg-emerald-100 text-[#15803D] text-[9px] font-extrabold px-2 py-0.5 rounded-full">
+                    <Sprout className="h-2.5 w-2.5" />
+                    <span>From Farmer</span>
+                  </span>
+                )}
+                {p.quality && (
+                  <span className="bg-amber-50 text-amber-800 text-[9px] font-extrabold px-1.5 py-0.5 rounded">
+                    {p.quality}
+                  </span>
+                )}
+              </div>
+              <h4 className="text-xs font-extrabold text-slate-900">{p.nameEn}</h4>
+              <p className="text-[11px] font-bold text-[#15803D]">{p.nameTe} • {p.packLabel}</p>
+              <div className="mt-1">
+                <span className="text-sm font-extrabold text-slate-900">₹{p.retailPrice}</span>
+                <span className="text-[10px] text-slate-400 line-through ml-1.5">₹{p.mrp}</span>
+              </div>
+            </div>
+          </div>
+
+          {!p.inStock ? (
+            <span className="text-[10px] font-extrabold text-rose-500 bg-rose-50 px-2.5 py-1.5 rounded-xl">Sold Out</span>
+          ) : q === 0 ? (
+            <button
+              onClick={() => setCart({ ...cart, [p.id]: 1 })}
+              className="bg-[#15803D] text-white font-extrabold px-4 py-2 rounded-xl shadow-sm"
+            >
+              Add +
+            </button>
+          ) : (
+            <div className="flex items-center bg-[#15803D] text-white rounded-xl px-2.5 py-1.5 space-x-2.5 font-extrabold">
+              <button onClick={() => setCart((c) => { const n = { ...c }; if (n[p.id] <= 1) delete n[p.id]; else n[p.id]--; return n; })}>-</button>
+              <span>{q}</span>
+              <button onClick={() => setCart({ ...cart, [p.id]: q + 1 })}>+</button>
+            </div>
+          )}
+        </div>
+      );
+    };
+
+if (activeTab === 'selectLocation') {
       const filteredAddrs = savedAddresses.filter(
         (a) =>
           a.title.toLowerCase().includes(locSearch.toLowerCase()) ||
@@ -2378,7 +2342,7 @@ const handleSimulateCustomerDelivery = (ord) => {
       );
     }
 
-if (activeTab === 'mapPin') {
+    if (activeTab === 'mapPin') {
       return (
         <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto text-slate-800 shadow-2xl pb-10">
           <div className="bg-[#0F5132] px-4 py-4 text-white flex items-center space-x-3 rounded-b-3xl shadow">
@@ -2447,11 +2411,16 @@ if (activeTab === 'mapPin') {
       );
     }
 
-    const visibleProducts = products.filter((p) => {
-      const catOk = selectedCat === 'All' || p.cat === selectedCat;
-      const q = search.toLowerCase();
-      return catOk && (p.nameEn.toLowerCase().includes(q) || p.nameTe.includes(search));
-    });
+const q = search.toLowerCase();
+    const searchedProducts = products.filter(
+      (p) =>
+        p.nameEn.toLowerCase().includes(q) ||
+        p.nameTe.includes(search) ||
+        p.cat.toLowerCase().includes(q)
+    );
+
+    const dailyEssentialCats = categoriesList.filter((c) => c.isDailyEssential !== false).slice(0, 4);
+    const activeCoupons = couponsList.filter((c) => c.active);
 
     const liveLat = trackingOrder?.driverLat || mapPinCoords.lat;
     const liveLng = trackingOrder?.driverLng || mapPinCoords.lng;
@@ -2493,8 +2462,9 @@ if (activeTab === 'mapPin') {
           </div>
         )}
 
-{activeTab === 'home' && (
+        {activeTab === 'home' && (
           <main className="px-4 pt-3.5 space-y-4 text-xs">
+            {/* Top Bar: Location + Wallet */}
             <div className="flex items-center justify-between">
               <button
                 type="button"
@@ -2530,152 +2500,190 @@ if (activeTab === 'mapPin') {
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-[#DCFCE7] via-[#BBF7D0] to-[#86EFAC] rounded-3xl p-4 shadow-sm flex items-center justify-between overflow-hidden">
-              <div className="space-y-2 max-w-[58%]">
-                <h2 className="text-base font-extrabold text-[#0F5132] leading-snug">
-                  Fresh Vegetables Direct from Farmers
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => setSelectedCat('All')}
-                  className="bg-[#15803D] text-white font-extrabold px-4 py-2 rounded-xl shadow text-xs"
-                >
-                  Shop Now
+            {/* 1. TOP PRODUCTS SEARCH BAR */}
+            <div className="bg-white border-2 border-emerald-100 rounded-2xl px-3.5 py-2.5 flex items-center shadow-sm">
+              <Search className="h-4 w-4 text-[#15803D] mr-2 flex-shrink-0" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search Vegetables, Dairy, Atta, Masala, Tea, Juices..."
+                className="w-full bg-transparent font-bold text-xs focus:outline-none"
+              />
+              {search && (
+                <button type="button" onClick={() => setSearch('')} className="text-slate-400 font-extrabold ml-1">✕</button>
+              )}
+            </div>
+
+            {/* 2. DAILY ESSENTIALS SECTION */}
+            <section className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-extrabold text-slate-900">Daily essentials</h2>
+                <span className="text-[10px] font-bold text-[#15803D]">Morning Fresh</span>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {dailyEssentialCats.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setSelectedCat(selectedCat === item.labelEn ? 'All' : item.labelEn)}
+                    className={`rounded-2xl p-2 border text-center transition shadow-sm ${
+                      selectedCat === item.labelEn
+                        ? 'bg-emerald-50 border-2 border-[#15803D]'
+                        : 'bg-gradient-to-b from-emerald-50/70 to-white border-emerald-100'
+                    }`}
+                  >
+                    <div className="h-14 w-14 rounded-xl bg-white p-1 mx-auto mb-1.5 shadow-sm overflow-hidden">
+                      <img src={item.img} alt={item.labelEn} className="h-full w-full object-cover rounded-lg" />
+                    </div>
+                    <p className="text-[10px] font-extrabold text-slate-900 line-clamp-2 leading-tight">
+                      {item.labelEn}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {/* 3. OFFERS AND COUPONS SECTION (MANAGED BY ADMIN) */}
+            {activeCoupons.length > 0 && (
+              <section className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-extrabold text-slate-900 flex items-center space-x-1">
+                    <Tag className="h-4 w-4 text-[#EA580C]" />
+                    <span>Offers & Coupons</span>
+                  </h2>
+                  <span className="text-[10px] font-bold text-slate-400">Tap to Copy</span>
+                </div>
+                <div className="flex space-x-2.5 overflow-x-auto pb-1">
+                  {activeCoupons.map((cp) => (
+                    <button
+                      key={cp.id}
+                      type="button"
+                      onClick={() => {
+                        setPromoInput(cp.code);
+                        setAppliedCouponObj(cp);
+                        notify(`Coupon ${cp.code} selected for Checkout (-₹${cp.discount})!`);
+                      }}
+                      className="flex-shrink-0 w-56 bg-gradient-to-r from-[#FFFBEB] via-[#FEF3C7] to-[#FDE68A] border border-amber-300 rounded-2xl p-3 text-left shadow-sm space-y-1"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="bg-[#15803D] text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full">
+                          {cp.badge || 'OFFER'}
+                        </span>
+                        <span className="font-mono font-extrabold text-[11px] text-[#0F5132] bg-white px-2 py-0.5 rounded border border-emerald-200">
+                          {cp.code}
+                        </span>
+                      </div>
+                      <p className="text-xs font-extrabold text-slate-900 truncate pt-0.5">{cp.title}</p>
+                      <p className="text-[10px] font-semibold text-slate-600 truncate">{cp.subtitle}</p>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
+
+  {/* 4. CATEGORIES GRID SECTION */}
+            <section className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-extrabold text-slate-900">Categories</h2>
+                <button type="button" onClick={() => setActiveTab('categories')} className="text-[11px] font-extrabold text-[#15803D]">
+                  See All ({categoriesList.length}) &gt;
                 </button>
               </div>
-              <img
-                src={FARMER_HERO_IMG}
-                onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = '/icon-512.png';
-                }}
-                alt="Farmer"
-                className="h-24 w-24 rounded-2xl object-cover object-top shadow"
-              />
-            </div>
-
-            <div className="grid grid-cols-4 gap-2 text-center">
-              {TOP_CATEGORIES.map((c) => {
-                const active = selectedCat === c.id;
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => setSelectedCat(active ? 'All' : c.id)}
-                    className={`rounded-2xl p-2 border transition ${active ? 'border-[#15803D] bg-emerald-50 shadow-sm' : 'border-slate-100 bg-white'}`}
-                  >
-                    <img src={c.img} alt={c.labelEn} className="h-12 w-12 rounded-xl object-cover mx-auto mb-1" />
-                    <p className="text-[10px] font-extrabold text-slate-800 truncate">{c.labelEn}</p>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-extrabold text-slate-900">
-                  {selectedCat === 'All' ? 'Fresh Harvest & Store Produce' : selectedCat}
-                </h3>
-                {selectedCat !== 'All' && (
-                  <button onClick={() => setSelectedCat('All')} className="text-[11px] font-extrabold text-[#15803D]">
-                    Show All
-                  </button>
-                )}
-              </div>
-
-              {visibleProducts.map((p) => {
-                const q = cart[p.id] || 0;
-                const isFarmerItem = (p.postedByRole || 'farmer') === 'farmer';
-                return (
-                  <div key={p.id} className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex items-center justify-between">
-                    <div
-                      onClick={() => {
-                        setDetailProduct(p);
-                        setDetailQty(q || 1);
-                        setActiveTab('productDetail');
-                      }}
-                      className="flex items-center space-x-3 flex-1 cursor-pointer"
+              <div className="grid grid-cols-3 gap-2">
+                {categoriesList.map((cat) => {
+                  const isSel = selectedCat === cat.labelEn;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setSelectedCat(isSel ? 'All' : cat.labelEn)}
+                      className={`rounded-2xl p-2.5 border text-center transition ${
+                        isSel ? 'border-2 border-[#15803D] bg-emerald-50 shadow-sm' : 'border-slate-100 bg-white shadow-sm'
+                      }`}
                     >
-                      <img src={p.img} alt={p.nameEn} className="h-16 w-16 rounded-2xl object-cover bg-slate-50" />
-                      <div>
-                        <div className="flex items-center flex-wrap gap-1 mb-0.5">
-                          {isFarmerItem && (
-                            <span className="inline-flex items-center space-x-1 bg-emerald-100 text-[#15803D] text-[9px] font-extrabold px-2 py-0.5 rounded-full">
-                              <Sprout className="h-2.5 w-2.5" />
-                              <span>From Farmer</span>
-                            </span>
-                          )}
-                          {p.quality && (
-                            <span className="bg-amber-50 text-amber-800 text-[9px] font-extrabold px-1.5 py-0.5 rounded">
-                              {p.quality}
-                            </span>
-                          )}
-                        </div>
-                        <h4 className="text-xs font-extrabold text-slate-900">{p.nameEn}</h4>
-                        <p className="text-[11px] font-bold text-[#15803D]">{p.nameTe} • {p.packLabel}</p>
-                        <div className="mt-1">
-                          <span className="text-sm font-extrabold text-slate-900">₹{p.retailPrice}</span>
-                          <span className="text-[10px] text-slate-400 line-through ml-1.5">₹{p.mrp}</span>
-                        </div>
-                      </div>
-                    </div>
+                      <img src={cat.img} alt={cat.labelEn} className="h-14 w-14 rounded-2xl object-cover mx-auto mb-1.5" />
+                      <p className="text-[10px] font-extrabold text-slate-900 line-clamp-2 leading-tight">{cat.labelEn}</p>
+                      <p className="text-[9px] font-bold text-[#15803D] truncate mt-0.5">{cat.labelTe}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
 
-                    {!p.inStock ? (
-                      <span className="text-[10px] font-extrabold text-rose-500 bg-rose-50 px-2.5 py-1.5 rounded-xl">Sold Out</span>
-                    ) : q === 0 ? (
-                      <button
-                        onClick={() => setCart({ ...cart, [p.id]: 1 })}
-                        className="bg-[#15803D] text-white font-extrabold px-4 py-2 rounded-xl shadow-sm"
-                      >
-                        Add +
-                      </button>
-                    ) : (
-                      <div className="flex items-center bg-[#15803D] text-white rounded-xl px-2.5 py-1.5 space-x-2.5 font-extrabold">
-                        <button onClick={() => setCart((c) => { const n = { ...c }; if (n[p.id] <= 1) delete n[p.id]; else n[p.id]--; return n; })}>-</button>
-                        <span>{q}</span>
-                        <button onClick={() => setCart({ ...cart, [p.id]: q + 1 })}>+</button>
+            {/* 5. SECTION-WISE PRODUCTS LIST */}
+            {selectedCat !== 'All' || search.trim() !== '' ? (
+              <div className="space-y-2.5 pt-1">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-extrabold text-slate-900">
+                    {selectedCat !== 'All' ? selectedCat : `Search Results (${searchedProducts.length})`}
+                  </h3>
+                  <button
+                    onClick={() => {
+                      setSelectedCat('All');
+                      setSearch('');
+                    }}
+                    className="text-[11px] font-extrabold text-[#15803D]"
+                  >
+                    Show All Sections
+                  </button>
+                </div>
+                {searchedProducts
+                  .filter((p) => selectedCat === 'All' || p.cat === selectedCat)
+                  .map((p) => renderCustomerProductCard(p))}
+              </div>
+            ) : (
+              categoriesList.map((catObj) => {
+                const catItems = products.filter((p) => p.cat === catObj.labelEn);
+                if (catItems.length === 0) return null;
+                return (
+                  <section key={catObj.id} className="space-y-2.5 pt-1">
+                    <div className="flex items-center justify-between border-b border-emerald-100 pb-1.5">
+                      <div>
+                        <h3 className="text-sm font-extrabold text-slate-900">{catObj.labelEn}</h3>
+                        <p className="text-[10px] font-bold text-[#15803D]">{catObj.labelTe}</p>
                       </div>
-                    )}
-                  </div>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedCat(catObj.labelEn)}
+                        className="text-[11px] font-extrabold text-[#15803D] bg-emerald-50 px-2.5 py-1 rounded-full"
+                      >
+                        See All ({catItems.length})
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {catItems.map((p) => renderCustomerProductCard(p))}
+                    </div>
+                  </section>
                 );
-              })}
-            </div>
+              })
+            )}
           </main>
         )}
 
+        {/* CATEGORIES TAB (MATCHING HOME CATEGORIES VISUAL LAYOUT) */}
         {activeTab === 'categories' && (
           <main className="p-4 space-y-4 text-xs">
             <div className="flex items-center space-x-3">
               <button onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white shadow-sm">
                 <ArrowLeft className="h-4 w-4" />
               </button>
-              <h2 className="text-base font-extrabold text-slate-900">Categories</h2>
+              <h2 className="text-base font-extrabold text-slate-900">All Categories ({categoriesList.length})</h2>
             </div>
 
-            <div className="bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 flex items-center shadow-sm">
-              <Search className="h-4 w-4 text-slate-400 mr-2" />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => { setSearch(e.target.value); setActiveTab('home'); }}
-                placeholder="Search for products..."
-                className="w-full bg-transparent font-semibold focus:outline-none"
-              />
-            </div>
-
-  <div className="grid grid-cols-2 gap-3">
-              {TOP_CATEGORIES.map((cat) => (
+            <div className="grid grid-cols-3 gap-2.5">
+              {categoriesList.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => {
-                    setSelectedCat(cat.id);
+                    setSelectedCat(cat.labelEn);
                     setActiveTab('home');
                   }}
-                  className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 text-center space-y-2"
+                  className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 text-center space-y-1.5 hover:border-[#15803D]"
                 >
-                  <img src={cat.img} alt={cat.labelEn} className="h-24 w-24 rounded-2xl object-cover mx-auto" />
-                  <h3 className="text-sm font-extrabold text-slate-900">{cat.labelEn}</h3>
-                  <p className="text-[11px] font-bold text-[#15803D]">{cat.labelTe}</p>
+                  <img src={cat.img} alt={cat.labelEn} className="h-16 w-16 rounded-2xl object-cover mx-auto" />
+                  <h3 className="text-[10px] font-extrabold text-slate-900 line-clamp-2 leading-tight">{cat.labelEn}</h3>
+                  <p className="text-[9px] font-bold text-[#15803D] truncate">{cat.labelTe}</p>
                 </button>
               ))}
             </div>
@@ -2716,7 +2724,7 @@ if (activeTab === 'mapPin') {
           </main>
         )}
 
-        {activeTab === 'cart' && (
+   {activeTab === 'cart' && (
           <main className="p-4 space-y-3.5 text-xs">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-extrabold text-slate-900">My Cart</h2>
@@ -2780,6 +2788,26 @@ if (activeTab === 'mapPin') {
               <button onClick={() => setActiveTab('selectLocation')} className="text-[#15803D] font-extrabold">Change</button>
             </div>
 
+            {/* Coupon Apply Section */}
+            <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  value={promoInput}
+                  onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                  placeholder="Enter Coupon Code (e.g., RYTHU30)"
+                  className="flex-1 bg-slate-50 border rounded-xl px-3 py-2 font-extrabold"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleApplyCouponCode(promoInput)}
+                  className="bg-[#15803D] text-white font-extrabold px-4 rounded-xl"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+
             <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
               <div className="flex items-center justify-between">
                 <h3 className="font-extrabold text-slate-900">Payment Method</h3>
@@ -2816,6 +2844,7 @@ if (activeTab === 'mapPin') {
             <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-1.5">
               <div className="flex justify-between"><span>Subtotal</span><span className="font-bold">₹{subtotal}</span></div>
               {autoTierDiscount > 0 && <div className="flex justify-between text-[#15803D] font-extrabold"><span>{autoTierLabel}</span><span>-₹{autoTierDiscount}</span></div>}
+              {promoDeduction > 0 && <div className="flex justify-between text-[#15803D] font-extrabold"><span>Coupon ({appliedCouponObj.code})</span><span>-₹{promoDeduction}</span></div>}
               <div className="flex justify-between"><span>Delivery (Free ₹99+)</span><span className="font-bold">{deliveryFee === 0 ? 'FREE' : `₹${deliveryFee}`}</span></div>
               <div className="border-t pt-2 flex justify-between text-sm font-extrabold text-slate-900"><span>Payable Total</span><span>₹{payableTotal}</span></div>
 
@@ -2861,7 +2890,7 @@ if (activeTab === 'mapPin') {
               <h2 className="text-xl font-extrabold text-slate-900">Order Placed Successfully!</h2>
               <p className="text-xs font-extrabold text-[#15803D]">Order ID: {lastPlacedOrder.id}</p>
               <p className="text-xs text-slate-500 pt-1">
-                Sent to {(lastPlacedOrder.pickupStops || []).length} seller group(s). Live tracking activates once picked up!
+                Sent to {(lastPlacedOrder.pickupStops || []).length} seller group(s). Live scooter tracking activates once picked up!
               </p>
             </div>
             <div className="w-full space-y-2.5 pt-2">
@@ -2925,32 +2954,28 @@ if (activeTab === 'mapPin') {
                 </div>
               )}
 
+   {/* LIVE SCOOTER ICON MAP */}
               {isOutForCustomerDrop ? (
-                <div className="relative h-52 w-full rounded-3xl overflow-hidden border-2 border-[#15803D] shadow-md">
-                  <iframe
-                    title="Delivery Partner Live GPS"
-                    width="100%"
-                    height="208"
-                    style={{ border: 0 }}
-                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${liveLng - 0.008}%2C${liveLat - 0.008}%2C${liveLng + 0.008}%2C${liveLat + 0.008}&layer=mapnik&marker=${liveLat}%2C${liveLng}`}
-                  />
-                  <span className="absolute bottom-2 left-2 bg-slate-900/90 text-white text-[10px] font-extrabold px-3 py-1 rounded-full">
-                    ● Rider Out for Delivery • Live GPS: {liveLat}, {liveLng}
-                  </span>
-                </div>
+                <LiveScooterMap
+                  lat={liveLat}
+                  lng={liveLng}
+                  title="Delivery Partner Live Scooter"
+                  height={208}
+                  badgeText={`🛵 Rider Out for Delivery • GPS: ${liveLat}, ${liveLng}`}
+                />
               ) : (
                 <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-1 text-amber-950">
                   <p className="font-extrabold">Stage 1: Store Acceptance & Pickup in Progress</p>
                   <p className="text-[11px]">
-                    Once all accepted sellers' items are picked up by the delivery partner, live drop tracking will appear here!
+                    Once all accepted sellers' items are picked up by the delivery partner, live scooter tracking will appear here!
                   </p>
                 </div>
               )}
 
-  <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
+              <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="h-11 w-11 rounded-full bg-emerald-100 text-[#15803D] font-extrabold flex items-center justify-center">
-                    <Truck className="h-5 w-5" />
+                  <div className="h-11 w-11 rounded-full bg-emerald-100 text-[#15803D] font-extrabold flex items-center justify-center text-xl">
+                    🛵
                   </div>
                   <div>
                     <p className="text-[10px] text-slate-400 font-bold">Delivery Partner</p>
@@ -3051,7 +3076,7 @@ if (activeTab === 'mapPin') {
   }
 
 // =========================================================================
-  // INDEPENDENT MULTI-VENDOR ORDER ALERTS & SEQUENTIAL PICKUP TRACKING
+  // INDEPENDENT MULTI-VENDOR ORDER ALERTS & SEQUENTIAL PICKUP TRACKING (WITH SCOOTER ICON)
   // =========================================================================
   const renderBroadcastOrderAlertsAndPickupTracking = () => {
     const incomingAlertCards = [];
@@ -3177,7 +3202,7 @@ if (activeTab === 'mapPin') {
               <div className="flex justify-between items-center">
                 <span className="font-extrabold text-slate-900">Order #{ord.id} • {ord.buyerName}</span>
                 <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${st.pickedUp ? 'bg-emerald-100 text-[#15803D]' : 'bg-amber-100 text-amber-900'}`}>
-                  {st.pickedUp ? '✓ Picked Up by Rider' : isMyTurnForRiderPickup ? '● Rider En Route to You' : 'Queued Next Pickup'}
+                  {st.pickedUp ? '✓ Picked Up by Rider' : isMyTurnForRiderPickup ? '🛵 Rider En Route to You' : 'Queued Next Pickup'}
                 </span>
               </div>
               <p className="text-[11px] font-bold text-[#15803D]">Items: {st.itemsSummary.join(', ')}</p>
@@ -3186,24 +3211,22 @@ if (activeTab === 'mapPin') {
                 <div className="space-y-1.5 pt-1">
                   <p className="text-[11px] font-extrabold text-[#15803D]">
                     {ord.driverName
-                      ? `● Live Rider Pickup Tracking: ${ord.driverName} (+91 ${ord.driverMobile}) • GPS: ${rLat}, ${rLng}`
+                      ? `🛵 Live Rider Pickup Tracking: ${ord.driverName} (+91 ${ord.driverMobile}) • GPS: ${rLat}, ${rLng}`
                       : 'Waiting for Delivery Partner to accept pickup route...'}
                   </p>
-                  <div className="h-36 w-full rounded-xl overflow-hidden border border-emerald-200">
-                    <iframe
-                      title={`Pickup Map ${ord.id}_${st.stopId}`}
-                      width="100%"
-                      height="144"
-                      style={{ border: 0 }}
-                      src={`https://www.openstreetmap.org/export/embed.html?bbox=${rLng - 0.008}%2C${rLat - 0.008}%2C${rLng + 0.008}%2C${rLat + 0.008}&layer=mapnik&marker=${rLat}%2C${rLng}`}
-                    />
-                  </div>
+                  <LiveScooterMap
+                    lat={rLat}
+                    lng={rLng}
+                    title={`Pickup Map ${ord.id}_${st.stopId}`}
+                    height={148}
+                    badgeText={`🛵 Rider arriving for pickup • ${rLat}, ${rLng}`}
+                  />
                 </div>
               )}
 
               {!st.pickedUp && !isMyTurnForRiderPickup && (
                 <p className="text-[10px] text-slate-500">
-                  Rider is picking up the previous accepted stop first — live rider tracking will automatically switch to you right after!
+                  Rider is picking up the previous accepted stop first — live scooter tracking will automatically switch to you right after!
                 </p>
               )}
             </div>
@@ -3213,7 +3236,7 @@ if (activeTab === 'mapPin') {
     );
   };
 
-// =========================================================================
+  // =========================================================================
   // 4. FARMER PORTAL
   // =========================================================================
   if (currentUser.role === 'farmer') {
@@ -3324,7 +3347,7 @@ if (activeTab === 'mapPin') {
 
         {activeTab === 'profile' && renderSharedProfileTab()}
 
-<nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-4 py-2 flex justify-between items-center z-40">
+        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-4 py-2 flex justify-between items-center z-40">
           {[
             { id: 'home', icon: Home, label: 'Home' },
             { id: 'listProduce', icon: Sprout, label: 'My Produce' },
@@ -3415,7 +3438,7 @@ if (activeTab === 'mapPin') {
       setActiveTab('orders');
     };
 
-    return (
+return (
       <div style={fontStyle} className="min-h-screen bg-[#F5F7F5] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
         <WelcomeSmileModal />
         {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-extrabold px-4 py-2 rounded-full shadow-lg">{toast}</div>}
@@ -3458,7 +3481,7 @@ if (activeTab === 'mapPin') {
           </main>
         )}
 
-{activeTab === 'sellStock' && (
+        {activeTab === 'sellStock' && (
           <main className="p-4 space-y-3 text-xs">
             <div className="flex items-center space-x-2">
               <button onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white shadow-sm">
@@ -3519,7 +3542,7 @@ if (activeTab === 'mapPin') {
           </main>
         )}
 
-        {activeTab === 'orders' && (
+{activeTab === 'orders' && (
           <main className="p-4 space-y-3 text-xs">
             <h2 className="text-base font-extrabold">{currentUser.role.toUpperCase()} Orders & Live Tracking</h2>
             {renderBroadcastOrderAlertsAndPickupTracking()}
@@ -3544,17 +3567,15 @@ if (activeTab === 'mapPin') {
                   {isPickedUp ? (
                     <div className="space-y-1.5 pt-1">
                       <p className="text-[11px] font-extrabold text-[#15803D]">
-                        ● Rider {ord.driverName} Picked Up Order — Live Delivery GPS: {rLat}, {rLng}
+                        🛵 Rider {ord.driverName} Picked Up Order — Live Delivery GPS: {rLat}, {rLng}
                       </p>
-                      <div className="h-36 w-full rounded-xl overflow-hidden border border-emerald-300">
-                        <iframe
-                          title={`Bulk Drop Map ${ord.id}`}
-                          width="100%"
-                          height="144"
-                          style={{ border: 0 }}
-                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${rLng - 0.008}%2C${rLat - 0.008}%2C${rLng + 0.008}%2C${rLat + 0.008}&layer=mapnik&marker=${rLat}%2C${rLng}`}
-                        />
-                      </div>
+                      <LiveScooterMap
+                        lat={rLat}
+                        lng={rLng}
+                        title={`Bulk Drop Map ${ord.id}`}
+                        height={148}
+                        badgeText={`🛵 Live Delivery GPS: ${rLat}, ${rLng}`}
+                      />
                     </div>
                   ) : (
                     <p className="text-[10px] font-bold text-slate-500">
@@ -3572,7 +3593,7 @@ if (activeTab === 'mapPin') {
           </main>
         )}
 
-{activeTab === 'profile' && renderSharedProfileTab()}
+        {activeTab === 'profile' && renderSharedProfileTab()}
 
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-6 py-2.5 flex justify-between items-center z-40">
           {[
@@ -3595,7 +3616,7 @@ if (activeTab === 'mapPin') {
     );
   }
 
-  // =========================================================================
+// =========================================================================
   // 6. DELIVERY PARTNER PORTAL
   // =========================================================================
   if (currentUser.role === 'delivery') {
@@ -3625,8 +3646,8 @@ if (activeTab === 'mapPin') {
       }).catch(() => {});
       notify(
         allAcceptedPicked
-          ? 'All accepted stops Picked Up! Customer live delivery tracking enabled.'
-          : `Stop ${stopIdx + 1} Picked Up! Next accepted seller now tracking your pickup.`
+          ? 'All accepted stops Picked Up! Customer live scooter tracking enabled.'
+          : `Stop ${stopIdx + 1} Picked Up! Next accepted seller now tracking your scooter.`
       );
     };
 
@@ -3661,7 +3682,7 @@ if (activeTab === 'mapPin') {
         <header className="bg-white px-4 py-3.5 flex items-center justify-between border-b border-slate-100 sticky top-0 z-30">
           <div>
             <span className="text-[10px] font-bold text-slate-400 block">Hello,</span>
-            <h1 className="text-sm font-extrabold text-slate-900">{currentUser.name} 👋</h1>
+            <h1 className="text-sm font-extrabold text-slate-900">{currentUser.name} 🛵</h1>
           </div>
           <span className="bg-emerald-50 text-[#15803D] text-xs font-extrabold px-3 py-1 rounded-full">₹{currentUser.wallet || 0}</span>
         </header>
@@ -3692,7 +3713,7 @@ if (activeTab === 'mapPin') {
               </div>
             </div>
 
-{(delivFilter === 'available' ? availOrders : delivOrders).length === 0 ? (
+            {(delivFilter === 'available' ? availOrders : delivOrders).length === 0 ? (
               <div className="bg-white rounded-2xl p-6 text-center text-slate-400 font-bold">No orders in this list.</div>
             ) : (
               (delivFilter === 'available' ? availOrders : delivOrders).map((ord) => {
@@ -3705,7 +3726,7 @@ if (activeTab === 'mapPin') {
                   ? `${ord.buyerLat},${ord.buyerLng}`
                   : encodeURIComponent(ord.buyerAddress);
 
-                return (
+return (
                   <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2.5">
                     <div className="flex justify-between items-start">
                       <div>
@@ -3788,7 +3809,7 @@ if (activeTab === 'mapPin') {
 
                     {isAssignedToMe && (
                       <p className="text-[10px] font-extrabold text-[#15803D] bg-emerald-50 px-2.5 py-1 rounded-lg">
-                        ● Live GPS Active ({ord.driverCoords}) • {ord.status === 'Out for Delivery' ? 'Tracking visible to Customer' : 'Sequential Pickup Tracking Active'}
+                        🛵 Live Scooter GPS Active ({ord.driverCoords})
                       </p>
                     )}
 
@@ -3813,7 +3834,7 @@ if (activeTab === 'mapPin') {
                               driverLng: initLng,
                               driverCoords: `${initLat}, ${initLng}`,
                             }).catch(() => {});
-                            notify('Accepted! Live pickup tracking sent to 1st accepted seller.');
+                            notify('Accepted! Live scooter pickup tracking sent to 1st accepted seller.');
                           } else {
                             if (ord.b2bOtp) {
                               const entered = window.prompt(`Enter ${ord.buyerRole.toUpperCase()} Delivery OTP (${ord.b2bOtp}):`);
@@ -3857,8 +3878,8 @@ if (activeTab === 'mapPin') {
     );
   }
 
-// =========================================================================
-  // 7. MASTER ADMIN HQ (UPLOAD MASTER CATALOG PRODUCTS & PICTURES + USER APPROVALS)
+  // =========================================================================
+  // 7. MASTER ADMIN HQ (MANAGE CATALOGUE + MANAGE CATEGORIES + MANAGE COUPONS + APPROVALS)
   // =========================================================================
   const handleAdminCatalogPhotoUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -3895,13 +3916,100 @@ if (activeTab === 'mapPin') {
     setCatNameTe('');
     setCatImgPreview('');
     setCatImgUrl('');
-    notify(`Added "${newItem.nameEn}" to Master Catalog for all Sellers!`);
+    notify(`Added "${newItem.nameEn}" (${catCategory}) to Master Catalog!`);
   };
 
   const handleDeleteCatalogItem = (itemId) => {
     setMasterCatalog((prev) => prev.filter((c) => c.id !== itemId));
     deleteDoc(doc(db, 'masterCatalog', itemId)).catch(() => {});
     notify('Removed from Master Catalog');
+  };
+
+  // Admin Category Icon Photo Upload
+  const handleAdminCategoryPhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const compressed = await compressImageFileToDataUrl(file);
+      setNewCatImgPreview(compressed);
+      notify('Category icon uploaded!');
+    } catch {
+      notify('Could not process category image.');
+    }
+  };
+
+  // Add or Update Category (Syncs immediately to Customer & Seller pages)
+  const handleSaveCategory = (e) => {
+    e.preventDefault();
+    if (!newCatEn.trim()) return;
+    const finalImg =
+      newCatImgPreview ||
+      newCatImgUrl.trim() ||
+      'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=200&q=80';
+
+    const catObj = {
+      id: editingCatId || newCatEn.trim(),
+      labelEn: newCatEn.trim(),
+      labelTe: newCatTe.trim() || newCatEn.trim(),
+      isDailyEssential: newCatDaily,
+      img: finalImg,
+    };
+
+    setCategoriesList((prev) => {
+      if (editingCatId) {
+        return prev.map((c) => (c.id === editingCatId ? catObj : c));
+      }
+      return [catObj, ...prev];
+    });
+    setDoc(doc(db, 'categories', catObj.id), catObj).catch(() => {});
+    setEditingCatId(null);
+    setNewCatEn('');
+    setNewCatTe('');
+    setNewCatImgPreview('');
+    setNewCatImgUrl('');
+    notify(editingCatId ? 'Category Updated Across All Pages!' : 'New Category Added!');
+  };
+
+  const handleDeleteCategory = (catId) => {
+    setCategoriesList((prev) => prev.filter((c) => c.id !== catId));
+    deleteDoc(doc(db, 'categories', catId)).catch(() => {});
+    notify('Category Deleted');
+  };
+
+// Add or Update Coupon / Offer (Syncs immediately to Customer Home & Checkout)
+  const handleSaveCoupon = (e) => {
+    e.preventDefault();
+    if (!cpCode.trim() || !cpTitle.trim()) return;
+    const couponObj = {
+      id: editingCouponId || 'cp_' + Date.now(),
+      code: cpCode.trim().toUpperCase(),
+      title: cpTitle.trim(),
+      subtitle: `Valid on orders above ₹${cpMinOrder || 0}`,
+      discount: Number(cpDiscount || 0),
+      minOrder: Number(cpMinOrder || 0),
+      badge: cpBadge.trim().toUpperCase() || 'OFFER',
+      active: true,
+    };
+
+    setCouponsList((prev) => {
+      if (editingCouponId) {
+        return prev.map((c) => (c.id === editingCouponId ? couponObj : c));
+      }
+      return [couponObj, ...prev];
+    });
+    setDoc(doc(db, 'coupons', couponObj.id), couponObj).catch(() => {});
+    setEditingCouponId(null);
+    setCpCode('');
+    setCpTitle('');
+    setCpDiscount('30');
+    setCpMinOrder('149');
+    notify(editingCouponId ? 'Coupon Updated!' : 'New Coupon Published to Customer Page!');
+  };
+
+  const handleDeleteCoupon = (cpId) => {
+    setCouponsList((prev) => prev.filter((c) => c.id !== cpId));
+    deleteDoc(doc(db, 'coupons', cpId)).catch(() => {});
+    notify('Coupon Removed');
   };
 
   return (
@@ -3914,20 +4022,34 @@ if (activeTab === 'mapPin') {
           <h1 className="text-base font-extrabold mt-0.5">Rythu Basket Control</h1>
         </div>
         <span className="bg-[#EAB308] text-slate-900 text-xs font-extrabold px-2.5 py-1 rounded-full">
-          {masterCatalog.length} Catalog Items
+          Live Sync
         </span>
       </header>
 
       {activeTab === 'home' && (
         <main className="p-4 space-y-3 text-xs">
-          {/* Admin Sub-Navigation Tabs */}
+          {/* 4 Admin Management Tabs */}
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
-              onClick={() => setAdminTab('catalog')}
-              className={`py-2.5 rounded-xl font-extrabold border ${adminTab === 'catalog' ? 'bg-[#15803D] text-white border-[#15803D]' : 'bg-white text-slate-700'}`}
+              onClick={() => setAdminTab('catalogue')}
+              className={`py-2.5 rounded-xl font-extrabold border ${adminTab === 'catalogue' ? 'bg-[#15803D] text-white border-[#15803D]' : 'bg-white text-slate-700'}`}
             >
-              Product Catalog ({masterCatalog.length})
+              Manage Catalogue ({masterCatalog.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setAdminTab('categories')}
+              className={`py-2.5 rounded-xl font-extrabold border ${adminTab === 'categories' ? 'bg-[#15803D] text-white border-[#15803D]' : 'bg-white text-slate-700'}`}
+            >
+              Manage Categories ({categoriesList.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setAdminTab('coupons')}
+              className={`py-2.5 rounded-xl font-extrabold border ${adminTab === 'coupons' ? 'bg-[#15803D] text-white border-[#15803D]' : 'bg-white text-slate-700'}`}
+            >
+              Manage Coupons ({couponsList.length})
             </button>
             <button
               type="button"
@@ -3938,16 +4060,16 @@ if (activeTab === 'mapPin') {
             </button>
           </div>
 
-          {adminTab === 'catalog' ? (
+          {/* 1. MANAGE CATALOGUE */}
+          {adminTab === 'catalogue' && (
             <div className="space-y-3">
-              {/* Upload Master Product & Picture Form */}
               <form onSubmit={handleAddMasterCatalogItem} className="bg-white rounded-3xl p-4 shadow-sm border border-emerald-100 space-y-3">
                 <div className="flex items-center space-x-1.5 font-extrabold text-[#15803D] text-sm">
                   <Image className="h-4 w-4" />
-                  <span>Upload Product & Picture to Master Catalog</span>
+                  <span>Add Product & Picture to Catalogue</span>
                 </div>
 
-<div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <input
                     type="text"
                     required
@@ -3972,8 +4094,8 @@ if (activeTab === 'mapPin') {
 
                 <div className="grid grid-cols-2 gap-2">
                   <select value={catCategory} onChange={(e) => setCatCategory(e.target.value)} className="bg-slate-50 border rounded-xl px-3 py-2.5 font-extrabold">
-                    {PRODUCT_CATEGORIES.map((c) => (
-                      <option key={c} value={c}>{c}</option>
+                    {categoriesList.map((c) => (
+                      <option key={c.id} value={c.labelEn}>{c.labelEn}</option>
                     ))}
                   </select>
                   <select value={catUnit} onChange={(e) => setCatUnit(e.target.value)} className="bg-slate-50 border rounded-xl px-3 py-2.5 font-extrabold">
@@ -3983,15 +4105,14 @@ if (activeTab === 'mapPin') {
                   </select>
                 </div>
 
-                {/* Upload Picture from Phone Gallery/Camera OR Paste Image URL */}
-                <label className="block border-2 border-dashed border-emerald-300 bg-emerald-50/40 rounded-2xl p-3 text-center cursor-pointer">
+<label className="block border-2 border-dashed border-emerald-300 bg-emerald-50/40 rounded-2xl p-3 text-center cursor-pointer">
                   {catImgPreview ? (
                     <img src={catImgPreview} alt="Preview" className="h-20 w-20 rounded-xl object-cover mx-auto mb-1 border" />
                   ) : (
                     <Camera className="h-6 w-6 text-[#15803D] mx-auto mb-1" />
                   )}
                   <span className="font-extrabold text-[#15803D] block">
-                    {catImgPreview ? 'Change Uploaded Photo' : 'Tap to Upload Product Photo (Gallery / Camera)'}
+                    {catImgPreview ? 'Change Uploaded Photo' : 'Tap to Upload Product Photo'}
                   </span>
                   <input type="file" accept="image/*" onChange={handleAdminCatalogPhotoUpload} className="hidden" />
                 </label>
@@ -4005,12 +4126,10 @@ if (activeTab === 'mapPin') {
                 />
 
                 <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow text-sm">
-                  + Save to Master Catalog (All Sellers Can Use)
+                  + Save to Master Catalogue
                 </button>
               </form>
 
-              {/* Existing Master Catalog List */}
-              <h3 className="font-extrabold text-slate-900">Saved Master Catalog ({masterCatalog.length})</h3>
               <div className="space-y-2">
                 {masterCatalog.map((item) => (
                   <div key={item.id} className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex items-center justify-between">
@@ -4032,7 +4151,262 @@ if (activeTab === 'mapPin') {
                 ))}
               </div>
             </div>
-          ) : (
+          )}
+
+          {/* 2. MANAGE CATEGORIES (ADD NEW, EDIT NAME/TELUGU, CHANGE CATEGORY ICON/PHOTO) */}
+          {adminTab === 'categories' && (
+            <div className="space-y-3">
+              <form onSubmit={handleSaveCategory} className="bg-white rounded-3xl p-4 shadow-sm border border-emerald-100 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-extrabold text-[#15803D] text-sm">
+                    {editingCatId ? 'Edit Category & Icon' : '+ Add New Category'}
+                  </span>
+                  {editingCatId && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingCatId(null);
+                        setNewCatEn('');
+                        setNewCatTe('');
+                        setNewCatImgPreview('');
+                        setNewCatImgUrl('');
+                      }}
+                      className="text-rose-600 font-bold text-[11px]"
+                    >
+                      Cancel Edit
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    required
+                    value={newCatEn}
+                    onChange={(e) => setNewCatEn(e.target.value)}
+                    placeholder="Category Name (EN) *"
+                    className="bg-slate-50 border rounded-xl px-3 py-2.5 font-bold"
+                  />
+                  <input
+                    type="text"
+                    required
+                    value={newCatTe}
+                    onChange={(e) => setNewCatTe(e.target.value)}
+                    placeholder="తెలుగు పేరు *"
+                    className="bg-emerald-50/70 border border-emerald-200 rounded-xl px-3 py-2.5 font-bold text-[#15803D]"
+                  />
+                </div>
+
+                <label className="flex items-center justify-between bg-slate-50 border rounded-xl px-3 py-2.5 font-bold">
+                  <span>Show in Customer "Daily essentials"</span>
+                  <input
+                    type="checkbox"
+                    checked={newCatDaily}
+                    onChange={(e) => setNewCatDaily(e.target.checked)}
+                    className="accent-[#15803D] h-4 w-4"
+                  />
+                </label>
+
+                <label className="block border-2 border-dashed border-emerald-300 bg-emerald-50/40 rounded-2xl p-3 text-center cursor-pointer">
+                  {(newCatImgPreview || newCatImgUrl) ? (
+                    <img src={newCatImgPreview || newCatImgUrl} alt="Icon Preview" className="h-16 w-16 rounded-xl object-cover mx-auto mb-1 border" />
+                  ) : (
+                    <Camera className="h-6 w-6 text-[#15803D] mx-auto mb-1" />
+                  )}
+                  <span className="font-extrabold text-[#15803D] block">
+                    Tap to Change / Upload Category Icon
+                  </span>
+                  <input type="file" accept="image/*" onChange={handleAdminCategoryPhotoUpload} className="hidden" />
+                </label>
+
+                <input
+                  type="url"
+                  value={newCatImgUrl}
+                  onChange={(e) => setNewCatImgUrl(e.target.value)}
+                  placeholder="Or paste Category Icon URL"
+                  className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-semibold text-[11px]"
+                />
+
+  <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow text-sm">
+                  {editingCatId ? 'Update Category Everywhere' : '+ Add Category'}
+                </button>
+              </form>
+
+              <div className="space-y-2">
+                {categoriesList.map((cat) => (
+                  <div key={cat.id} className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex items-center justify-between">
+                    <div className="flex items-center space-x-3 min-w-0">
+                      <img src={cat.img} alt={cat.labelEn} className="h-12 w-12 rounded-xl object-cover flex-shrink-0" />
+                      <div className="min-w-0">
+                        <h4 className="font-extrabold text-slate-900 truncate">{cat.labelEn}</h4>
+                        <p className="text-[10px] font-bold text-[#15803D] truncate">{cat.labelTe}</p>
+                        {cat.isDailyEssential !== false && (
+                          <span className="text-[9px] font-extrabold bg-emerald-50 text-[#15803D] px-1.5 py-0.5 rounded">Daily Essential</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex space-x-1.5 flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingCatId(cat.id);
+                          setNewCatEn(cat.labelEn);
+                          setNewCatTe(cat.labelTe);
+                          setNewCatDaily(cat.isDailyEssential !== false);
+                          setNewCatImgUrl(cat.img);
+                          setNewCatImgPreview('');
+                        }}
+                        className="p-2 text-[#15803D] bg-emerald-50 rounded-xl"
+                      >
+                        <Edit3 className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCategory(cat.id)}
+                        className="p-2 text-rose-600 bg-rose-50 rounded-xl"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 3. MANAGE COUPONS & OFFERS (SYNCED LIVE TO CUSTOMER HOME & CHECKOUT) */}
+          {adminTab === 'coupons' && (
+            <div className="space-y-3">
+              <form onSubmit={handleSaveCoupon} className="bg-white rounded-3xl p-4 shadow-sm border border-amber-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-extrabold text-[#EA580C] text-sm">
+                    {editingCouponId ? 'Edit Coupon / Offer' : '+ Create New Coupon / Offer'}
+                  </span>
+                  {editingCouponId && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingCouponId(null);
+                        setCpCode('');
+                        setCpTitle('');
+                      }}
+                      className="text-rose-600 font-bold text-[11px]"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    required
+                    value={cpCode}
+                    onChange={(e) => setCpCode(e.target.value.toUpperCase())}
+                    placeholder="Coupon Code (e.g., SAVE40) *"
+                    className="bg-slate-50 border rounded-xl px-3 py-2.5 font-mono font-extrabold"
+                  />
+                  <input
+                    type="text"
+                    value={cpBadge}
+                    onChange={(e) => setCpBadge(e.target.value.toUpperCase())}
+                    placeholder="Tag (e.g., MEGA SAVER)"
+                    className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 font-extrabold"
+                  />
+                </div>
+
+                <input
+                  type="text"
+                  required
+                  value={cpTitle}
+                  onChange={(e) => setCpTitle(e.target.value)}
+                  placeholder="Offer Title (e.g., Flat ₹40 OFF on Vegetables) *"
+                  className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-bold"
+                />
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400">Discount Amount (₹)</label>
+                    <input
+                      type="number"
+                      required
+                      value={cpDiscount}
+                      onChange={(e) => setCpDiscount(e.target.value)}
+                      className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-extrabold text-[#15803D]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400">Min Order Amount (₹)</label>
+                    <input
+                      type="number"
+                      required
+                      value={cpMinOrder}
+                      onChange={(e) => setCpMinOrder(e.target.value)}
+                      className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-extrabold"
+                    />
+                  </div>
+                </div>
+
+                <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow text-sm">
+                  {editingCouponId ? 'Update Coupon' : '+ Publish Coupon to Customer Page'}
+                </button>
+              </form>
+
+<div className="space-y-2">
+                {couponsList.map((cp) => (
+                  <div key={cp.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <span className="font-mono font-extrabold bg-emerald-50 text-[#15803D] px-2 py-0.5 rounded border border-emerald-200">
+                          {cp.code}
+                        </span>
+                        <span className="text-[10px] font-extrabold text-amber-700">₹{cp.discount} OFF (Min ₹{cp.minOrder})</span>
+                      </div>
+                      <p className="font-bold text-slate-800 mt-1">{cp.title}</p>
+                    </div>
+                    <div className="flex items-center space-x-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = { ...cp, active: !cp.active };
+                          setCouponsList((prev) => prev.map((x) => (x.id === cp.id ? updated : x)));
+                          updateDoc(doc(db, 'coupons', cp.id), { active: updated.active }).catch(() => {});
+                          notify(updated.active ? 'Coupon Activated!' : 'Coupon Paused');
+                        }}
+                        className={`px-2.5 py-1 rounded-lg font-extrabold text-[10px] ${cp.active ? 'bg-emerald-100 text-[#15803D]' : 'bg-slate-200 text-slate-600'}`}
+                      >
+                        {cp.active ? 'ON' : 'OFF'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingCouponId(cp.id);
+                          setCpCode(cp.code);
+                          setCpTitle(cp.title);
+                          setCpDiscount(String(cp.discount));
+                          setCpMinOrder(String(cp.minOrder));
+                          setCpBadge(cp.badge || 'OFFER');
+                        }}
+                        className="p-2 text-[#15803D] bg-emerald-50 rounded-xl"
+                      >
+                        <Edit3 className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCoupon(cp.id)}
+                        className="p-2 text-rose-600 bg-rose-50 rounded-xl"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 4. SELLER APPROVALS */}
+          {adminTab === 'approvals' && (
             <div className="space-y-2.5">
               {users
                 .filter((u) => u.role === 'farmer' || u.role === 'wholesale' || u.role === 'retail')
