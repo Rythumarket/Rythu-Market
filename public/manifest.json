@@ -1,23 +1,24 @@
 {
   "short_name": "Rythu Basket",
-  "name": "Rythu Basket - Nellore",
+  "name": "రైతు బాస్కెట్ • Rythu Basket",
+  "description": "Direct Farm-to-Home Fresh Produce & Groceries",
   "icons": [
     {
-      "src": "/icon-512.png",
+      "src": "/icon-192.png",
       "type": "image/png",
-      "sizes": "512x512",
-      "purpose": "any"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
       "src": "/icon-512.png",
       "type": "image/png",
       "sizes": "512x512",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
   ],
   "start_url": "/",
-  "scope": "/",
+  "background_color": "#ffffff",
+  "theme_color": "#15803D",
   "display": "standalone",
-  "theme_color": "#059669",
-  "background_color": "#ffffff"
+  "orientation": "portrait"
 }
