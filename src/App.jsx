@@ -5,7 +5,8 @@ import {
   ArrowLeft, CheckCircle2, Wallet, Sparkles, Bell, Globe,
   LocateFixed, LogOut, Printer, Warehouse, ChevronDown,
   Briefcase, Leaf, Shield, Zap, Grid, Check, Tag, Edit3,
-  TrendingUp, Package, HelpCircle, Navigation, Camera, Landmark, Volume2, VolumeX, Trash2, Image
+  TrendingUp, Package, HelpCircle, Navigation, Camera, Landmark, Volume2, VolumeX, Trash2, Image,
+  Heart, Star, Clock, UserPlus
 } from 'lucide-react';
 import { db } from './firebase';
 import { collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
@@ -16,15 +17,45 @@ const EMAILJS_TEMPLATE_ID = 'template_z42k41l';
 const EMAILJS_INVOICE_TEMPLATE_ID = 'template_fhx6p4e';
 const EMAILJS_PUBLIC_KEY = 'Y1UQmUcSoEzEtFR1m';
 
-// STRICTLY AUTHORIZED ADMINS ONLY (Only these mobiles/emails can access Master Admin HQ)
-const AUTHORIZED_ADMIN_MOBILES = ['8328261103'];
-const AUTHORIZED_ADMIN_EMAILS = ['madhavam.com@gmail.com', 'madhavareddy2516@gmail.com'];
+// MASTER ADMINS (Can grant Sub-Admin access to others inside Admin HQ)
+const MASTER_ADMIN_MOBILES = ['8328261103'];
+const MASTER_ADMIN_EMAILS = ['madhavam.com@gmail.com', 'madhavareddy2516@gmail.com'];
 
 // Role Hero Images
 const FARMER_HERO_IMG = 'https://images.pexels.com/photos/2889440/pexels-photo-2889440.jpeg?auto=compress&cs=tinysrgb&w=500';
 const WHOLESALE_HERO_IMG = 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=600&q=80';
 const RETAIL_HERO_IMG = 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80';
 const DELIVERY_HERO_IMG = 'https://images.unsplash.com/photo-1617347454431-f49d7ff5c3b1?auto=format&fit=crop&w=600&q=80';
+
+const WHOLESALE_TYPES = [
+  'Vegetable Wholesaler',
+  'Fruit Wholesaler',
+  'Grocery Wholesaler',
+  'Rice & Dal Wholesaler',
+  'General Wholesale',
+  'Distributor',
+  'Other',
+];
+
+const RETAIL_SHOP_TYPES = [
+  'Vegetable Shop',
+  'Fruit Shop',
+  'Grocery Store',
+  'Supermarket',
+  'Kirana Store',
+  'Dairy Store',
+  'General Store',
+  'Other',
+];
+
+const DELIVERY_VEHICLE_TYPES = [
+  'Bicycle',
+  'Two Wheeler',
+  'Three Wheeler',
+  'Mini Truck',
+  'Pickup Van',
+  'Truck',
+];
 
 const EN_TO_TE = {
   tomato: 'టమాటా',
@@ -180,14 +211,6 @@ const LiveScooterMap = ({ lat, lng, title, height = 200, badgeText }) => (
 const isValidIndianMobile = (num) => /^[6-9]\d{9}$/.test(num);
 const isValidEmail = (em) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em.trim());
 
-const isAuthorizedAdmin = (mobileStr = '', emailStr = '') => {
-  const cleanM = mobileStr.replace(/\D/g, '');
-  const cleanE = emailStr.trim().toLowerCase();
-  const okMobile = cleanM.length === 10 && AUTHORIZED_ADMIN_MOBILES.includes(cleanM);
-  const okEmail = cleanE !== '' && AUTHORIZED_ADMIN_EMAILS.some((em) => em.toLowerCase() === cleanE);
-  return okMobile || okEmail;
-};
-
 const buildPaymentLaunchUrl = (mode, upiId, amount) => {
   const pa = encodeURIComponent(upiId);
   const pn = encodeURIComponent('Rythu Basket Nellore');
@@ -262,9 +285,7 @@ export default function App() {
         const parsed = JSON.parse(decodeURIComponent(raw));
         setSharedInvoiceData(parsed);
         setTimeout(() => window.print(), 800);
-      } catch {
-        // ignore
-      }
+      } catch {}
     }
   }, []);
 
@@ -276,9 +297,36 @@ export default function App() {
     }
   });
 
+  // PERSISTENT SESSION: Auto-restore logged-in user & role across app restarts until explicit Logout
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('rythu_active_session_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [selectedRole, setSelectedRole] = useState(() => {
+    try {
+      const saved = localStorage.getItem('rythu_active_session_user');
+      return saved ? JSON.parse(saved)?.role || null : null;
+    } catch {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      if (currentUser) {
+        localStorage.setItem('rythu_active_session_user', JSON.stringify(currentUser));
+      } else {
+        localStorage.removeItem('rythu_active_session_user');
+      }
+    } catch {}
+  }, [currentUser]);
+
   const [lang, setLang] = useState('te');
-  const [selectedRole, setSelectedRole] = useState(null);
-  const [currentUser, setCurrentUser] = useState(null);
   const [users, setUsers] = useState(() => {
     try {
       const saved = localStorage.getItem('rythu_registered_users');
@@ -287,9 +335,45 @@ export default function App() {
       return [];
     }
   });
+
+// Sub-Admins List (Managed by Master Admin, synced via Firestore)
+  const [subAdmins, setSubAdmins] = useState(() => {
+    try {
+      const saved = localStorage.getItem('rythu_sub_admins');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem('rythu_sub_admins', JSON.stringify(subAdmins)); } catch {}
+  }, [subAdmins]);
+
+  const isAuthorizedAdminOrSubAdmin = useCallback(
+    (mobileStr = '', emailStr = '') => {
+      const cleanM = mobileStr.replace(/\D/g, '');
+      const cleanE = emailStr.trim().toLowerCase();
+      const isMasterM = cleanM.length === 10 && MASTER_ADMIN_MOBILES.includes(cleanM);
+      const isMasterE = cleanE !== '' && MASTER_ADMIN_EMAILS.some((em) => em.toLowerCase() === cleanE);
+      const isSub = subAdmins.some(
+        (sa) =>
+          sa.active !== false &&
+          ((cleanM.length === 10 && sa.mobile === cleanM) ||
+            (cleanE !== '' && (sa.email || '').toLowerCase() === cleanE))
+      );
+      return isMasterM || isMasterE || isSub;
+    },
+    [subAdmins]
+  );
+
+  const isCurrentUserMasterAdmin =
+    currentUser?.role === 'admin' &&
+    (MASTER_ADMIN_MOBILES.includes(currentUser.mobile) ||
+      MASTER_ADMIN_EMAILS.some((e) => e.toLowerCase() === (currentUser.email || '').toLowerCase()));
+
   const [products, setProducts] = useState(INITIAL_PRODUCTS);
 
-// Admin-Managed Categories (Always merged with DEFAULT_CATEGORIES so none disappear)
   const [categoriesList, setCategoriesList] = useState(() => {
     try {
       const saved = localStorage.getItem('rythu_managed_categories');
@@ -363,33 +447,49 @@ export default function App() {
   const [sendingEmail, setSendingEmail] = useState(false);
   const [authMsg, setAuthMsg] = useState('');
 
-  // Role-Specific Registration Form States
+  // Comprehensive Role Registration & Profile Fields
+  const [regProfilePhoto, setRegProfilePhoto] = useState('');
   const [regName, setRegName] = useState('');
   const [regOwnerName, setRegOwnerName] = useState('');
   const [regMobile, setRegMobile] = useState('');
+  const [regAltMobile, setRegAltMobile] = useState('');
   const [regEmail, setRegEmail] = useState('');
-  const [regAadhaar, setRegAadhaar] = useState('');
+  const [regGender, setRegGender] = useState('Male');
+  const [regDob, setRegDob] = useState('');
+  const [regHouseNo, setRegHouseNo] = useState('');
+  const [regStreetArea, setRegStreetArea] = useState('');
   const [regAddress, setRegAddress] = useState('');
   const [regVillage, setRegVillage] = useState('');
   const [regMandal, setRegMandal] = useState('');
   const [regDistrict, setRegDistrict] = useState('Nellore');
   const [regState, setRegState] = useState('Andhra Pradesh');
-  const [regGstNumber, setRegGstNumber] = useState('');
-  const [regStoreType, setRegStoreType] = useState('Distributor');
-  const [regLandAcres, setRegLandAcres] = useState('');
+  const [regPinCode, setRegPinCode] = useState('524001');
+  const [regPrefLang, setRegPrefLang] = useState('Telugu');
+  const [regStoreType, setRegStoreType] = useState('Vegetable Wholesaler');
+  const [regOperatingHours, setRegOperatingHours] = useState('6:00 AM - 9:00 PM');
+  const [regOpeningTime, setRegOpeningTime] = useState('06:00 AM');
+  const [regClosingTime, setRegClosingTime] = useState('10:00 PM');
   const [regMajorCrops, setRegMajorCrops] = useState('Tomato, Paddy, Chillies');
-  const [regVehicleType, setRegVehicleType] = useState('Bike / Scooter');
+  const [regVehicleType, setRegVehicleType] = useState('Two Wheeler');
+  const [regDrivingLicence, setRegDrivingLicence] = useState('');
   const [regVehicleNumber, setRegVehicleNumber] = useState('');
+  const [regRcDocName, setRegRcDocName] = useState('');
+  const [regInsuranceDocName, setRegInsuranceDocName] = useState('');
+  const [regEmergencyContact, setRegEmergencyContact] = useState('');
   const [regBankAccount, setRegBankAccount] = useState('');
   const [regIfscCode, setRegIfscCode] = useState('');
   const [regUpiId, setRegUpiId] = useState('');
-  const [regPhotoName, setRegPhotoName] = useState('');
-  const [regDocName, setRegDocName] = useState('');
   const [regTermsAccepted, setRegTermsAccepted] = useState(true);
   const [regReferralCode, setRegReferralCode] = useState('');
   const [regOtpSent, setRegOtpSent] = useState(false);
   const [regOtpInput, setRegOtpInput] = useState('');
   const [showWelcomeSmile, setShowWelcomeSmile] = useState(false);
+
+  // Profile Edit & Extra Section Drawer
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileSubView, setProfileSubView] = useState(null);
+  const [wishlistIds, setWishlistIds] = useState(['p1', 'p3']);
+  const [isRiderOnline, setIsRiderOnline] = useState(true);
 
   // Navigation & Screens
   const [activeTab, setActiveTab] = useState('home');
@@ -403,7 +503,7 @@ export default function App() {
   const [selectedCat, setSelectedCat] = useState('All');
   const [search, setSearch] = useState('');
 
-// Location & Map Pin States
+  // Location & Map Pin States
   const [savedAddresses, setSavedAddresses] = useState([
     { id: 'addr1', tag: 'Home', title: 'Vedayapalem Main Road', full: 'Vedayapalem, Nellore, Andhra Pradesh - 524004', distance: '57 m', lat: 14.4285, lng: 79.9692 },
     { id: 'addr2', tag: 'Office', title: 'Magunta Layout, Nellore', full: 'Magunta Layout Main Road, Dargamitta, Nellore - 524003', distance: '2.5 kms', lat: 14.4426, lng: 79.9865 },
@@ -417,7 +517,7 @@ export default function App() {
   const [isEditingPinText, setIsEditingPinText] = useState(false);
   const [isLocatingGps, setIsLocatingGps] = useState(false);
 
-  // Cart starts empty ({}) on customer login
+  // Cart starts empty ({})
   const [cart, setCart] = useState({});
   const [useWalletBalance] = useState(false);
   const [promoInput, setPromoInput] = useState('');
@@ -433,11 +533,8 @@ export default function App() {
   // B2B States
   const [b2bDeliveryMode, setB2bDeliveryMode] = useState('pickup');
 
-  // Scratch Card & Notifications
+// Scratch Card & Notifications
   const [scratchCard, setScratchCard] = useState(null);
-  const [notifications, setNotifications] = useState([
-    'Wallet Alert: Cashback expires in 15 days (48h–6h reminder active).',
-  ]);
   const [orders, setOrders] = useState([]);
 
   // Seller Post Product States
@@ -478,6 +575,12 @@ export default function App() {
   const [cpDiscount, setCpDiscount] = useState('30');
   const [cpMinOrder, setCpMinOrder] = useState('149');
   const [cpBadge, setCpBadge] = useState('OFFER');
+
+  // Sub-Admin Grant Access Form States
+  const [subName, setSubName] = useState('');
+  const [subMobile, setSubMobile] = useState('');
+  const [subEmail, setSubEmail] = useState('');
+  const [subPermissions, setSubPermissions] = useState('Catalogue, Categories, Coupons & Approvals');
 
   // Delivery & Admin States
   const [delivFilter, setDelivFilter] = useState('available');
@@ -521,7 +624,7 @@ export default function App() {
       } catch {}
     };
 
-    playSingleChime();
+playSingleChime();
     let elapsed = 0;
     ringTimerRef.current = setInterval(() => {
       elapsed += 1;
@@ -571,7 +674,7 @@ export default function App() {
     setTimeout(() => setToast(''), 3500);
   };
 
-  // Hardware Back Button Handler
+  // Hardware Back Button Handler (Does NOT log user out on accidental back press)
   const handleHardwareBack = useCallback(() => {
     if (sharedInvoiceData) {
       window.history.replaceState({}, '', '/');
@@ -579,13 +682,21 @@ export default function App() {
       return;
     }
     if (currentUser) {
+      if (profileSubView) {
+        setProfileSubView(null);
+        window.history.pushState({ rythuNav: true }, '');
+        return;
+      }
+      if (isEditingProfile) {
+        setIsEditingProfile(false);
+        window.history.pushState({ rythuNav: true }, '');
+        return;
+      }
       if (activeTab !== 'home') {
         setActiveTab('home');
         window.history.pushState({ rythuNav: true }, '');
         return;
       }
-      setCurrentUser(null);
-      setSelectedRole(null);
       window.history.pushState({ rythuNav: true }, '');
       return;
     }
@@ -598,9 +709,9 @@ export default function App() {
       setSelectedRole(null);
       window.history.pushState({ rythuNav: true }, '');
     }
-  }, [sharedInvoiceData, currentUser, activeTab, selectedRole, authScreen]);
+  }, [sharedInvoiceData, currentUser, profileSubView, isEditingProfile, activeTab, selectedRole, authScreen]);
 
-useEffect(() => {
+  useEffect(() => {
     window.history.pushState({ rythuNav: true }, '');
     const onPopState = () => {
       handleHardwareBack();
@@ -631,7 +742,7 @@ useEffect(() => {
     }
   };
 
-  // Real-Time Cloud Firestore Sync
+// Real-Time Cloud Firestore Sync
   useEffect(() => {
     const unsubOrders = onSnapshot(
       collection(db, 'orders'),
@@ -724,6 +835,15 @@ const unsubUsers = onSnapshot(
       () => {}
     );
 
+    const unsubSubAdmins = onSnapshot(
+      collection(db, 'subAdmins'),
+      (snapshot) => {
+        const liveSubs = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+        setSubAdmins(liveSubs);
+      },
+      () => {}
+    );
+
     return () => {
       unsubOrders();
       unsubProducts();
@@ -731,6 +851,7 @@ const unsubUsers = onSnapshot(
       unsubCategories();
       unsubCoupons();
       unsubUsers();
+      unsubSubAdmins();
     };
   }, []);
 
@@ -787,7 +908,7 @@ const unsubUsers = onSnapshot(
         throw new Error(errText || 'Failed to send email');
       }
 
-      setGeneratedEmailOtp(code);
+setGeneratedEmailOtp(code);
       setEmailOtpExpiry(Date.now() + 5 * 60 * 1000);
       notify(`6-Digit OTP sent to ${targetEmail}! Check your Inbox/Spam.`);
       return true;
@@ -823,7 +944,7 @@ const unsubUsers = onSnapshot(
       )
       .join('');
 
-const invoiceHtml = `
+    const invoiceHtml = `
       <div style="border:1px solid #cbd5e1;padding:16px;border-radius:10px;background:#ffffff;font-family:Arial,sans-serif;font-size:12px;color:#1e293b;">
         <div style="text-align:center;margin-bottom:12px;">
           <img src="https://rythu-market.vercel.app/icon-512.png" width="56" height="56" style="border-radius:50%;border:2px solid #EAB308;" />
@@ -870,7 +991,7 @@ const invoiceHtml = `
       </div>
     `;
 
-    const invoicePayload = encodeURIComponent(
+const invoicePayload = encodeURIComponent(
       JSON.stringify({
         id: ord.id,
         date: invoiceDate,
@@ -914,7 +1035,6 @@ const invoiceHtml = `
     return true;
   };
 
-  // Direct Login with Strict Admin Authorization Gate
   const handleDirectLogin = (e) => {
     e.preventDefault();
     const raw = loginIdentifier.trim();
@@ -925,8 +1045,8 @@ const invoiceHtml = `
     const digitsOnly = raw.replace(/\D/g, '');
     const lowerEmail = raw.toLowerCase();
 
-    if (selectedRole === 'admin' && !isAuthorizedAdmin(digitsOnly, lowerEmail)) {
-      setAuthMsg('Access Denied: Only authorized administrators can access Master Admin HQ.');
+    if (selectedRole === 'admin' && !isAuthorizedAdminOrSubAdmin(digitsOnly, lowerEmail)) {
+      setAuthMsg('Access Denied: Only authorized Admins or Sub-Admins can access Admin HQ.');
       return;
     }
 
@@ -948,13 +1068,12 @@ const invoiceHtml = `
     window.history.pushState({ rythuNav: true }, '');
   };
 
-// Registration Step 1 with Strict Admin Authorization Gate
   const handleSendRegisterOtp = async () => {
     const cleanMobile = regMobile.replace(/\D/g, '');
     const cleanEmail = regEmail.trim().toLowerCase();
 
-    if (selectedRole === 'admin' && !isAuthorizedAdmin(cleanMobile, cleanEmail)) {
-      setAuthMsg('Access Denied: This Mobile / Email is not authorized for Admin access.');
+    if (selectedRole === 'admin' && !isAuthorizedAdminOrSubAdmin(cleanMobile, cleanEmail)) {
+      setAuthMsg('Access Denied: Only Master Admin or granted Sub-Admins can register here.');
       return;
     }
 
@@ -970,12 +1089,20 @@ const invoiceHtml = `
       setAuthMsg('Valid Email ID is mandatory to receive 6-digit verification OTP.');
       return;
     }
+    if (selectedRole === 'delivery' && !regProfilePhoto) {
+      setAuthMsg('Profile Photo is mandatory for Delivery Partners.');
+      return;
+    }
+    if (['farmer', 'wholesale', 'retail', 'delivery'].includes(selectedRole) && !regBankAccount.trim() && !regUpiId.trim()) {
+      setAuthMsg('Bank Account Details / UPI ID is mandatory for payouts.');
+      return;
+    }
     if (!regTermsAccepted) {
       setAuthMsg('Please accept Terms & Conditions and Privacy Policy.');
       return;
     }
 
-    const already = users.find(
+const already = users.find(
       (u) =>
         u.role === selectedRole &&
         (u.mobile === cleanMobile || (u.email || '').toLowerCase() === cleanEmail)
@@ -998,38 +1125,49 @@ const invoiceHtml = `
     const cleanEmail = regEmail.trim().toLowerCase();
     const needsApproval = selectedRole === 'farmer' || selectedRole === 'wholesale' || selectedRole === 'retail';
 
-    const fullLocation =
-      selectedRole === 'farmer'
-        ? `${regVillage || regAddress}, ${regMandal || ''}, ${regDistrict || 'Nellore'}`.replace(/,\s*,/g, ',')
-        : regAddress.trim() || `${regVillage || 'Nellore'}, ${regState}`;
+    const composedAddress =
+      selectedRole === 'customer'
+        ? `${regHouseNo}, ${regStreetArea}, ${regVillage}, ${regDistrict}, ${regState} - ${regPinCode}`.replace(/^,\s*/g, '')
+        : `${regAddress || regVillage}, ${regMandal ? regMandal + ', ' : ''}${regDistrict}, ${regState} - ${regPinCode}`;
 
     const newUser = {
       id: 'u_' + Date.now(),
       role: selectedRole,
+      profilePhoto: regProfilePhoto || '',
       name: regName.trim(),
       ownerName: regOwnerName.trim() || regName.trim(),
       mobile: cleanMobile,
+      altMobile: regAltMobile.replace(/\D/g, ''),
       email: cleanEmail,
-      aadhaarOptional: regAadhaar.trim() || null,
-      address: fullLocation,
+      gender: regGender,
+      dob: regDob,
+      houseNo: regHouseNo.trim(),
+      streetArea: regStreetArea.trim(),
+      address: composedAddress,
       lat: mapPinCoords.lat,
       lng: mapPinCoords.lng,
       village: regVillage.trim(),
       mandal: regMandal.trim(),
       district: regDistrict.trim(),
-      state: regState,
-      gstNumber: regGstNumber.trim(),
+      state: regState.trim(),
+      pinCode: regPinCode.trim(),
+      preferredLanguage: regPrefLang,
       storeType: regStoreType,
-      landAcres: regLandAcres.trim(),
+      operatingHours: regOperatingHours,
+      openingTime: regOpeningTime,
+      closingTime: regClosingTime,
       majorCrops: regMajorCrops.trim(),
       vehicleType: regVehicleType,
+      drivingLicence: regDrivingLicence.trim().toUpperCase(),
       vehicleNumber: regVehicleNumber.trim().toUpperCase(),
+      rcDocName: regRcDocName,
+      insuranceDocName: regInsuranceDocName,
+      emergencyContact: regEmergencyContact.replace(/\D/g, ''),
       bankAccount: regBankAccount.trim(),
       ifscCode: regIfscCode.trim().toUpperCase(),
       upiId: regUpiId.trim(),
       approved: !needsApproval,
       wallet: 0,
-      referralsCount: 0,
       ordersCompleted: 0,
       referredBy: regReferralCode.trim() || null,
     };
@@ -1037,12 +1175,6 @@ const invoiceHtml = `
     setUsers([newUser, ...users]);
     setDoc(doc(db, 'users', newUser.id), newUser).catch(() => {});
 
-    if (needsApproval) {
-      setNotifications((prev) => [
-        `New ${selectedRole.toUpperCase()} registration (${newUser.name} • ${cleanEmail}) awaiting Admin approval.`,
-        ...prev,
-      ]);
-    }
     setGeneratedEmailOtp('');
     setRegOtpSent(false);
     setCurrentUser(newUser);
@@ -1054,15 +1186,36 @@ const invoiceHtml = `
 
   const handleStrictLogout = () => {
     stopAlertRingtone();
+    try { localStorage.removeItem('rythu_active_session_user'); } catch {}
     setCurrentUser(null);
     setSelectedRole(null);
     setLoginIdentifier('');
     setGeneratedEmailOtp('');
     setAuthMsg('');
+    setProfileSubView(null);
+    setIsEditingProfile(false);
     setActiveTab('home');
   };
 
-const fetchAddressFromCoords = async (lat, lng) => {
+const handleProfilePhotoPick = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const dataUrl = await compressImageFileToDataUrl(file);
+      setRegProfilePhoto(dataUrl);
+      if (currentUser) {
+        const updated = { ...currentUser, profilePhoto: dataUrl };
+        setCurrentUser(updated);
+        setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+        updateDoc(doc(db, 'users', updated.id), { profilePhoto: dataUrl }).catch(() => {});
+        notify('Profile Photo Updated!');
+      }
+    } catch {
+      notify('Could not process photo.');
+    }
+  };
+
+  const fetchAddressFromCoords = async (lat, lng) => {
     try {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
@@ -1114,7 +1267,7 @@ const fetchAddressFromCoords = async (lat, lng) => {
     await fetchAddressFromCoords(lat, lng);
   };
 
-  const handleConfirmSetLocation = () => {
+const handleConfirmSetLocation = () => {
     const newId = 'loc_' + Date.now();
     const newEntry = {
       id: newId,
@@ -1193,8 +1346,7 @@ const fetchAddressFromCoords = async (lat, lng) => {
     notify(`Published ${newProd.nameEn} (${fCat} • ${fQuality} • ${fQty} ${fUnit})!`);
   };
 
-// Seller Product Form with Search Bar + Category Dropdown + Admin Catalog Picker
-  const renderPostProductForm = (roleSource, submitLabel) => {
+const renderPostProductForm = (roleSource, submitLabel) => {
     const q = sellerCatalogSearch.trim().toLowerCase();
     const filteredSellerCatalog = masterCatalog.filter((c) => {
       const catOk = sellerCatalogFilter === 'All' || c.cat === sellerCatalogFilter;
@@ -1232,9 +1384,7 @@ const fetchAddressFromCoords = async (lat, lng) => {
                 value={sellerCatalogSearch}
                 onChange={(e) => {
                   setSellerCatalogSearch(e.target.value);
-                  if (e.target.value.trim()) {
-                    handleFarmerEnChange(e.target.value);
-                  }
+                  if (e.target.value.trim()) handleFarmerEnChange(e.target.value);
                 }}
                 placeholder="Search item..."
                 className="w-full bg-transparent text-[11px] font-bold focus:outline-none"
@@ -1296,7 +1446,7 @@ const fetchAddressFromCoords = async (lat, lng) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
+ <div className="grid grid-cols-2 gap-2">
           <div>
             <label className="text-[10px] font-bold text-slate-400">Category</label>
             <select value={fCat} onChange={(e) => setFCat(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-extrabold text-slate-800">
@@ -1315,7 +1465,7 @@ const fetchAddressFromCoords = async (lat, lng) => {
           </div>
         </div>
 
-<div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <div>
             <label className="text-[10px] font-bold text-slate-400">Quantity & Unit</label>
             <div className="flex space-x-1.5">
@@ -1385,7 +1535,7 @@ const fetchAddressFromCoords = async (lat, lng) => {
           </div>
         </div>
 
-        <table className="w-full text-xs border-collapse border border-slate-200">
+  <table className="w-full text-xs border-collapse border border-slate-200">
           <thead>
             <tr className="bg-[#15803D] text-white">
               <th className="p-2 text-left">#</th>
@@ -1431,7 +1581,7 @@ const fetchAddressFromCoords = async (lat, lng) => {
   }
 
   // =========================================================================
-  // 1. HOME / ROLE ENTRY PAGE + ONE-TIME DEVICE PERMISSIONS DIALOG
+  // 1. HOME / ROLE ENTRY PAGE (ONLY SHOWN WHEN LOGGED OUT)
   // =========================================================================
   if (!selectedRole) {
     const roleCards = [
@@ -1480,7 +1630,7 @@ const fetchAddressFromCoords = async (lat, lng) => {
           </div>
         )}
 
-        <div className="bg-gradient-to-b from-[#0E5A2B] via-[#15803D] to-[#4ADE80]/30 text-white rounded-b-[36px] px-4 pt-4 pb-6 shadow-lg relative overflow-hidden">
+<div className="bg-gradient-to-b from-[#0E5A2B] via-[#15803D] to-[#4ADE80]/30 text-white rounded-b-[36px] px-4 pt-4 pb-6 shadow-lg relative overflow-hidden">
           <div className="flex items-center justify-between relative z-10">
             <div className="flex items-center space-x-2.5">
               <div className="h-12 w-12 rounded-full bg-white p-0.5 border-2 border-[#EAB308] shadow overflow-hidden flex-shrink-0">
@@ -1543,15 +1693,9 @@ const fetchAddressFromCoords = async (lat, lng) => {
               />
             </div>
           </div>
-
-          <div className="flex justify-center space-x-1.5 mt-3">
-            <span className="h-2 w-2 rounded-full bg-[#15803D]" />
-            <span className="h-2 w-2 rounded-full bg-white/70" />
-            <span className="h-2 w-2 rounded-full bg-white/70" />
-          </div>
         </div>
 
-  <div className="px-3.5 pt-4 grid grid-cols-2 gap-2.5">
+        <div className="px-3.5 pt-4 grid grid-cols-2 gap-2.5">
           {roleCards.map((r) => {
             const Icon = r.icon;
             return (
@@ -1585,7 +1729,7 @@ const fetchAddressFromCoords = async (lat, lng) => {
           })}
         </div>
 
-        <div className="px-3.5 pt-3.5">
+  <div className="px-3.5 pt-3.5">
           <div className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white rounded-2xl p-3.5 shadow-md flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="h-11 w-11 rounded-full bg-white/15 border border-white/25 flex items-center justify-center flex-shrink-0">
@@ -1606,41 +1750,6 @@ const fetchAddressFromCoords = async (lat, lng) => {
           </div>
         </div>
 
-        <div className="px-3.5 pt-3.5">
-          <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2.5">
-            <div className="flex items-center space-x-1.5 text-xs font-extrabold text-slate-800">
-              <Leaf className="h-4 w-4 text-[#15803D]" />
-              <span>Rythu Basket Highlights</span>
-            </div>
-            <div className="grid grid-cols-4 gap-1.5 text-center">
-              <div className="space-y-1">
-                <div className="h-8 w-8 rounded-full bg-emerald-50 text-[#15803D] flex items-center justify-center mx-auto">
-                  <Leaf className="h-4 w-4" />
-                </div>
-                <p className="text-[9px] font-bold text-slate-600 leading-tight">100% Fresh Produce</p>
-              </div>
-              <div className="space-y-1">
-                <div className="h-8 w-8 rounded-full bg-emerald-50 text-[#15803D] flex items-center justify-center mx-auto">
-                  <Sprout className="h-4 w-4" />
-                </div>
-                <p className="text-[9px] font-bold text-slate-600 leading-tight">Direct from Farmers</p>
-              </div>
-              <div className="space-y-1">
-                <div className="h-8 w-8 rounded-full bg-emerald-50 text-[#15803D] flex items-center justify-center mx-auto">
-                  <Shield className="h-4 w-4" />
-                </div>
-                <p className="text-[9px] font-bold text-slate-600 leading-tight">Safe & Secure Payments</p>
-              </div>
-              <div className="space-y-1">
-                <div className="h-8 w-8 rounded-full bg-emerald-50 text-[#15803D] flex items-center justify-center mx-auto">
-                  <Zap className="h-4 w-4" />
-                </div>
-                <p className="text-[9px] font-bold text-slate-600 leading-tight">Fast Delivery</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0D4A24] text-white px-6 py-2.5 rounded-t-3xl flex justify-center items-center z-40 shadow-2xl">
           <button
             type="button"
@@ -1655,48 +1764,77 @@ const fetchAddressFromCoords = async (lat, lng) => {
     );
   }
 
-// =========================================================================
-  // 2. ROLE-SPECIFIC REGISTRATION & DIRECT LOGIN (WITH ADMIN ACCESS LOCK)
+  // =========================================================================
+  // 2. COMPLETE ROLE-SPECIFIC REGISTRATION & DIRECT LOGIN
   // =========================================================================
   if (!currentUser) {
     const roleMeta = {
       farmer: { title: 'Farmer Registration', subtitle: 'Sell your fresh produce directly to buyers', cta: 'Register as Farmer →', hero: FARMER_HERO_IMG, icon: Sprout },
-      wholesale: { title: 'Wholesale Registration', subtitle: 'Buy in bulk at the best prices', cta: 'Register as Wholesale →', hero: WHOLESALE_HERO_IMG, icon: Warehouse },
-      retail: { title: 'Retail Store Registration', subtitle: 'Grow your store with Rythu Basket', cta: 'Register as Retail Store →', hero: RETAIL_HERO_IMG, icon: Store },
-      delivery: { title: 'Delivery Partner Registration', subtitle: 'Deliver Freshness, Earn More', cta: 'Register as Delivery Partner →', hero: DELIVERY_HERO_IMG, icon: Truck },
-      customer: { title: 'Create Account', subtitle: 'Verify your Email inbox with 6-digit OTP to join', cta: 'Create Customer Account →', hero: FARMER_HERO_IMG, icon: ShoppingCart },
-      admin: { title: 'Authorized Admin Access', subtitle: 'Restricted to Approved Rythu Basket Administrators', cta: 'Register Authorized Admin →', hero: FARMER_HERO_IMG, icon: ShieldCheck },
+      wholesale: { title: 'Wholesale Business Registration', subtitle: 'Buy & sell in bulk across Nellore', cta: 'Register Wholesale Business →', hero: WHOLESALE_HERO_IMG, icon: Warehouse },
+      retail: { title: 'Retail Store Registration', subtitle: 'Grow your shop with Rythu Basket', cta: 'Register Retail Store →', hero: RETAIL_HERO_IMG, icon: Store },
+      delivery: { title: 'Delivery Partner Registration', subtitle: 'Deliver Freshness, Earn More', cta: 'Register Delivery Partner →', hero: DELIVERY_HERO_IMG, icon: Truck },
+      customer: { title: 'Customer Registration', subtitle: 'Fresh farm produce delivered to your home', cta: 'Create Customer Account →', hero: FARMER_HERO_IMG, icon: ShoppingCart },
+      admin: { title: 'Authorized Admin / Sub-Admin', subtitle: 'Restricted to Approved Rythu Basket Administrators', cta: 'Register Authorized Admin →', hero: FARMER_HERO_IMG, icon: ShieldCheck },
     }[selectedRole];
 
     const RoleHeaderIcon = roleMeta.icon;
 
     const renderBankAndUpiBlock = () => (
-      <div className="space-y-2.5 pt-1">
+      <div className="space-y-2 pt-1 bg-emerald-50/40 p-3 rounded-2xl border border-emerald-100">
         <div className="flex items-center space-x-1.5 text-xs font-extrabold text-[#15803D]">
           <Landmark className="h-4 w-4" />
-          <span>Bank / UPI Payout Details (Enter Bank or UPI)</span>
+          <span>Bank Account Details (Mandatory for Payouts) *</span>
         </div>
         <input
           type="text"
+          required
           value={regBankAccount}
           onChange={(e) => setRegBankAccount(e.target.value)}
-          placeholder="Bank Account Number (Optional if UPI entered)"
+          placeholder="Bank Account Number *"
           className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold"
         />
         <input
           type="text"
+          required
           value={regIfscCode}
           onChange={(e) => setRegIfscCode(e.target.value.toUpperCase())}
-          placeholder="IFSC Code (e.g., SBIN0001234)"
+          placeholder="IFSC Code (e.g., SBIN0001234) *"
           className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold"
         />
         <input
           type="text"
           value={regUpiId}
           onChange={(e) => setRegUpiId(e.target.value)}
-          placeholder="UPI ID (e.g., name@ybl / name@okicici)"
-          className="w-full bg-emerald-50/50 border border-emerald-200 rounded-xl px-3.5 py-2.5 font-bold"
+          placeholder="UPI ID (Optional, e.g., name@ybl)"
+          className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold"
         />
+      </div>
+    );
+
+const renderPinGpsWidget = (label) => (
+      <div className="bg-white border border-emerald-200 rounded-2xl p-3 flex items-center justify-between">
+        <div>
+          <p className="font-extrabold text-slate-900">{label} *</p>
+          <p className="text-[10px] text-[#15803D] font-bold">GPS: {mapPinCoords.lat}, {mapPinCoords.lng}</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            if (navigator.geolocation) {
+              navigator.geolocation.getCurrentPosition((pos) => {
+                setMapPinCoords({
+                  lat: Number(pos.coords.latitude.toFixed(5)),
+                  lng: Number(pos.coords.longitude.toFixed(5)),
+                });
+                notify('GPS Location Captured!');
+              });
+            }
+          }}
+          className="bg-[#15803D] text-white px-3 py-1.5 rounded-xl font-extrabold text-[11px] flex items-center space-x-1"
+        >
+          <LocateFixed className="h-3.5 w-3.5" />
+          <span>Capture GPS</span>
+        </button>
       </div>
     );
 
@@ -1725,12 +1863,10 @@ const fetchAddressFromCoords = async (lat, lng) => {
               </div>
               <h1 className="text-xl font-extrabold text-[#15803D]">Rythu Basket</h1>
               <h2 className="text-lg font-extrabold text-slate-900">
-                {selectedRole === 'admin' ? 'Restricted Admin Portal' : 'Welcome Back!'}
+                {selectedRole === 'admin' ? 'Admin / Sub-Admin Portal' : 'Welcome Back!'}
               </h2>
               <p className="text-xs text-slate-500">
-                {selectedRole === 'admin'
-                  ? 'Authorized Admin Mobile Number or Email ID required'
-                  : 'Login directly with your registered Mobile Number or Email ID (No OTP needed)'}
+                Login once — stays logged in even if you close the app until you tap Logout.
               </p>
             </div>
 
@@ -1750,7 +1886,7 @@ const fetchAddressFromCoords = async (lat, lng) => {
                 />
               </div>
 
-              {authMsg && (
+{authMsg && (
                 <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-2xl font-bold flex items-center justify-between">
                   <span>{authMsg}</span>
                   {!authMsg.startsWith('Access Denied') && (
@@ -1768,7 +1904,7 @@ const fetchAddressFromCoords = async (lat, lng) => {
                 </div>
               )}
 
-<button
+              <button
                 type="submit"
                 className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
               >
@@ -1785,7 +1921,7 @@ const fetchAddressFromCoords = async (lat, lng) => {
                   }}
                   className="w-full border-2 border-[#15803D]/30 bg-emerald-50/40 text-[#15803D] font-extrabold py-3.5 rounded-2xl"
                 >
-                  New {selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}? Create Account (1-Time Email OTP)
+                  New {selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}? Complete Profile Registration
                 </button>
               </div>
             </form>
@@ -1807,16 +1943,6 @@ const fetchAddressFromCoords = async (lat, lng) => {
                 <span className="w-8" />
               </div>
 
-              {selectedRole !== 'customer' && (
-                <div className="px-4 pt-2">
-                  <img
-                    src={roleMeta.hero}
-                    alt={roleMeta.title}
-                    className="w-full h-32 object-cover rounded-2xl shadow-sm border border-emerald-200"
-                  />
-                </div>
-              )}
-
               <div className="mx-3 mt-2 bg-gradient-to-r from-[#0E5A2B] to-[#15803D] text-white rounded-2xl px-4 py-3 flex items-center space-x-3 shadow-md">
                 <div className="h-10 w-10 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
                   <RoleHeaderIcon className="h-5 w-5 text-[#FDE047]" />
@@ -1828,167 +1954,208 @@ const fetchAddressFromCoords = async (lat, lng) => {
               </div>
             </div>
 
-            <form onSubmit={handleCompleteRegistration} className="p-4 space-y-3 text-xs">
+            <form onSubmit={handleCompleteRegistration} className="p-4 space-y-2.5 text-xs">
+              {/* 1. CUSTOMER REGISTRATION */}
               {selectedRole === 'customer' && (
                 <>
-                  <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Full Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-3 font-bold" />
-                  <input type="tel" maxLength={10} required value={regMobile} onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, ''))} placeholder="Mobile Number (10 Digits) *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-3 font-bold" />
-                  <input type="email" required value={regEmail} onChange={(e) => { setRegEmail(e.target.value); setRegOtpSent(false); }} placeholder="Email ID (Mandatory for 6-Digit OTP) *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-3 font-bold" />
-                  <input type="text" required value={regAddress} onChange={(e) => setRegAddress(e.target.value)} placeholder="Delivery Address in Nellore *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-3 font-bold" />
-                  <input type="text" value={regReferralCode} onChange={(e) => setRegReferralCode(e.target.value.toUpperCase())} placeholder="Referral Code (Optional • ₹50 Bonus)" className="w-full bg-amber-50 border border-amber-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                  <label className="block border-2 border-dashed border-emerald-300 bg-white rounded-2xl p-3 text-center cursor-pointer">
+                    {regProfilePhoto ? (
+                      <img src={regProfilePhoto} alt="Profile" className="h-16 w-16 rounded-full object-cover mx-auto mb-1 border" />
+                    ) : (
+                      <Camera className="h-5 w-5 text-[#15803D] mx-auto mb-1" />
+                    )}
+                    <span className="font-bold text-slate-600">Profile Photo (Optional)</span>
+                    <input type="file" accept="image/*" onChange={handleProfilePhotoPick} className="hidden" />
+                  </label>
+                  <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Full Name *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="tel" maxLength={10} required value={regMobile} onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, ''))} placeholder="Mobile Number (10 Digits) *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="email" required value={regEmail} onChange={(e) => { setRegEmail(e.target.value); setRegOtpSent(false); }} placeholder="Email ID (Mandatory for 6-Digit OTP) *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <select value={regGender} onChange={(e) => setRegGender(e.target.value)} className="bg-white border rounded-xl px-3 py-2.5 font-bold">
+                      <option value="Male">Gender: Male (Optional)</option>
+                      <option value="Female">Gender: Female</option>
+                      <option value="Other">Gender: Other</option>
+                    </select>
+                    <input type="date" value={regDob} onChange={(e) => setRegDob(e.target.value)} placeholder="Date of Birth" className="bg-white border rounded-xl px-3 py-2.5 font-bold" />
+                  </div>
+                  <input type="tel" maxLength={10} value={regAltMobile} onChange={(e) => setRegAltMobile(e.target.value.replace(/\D/g, ''))} placeholder="Alternate Mobile Number (Optional)" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
+
+                  <p className="font-extrabold text-[#15803D] pt-1">— Default Delivery Address *</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input type="text" required value={regHouseNo} onChange={(e) => setRegHouseNo(e.target.value)} placeholder="House / Flat Number *" className="bg-white border rounded-xl px-3 py-2.5 font-bold" />
+                    <input type="text" required value={regStreetArea} onChange={(e) => setRegStreetArea(e.target.value)} placeholder="Street / Area *" className="bg-white border rounded-xl px-3 py-2.5 font-bold" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input type="text" required value={regVillage} onChange={(e) => setRegVillage(e.target.value)} placeholder="Village / City *" className="bg-white border rounded-xl px-3 py-2.5 font-bold" />
+                    <input type="text" required value={regDistrict} onChange={(e) => setRegDistrict(e.target.value)} placeholder="District *" className="bg-white border rounded-xl px-3 py-2.5 font-bold" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input type="text" required value={regState} onChange={(e) => setRegState(e.target.value)} placeholder="State *" className="bg-white border rounded-xl px-3 py-2.5 font-bold" />
+                    <input type="tel" maxLength={6} required value={regPinCode} onChange={(e) => setRegPinCode(e.target.value.replace(/\D/g, ''))} placeholder="PIN Code *" className="bg-white border rounded-xl px-3 py-2.5 font-bold" />
+                  </div>
+                  {renderPinGpsWidget('Location on Map')}
+                  <select required value={regPrefLang} onChange={(e) => setRegPrefLang(e.target.value)} className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold">
+                    <option value="Telugu">Preferred Language: తెలుగు (Telugu) *</option>
+                    <option value="English">Preferred Language: English *</option>
+                  </select>
                 </>
               )}
 
+              {/* 2. FARMER REGISTRATION */}
               {selectedRole === 'farmer' && (
                 <>
-                  <p className="font-extrabold text-[#15803D]">— Personal Details</p>
-                  <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Full Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
-                  <input type="tel" maxLength={10} required value={regMobile} onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, ''))} placeholder="Mobile Number *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
-                  <input type="email" required value={regEmail} onChange={(e) => { setRegEmail(e.target.value); setRegOtpSent(false); }} placeholder="Email ID (Mandatory for OTP) *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
-                  <input type="text" maxLength={12} value={regAadhaar} onChange={(e) => setRegAadhaar(e.target.value.replace(/\D/g, ''))} placeholder="Aadhaar Number (Optional)" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
-                  <input type="text" required value={regAddress} onChange={(e) => setRegAddress(e.target.value)} placeholder="Address *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
-                  <div className="grid grid-cols-3 gap-2">
-                    <input type="text" required value={regVillage} onChange={(e) => setRegVillage(e.target.value)} placeholder="Village *" className="bg-white border border-slate-200 rounded-xl px-2.5 py-2.5 font-bold" />
-                    <input type="text" required value={regMandal} onChange={(e) => setRegMandal(e.target.value)} placeholder="Mandal *" className="bg-white border border-slate-200 rounded-xl px-2.5 py-2.5 font-bold" />
-                    <input type="text" required value={regDistrict} onChange={(e) => setRegDistrict(e.target.value)} placeholder="District *" className="bg-white border border-slate-200 rounded-xl px-2.5 py-2.5 font-bold" />
-                  </div>
-
-                  <p className="font-extrabold text-[#15803D] pt-1">— Farm Details</p>
-                  <input type="text" value={regLandAcres} onChange={(e) => setRegLandAcres(e.target.value)} placeholder="Land Holding (Acres)" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
-                  <input type="text" value={regMajorCrops} onChange={(e) => setRegMajorCrops(e.target.value)} placeholder="Major Crops (e.g., Tomato, Paddy)" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
-
-                  <label className="block border-2 border-dashed border-emerald-300 bg-white rounded-2xl p-3 text-center cursor-pointer">
-                    <Camera className="h-5 w-5 text-[#15803D] mx-auto mb-1" />
-                    <span className="font-bold text-slate-600">{regPhotoName || 'Upload Farm Photo (JPG, PNG)'}</span>
-                    <input type="file" accept="image/*" onChange={(e) => setRegPhotoName(e.target.files?.[0]?.name || '')} className="hidden" />
-                  </label>
-
-                  {renderBankAndUpiBlock()}
-                </>
-              )}
-
-{selectedRole === 'wholesale' && (
-                <>
-                  <p className="font-extrabold text-[#15803D]">— Business Details</p>
-                  <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Business Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
-                  <input type="text" required value={regOwnerName} onChange={(e) => setRegOwnerName(e.target.value)} placeholder="Owner Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
-                  <input type="tel" maxLength={10} required value={regMobile} onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, ''))} placeholder="Mobile Number *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
-                  <input type="email" required value={regEmail} onChange={(e) => { setRegEmail(e.target.value); setRegOtpSent(false); }} placeholder="Email ID (Mandatory for OTP) *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
-                  <input type="text" value={regGstNumber} onChange={(e) => setRegGstNumber(e.target.value.toUpperCase())} placeholder="GST Number (Optional)" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
-                  <input type="text" required value={regAddress} onChange={(e) => setRegAddress(e.target.value)} placeholder="Business Address *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Full Name *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="tel" maxLength={10} required value={regMobile} onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, ''))} placeholder="Mobile Number *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="email" required value={regEmail} onChange={(e) => { setRegEmail(e.target.value); setRegOtpSent(false); }} placeholder="Email ID (Mandatory for OTP) *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
                   <div className="grid grid-cols-2 gap-2">
-                    <input type="text" required value={regDistrict} onChange={(e) => setRegDistrict(e.target.value)} placeholder="City *" className="bg-white border border-slate-200 rounded-xl px-3 py-2.5 font-bold" />
-                    <input type="text" required value={regState} onChange={(e) => setRegState(e.target.value)} placeholder="State *" className="bg-white border border-slate-200 rounded-xl px-3 py-2.5 font-bold" />
+                    <input type="text" required value={regVillage} onChange={(e) => setRegVillage(e.target.value)} placeholder="Village *" className="bg-white border rounded-xl px-3 py-2.5 font-bold" />
+                    <input type="text" required value={regMandal} onChange={(e) => setRegMandal(e.target.value)} placeholder="Mandal *" className="bg-white border rounded-xl px-3 py-2.5 font-bold" />
                   </div>
-
-                  <p className="font-extrabold text-[#15803D] pt-1">— Store Type</p>
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {['Distributor', 'Wholesaler', 'Trader'].map((st) => (
-                      <button
-                        type="button"
-                        key={st}
-                        onClick={() => setRegStoreType(st)}
-                        className={`py-2 rounded-full font-extrabold border ${regStoreType === st ? 'bg-[#15803D] text-white border-[#15803D]' : 'bg-white text-slate-600'}`}
-                      >
-                        {st}
-                      </button>
-                    ))}
+                  <div className="grid grid-cols-3 gap-2">
+                    <input type="text" required value={regDistrict} onChange={(e) => setRegDistrict(e.target.value)} placeholder="District *" className="bg-white border rounded-xl px-2.5 py-2.5 font-bold" />
+                    <input type="text" required value={regState} onChange={(e) => setRegState(e.target.value)} placeholder="State *" className="bg-white border rounded-xl px-2.5 py-2.5 font-bold" />
+                    <input type="tel" maxLength={6} required value={regPinCode} onChange={(e) => setRegPinCode(e.target.value.replace(/\D/g, ''))} placeholder="PIN Code *" className="bg-white border rounded-xl px-2.5 py-2.5 font-bold" />
                   </div>
-
+                  {renderPinGpsWidget('Farm Location')}
+                  <input type="text" required value={regMajorCrops} onChange={(e) => setRegMajorCrops(e.target.value)} placeholder="Main Crops (e.g., Tomato, Paddy, Mango) *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
                   {renderBankAndUpiBlock()}
-
-                  <div className="grid grid-cols-2 gap-2 pt-1">
-                    <label className="border-2 border-dashed border-emerald-300 bg-white rounded-xl p-2.5 text-center cursor-pointer">
-                      <span className="font-bold text-[10px] text-slate-600">{regPhotoName || 'GST Certificate (Optional)'}</span>
-                      <input type="file" onChange={(e) => setRegPhotoName(e.target.files?.[0]?.name || '')} className="hidden" />
-                    </label>
-                    <label className="border-2 border-dashed border-emerald-300 bg-white rounded-xl p-2.5 text-center cursor-pointer">
-                      <span className="font-bold text-[10px] text-slate-600">{regDocName || 'Shop License (Optional)'}</span>
-                      <input type="file" onChange={(e) => setRegDocName(e.target.files?.[0]?.name || '')} className="hidden" />
-                    </label>
-                  </div>
                 </>
               )}
 
+{/* 3. WHOLESALE BUSINESS REGISTRATION */}
+              {selectedRole === 'wholesale' && (
+                <>
+                  <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Business Name *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="text" required value={regOwnerName} onChange={(e) => setRegOwnerName(e.target.value)} placeholder="Owner Name *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="tel" maxLength={10} required value={regMobile} onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, ''))} placeholder="Mobile Number *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="email" required value={regEmail} onChange={(e) => { setRegEmail(e.target.value); setRegOtpSent(false); }} placeholder="Email ID (Mandatory for OTP) *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
+                  <select required value={regStoreType} onChange={(e) => setRegStoreType(e.target.value)} className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-extrabold text-[#15803D]">
+                    {WHOLESALE_TYPES.map((wt) => (
+                      <option key={wt} value={wt}>Business Type: {wt} *</option>
+                    ))}
+                  </select>
+                  <input type="text" required value={regAddress} onChange={(e) => setRegAddress(e.target.value)} placeholder="Shop / Warehouse Address *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input type="text" required value={regVillage} onChange={(e) => setRegVillage(e.target.value)} placeholder="Village / City *" className="bg-white border rounded-xl px-3 py-2.5 font-bold" />
+                    <input type="text" required value={regMandal} onChange={(e) => setRegMandal(e.target.value)} placeholder="Mandal *" className="bg-white border rounded-xl px-3 py-2.5 font-bold" />
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <input type="text" required value={regDistrict} onChange={(e) => setRegDistrict(e.target.value)} placeholder="District *" className="bg-white border rounded-xl px-2.5 py-2.5 font-bold" />
+                    <input type="text" required value={regState} onChange={(e) => setRegState(e.target.value)} placeholder="State *" className="bg-white border rounded-xl px-2.5 py-2.5 font-bold" />
+                    <input type="tel" maxLength={6} required value={regPinCode} onChange={(e) => setRegPinCode(e.target.value.replace(/\D/g, ''))} placeholder="PIN Code *" className="bg-white border rounded-xl px-2.5 py-2.5 font-bold" />
+                  </div>
+                  {renderPinGpsWidget('Warehouse Location (Optional)')}
+                  <input type="text" required value={regOperatingHours} onChange={(e) => setRegOperatingHours(e.target.value)} placeholder="Business Operating Hours (e.g., 5:00 AM - 9:00 PM) *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
+                  {renderBankAndUpiBlock()}
+                </>
+              )}
+
+              {/* 4. RETAIL STORE REGISTRATION */}
               {selectedRole === 'retail' && (
                 <>
-                  <p className="font-extrabold text-[#15803D]">— Store Details</p>
-                  <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Store Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
-                  <input type="text" required value={regOwnerName} onChange={(e) => setRegOwnerName(e.target.value)} placeholder="Owner Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
-                  <input type="tel" maxLength={10} required value={regMobile} onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, ''))} placeholder="Mobile Number *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
-                  <input type="email" required value={regEmail} onChange={(e) => { setRegEmail(e.target.value); setRegOtpSent(false); }} placeholder="Email ID (Mandatory for OTP) *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
-                  <input type="text" required value={regAddress} onChange={(e) => setRegAddress(e.target.value)} placeholder="Shop Address *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
-                  <div className="grid grid-cols-2 gap-2">
-                    <input type="text" required value={regDistrict} onChange={(e) => setRegDistrict(e.target.value)} placeholder="City *" className="bg-white border border-slate-200 rounded-xl px-3 py-2.5 font-bold" />
-                    <input type="text" required value={regState} onChange={(e) => setRegState(e.target.value)} placeholder="State *" className="bg-white border border-slate-200 rounded-xl px-3 py-2.5 font-bold" />
-                  </div>
-
-                  <p className="font-extrabold text-[#15803D] pt-1">— Business Type</p>
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {['Grocery Store', 'Supermarket', 'Others'].map((bt) => (
-                      <button
-                        type="button"
-                        key={bt}
-                        onClick={() => setRegStoreType(bt)}
-                        className={`py-2 rounded-full font-extrabold border text-[10px] ${regStoreType === bt ? 'bg-[#15803D] text-white border-[#15803D]' : 'bg-white text-slate-600'}`}
-                      >
-                        {bt}
-                      </button>
+                  <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Shop Name *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="text" required value={regOwnerName} onChange={(e) => setRegOwnerName(e.target.value)} placeholder="Owner Name *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="tel" maxLength={10} required value={regMobile} onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, ''))} placeholder="Mobile Number *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="email" required value={regEmail} onChange={(e) => { setRegEmail(e.target.value); setRegOtpSent(false); }} placeholder="Email ID (Mandatory for OTP) *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
+                  <select required value={regStoreType} onChange={(e) => setRegStoreType(e.target.value)} className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-extrabold text-[#15803D]">
+                    {RETAIL_SHOP_TYPES.map((rt) => (
+                      <option key={rt} value={rt}>Shop Type: {rt} *</option>
                     ))}
+                  </select>
+                  <input type="text" required value={regAddress} onChange={(e) => setRegAddress(e.target.value)} placeholder="Shop Address *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input type="text" required value={regVillage} onChange={(e) => setRegVillage(e.target.value)} placeholder="Village / City *" className="bg-white border rounded-xl px-3 py-2.5 font-bold" />
+                    <input type="text" required value={regMandal} onChange={(e) => setRegMandal(e.target.value)} placeholder="Mandal *" className="bg-white border rounded-xl px-3 py-2.5 font-bold" />
                   </div>
-
+                  <div className="grid grid-cols-3 gap-2">
+                    <input type="text" required value={regDistrict} onChange={(e) => setRegDistrict(e.target.value)} placeholder="District *" className="bg-white border rounded-xl px-2.5 py-2.5 font-bold" />
+                    <input type="text" required value={regState} onChange={(e) => setRegState(e.target.value)} placeholder="State *" className="bg-white border rounded-xl px-2.5 py-2.5 font-bold" />
+                    <input type="tel" maxLength={6} required value={regPinCode} onChange={(e) => setRegPinCode(e.target.value.replace(/\D/g, ''))} placeholder="PIN Code *" className="bg-white border rounded-xl px-2.5 py-2.5 font-bold" />
+                  </div>
+                  {renderPinGpsWidget('Shop Location')}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500">Shop Opening Time *</label>
+                      <input type="text" required value={regOpeningTime} onChange={(e) => setRegOpeningTime(e.target.value)} className="w-full bg-white border rounded-xl px-3 py-2 font-bold" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500">Shop Closing Time *</label>
+                      <input type="text" required value={regClosingTime} onChange={(e) => setRegClosingTime(e.target.value)} className="w-full bg-white border rounded-xl px-3 py-2 font-bold" />
+                    </div>
+                  </div>
                   {renderBankAndUpiBlock()}
-
-                  <label className="block border-2 border-dashed border-emerald-300 bg-white rounded-2xl p-3 text-center cursor-pointer">
-                    <Camera className="h-5 w-5 text-[#15803D] mx-auto mb-1" />
-                    <span className="font-bold text-slate-600">{regPhotoName || 'Upload Shop Photo (JPG, PNG)'}</span>
-                    <input type="file" accept="image/*" onChange={(e) => setRegPhotoName(e.target.files?.[0]?.name || '')} className="hidden" />
-                  </label>
                 </>
               )}
 
+              {/* 5. DELIVERY PARTNER REGISTRATION */}
               {selectedRole === 'delivery' && (
                 <>
-                  <p className="font-extrabold text-[#15803D]">— Personal Details</p>
-                  <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Full Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
-                  <input type="tel" maxLength={10} required value={regMobile} onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, ''))} placeholder="Mobile Number *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
-                  <input type="email" required value={regEmail} onChange={(e) => { setRegEmail(e.target.value); setRegOtpSent(false); }} placeholder="Email ID (Mandatory for OTP) *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
-
-                  <p className="font-extrabold text-[#15803D] pt-1">— Vehicle Details</p>
-                  <select value={regVehicleType} onChange={(e) => setRegVehicleType(e.target.value)} className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold">
-                    <option value="Bike / Scooter">Bike / Scooter</option>
-                    <option value="Auto / 3-Wheeler">Auto / 3-Wheeler</option>
-                    <option value="Mini Truck / Tempo">Mini Truck / Tempo</option>
-                  </select>
-                  <input type="text" required value={regVehicleNumber} onChange={(e) => setRegVehicleNumber(e.target.value.toUpperCase())} placeholder="Vehicle Number (e.g., AP 26 BX 1234) *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
-
-                  <p className="font-extrabold text-[#15803D] pt-1">— Location</p>
+                  <label className="block border-2 border-dashed border-emerald-400 bg-white rounded-2xl p-3 text-center cursor-pointer">
+                    {regProfilePhoto ? (
+                      <img src={regProfilePhoto} alt="Rider" className="h-16 w-16 rounded-full object-cover mx-auto mb-1 border" />
+                    ) : (
+                      <Camera className="h-5 w-5 text-[#15803D] mx-auto mb-1" />
+                    )}
+                    <span className="font-extrabold text-[#15803D]">Upload Profile Photo (Mandatory) *</span>
+                    <input type="file" accept="image/*" onChange={handleProfilePhotoPick} className="hidden" />
+                  </label>
+                  <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Full Name *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="tel" maxLength={10} required value={regMobile} onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, ''))} placeholder="Mobile Number *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="email" required value={regEmail} onChange={(e) => { setRegEmail(e.target.value); setRegOtpSent(false); }} placeholder="Email ID (Mandatory for OTP) *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
                   <div className="grid grid-cols-2 gap-2">
-                    <input type="text" required value={regDistrict} onChange={(e) => setRegDistrict(e.target.value)} placeholder="City *" className="bg-white border border-slate-200 rounded-xl px-3 py-2.5 font-bold" />
-                    <input type="text" required value={regAddress} onChange={(e) => setRegAddress(e.target.value)} placeholder="Area / Locality *" className="bg-white border border-slate-200 rounded-xl px-3 py-2.5 font-bold" />
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500">Date of Birth (Mandatory) *</label>
+                      <input type="date" required value={regDob} onChange={(e) => setRegDob(e.target.value)} className="w-full bg-white border rounded-xl px-3 py-2 font-bold" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500">Gender (Optional)</label>
+                      <select value={regGender} onChange={(e) => setRegGender(e.target.value)} className="w-full bg-white border rounded-xl px-3 py-2.5 font-bold">
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                  </div>
+                  <input type="text" required value={regAddress} onChange={(e) => setRegAddress(e.target.value)} placeholder="Complete Address *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input type="text" required value={regVillage} onChange={(e) => setRegVillage(e.target.value)} placeholder="Village / City *" className="bg-white border rounded-xl px-3 py-2.5 font-bold" />
+                    <input type="text" required value={regDistrict} onChange={(e) => setRegDistrict(e.target.value)} placeholder="District *" className="bg-white border rounded-xl px-3 py-2.5 font-bold" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input type="text" required value={regState} onChange={(e) => setRegState(e.target.value)} placeholder="State *" className="bg-white border rounded-xl px-3 py-2.5 font-bold" />
+                    <input type="tel" maxLength={6} required value={regPinCode} onChange={(e) => setRegPinCode(e.target.value.replace(/\D/g, ''))} placeholder="PIN Code *" className="bg-white border rounded-xl px-3 py-2.5 font-bold" />
                   </div>
 
+                  <p className="font-extrabold text-[#15803D] pt-1">— Vehicle & Compliance Details</p>
+                  <select required value={regVehicleType} onChange={(e) => setRegVehicleType(e.target.value)} className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-extrabold">
+                    {DELIVERY_VEHICLE_TYPES.map((vt) => (
+                      <option key={vt} value={vt}>Vehicle Type: {vt} *</option>
+                    ))}
+                  </select>
+                  <input type="text" value={regDrivingLicence} onChange={(e) => setRegDrivingLicence(e.target.value.toUpperCase())} placeholder="Driving Licence Number (For motor vehicles)" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="text" value={regVehicleNumber} onChange={(e) => setRegVehicleNumber(e.target.value.toUpperCase())} placeholder="Vehicle Registration Number (e.g., AP 26 BX 1234)" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <label className="border-2 border-dashed border-emerald-300 bg-white rounded-xl p-2.5 text-center cursor-pointer">
+                      <span className="font-bold text-[10px] text-slate-600">{regRcDocName || 'Upload RC Document'}</span>
+                      <input type="file" onChange={(e) => setRegRcDocName(e.target.files?.[0]?.name || '')} className="hidden" />
+                    </label>
+                    <label className="border-2 border-dashed border-emerald-300 bg-white rounded-xl p-2.5 text-center cursor-pointer">
+                      <span className="font-bold text-[10px] text-slate-600">{regInsuranceDocName || 'Upload Vehicle Insurance'}</span>
+                      <input type="file" onChange={(e) => setRegInsuranceDocName(e.target.files?.[0]?.name || '')} className="hidden" />
+                    </label>
+                  </div>
+                  <input type="tel" maxLength={10} required value={regEmergencyContact} onChange={(e) => setRegEmergencyContact(e.target.value.replace(/\D/g, ''))} placeholder="Emergency Contact Mobile Number *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
                   {renderBankAndUpiBlock()}
-
-                  <div className="grid grid-cols-2 gap-2 pt-1">
-                    <label className="border-2 border-dashed border-emerald-300 bg-white rounded-xl p-2.5 text-center cursor-pointer">
-                      <span className="font-bold text-[10px] text-slate-600">{regPhotoName || 'Driving License (Optional)'}</span>
-                      <input type="file" onChange={(e) => setRegPhotoName(e.target.files?.[0]?.name || '')} className="hidden" />
-                    </label>
-                    <label className="border-2 border-dashed border-emerald-300 bg-white rounded-xl p-2.5 text-center cursor-pointer">
-                      <span className="font-bold text-[10px] text-slate-600">{regDocName || 'Vehicle RC (Optional)'}</span>
-                      <input type="file" onChange={(e) => setRegDocName(e.target.files?.[0]?.name || '')} className="hidden" />
-                    </label>
-                  </div>
                 </>
               )}
 
-   {selectedRole === 'admin' && (
+{/* 6. ADMIN / SUB-ADMIN REGISTRATION */}
+              {selectedRole === 'admin' && (
                 <>
-                  <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Authorized Admin Name *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
-                  <input type="tel" maxLength={10} required value={regMobile} onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, ''))} placeholder="Authorized Admin Mobile (8328261103) *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
-                  <input type="email" required value={regEmail} onChange={(e) => { setRegEmail(e.target.value); setRegOtpSent(false); }} placeholder="Authorized Admin Gmail ID *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
-                  <input type="text" required value={regAddress} onChange={(e) => setRegAddress(e.target.value)} placeholder="Office Location *" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Authorized Admin / Sub-Admin Name *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="tel" maxLength={10} required value={regMobile} onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, ''))} placeholder="Authorized Mobile Number *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="email" required value={regEmail} onChange={(e) => { setRegEmail(e.target.value); setRegOtpSent(false); }} placeholder="Authorized Email ID *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
+                  <input type="text" required value={regAddress} onChange={(e) => setRegAddress(e.target.value)} placeholder="Office Location *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
                 </>
               )}
 
@@ -2060,55 +2227,284 @@ const fetchAddressFromCoords = async (lat, lng) => {
       </div>
     ) : null;
 
-const renderSharedProfileTab = () => (
-    <div className="p-4 space-y-3.5 text-xs">
-      <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex items-center space-x-3.5">
-        <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-[#15803D] to-[#22C55E] text-white font-extrabold text-xl flex items-center justify-center shadow">
-          {currentUser.name.charAt(0)}
+// =========================================================================
+  // COMPREHENSIVE ROLE-SPECIFIC PROFILE & ADDITIONAL OPTIONS RENDERER
+  // =========================================================================
+  const renderSharedProfileTab = () => {
+    const r = currentUser.role;
+
+    const handleSaveEditedProfile = (e) => {
+      e.preventDefault();
+      setUsers((prev) => prev.map((u) => (u.id === currentUser.id ? currentUser : u)));
+      updateDoc(doc(db, 'users', currentUser.id), currentUser).catch(() => {});
+      setIsEditingProfile(false);
+      notify('Profile Details Saved Successfully!');
+    };
+
+    const roleMenuOptions =
+      r === 'customer'
+        ? [
+            { label: 'My Orders', action: () => setActiveTab('orders') },
+            { label: `My Wishlist (${wishlistIds.length})`, action: () => setProfileSubView('Wishlist') },
+            { label: 'Saved Addresses', action: () => setActiveTab('selectLocation') },
+            { label: `My Wallet (₹${currentUser.wallet || 0})`, action: () => setProfileSubView('My Wallet') },
+            { label: 'Payment Methods', action: () => setProfileSubView('Payment Methods') },
+            { label: 'Refer & Earn (₹50 Bonus)', action: () => setProfileSubView('Refer & Earn') },
+            { label: 'Help & Support', action: () => setProfileSubView('Help & Support') },
+            { label: 'Ratings & Reviews', action: () => setProfileSubView('Ratings & Reviews') },
+          ]
+        : r === 'farmer'
+        ? [
+            { label: 'Available Stock', action: () => setActiveTab('listProduce') },
+            { label: 'Wholesale Buyers', action: () => setProfileSubView('Wholesale Buyers') },
+            { label: 'Retail Buyers', action: () => setProfileSubView('Retail Buyers') },
+            { label: 'Customer Orders', action: () => setActiveTab('orders') },
+            { label: 'Price Management', action: () => setActiveTab('marketRates') },
+            { label: 'Sales History', action: () => setProfileSubView('Sales History') },
+            { label: 'Payment History', action: () => setProfileSubView('Payment History') },
+            { label: `Farmer Wallet (₹${currentUser.wallet || 0})`, action: () => setActiveTab('earnings') },
+            { label: 'Transport Requests', action: () => setProfileSubView('Transport Requests') },
+            { label: 'Ratings & Reviews', action: () => setProfileSubView('Ratings & Reviews') },
+            { label: 'Support', action: () => setActiveTab('support') },
+          ]
+        : r === 'wholesale'
+        ? [
+            { label: 'My Business', action: () => setIsEditingProfile(true) },
+            { label: 'Buy from Farmers', action: () => setActiveTab('browse') },
+            { label: 'Buy from Wholesalers', action: () => setActiveTab('browse') },
+            { label: 'Sell Products', action: () => setActiveTab('sellStock') },
+            { label: 'Bulk Orders', action: () => setActiveTab('orders') },
+            { label: 'Minimum Order Quantity', action: () => setProfileSubView('Minimum Order Quantity') },
+            { label: 'Price Negotiation', action: () => setProfileSubView('Price Negotiation') },
+            { label: 'Inventory Management', action: () => setActiveTab('sellStock') },
+            { label: 'Purchase History', action: () => setActiveTab('orders') },
+            { label: 'Sales History', action: () => setProfileSubView('Sales History') },
+            { label: 'GST Invoices', action: () => window.print() },
+            { label: `Payments & Wallet (₹${currentUser.wallet || 0})`, action: () => setProfileSubView('Payments & Wallet') },
+            { label: 'Support', action: () => setProfileSubView('Help & Support') },
+          ]
+        : r === 'retail'
+        ? [
+            { label: 'My Shop', action: () => setIsEditingProfile(true) },
+            { label: 'Purchase from Farmers', action: () => setActiveTab('browse') },
+            { label: 'Purchase from Wholesalers', action: () => setActiveTab('browse') },
+            { label: 'My Products', action: () => setActiveTab('sellStock') },
+            { label: 'Stock Alerts', action: () => setProfileSubView('Stock Alerts') },
+            { label: 'Sales & Billing', action: () => window.print() },
+            { label: 'Customer Orders', action: () => setActiveTab('orders') },
+            { label: 'Purchase History', action: () => setActiveTab('orders') },
+            { label: 'Sales Reports', action: () => setProfileSubView('Sales Reports') },
+            { label: 'Profit & Loss', action: () => setProfileSubView('Profit & Loss') },
+            { label: 'GST Invoices', action: () => window.print() },
+            { label: `Payments & Wallet (₹${currentUser.wallet || 0})`, action: () => setProfileSubView('Payments & Wallet') },
+            { label: 'Support', action: () => setProfileSubView('Help & Support') },
+          ]
+        : r === 'delivery'
+        ? [
+            { label: 'Available Orders', action: () => setActiveTab('home') },
+            { label: 'My Deliveries', action: () => setActiveTab('home') },
+            { label: 'Pickup History', action: () => setProfileSubView('Pickup History') },
+            { label: 'Delivery History', action: () => setProfileSubView('Delivery History') },
+            { label: `Earnings (₹${currentUser.wallet || 0})`, action: () => setProfileSubView('Earnings') },
+            { label: 'Incentives (Weekly Target)', action: () => setProfileSubView('Incentives') },
+            { label: 'Wallet', action: () => setProfileSubView('Wallet') },
+            { label: 'Bank Withdrawals', action: () => setProfileSubView('Bank Withdrawals') },
+            { label: 'Customer Ratings', action: () => setProfileSubView('Customer Ratings') },
+            { label: 'Help & Support', action: () => setProfileSubView('Help & Support') },
+          ]
+        : [
+            { label: 'Master Admin HQ', action: () => setActiveTab('home') },
+            { label: 'Help & Support', action: () => setProfileSubView('Help & Support') },
+          ];
+
+return (
+      <div className="p-4 space-y-3.5 text-xs">
+        {/* Profile Header Card */}
+        <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
+          <div className="flex items-center space-x-3.5 min-w-0">
+            <label className="relative cursor-pointer flex-shrink-0">
+              {currentUser.profilePhoto ? (
+                <img src={currentUser.profilePhoto} alt="Avatar" className="h-14 w-14 rounded-2xl object-cover border-2 border-[#15803D]" />
+              ) : (
+                <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-[#15803D] to-[#22C55E] text-white font-extrabold text-xl flex items-center justify-center shadow">
+                  {currentUser.name.charAt(0)}
+                </div>
+              )}
+              <span className="absolute -bottom-1 -right-1 bg-slate-900 text-white p-1 rounded-full">
+                <Camera className="h-3 w-3" />
+              </span>
+              <input type="file" accept="image/*" onChange={handleProfilePhotoPick} className="hidden" />
+            </label>
+            <div className="min-w-0">
+              <span className="text-[10px] font-extrabold uppercase bg-emerald-50 text-[#15803D] px-2 py-0.5 rounded-md">
+                {r} {r === 'admin' && !isCurrentUserMasterAdmin ? '(Sub-Admin)' : ''}
+              </span>
+              <h2 className="text-base font-extrabold text-slate-900 mt-0.5 truncate">{currentUser.name}</h2>
+              <p className="text-slate-500 font-semibold truncate">{currentUser.email}</p>
+              <p className="text-slate-500 font-semibold">+91 {currentUser.mobile}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsEditingProfile(!isEditingProfile)}
+            className="bg-emerald-50 text-[#15803D] px-3 py-2 rounded-xl font-extrabold flex items-center space-x-1 flex-shrink-0"
+          >
+            <Edit3 className="h-3.5 w-3.5" />
+            <span>{isEditingProfile ? 'Close' : 'Edit'}</span>
+          </button>
         </div>
-        <div className="min-w-0">
-          <span className="text-[10px] font-extrabold uppercase bg-emerald-50 text-[#15803D] px-2 py-0.5 rounded-md">
-            {currentUser.role}
-          </span>
-          <h2 className="text-base font-extrabold text-slate-900 mt-0.5 truncate">{currentUser.name}</h2>
-          <p className="text-slate-500 font-semibold truncate">{currentUser.email}</p>
-          <p className="text-slate-500 font-semibold">+91 {currentUser.mobile} • {currentUser.address}</p>
+
+        {/* Delivery Partner Online / Offline Toggle */}
+        {r === 'delivery' && (
+          <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
+            <div>
+              <p className="font-extrabold text-slate-900">Online / Offline Status</p>
+              <p className="text-[10px] text-slate-500">{isRiderOnline ? 'Online — Receiving Nellore delivery routes' : 'Offline — Paused'}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setIsRiderOnline(!isRiderOnline);
+                notify(!isRiderOnline ? 'You are now ONLINE!' : 'You are now OFFLINE');
+              }}
+              className={`px-4 py-2 rounded-full font-extrabold text-xs ${isRiderOnline ? 'bg-[#15803D] text-white' : 'bg-slate-200 text-slate-600'}`}
+            >
+              {isRiderOnline ? '● ONLINE' : '○ OFFLINE'}
+            </button>
+          </div>
+        )}
+
+        {/* Complete Profile Details / Edit Form */}
+        {isEditingProfile ? (
+          <form onSubmit={handleSaveEditedProfile} className="bg-white rounded-3xl p-4 shadow-sm border border-emerald-200 space-y-2.5">
+            <h3 className="font-extrabold text-sm text-[#15803D]">Edit Complete Profile Details</h3>
+            <input type="text" required value={currentUser.name} onChange={(e) => setCurrentUser({ ...currentUser, name: e.target.value })} placeholder="Name / Business / Shop Name *" className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
+            {['wholesale', 'retail'].includes(r) && (
+              <input type="text" required value={currentUser.ownerName || ''} onChange={(e) => setCurrentUser({ ...currentUser, ownerName: e.target.value })} placeholder="Owner Name *" className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
+            )}
+            <div className="grid grid-cols-2 gap-2">
+              <input type="tel" maxLength={10} required value={currentUser.mobile} onChange={(e) => setCurrentUser({ ...currentUser, mobile: e.target.value.replace(/\D/g, '') })} placeholder="Mobile *" className="bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
+              <input type="email" required value={currentUser.email} onChange={(e) => setCurrentUser({ ...currentUser, email: e.target.value })} placeholder="Email ID *" className="bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
+            </div>
+            {['customer', 'delivery'].includes(r) && (
+              <div className="grid grid-cols-2 gap-2">
+                <select value={currentUser.gender || 'Male'} onChange={(e) => setCurrentUser({ ...currentUser, gender: e.target.value })} className="bg-slate-50 border rounded-xl px-3 py-2 font-bold">
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+                <input type="date" value={currentUser.dob || ''} onChange={(e) => setCurrentUser({ ...currentUser, dob: e.target.value })} className="bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
+              </div>
+            )}
+            {r === 'customer' && (
+              <div className="grid grid-cols-2 gap-2">
+                <input type="text" value={currentUser.houseNo || ''} onChange={(e) => setCurrentUser({ ...currentUser, houseNo: e.target.value })} placeholder="House / Flat No *" className="bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
+                <input type="text" value={currentUser.streetArea || ''} onChange={(e) => setCurrentUser({ ...currentUser, streetArea: e.target.value })} placeholder="Street / Area *" className="bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-2">
+              <input type="text" value={currentUser.village || ''} onChange={(e) => setCurrentUser({ ...currentUser, village: e.target.value })} placeholder="Village / City *" className="bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
+              <input type="text" value={currentUser.mandal || ''} onChange={(e) => setCurrentUser({ ...currentUser, mandal: e.target.value })} placeholder="Mandal" className="bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <input type="text" value={currentUser.district || ''} onChange={(e) => setCurrentUser({ ...currentUser, district: e.target.value })} placeholder="District *" className="bg-slate-50 border rounded-xl px-2.5 py-2 font-bold" />
+              <input type="text" value={currentUser.state || ''} onChange={(e) => setCurrentUser({ ...currentUser, state: e.target.value })} placeholder="State *" className="bg-slate-50 border rounded-xl px-2.5 py-2 font-bold" />
+              <input type="tel" maxLength={6} value={currentUser.pinCode || ''} onChange={(e) => setCurrentUser({ ...currentUser, pinCode: e.target.value })} placeholder="PIN *" className="bg-slate-50 border rounded-xl px-2.5 py-2 font-bold" />
+            </div>
+            {r === 'farmer' && (
+              <input type="text" value={currentUser.majorCrops || ''} onChange={(e) => setCurrentUser({ ...currentUser, majorCrops: e.target.value })} placeholder="Main Crops *" className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
+            )}
+            {['farmer', 'wholesale', 'retail', 'delivery'].includes(r) && (
+              <div className="grid grid-cols-2 gap-2">
+                <input type="text" value={currentUser.bankAccount || ''} onChange={(e) => setCurrentUser({ ...currentUser, bankAccount: e.target.value })} placeholder="Bank Account No *" className="bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
+                <input type="text" value={currentUser.ifscCode || ''} onChange={(e) => setCurrentUser({ ...currentUser, ifscCode: e.target.value.toUpperCase() })} placeholder="IFSC Code *" className="bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
+              </div>
+            )}
+            <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow">
+              Save Profile Changes
+            </button>
+          </form>
+        ) : (
+          <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-1.5 text-[11px]">
+            <p className="font-extrabold text-[#15803D] text-xs">Registered Profile Summary</p>
+            {currentUser.ownerName && r !== 'customer' && r !== 'farmer' && (
+              <p><span className="text-slate-400">Owner:</span> <strong>{currentUser.ownerName}</strong></p>
+            )}
+            {currentUser.storeType && ['wholesale', 'retail'].includes(r) && (
+              <p><span className="text-slate-400">Category:</span> <strong>{currentUser.storeType}</strong></p>
+            )}
+            {currentUser.majorCrops && r === 'farmer' && (
+              <p><span className="text-slate-400">Main Crops:</span> <strong>{currentUser.majorCrops}</strong></p>
+            )}
+            {currentUser.vehicleType && r === 'delivery' && (
+              <p><span className="text-slate-400">Vehicle:</span> <strong>{currentUser.vehicleType} ({currentUser.vehicleNumber || 'N/A'})</strong></p>
+            )}
+            {currentUser.emergencyContact && r === 'delivery' && (
+              <p><span className="text-slate-400">Emergency Contact:</span> <strong>+91 {currentUser.emergencyContact}</strong></p>
+            )}
+            <p><span className="text-slate-400">Location:</span> <strong>{currentUser.address} (PIN: {currentUser.pinCode || '524001'})</strong></p>
+            {(currentUser.bankAccount || currentUser.upiId) && (
+              <p><span className="text-slate-400">Bank / UPI:</span> <strong>{currentUser.bankAccount} {currentUser.ifscCode ? `(${currentUser.ifscCode})` : ''} {currentUser.upiId}</strong></p>
+            )}
+          </div>
+        )}
+
+{/* Sub-View Panel when clicking any Additional Option */}
+        {profileSubView && (
+          <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-3.5 space-y-2">
+            <div className="flex items-center justify-between">
+              <h4 className="font-extrabold text-[#0F5132]">{profileSubView}</h4>
+              <button type="button" onClick={() => setProfileSubView(null)} className="text-rose-600 font-extrabold">✕</button>
+            </div>
+            {profileSubView === 'Wishlist' ? (
+              <div className="space-y-1.5">
+                {products.filter((p) => wishlistIds.includes(p.id)).map((wp) => (
+                  <div key={wp.id} className="bg-white p-2 rounded-xl flex justify-between items-center">
+                    <span className="font-bold">{wp.nameEn} (₹{wp.retailPrice})</span>
+                    <button onClick={() => { setCart({ ...cart, [wp.id]: 1 }); notify('Moved to Cart!'); }} className="bg-[#15803D] text-white px-2.5 py-1 rounded-lg font-extrabold text-[10px]">Add to Cart</button>
+                  </div>
+                ))}
+              </div>
+            ) : profileSubView === 'Refer & Earn' ? (
+              <p className="text-slate-700 font-bold">Share your referral code <span className="bg-white px-2 py-0.5 rounded border font-mono text-[#15803D]">RYTHU{currentUser.mobile?.slice(-4)}</span> with friends in Nellore and earn ₹50 Wallet Cashback!</p>
+            ) : profileSubView === 'Help & Support' ? (
+              <div className="space-y-2">
+                <p className="text-slate-700">24/7 Nellore Support Helpline: <strong>8328261103</strong></p>
+                <a href="tel:8328261103" className="inline-block bg-[#15803D] text-white font-extrabold px-4 py-2 rounded-xl">Call Now</a>
+              </div>
+            ) : (
+              <p className="text-slate-700">
+                Active <strong>{profileSubView}</strong> dashboard synced with your Nellore account ({currentUser.name}). Total Wallet: <strong>₹{currentUser.wallet || 0}</strong>.
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Role-Specific Additional Options List */}
+        <div className="bg-white rounded-3xl p-2 shadow-sm border border-slate-100 divide-y divide-slate-100">
+          {roleMenuOptions.map((opt) => (
+            <button
+              key={opt.label}
+              type="button"
+              onClick={opt.action}
+              className="w-full px-3.5 py-3 flex items-center justify-between text-left hover:bg-slate-50 transition"
+            >
+              <span className="font-extrabold text-slate-800">{opt.label}</span>
+              <ChevronRight className="h-4 w-4 text-slate-400" />
+            </button>
+          ))}
         </div>
+
+        <button onClick={handleStrictLogout} className="w-full bg-rose-600 text-white font-extrabold py-3.5 rounded-2xl shadow-md flex items-center justify-center space-x-2">
+          <LogOut className="h-4 w-4" />
+          <span>Logout (Switch Role)</span>
+        </button>
       </div>
-
-      {(currentUser.bankAccount || currentUser.upiId) && (
-        <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-1">
-          <p className="font-extrabold text-[#15803D]">Registered Payout Details</p>
-          {currentUser.bankAccount && <p className="text-slate-600">Bank A/C: <strong>{currentUser.bankAccount}</strong> ({currentUser.ifscCode})</p>}
-          {currentUser.upiId && <p className="text-slate-600">UPI ID: <strong>{currentUser.upiId}</strong></p>}
-        </div>
-      )}
-
-      <div className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white rounded-3xl p-5 shadow-md space-y-2">
-        <div className="flex justify-between items-center">
-          <span className="font-semibold text-emerald-100 flex items-center space-x-1.5">
-            <Wallet className="h-4 w-4 text-[#FDE047]" />
-            <span>Rythu Wallet Balance</span>
-          </span>
-          <span className="bg-white/15 text-[10px] font-bold px-2.5 py-0.5 rounded-full">15-Day Validity</span>
-        </div>
-        <h3 className="text-3xl font-extrabold">₹{currentUser.wallet || 0}</h3>
-      </div>
-
-      <a href="tel:8328261103" className="w-full bg-white border border-slate-200 text-slate-800 font-extrabold py-3.5 rounded-2xl flex items-center justify-center space-x-2 shadow-sm">
-        <Phone className="h-4 w-4 text-[#15803D]" />
-        <span>Contact Support (8328261103)</span>
-      </a>
-
-      <button onClick={handleStrictLogout} className="w-full bg-rose-600 text-white font-extrabold py-3.5 rounded-2xl shadow-md flex items-center justify-center space-x-2">
-        <LogOut className="h-4 w-4" />
-        <span>Logout (Switch Role)</span>
-      </button>
-    </div>
-  );
+    );
+  };
 
   // =========================================================================
-  // 3. CUSTOMER STOREFRONT (EMPTY INITIAL CART + DAILY ESSENTIALS + COUPONS + CATEGORIES)
+  // 3. CUSTOMER STOREFRONT
   // =========================================================================
   if (currentUser.role === 'customer') {
     const activeAddr = savedAddresses.find((a) => a.id === activeAddrId) || savedAddresses[0];
@@ -2148,7 +2544,7 @@ const renderSharedProfileTab = () => (
         ? 20
         : 5;
 
-const paymentAppLaunchUrl = buildPaymentLaunchUrl(payMode, merchantUpiId, payableTotal);
+    const paymentAppLaunchUrl = buildPaymentLaunchUrl(payMode, merchantUpiId, payableTotal);
     const genericUpiQr = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(
       `upi://pay?pa=${encodeURIComponent(merchantUpiId)}&pn=${encodeURIComponent('Rythu Basket Nellore')}&am=${payableTotal}&cu=INR`
     )}`;
@@ -2169,7 +2565,7 @@ const paymentAppLaunchUrl = buildPaymentLaunchUrl(payMode, merchantUpiId, payabl
       notify(`Coupon ${found.code} Applied (-₹${found.discount})!`);
     };
 
-    const finalizeCustomerOrder = () => {
+const finalizeCustomerOrder = () => {
       const itemsArr = Object.entries(cart)
         .map(([id, qty]) => {
           const p = products.find((x) => x.id === id);
@@ -2286,6 +2682,7 @@ const handleSimulateCustomerDelivery = (ord) => {
     const renderCustomerProductCard = (p) => {
       const q = cart[p.id] || 0;
       const isFarmerItem = (p.postedByRole || 'farmer') === 'farmer';
+      const isWished = wishlistIds.includes(p.id);
       return (
         <div key={p.id} className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex items-center justify-between">
           <div
@@ -2320,27 +2717,40 @@ const handleSimulateCustomerDelivery = (ord) => {
             </div>
           </div>
 
-          {!p.inStock ? (
-            <span className="text-[10px] font-extrabold text-rose-500 bg-rose-50 px-2.5 py-1.5 rounded-xl">Sold Out</span>
-          ) : q === 0 ? (
+          <div className="flex items-center space-x-1.5">
             <button
-              onClick={() => setCart({ ...cart, [p.id]: 1 })}
-              className="bg-[#15803D] text-white font-extrabold px-4 py-2 rounded-xl shadow-sm"
+              type="button"
+              onClick={() => {
+                setWishlistIds((prev) => (prev.includes(p.id) ? prev.filter((x) => x !== p.id) : [...prev, p.id]));
+                notify(isWished ? 'Removed from Wishlist' : 'Added to Wishlist!');
+              }}
+              className="p-2 rounded-xl bg-slate-50 text-rose-500"
             >
-              Add +
+              <Heart className={`h-4 w-4 ${isWished ? 'fill-rose-500' : ''}`} />
             </button>
-          ) : (
-            <div className="flex items-center bg-[#15803D] text-white rounded-xl px-2.5 py-1.5 space-x-2.5 font-extrabold">
-              <button onClick={() => setCart((c) => { const n = { ...c }; if (n[p.id] <= 1) delete n[p.id]; else n[p.id]--; return n; })}>-</button>
-              <span>{q}</span>
-              <button onClick={() => setCart({ ...cart, [p.id]: q + 1 })}>+</button>
-            </div>
-          )}
+
+            {!p.inStock ? (
+              <span className="text-[10px] font-extrabold text-rose-500 bg-rose-50 px-2.5 py-1.5 rounded-xl">Sold Out</span>
+            ) : q === 0 ? (
+              <button
+                onClick={() => setCart({ ...cart, [p.id]: 1 })}
+                className="bg-[#15803D] text-white font-extrabold px-4 py-2 rounded-xl shadow-sm"
+              >
+                Add +
+              </button>
+            ) : (
+              <div className="flex items-center bg-[#15803D] text-white rounded-xl px-2.5 py-1.5 space-x-2.5 font-extrabold">
+                <button onClick={() => setCart((c) => { const n = { ...c }; if (n[p.id] <= 1) delete n[p.id]; else n[p.id]--; return n; })}>-</button>
+                <span>{q}</span>
+                <button onClick={() => setCart({ ...cart, [p.id]: q + 1 })}>+</button>
+              </div>
+            )}
+          </div>
         </div>
       );
     };
 
-    if (activeTab === 'selectLocation') {
+if (activeTab === 'selectLocation') {
       const filteredAddrs = savedAddresses.filter(
         (a) =>
           a.title.toLowerCase().includes(locSearch.toLowerCase()) ||
@@ -2368,7 +2778,7 @@ const handleSimulateCustomerDelivery = (ord) => {
               />
             </div>
 
-   <button
+            <button
               type="button"
               onClick={handleUseCurrentLocationMap}
               className="w-full border-2 border-[#15803D] bg-emerald-50 rounded-2xl py-3.5 px-4 flex items-center justify-center space-x-2 text-[#15803D] font-extrabold text-xs shadow-sm"
@@ -2444,7 +2854,7 @@ const handleSimulateCustomerDelivery = (ord) => {
               </div>
             </div>
 
-            <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+   <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm space-y-3">
               <div className="flex items-start justify-between space-x-2">
                 <div className="flex items-start space-x-2 flex-1">
                   <MapPin className="h-5 w-5 text-[#15803D] flex-shrink-0 mt-0.5" />
@@ -2487,7 +2897,7 @@ const handleSimulateCustomerDelivery = (ord) => {
     const dailyEssentialCats = categoriesList.filter((c) => c.isDailyEssential !== false).slice(0, 4);
     const activeCoupons = couponsList.filter((c) => c.active);
 
-const liveLat = trackingOrder?.driverLat || mapPinCoords.lat;
+    const liveLat = trackingOrder?.driverLat || mapPinCoords.lat;
     const liveLng = trackingOrder?.driverLng || mapPinCoords.lng;
     const isOutForCustomerDrop = trackingOrder?.status === 'Out for Delivery' || trackingOrder?.status === 'Delivered';
 
@@ -2529,7 +2939,6 @@ const liveLat = trackingOrder?.driverLat || mapPinCoords.lat;
 
         {activeTab === 'home' && (
           <main className="px-4 pt-3.5 space-y-4 text-xs">
-            {/* Top Bar: Location + Wallet */}
             <div className="flex items-center justify-between">
               <button
                 type="button"
@@ -2565,8 +2974,7 @@ const liveLat = trackingOrder?.driverLat || mapPinCoords.lat;
               </div>
             </div>
 
-            {/* 1. TOP PRODUCTS SEARCH BAR */}
-            <div className="bg-white border-2 border-emerald-100 rounded-2xl px-3.5 py-2.5 flex items-center shadow-sm">
+   <div className="bg-white border-2 border-emerald-100 rounded-2xl px-3.5 py-2.5 flex items-center shadow-sm">
               <Search className="h-4 w-4 text-[#15803D] mr-2 flex-shrink-0" />
               <input
                 type="text"
@@ -2580,7 +2988,6 @@ const liveLat = trackingOrder?.driverLat || mapPinCoords.lat;
               )}
             </div>
 
-            {/* 2. DAILY ESSENTIALS SECTION */}
             <section className="space-y-2">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-extrabold text-slate-900">Daily essentials</h2>
@@ -2609,7 +3016,6 @@ const liveLat = trackingOrder?.driverLat || mapPinCoords.lat;
               </div>
             </section>
 
-{/* 3. OFFERS AND COUPONS SECTION */}
             {activeCoupons.length > 0 && (
               <section className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -2647,7 +3053,6 @@ const liveLat = trackingOrder?.driverLat || mapPinCoords.lat;
               </section>
             )}
 
-            {/* 4. CATEGORIES GRID SECTION */}
             <section className="space-y-2">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-extrabold text-slate-900">Categories</h2>
@@ -2676,7 +3081,6 @@ const liveLat = trackingOrder?.driverLat || mapPinCoords.lat;
               </div>
             </section>
 
-            {/* 5. SECTION-WISE PRODUCTS LIST */}
             {selectedCat !== 'All' || search.trim() !== '' ? (
               <div className="space-y-2.5 pt-1">
                 <div className="flex items-center justify-between">
@@ -2726,7 +3130,7 @@ const liveLat = trackingOrder?.driverLat || mapPinCoords.lat;
           </main>
         )}
 
-        {activeTab === 'categories' && (
+{activeTab === 'categories' && (
           <main className="p-4 space-y-4 text-xs">
             <div className="flex items-center space-x-3">
               <button onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white shadow-sm">
@@ -2754,7 +3158,7 @@ const liveLat = trackingOrder?.driverLat || mapPinCoords.lat;
           </main>
         )}
 
-{activeTab === 'productDetail' && detailProduct && (
+        {activeTab === 'productDetail' && detailProduct && (
           <main className="bg-white min-h-screen pb-24 text-xs">
             <div className="relative h-64 w-full bg-slate-100">
               <img src={detailProduct.img} alt={detailProduct.nameEn} className="h-full w-full object-cover" />
@@ -2871,7 +3275,7 @@ const liveLat = trackingOrder?.driverLat || mapPinCoords.lat;
               </div>
             </div>
 
-   <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
+            <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
               <div className="flex items-center justify-between">
                 <h3 className="font-extrabold text-slate-900">Payment Method</h3>
                 <span className="text-[10px] font-bold text-[#15803D]">{merchantUpiId}</span>
@@ -2904,7 +3308,7 @@ const liveLat = trackingOrder?.driverLat || mapPinCoords.lat;
               {cardError && <p className="text-rose-600 font-bold">{cardError}</p>}
             </div>
 
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-1.5">
+  <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-1.5">
               <div className="flex justify-between"><span>Subtotal</span><span className="font-bold">₹{subtotal}</span></div>
               {autoTierDiscount > 0 && <div className="flex justify-between text-[#15803D] font-extrabold"><span>{autoTierLabel}</span><span>-₹{autoTierDiscount}</span></div>}
               {promoDeduction > 0 && <div className="flex justify-between text-[#15803D] font-extrabold"><span>Coupon ({appliedCouponObj.code})</span><span>-₹{promoDeduction}</span></div>}
@@ -3017,7 +3421,7 @@ const liveLat = trackingOrder?.driverLat || mapPinCoords.lat;
                 </div>
               )}
 
-{isOutForCustomerDrop ? (
+              {isOutForCustomerDrop ? (
                 <LiveScooterMap
                   lat={liveLat}
                   lng={liveLng}
@@ -3067,7 +3471,7 @@ const liveLat = trackingOrder?.driverLat || mapPinCoords.lat;
                 </div>
               </div>
 
-              {trackingOrder.status !== 'Delivered' ? (
+    {trackingOrder.status !== 'Delivered' ? (
                 <button onClick={() => handleSimulateCustomerDelivery(trackingOrder)} className="w-full bg-[#EA580C] text-white font-extrabold py-3.5 rounded-2xl shadow">
                   Complete Delivery (Auto Email Invoice PDF)
                 </button>
@@ -3137,7 +3541,7 @@ const liveLat = trackingOrder?.driverLat || mapPinCoords.lat;
     );
   }
 
-// =========================================================================
+ // =========================================================================
   // INDEPENDENT MULTI-VENDOR ORDER ALERTS & SEQUENTIAL PICKUP TRACKING
   // =========================================================================
   const renderBroadcastOrderAlertsAndPickupTracking = () => {
@@ -3256,7 +3660,7 @@ const liveLat = trackingOrder?.driverLat || mapPinCoords.lat;
           </div>
         )}
 
-   {myAcceptedStopCards.map(({ ord, st, isMyTurnForRiderPickup }) => {
+{myAcceptedStopCards.map(({ ord, st, isMyTurnForRiderPickup }) => {
           const rLat = ord.driverLat || 14.4390;
           const rLng = ord.driverLng || 79.9810;
           return (
@@ -3466,7 +3870,7 @@ const liveLat = trackingOrder?.driverLat || mapPinCoords.lat;
       ];
       const pickupStops = buildPickupStopsFromItems(itemsArr);
 
-      const newOrd = {
+const newOrd = {
         id: (isRetail ? 'RIT-' : 'WS-') + Math.floor(1000 + Math.random() * 8999),
         buyerId: currentUser.id,
         buyerRole: currentUser.role,
@@ -3500,7 +3904,7 @@ const liveLat = trackingOrder?.driverLat || mapPinCoords.lat;
       setActiveTab('orders');
     };
 
-return (
+    return (
       <div style={fontStyle} className="min-h-screen bg-[#F5F7F5] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
         <WelcomeSmileModal />
         {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-extrabold px-4 py-2 rounded-full shadow-lg">{toast}</div>}
@@ -3604,7 +4008,7 @@ return (
           </main>
         )}
 
-        {activeTab === 'orders' && (
+    {activeTab === 'orders' && (
           <main className="p-4 space-y-3 text-xs">
             <h2 className="text-base font-extrabold">{currentUser.role.toUpperCase()} Orders & Live Tracking</h2>
             {renderBroadcastOrderAlertsAndPickupTracking()}
@@ -3678,7 +4082,7 @@ return (
     );
   }
 
-  // =========================================================================
+// =========================================================================
   // 6. DELIVERY PARTNER PORTAL
   // =========================================================================
   if (currentUser.role === 'delivery') {
@@ -3807,7 +4211,7 @@ return (
                       </div>
                     </div>
 
-   <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-2">
+    <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-2">
                       <p className="text-[10px] font-extrabold text-slate-700 uppercase">
                         1. Farmer / Shop Pickup Stops ({stops.length}):
                       </p>
@@ -3940,8 +4344,8 @@ return (
     );
   }
 
-  // =========================================================================
-  // 7. MASTER ADMIN HQ (MANAGE CATALOGUE + MANAGE CATEGORIES + MANAGE COUPONS + APPROVALS)
+// =========================================================================
+  // 7. MASTER ADMIN & SUB-ADMIN HQ
   // =========================================================================
   const handleAdminCatalogPhotoUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -4075,17 +4479,44 @@ const handleSaveCoupon = (e) => {
     notify('Coupon Removed');
   };
 
+  const handleGrantSubAdminAccess = (e) => {
+    e.preventDefault();
+    const cleanM = subMobile.replace(/\D/g, '');
+    const cleanE = subEmail.trim().toLowerCase();
+    if (!subName.trim() || (!isValidIndianMobile(cleanM) && !isValidEmail(cleanE))) {
+      notify('Enter valid Sub-Admin Name and 10-digit Mobile or Email!');
+      return;
+    }
+    const newSub = {
+      id: 'sub_' + Date.now(),
+      name: subName.trim(),
+      mobile: cleanM,
+      email: cleanE,
+      permissions: subPermissions,
+      active: true,
+      grantedBy: currentUser.name,
+    };
+    setSubAdmins((prev) => [newSub, ...prev]);
+    setDoc(doc(db, 'subAdmins', newSub.id), newSub).catch(() => {});
+    setSubName('');
+    setSubMobile('');
+    setSubEmail('');
+    notify(`Sub-Admin Access Granted to ${newSub.name}!`);
+  };
+
   return (
     <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
       {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-extrabold px-4 py-2 rounded-full shadow-lg">{toast}</div>}
 
       <header className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white p-4 rounded-b-[28px] flex justify-between items-center shadow-md">
         <div>
-          <span className="text-[10px] bg-white/15 px-2 py-0.5 rounded font-extrabold uppercase">Master Admin HQ</span>
+          <span className="text-[10px] bg-white/15 px-2 py-0.5 rounded font-extrabold uppercase">
+            {isCurrentUserMasterAdmin ? 'Master Admin HQ' : 'Sub-Admin HQ'}
+          </span>
           <h1 className="text-base font-extrabold mt-0.5">Rythu Basket Control</h1>
         </div>
         <span className="bg-[#EAB308] text-slate-900 text-xs font-extrabold px-2.5 py-1 rounded-full">
-          Verified Admin
+          {isCurrentUserMasterAdmin ? 'Master Admin' : 'Sub-Admin'}
         </span>
       </header>
 
@@ -4118,11 +4549,78 @@ const handleSaveCoupon = (e) => {
               onClick={() => setAdminTab('approvals')}
               className={`py-2.5 rounded-xl font-extrabold border ${adminTab === 'approvals' ? 'bg-[#15803D] text-white border-[#15803D]' : 'bg-white text-slate-700'}`}
             >
-              Seller Approvals ({users.filter((u) => u.role !== 'customer' && u.role !== 'admin').length})
+              Approvals ({users.filter((u) => u.role !== 'customer' && u.role !== 'admin').length})
             </button>
           </div>
 
-{adminTab === 'catalogue' && (
+          {isCurrentUserMasterAdmin && (
+            <button
+              type="button"
+              onClick={() => setAdminTab('subadmins')}
+              className={`w-full py-2.5 rounded-xl font-extrabold border flex items-center justify-center space-x-1.5 ${
+                adminTab === 'subadmins' ? 'bg-slate-900 text-[#FDE047] border-slate-900' : 'bg-amber-50 text-amber-950 border-amber-300'
+              }`}
+            >
+              <UserPlus className="h-4 w-4" />
+              <span>Grant / Manage Sub-Admin Access ({subAdmins.length})</span>
+            </button>
+          )}
+
+   {adminTab === 'subadmins' && isCurrentUserMasterAdmin && (
+            <div className="space-y-3">
+              <form onSubmit={handleGrantSubAdminAccess} className="bg-white rounded-3xl p-4 shadow-sm border border-amber-300 space-y-2.5">
+                <h3 className="font-extrabold text-sm text-slate-900 flex items-center space-x-1.5">
+                  <UserPlus className="h-4 w-4 text-[#15803D]" />
+                  <span>Grant Sub-Admin Access to Staff / Partner</span>
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  Added person can login under <strong>Admin</strong> role using their Mobile or Email ID.
+                </p>
+                <input type="text" required value={subName} onChange={(e) => setSubName(e.target.value)} placeholder="Sub-Admin Full Name *" className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-bold" />
+                <div className="grid grid-cols-2 gap-2">
+                  <input type="tel" maxLength={10} value={subMobile} onChange={(e) => setSubMobile(e.target.value.replace(/\D/g, ''))} placeholder="Mobile Number (10 digits)" className="bg-slate-50 border rounded-xl px-3 py-2.5 font-bold" />
+                  <input type="email" value={subEmail} onChange={(e) => setSubEmail(e.target.value)} placeholder="Email ID (For OTP Reg)" className="bg-slate-50 border rounded-xl px-3 py-2.5 font-bold" />
+                </div>
+                <select value={subPermissions} onChange={(e) => setSubPermissions(e.target.value)} className="w-full bg-emerald-50/60 border border-emerald-200 rounded-xl px-3 py-2.5 font-extrabold text-[#15803D]">
+                  <option value="Catalogue, Categories, Coupons & Approvals">Access: Full Operations (Catalogue, Categories, Coupons, Approvals)</option>
+                  <option value="Catalogue & Categories Only">Access: Catalogue & Categories Only</option>
+                  <option value="Seller Approvals & Coupons">Access: Seller Approvals & Coupons</option>
+                </select>
+                <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow text-sm">
+                  + Grant Sub-Admin Access
+                </button>
+              </form>
+
+              <div className="space-y-2">
+                {subAdmins.length === 0 ? (
+                  <div className="bg-white rounded-2xl p-5 text-center text-slate-400 font-bold">No Sub-Admins added yet.</div>
+                ) : (
+                  subAdmins.map((sa) => (
+                    <div key={sa.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
+                      <div>
+                        <h4 className="font-extrabold text-slate-900">{sa.name}</h4>
+                        <p className="text-[10px] font-bold text-slate-500">{sa.mobile ? `+91 ${sa.mobile}` : ''} {sa.email ? `• ${sa.email}` : ''}</p>
+                        <p className="text-[10px] font-extrabold text-[#15803D] mt-0.5">{sa.permissions}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSubAdmins((prev) => prev.filter((x) => x.id !== sa.id));
+                          deleteDoc(doc(db, 'subAdmins', sa.id)).catch(() => {});
+                          notify(`Revoked Sub-Admin access for ${sa.name}`);
+                        }}
+                        className="p-2 text-rose-600 bg-rose-50 rounded-xl font-extrabold text-[10px]"
+                      >
+                        Revoke
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {adminTab === 'catalogue' && (
             <div className="space-y-3">
               <form onSubmit={handleAddMasterCatalogItem} className="bg-white rounded-3xl p-4 shadow-sm border border-emerald-100 space-y-3">
                 <div className="flex items-center space-x-1.5 font-extrabold text-[#15803D] text-sm">
@@ -4214,7 +4712,7 @@ const handleSaveCoupon = (e) => {
             </div>
           )}
 
-  {adminTab === 'categories' && (
+{adminTab === 'categories' && (
             <div className="space-y-3">
               <form onSubmit={handleSaveCategory} className="bg-white rounded-3xl p-4 shadow-sm border border-emerald-100 space-y-3">
                 <div className="flex items-center justify-between">
@@ -4334,7 +4832,7 @@ const handleSaveCoupon = (e) => {
             </div>
           )}
 
-{adminTab === 'coupons' && (
+   {adminTab === 'coupons' && (
             <div className="space-y-3">
               <form onSubmit={handleSaveCoupon} className="bg-white rounded-3xl p-4 shadow-sm border border-amber-200 space-y-3">
                 <div className="flex items-center justify-between">
