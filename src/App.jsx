@@ -3586,7 +3586,7 @@ const dailyEssentialCats = categoriesList.filter((c) => c.isDailyEssential !== f
           </main>
         )}
 
-        {activeTab === 'orders' && (
+                {activeTab === 'orders' && (
           <main className="p-4 space-y-3.5 text-xs">
             {broadcastOffers.length > 0 && (
               <div className="space-y-2">
@@ -3603,6 +3603,7 @@ const dailyEssentialCats = categoriesList.filter((c) => c.isDailyEssential !== f
                 ))}
               </div>
             )}
+
 
             <h2 className="text-base font-extrabold text-slate-900">My Orders</h2>
             {orders.filter((o) => o.buyerRole === 'customer').length === 0 ? (
