@@ -858,15 +858,30 @@ const [masterCatalog, setMasterCatalog] = useState(() => {
       () => {}
     );
 
-const unsubBroadcasts = onSnapshot(
+    let isFirstBroadcastLoad = true;
+    const unsubBroadcasts = onSnapshot(
       collection(db, 'broadcastOffers'),
       (snapshot) => {
         const list = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
         list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
         setBroadcastOffers(list);
+
+        if (!isFirstBroadcastLoad && list.length > 0) {
+          const latest = list[0];
+          const isForMe = !latest.targetUserId || latest.targetUserId === currentUser?.id;
+          if (isForMe && 'Notification' in window && Notification.permission === 'granted') {
+            new Notification(`Rythu Basket • ${latest.tag}`, {
+              body: latest.message,
+              icon: '/icon-512.png',
+              badge: '/icon-192.png',
+            });
+          }
+        }
+        isFirstBroadcastLoad = false;
       },
       () => {}
     );
+
 
     return () => {
       unsubOrders();
