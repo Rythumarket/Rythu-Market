@@ -4568,7 +4568,7 @@ return (
       img: finalImg,
     };
 
-    const nextList = editingCatId
+const nextList = editingCatId
       ? categoriesList.map((c) => (c.id === editingCatId ? catObj : c))
       : [catObj, ...categoriesList];
 
@@ -4577,7 +4577,7 @@ return (
       setDoc(doc(db, 'categories', item.id), item).catch(() => {});
     });
 
-setEditingCatId(null);
+    setEditingCatId(null);
     setNewCatEn('');
     setNewCatTe('');
     setNewCatImgPreview('');
@@ -4585,7 +4585,7 @@ setEditingCatId(null);
     notify(editingCatId ? 'Category Updated Across All Pages!' : 'New Category Added!');
   };
 
-const handleDeleteCategory = (catId) => {
+  const handleDeleteCategory = (catId) => {
     setCategoriesList((prev) => prev.filter((c) => c.id !== catId));
     deleteDoc(doc(db, 'categories', catId)).catch(() => {});
     notify('Category Deleted');
@@ -4656,7 +4656,6 @@ const handleDeleteCategory = (catId) => {
 return (
     <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
       {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-extrabold px-4 py-2 rounded-full shadow-lg">{toast}</div>}
-
       <header className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white p-4 rounded-b-[28px] flex justify-between items-center shadow-md">
         <div>
           <span className="text-[10px] bg-white/15 px-2 py-0.5 rounded font-extrabold uppercase">
@@ -4729,7 +4728,7 @@ return (
             </button>
           )}
 
-{/* A. SEND OFFER NOTIFICATION TO ALL REGISTERED USERS */}
+   {/* A. SEND OFFER NOTIFICATION TO ALL REGISTERED USERS */}
           {adminTab === 'broadcast' && (
             <div className="space-y-3">
               <div className="bg-white p-4 rounded-3xl border border-orange-200 shadow-sm space-y-2.5">
@@ -4761,6 +4760,20 @@ return (
                     };
                     setBroadcastOffers((prev) => [newOffer, ...prev]);
                     setDoc(doc(db, 'broadcastOffers', newOffer.id), newOffer).catch(() => {});
+
+                    const allTokens = users.map((u) => u.fcmToken).filter(Boolean);
+                    if (allTokens.length > 0) {
+                      fetch('/api/send-push', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          tokens: allTokens,
+                          title: `Rythu Basket • ${newOffer.tag}`,
+                          body: newOffer.message,
+                        }),
+                      }).catch(() => {});
+                    }
+
                     setPromoMsgText('');
                     notify('Offer App Notification Sent to All Users!');
                   }}
@@ -4770,7 +4783,7 @@ return (
                 </button>
               </div>
 
- {broadcastOffers.map((bo) => (
+              {broadcastOffers.map((bo) => (
                 <div key={bo.id} className="bg-white p-3 rounded-2xl border flex items-center justify-between">
                   <div>
                     <span className="text-[9px] font-extrabold bg-amber-100 text-amber-900 px-2 py-0.5 rounded">{bo.tag}</span>
@@ -4792,7 +4805,7 @@ return (
             </div>
           )}
 
-{/* B. CREDIT CUSTOMER WALLET + DIRECT IN-APP & PUSH NOTIFICATION (LIKE ZEPTO / BIGBASKET) */}
+   {/* B. CREDIT CUSTOMER WALLET + DIRECT IN-APP & PUSH NOTIFICATION (LIKE ZEPTO / BIGBASKET) */}
           {adminTab === 'walletCredit' && (
             <div className="space-y-3 bg-white p-4 rounded-3xl border border-emerald-200 shadow-sm">
               <h3 className="font-extrabold text-sm text-[#15803D]">Credit Cashback / Bonus to Customer Wallet</h3>
@@ -4859,6 +4872,18 @@ return (
                   setBroadcastOffers((prev) => [walletAlertObj, ...prev]);
                   await setDoc(doc(db, 'broadcastOffers', walletAlertObj.id), walletAlertObj).catch(() => {});
 
+                  if (targetUser.fcmToken) {
+                    fetch('/api/send-push', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        tokens: [targetUser.fcmToken],
+                        title: `Rythu Basket • ₹${amt} Wallet Credited!`,
+                        body: walletAlertObj.message,
+                      }),
+                    }).catch(() => {});
+                  }
+
                   notify(`₹${amt} Credited & App Notification Sent to ${targetUser.name}!`);
                 }}
                 className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow text-sm"
@@ -4868,7 +4893,7 @@ return (
             </div>
           )}
 
-{adminTab === 'subadmins' && isCurrentUserMasterAdmin && (
+   {adminTab === 'subadmins' && isCurrentUserMasterAdmin && (
             <div className="space-y-3">
               <form onSubmit={handleGrantSubAdminAccess} className="bg-white rounded-3xl p-4 shadow-sm border border-amber-300 space-y-2.5">
                 <h3 className="font-extrabold text-sm text-slate-900 flex items-center space-x-1.5">
@@ -4950,7 +4975,7 @@ return (
                   />
                 </div>
 
-<div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <select value={catCategory} onChange={(e) => setCatCategory(e.target.value)} className="bg-slate-50 border rounded-xl px-3 py-2.5 font-extrabold">
                     {categoriesList.map((c) => (
                       <option key={c.id} value={c.labelEn}>{c.labelEn}</option>
@@ -4983,7 +5008,8 @@ return (
                   className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-semibold text-[11px]"
                 />
 
-                <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow text-sm">
+
+ <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow text-sm">
                   + Save to Master Catalogue
                 </button>
               </form>
@@ -5035,7 +5061,7 @@ return (
                   )}
                 </div>
 
-<div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <input
                     type="text"
                     required
@@ -5076,7 +5102,7 @@ return (
                   <input type="file" accept="image/*" onChange={handleAdminCategoryPhotoUpload} className="hidden" />
                 </label>
 
-                <input
+  <input
                   type="url"
                   value={newCatImgUrl}
                   onChange={(e) => setNewCatImgUrl(e.target.value)}
@@ -5131,7 +5157,7 @@ return (
             </div>
           )}
 
-{adminTab === 'coupons' && (
+          {adminTab === 'coupons' && (
             <div className="space-y-3">
               <form onSubmit={handleSaveCoupon} className="bg-white rounded-3xl p-4 shadow-sm border border-amber-200 space-y-3">
                 <div className="flex items-center justify-between">
@@ -5153,7 +5179,7 @@ return (
                   )}
                 </div>
 
-<div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <input
                     type="text"
                     required
@@ -5180,7 +5206,7 @@ return (
                   className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-bold"
                 />
 
-                <div className="grid grid-cols-2 gap-2">
+  <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="text-[10px] font-bold text-slate-400">Discount Amount (₹)</label>
                     <input
@@ -5203,7 +5229,7 @@ return (
                   </div>
                 </div>
 
-<button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow text-sm">
+                <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow text-sm">
                   {editingCouponId ? 'Update Coupon' : '+ Publish Coupon to Customer Page'}
                 </button>
               </form>
@@ -5261,7 +5287,7 @@ return (
             </div>
           )}
 
-{adminTab === 'approvals' && (
+          {adminTab === 'approvals' && (
             <div className="space-y-2.5">
               {users
                 .filter((u) => u.role === 'farmer' || u.role === 'wholesale' || u.role === 'retail')
@@ -5288,7 +5314,6 @@ return (
           )}
         </main>
       )}
-
       {activeTab === 'profile' && renderSharedProfileTab()}
 
       <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-12 py-2.5 flex justify-between items-center z-40">
