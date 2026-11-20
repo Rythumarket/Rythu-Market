@@ -10,7 +10,6 @@ import {
   TrendingUp, Package, HelpCircle, Navigation, Camera, Landmark, Volume2, VolumeX, Trash2, Image,
   Heart, UserPlus
 } from 'lucide-react';
-import { db } from './firebase';
 import { collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 
 // EmailJS Credentials
