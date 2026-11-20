@@ -327,6 +327,18 @@ const [showPermissionPrompt, setShowPermissionPrompt] = useState(() => {
     } catch {}
   }, [currentUser]);
 
+  // Save Device FCM Push Token to Firestore when user logs in
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    requestFcmDeviceToken().then((fcmToken) => {
+      if (fcmToken && fcmToken !== currentUser.fcmToken) {
+        setCurrentUser((prev) => (prev ? { ...prev, fcmToken } : prev));
+        updateDoc(doc(db, 'users', currentUser.id), { fcmToken }).catch(() => {});
+      }
+    });
+  }, [currentUser?.id]);
+
+
   const [lang, setLang] = useState('te');
   const [users, setUsers] = useState(() => {
     try {
