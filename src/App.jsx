@@ -4540,7 +4540,7 @@ return (
     }
   };
 
-const handleSaveCategory = (e) => {
+  const handleSaveCategory = (e) => {
     e.preventDefault();
     if (!newCatEn.trim()) return;
     const finalImg =
@@ -4565,7 +4565,7 @@ const handleSaveCategory = (e) => {
       setDoc(doc(db, 'categories', item.id), item).catch(() => {});
     });
 
-    setEditingCatId(null);
+setEditingCatId(null);
     setNewCatEn('');
     setNewCatTe('');
     setNewCatImgPreview('');
@@ -4717,6 +4717,7 @@ return (
             </button>
           )}
 
+          {/* A. SEND OFFER NOTIFICATION TO ALL REGISTERED USERS */}
           {adminTab === 'broadcast' && (
             <div className="space-y-3">
               <div className="bg-white p-4 rounded-3xl border border-orange-200 shadow-sm space-y-2.5">
@@ -4749,15 +4750,15 @@ return (
                     setBroadcastOffers((prev) => [newOffer, ...prev]);
                     setDoc(doc(db, 'broadcastOffers', newOffer.id), newOffer).catch(() => {});
                     setPromoMsgText('');
-                    notify('Offer Notification Sent to All Users!');
+                    notify('Offer App Notification Sent to All Users!');
                   }}
                   className="w-full bg-[#EA580C] text-white font-extrabold py-3 rounded-2xl shadow text-sm"
                 >
-                  Send Notification to All Users 🔔
+                  Send App Notification to All Users 🔔
                 </button>
               </div>
 
-              {broadcastOffers.map((bo) => (
+ {broadcastOffers.map((bo) => (
                 <div key={bo.id} className="bg-white p-3 rounded-2xl border flex items-center justify-between">
                   <div>
                     <span className="text-[9px] font-extrabold bg-amber-100 text-amber-900 px-2 py-0.5 rounded">{bo.tag}</span>
@@ -4779,7 +4780,8 @@ return (
             </div>
           )}
 
-{adminTab === 'walletCredit' && (
+          {/* B. CREDIT CUSTOMER WALLET + DIRECT IN-APP & PUSH NOTIFICATION (LIKE ZEPTO / BIGBASKET) */}
+          {adminTab === 'walletCredit' && (
             <div className="space-y-3 bg-white p-4 rounded-3xl border border-emerald-200 shadow-sm">
               <h3 className="font-extrabold text-sm text-[#15803D]">Credit Cashback / Bonus to Customer Wallet</h3>
               <select
@@ -4814,31 +4816,47 @@ return (
 
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
                   const targetUser = users.find((u) => u.id === walletUserId);
                   const amt = Number(walletCreditAmt);
                   if (!targetUser || amt <= 0) {
                     notify('Select a customer and enter valid amount!');
                     return;
                   }
-                  const newWalletBal = (targetUser.wallet || 0) + amt;
-                  setUsers((prev) => prev.map((u) => (u.id === targetUser.id ? { ...u, wallet: newWalletBal } : u)));
-                  updateDoc(doc(db, 'users', targetUser.id), { wallet: newWalletBal }).catch(() => {});
+                  const newWalletBal = Number(targetUser.wallet || 0) + amt;
 
-                  const waText = encodeURIComponent(
-                    `Namaste ${targetUser.name}! ₹${amt} has been credited to your Rythu Basket Wallet (${walletReason}). Updated Balance: ₹${newWalletBal}. Order fresh now: https://rythu-market.vercel.app`
+                  // 1. Update Customer Wallet Live in Firestore
+                  setUsers((prev) =>
+                    prev.map((u) => (u.id === targetUser.id ? { ...u, wallet: newWalletBal } : u))
                   );
-                  notify(`₹${amt} Credited to ${targetUser.name}'s Wallet!`);
-                  window.open(`https://wa.me/91${targetUser.mobile}?text=${waText}`, '_blank');
+                  await setDoc(
+                    doc(db, 'users', targetUser.id),
+                    { ...targetUser, wallet: newWalletBal },
+                    { merge: true }
+                  ).catch(() => {});
+
+                  // 2. Send Direct App Push & In-App Notification (Like Zepto / BigBasket)
+                  const walletAlertObj = {
+                    id: 'bo_' + Date.now(),
+                    tag: 'WALLET CREDITED ₹' + amt,
+                    targetUserId: targetUser.id,
+                    message: `Namaste ${targetUser.name}! ₹${amt} credited to your Rythu Basket Wallet (${walletReason}). Updated Balance: ₹${newWalletBal}.`,
+                    createdAt: Date.now(),
+                    date: new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
+                  };
+                  setBroadcastOffers((prev) => [walletAlertObj, ...prev]);
+                  await setDoc(doc(db, 'broadcastOffers', walletAlertObj.id), walletAlertObj).catch(() => {});
+
+                  notify(`₹${amt} Credited & App Notification Sent to ${targetUser.name}!`);
                 }}
                 className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow text-sm"
               >
-                Credit Wallet & Send WhatsApp Alert 💬
+                Credit Wallet & Send App Notification 🔔
               </button>
             </div>
           )}
 
-          {adminTab === 'subadmins' && isCurrentUserMasterAdmin && (
+{adminTab === 'subadmins' && isCurrentUserMasterAdmin && (
             <div className="space-y-3">
               <form onSubmit={handleGrantSubAdminAccess} className="bg-white rounded-3xl p-4 shadow-sm border border-amber-300 space-y-2.5">
                 <h3 className="font-extrabold text-sm text-slate-900 flex items-center space-x-1.5">
@@ -4920,7 +4938,7 @@ return (
                   />
                 </div>
 
-   <div className="grid grid-cols-2 gap-2">
+ <div className="grid grid-cols-2 gap-2">
                   <select value={catCategory} onChange={(e) => setCatCategory(e.target.value)} className="bg-slate-50 border rounded-xl px-3 py-2.5 font-extrabold">
                     {categoriesList.map((c) => (
                       <option key={c.id} value={c.labelEn}>{c.labelEn}</option>
@@ -5005,7 +5023,7 @@ return (
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
+   <div className="grid grid-cols-2 gap-2">
                   <input
                     type="text"
                     required
@@ -5046,7 +5064,7 @@ return (
                   <input type="file" accept="image/*" onChange={handleAdminCategoryPhotoUpload} className="hidden" />
                 </label>
 
-<input
+                <input
                   type="url"
                   value={newCatImgUrl}
                   onChange={(e) => setNewCatImgUrl(e.target.value)}
@@ -5123,7 +5141,7 @@ return (
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
+<div className="grid grid-cols-2 gap-2">
                   <input
                     type="text"
                     required
@@ -5178,7 +5196,7 @@ return (
                 </button>
               </form>
 
-<div className="space-y-2">
+              <div className="space-y-2">
                 {couponsList.map((cp) => (
                   <div key={cp.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
                     <div>
@@ -5231,7 +5249,7 @@ return (
             </div>
           )}
 
-          {adminTab === 'approvals' && (
+{adminTab === 'approvals' && (
             <div className="space-y-2.5">
               {users
                 .filter((u) => u.role === 'farmer' || u.role === 'wholesale' || u.role === 'retail')
