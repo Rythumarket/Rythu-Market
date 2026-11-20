@@ -288,7 +288,7 @@ export default function App() {
     }
   }, []);
 
-  const [showPermissionPrompt, setShowPermissionPrompt] = useState(() => {
+const [showPermissionPrompt, setShowPermissionPrompt] = useState(() => {
     try {
       return localStorage.getItem('rythu_permissions_granted') !== 'true';
     } catch {
@@ -325,7 +325,7 @@ export default function App() {
     } catch {}
   }, [currentUser]);
 
-const [lang, setLang] = useState('te');
+  const [lang, setLang] = useState('te');
   const [users, setUsers] = useState(() => {
     try {
       const saved = localStorage.getItem('rythu_registered_users');
@@ -392,7 +392,7 @@ const [lang, setLang] = useState('te');
     }
   });
 
-  const [masterCatalog, setMasterCatalog] = useState(() => {
+const [masterCatalog, setMasterCatalog] = useState(() => {
     try {
       const saved = localStorage.getItem('rythu_master_catalog');
       return saved ? JSON.parse(saved) : DEFAULT_MASTER_CATALOG;
@@ -483,7 +483,7 @@ const [lang, setLang] = useState('te');
   const [regOtpInput, setRegOtpInput] = useState('');
   const [showWelcomeSmile, setShowWelcomeSmile] = useState(false);
 
-// Profile Edit & Extra Section Drawer
+  // Profile Edit & Extra Section Drawer
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileSubView, setProfileSubView] = useState(null);
   const [wishlistIds, setWishlistIds] = useState(['p1', 'p3']);
@@ -516,7 +516,7 @@ const [lang, setLang] = useState('te');
   const [isEditingPinText, setIsEditingPinText] = useState(false);
   const [isLocatingGps, setIsLocatingGps] = useState(false);
 
-  // Cart starts empty ({})
+// Cart starts empty ({})
   const [cart, setCart] = useState({});
   const [useWalletBalance] = useState(false);
   const [promoInput, setPromoInput] = useState('');
@@ -592,7 +592,7 @@ const [lang, setLang] = useState('te');
   const [scratchMax] = useState(25);
   const [offersEnabled] = useState(true);
 
-  // 15-Second Ringtone Alert Controller
+// 15-Second Ringtone Alert Controller
   const [isRinging, setIsRinging] = useState(false);
   const lastRungKeyRef = useRef(null);
   const ringTimerRef = useRef(null);
@@ -655,7 +655,7 @@ const [lang, setLang] = useState('te');
     [currentUser]
   );
 
-useEffect(() => {
+  useEffect(() => {
     if (!currentUser || !['farmer', 'wholesale', 'retail'].includes(currentUser.role)) {
       stopAlertRingtone();
       return;
@@ -678,7 +678,7 @@ useEffect(() => {
     setTimeout(() => setToast(''), 3500);
   };
 
-  // Hardware Back Button Handler
+// Hardware Back Button Handler
   const handleHardwareBack = useCallback(() => {
     if (sharedInvoiceData) {
       window.history.replaceState({}, '', '/');
@@ -830,7 +830,7 @@ useEffect(() => {
       () => {}
     );
 
-const unsubUsers = onSnapshot(
+    const unsubUsers = onSnapshot(
       collection(db, 'users'),
       (snapshot) => {
         if (!snapshot.empty) {
@@ -858,7 +858,7 @@ const unsubUsers = onSnapshot(
       () => {}
     );
 
-    const unsubBroadcasts = onSnapshot(
+const unsubBroadcasts = onSnapshot(
       collection(db, 'broadcastOffers'),
       (snapshot) => {
         const list = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
@@ -955,7 +955,7 @@ const unsubUsers = onSnapshot(
       year: 'numeric',
     });
 
-    const rowsHtml = ord.items
+const rowsHtml = ord.items
       .map(
         (i, idx) => `
         <tr>
@@ -1016,7 +1016,7 @@ const unsubUsers = onSnapshot(
       </div>
     `;
 
-const invoicePayload = encodeURIComponent(
+    const invoicePayload = encodeURIComponent(
       JSON.stringify({
         id: ord.id,
         date: invoiceDate,
@@ -1048,7 +1048,7 @@ const invoicePayload = encodeURIComponent(
     } catch {}
   };
 
-  const verifyEmailOtpCode = (enteredCode) => {
+const verifyEmailOtpCode = (enteredCode) => {
     if (!generatedEmailOtp || Date.now() > emailOtpExpiry) {
       setAuthMsg('OTP expired or not requested. Please tap Resend OTP.');
       return false;
@@ -1142,7 +1142,7 @@ const invoicePayload = encodeURIComponent(
     if (ok) setRegOtpSent(true);
   };
 
-  const handleCompleteRegistration = (e) => {
+const handleCompleteRegistration = (e) => {
     e.preventDefault();
     if (!verifyEmailOtpCode(regOtpInput)) return;
 
@@ -1155,7 +1155,7 @@ const invoicePayload = encodeURIComponent(
         ? `${regHouseNo}, ${regStreetArea}, ${regVillage}, ${regDistrict}, ${regState} - ${regPinCode}`.replace(/^,\s*/g, '')
         : `${regAddress || regVillage}, ${regMandal ? regMandal + ', ' : ''}${regDistrict}, ${regState} - ${regPinCode}`;
 
-const newUser = {
+    const newUser = {
       id: 'u_' + Date.now(),
       role: selectedRole,
       profilePhoto: regProfilePhoto || '',
@@ -1240,7 +1240,7 @@ const newUser = {
     }
   };
 
-  const fetchAddressFromCoords = async (lat, lng) => {
+const fetchAddressFromCoords = async (lat, lng) => {
     try {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
@@ -1257,7 +1257,7 @@ const newUser = {
     setMapPinFullAddress(`Lat ${lat.toFixed(5)}, Lng ${lng.toFixed(5)}, Nellore, Andhra Pradesh`);
   };
 
-const handleUseCurrentLocationMap = () => {
+  const handleUseCurrentLocationMap = () => {
     setIsLocatingGps(true);
     setIsEditingPinText(false);
     setActiveTab('mapPin');
@@ -1337,7 +1337,7 @@ const handleUseCurrentLocationMap = () => {
     setFImg(item.img);
   };
 
-  const handlePublishRoleProduct = (e, roleSource) => {
+const handlePublishRoleProduct = (e, roleSource) => {
     e.preventDefault();
     if (!fNameEn.trim() || !fPrice) return;
     const baseRate = Number(fPrice);
@@ -1428,7 +1428,7 @@ const handleUseCurrentLocationMap = () => {
             </select>
           </div>
 
-    <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-0.5">
+          <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-0.5">
             {filteredSellerCatalog.map((item) => {
               const isSel = selectedCatalogId === item.id;
               return (
@@ -1449,7 +1449,7 @@ const handleUseCurrentLocationMap = () => {
           </div>
         </div>
 
-        <div className="flex items-center space-x-2.5 bg-emerald-50/50 border border-emerald-200 rounded-2xl p-2.5">
+<div className="flex items-center space-x-2.5 bg-emerald-50/50 border border-emerald-200 rounded-2xl p-2.5">
           <img src={fImg} alt={fNameEn} className="h-12 w-12 rounded-xl object-cover flex-shrink-0 bg-white" />
           <div className="grid grid-cols-2 gap-1.5 flex-1">
             <input
@@ -1560,7 +1560,7 @@ const handleUseCurrentLocationMap = () => {
           </div>
         </div>
 
-        <table className="w-full text-xs border-collapse border border-slate-200">
+<table className="w-full text-xs border-collapse border border-slate-200">
           <thead>
             <tr className="bg-[#15803D] text-white">
               <th className="p-2 text-left">#</th>
@@ -1655,7 +1655,7 @@ const handleUseCurrentLocationMap = () => {
           </div>
         )}
 
-        <div className="bg-gradient-to-b from-[#0E5A2B] via-[#15803D] to-[#4ADE80]/30 text-white rounded-b-[36px] px-4 pt-4 pb-6 shadow-lg relative overflow-hidden">
+<div className="bg-gradient-to-b from-[#0E5A2B] via-[#15803D] to-[#4ADE80]/30 text-white rounded-b-[36px] px-4 pt-4 pb-6 shadow-lg relative overflow-hidden">
           <div className="flex items-center justify-between relative z-10">
             <div className="flex items-center space-x-2.5">
               <div className="h-12 w-12 rounded-full bg-white p-0.5 border-2 border-[#EAB308] shadow overflow-hidden flex-shrink-0">
@@ -1754,7 +1754,7 @@ const handleUseCurrentLocationMap = () => {
           })}
         </div>
 
-<div className="px-3.5 pt-3.5">
+        <div className="px-3.5 pt-3.5">
           <div className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white rounded-2xl p-3.5 shadow-md flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="h-11 w-11 rounded-full bg-white/15 border border-white/25 flex items-center justify-center flex-shrink-0">
@@ -1775,7 +1775,7 @@ const handleUseCurrentLocationMap = () => {
           </div>
         </div>
 
-        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0D4A24] text-white px-6 py-2.5 rounded-t-3xl flex justify-center items-center z-40 shadow-2xl">
+<nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0D4A24] text-white px-6 py-2.5 rounded-t-3xl flex justify-center items-center z-40 shadow-2xl">
           <button
             type="button"
             onClick={() => setSelectedRole(null)}
@@ -1863,7 +1863,7 @@ const handleUseCurrentLocationMap = () => {
       </div>
     );
 
-    return (
+return (
       <div style={fontStyle} className="min-h-screen bg-[#F4F8F4] max-w-md mx-auto text-slate-800 shadow-2xl pb-12">
         {toast && (
           <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-xl text-center">
@@ -1895,7 +1895,7 @@ const handleUseCurrentLocationMap = () => {
               </p>
             </div>
 
-<form onSubmit={handleDirectLogin} className="p-6 space-y-3.5 text-xs">
+            <form onSubmit={handleDirectLogin} className="p-6 space-y-3.5 text-xs">
               <div className="flex items-center border border-slate-200 rounded-2xl px-3.5 py-3.5 bg-slate-50">
                 <User className="h-4 w-4 text-slate-400 mr-2.5 flex-shrink-0" />
                 <input
@@ -1979,7 +1979,7 @@ const handleUseCurrentLocationMap = () => {
               </div>
             </div>
 
-            <form onSubmit={handleCompleteRegistration} className="p-4 space-y-2.5 text-xs">
+   <form onSubmit={handleCompleteRegistration} className="p-4 space-y-2.5 text-xs">
               {selectedRole === 'customer' && (
                 <>
                   <label className="block border-2 border-dashed border-emerald-300 bg-white rounded-2xl p-3 text-center cursor-pointer">
@@ -2045,7 +2045,7 @@ const handleUseCurrentLocationMap = () => {
                 </>
               )}
 
-{selectedRole === 'wholesale' && (
+              {selectedRole === 'wholesale' && (
                 <>
                   <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Business Name *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
                   <input type="text" required value={regOwnerName} onChange={(e) => setRegOwnerName(e.target.value)} placeholder="Owner Name *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
@@ -2108,7 +2108,7 @@ const handleUseCurrentLocationMap = () => {
                 </>
               )}
 
-              {selectedRole === 'delivery' && (
+{selectedRole === 'delivery' && (
                 <>
                   <label className="block border-2 border-dashed border-emerald-400 bg-white rounded-2xl p-3 text-center cursor-pointer">
                     {regProfilePhoto ? (
@@ -2320,7 +2320,7 @@ const WelcomeSmileModal = () =>
           ]
         : r === 'delivery'
         ? [
-            { label: 'Available Orders', action: () => setActiveTab('home') },
+{ label: 'Available Orders', action: () => setActiveTab('home') },
             { label: 'My Deliveries', action: () => setActiveTab('home') },
             { label: 'Pickup History', action: () => setProfileSubView('Pickup History') },
             { label: 'Delivery History', action: () => setProfileSubView('Delivery History') },
@@ -2336,7 +2336,7 @@ const WelcomeSmileModal = () =>
             { label: 'Help & Support', action: () => setProfileSubView('Help & Support') },
           ];
 
-return (
+    return (
       <div className="p-4 space-y-3.5 text-xs">
         <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
           <div className="flex items-center space-x-3.5 min-w-0">
@@ -2465,7 +2465,7 @@ return (
           </div>
         )}
 
-        {profileSubView && (
+  {profileSubView && (
           <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-3.5 space-y-2">
             <div className="flex items-center justify-between">
               <h4 className="font-extrabold text-[#0F5132]">{profileSubView}</h4>
@@ -2495,7 +2495,7 @@ return (
           </div>
         )}
 
-<div className="bg-white rounded-3xl p-2 shadow-sm border border-slate-100 divide-y divide-slate-100">
+        <div className="bg-white rounded-3xl p-2 shadow-sm border border-slate-100 divide-y divide-slate-100">
           {roleMenuOptions.map((opt) => (
             <button
               key={opt.label}
@@ -2558,7 +2558,7 @@ return (
         ? 20
         : 5;
 
-    const paymentAppLaunchUrl = buildPaymentLaunchUrl(payMode, merchantUpiId, payableTotal);
+const paymentAppLaunchUrl = buildPaymentLaunchUrl(payMode, merchantUpiId, payableTotal);
 
     const handleApplyCouponCode = (codeStr) => {
       const clean = codeStr.trim().toUpperCase();
@@ -2576,7 +2576,7 @@ return (
       notify(`Coupon ${found.code} Applied (-₹${found.discount})!`);
     };
 
-  // DIRECT ORDER PLACEMENT & AUTOMATIC JUMP TO LIVE TRACKING
+    // DIRECT ORDER PLACEMENT & AUTOMATIC JUMP TO LIVE TRACKING
     const finalizeAndOpenOrderTracking = () => {
       const itemsArr = Object.entries(cart)
         .map(([id, qty]) => {
@@ -2675,7 +2675,7 @@ return (
       }, 600);
     };
 
-    const renderCustomerProductCard = (p) => {
+const renderCustomerProductCard = (p) => {
       const q = cart[p.id] || 0;
       const isFarmerItem = (p.postedByRole || 'farmer') === 'farmer';
       const isWished = wishlistIds.includes(p.id);
@@ -2746,7 +2746,7 @@ return (
       );
     };
 
-const renderHorizontalSuggestionsBox = () => (
+    const renderHorizontalSuggestionsBox = () => (
       <section className="bg-emerald-50/80 border-2 border-[#15803D]/30 rounded-2xl p-3 space-y-2 shadow-sm">
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-extrabold text-[#0F5132]">Suggested in {selectedCat}</h3>
@@ -2791,7 +2791,7 @@ const renderHorizontalSuggestionsBox = () => (
           a.full.toLowerCase().includes(locSearch.toLowerCase())
       );
 
-      return (
+return (
         <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto text-slate-800 shadow-2xl pb-10">
           <div className="bg-[#0F5132] px-4 py-4 text-white flex items-center space-x-3 rounded-b-3xl shadow">
             <button type="button" onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white/15">
@@ -2851,7 +2851,7 @@ const renderHorizontalSuggestionsBox = () => (
       );
     }
 
-if (activeTab === 'mapPin') {
+    if (activeTab === 'mapPin') {
       return (
         <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto text-slate-800 shadow-2xl pb-10">
           <div className="bg-[#0F5132] px-4 py-4 text-white flex items-center space-x-3 rounded-b-3xl shadow">
@@ -2928,7 +2928,7 @@ if (activeTab === 'mapPin') {
         p.cat.toLowerCase().includes(q)
     );
 
-    const dailyEssentialCats = categoriesList.filter((c) => c.isDailyEssential !== false).slice(0, 4);
+const dailyEssentialCats = categoriesList.filter((c) => c.isDailyEssential !== false).slice(0, 4);
     const activeCoupons = couponsList.filter((c) => c.active);
 
     const liveLat = trackingOrder?.driverLat || mapPinCoords.lat;
@@ -2971,7 +2971,7 @@ if (activeTab === 'mapPin') {
           </div>
         )}
 
-   {activeTab === 'home' && (
+        {activeTab === 'home' && (
           <main className="px-4 pt-3.5 space-y-4 text-xs">
             <div className="flex items-center justify-between">
               <button
@@ -3067,7 +3067,7 @@ if (activeTab === 'mapPin') {
               </div>
             </section>
 
-     {/* HORIZONTAL SUGGESTIONS DIRECTLY BELOW DAILY ESSENTIALS WHEN SELECTED HERE */}
+{/* HORIZONTAL SUGGESTIONS DIRECTLY BELOW DAILY ESSENTIALS WHEN SELECTED HERE */}
             {selectedCat !== 'All' && selectedCatSource === 'daily' && renderHorizontalSuggestionsBox()}
 
             {activeCoupons.length > 0 && (
@@ -3284,7 +3284,7 @@ if (activeTab === 'mapPin') {
           )
         )}
 
-{activeTab === 'productDetail' && detailProduct && (
+        {activeTab === 'productDetail' && detailProduct && (
           <main className="bg-white min-h-screen pb-24 text-xs">
             <div className="relative h-64 w-full bg-slate-100">
               <img src={detailProduct.img} alt={detailProduct.nameEn} className="h-full w-full object-cover" />
@@ -3365,7 +3365,7 @@ if (activeTab === 'mapPin') {
           </main>
         )}
 
-  {activeTab === 'checkout' && (
+{activeTab === 'checkout' && (
           <main className="p-4 space-y-3.5 text-xs">
             <div className="flex items-center space-x-3">
               <button onClick={() => setActiveTab('cart')} className="p-2 rounded-full bg-white shadow-sm">
@@ -3610,7 +3610,7 @@ if (activeTab === 'mapPin') {
           </main>
         )}
 
-        {activeTab === 'profile' && renderSharedProfileTab()}
+{activeTab === 'profile' && renderSharedProfileTab()}
 
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-slate-200 px-4 py-2 flex justify-between items-center z-40 shadow-lg">
           <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'home' ? 'text-[#15803D]' : 'text-slate-400'}`}>
@@ -3650,7 +3650,7 @@ if (activeTab === 'mapPin') {
     );
   }
 
-// =========================================================================
+  // =========================================================================
   // INDEPENDENT MULTI-VENDOR ORDER ALERTS & SEQUENTIAL PICKUP TRACKING
   // =========================================================================
   const renderBroadcastOrderAlertsAndPickupTracking = () => {
@@ -3707,7 +3707,7 @@ if (activeTab === 'mapPin') {
               )}
             </div>
 
-            {incomingAlertCards.map(({ ord, st }) => (
+{incomingAlertCards.map(({ ord, st }) => (
               <div key={`${ord.id}_${st.stopId}`} className="bg-amber-50 border-2 border-amber-400 rounded-2xl p-3.5 shadow-md space-y-2">
                 <div className="flex justify-between font-extrabold text-slate-900">
                   <span>Order #{ord.id} • {ord.buyerName}</span>
@@ -3769,7 +3769,7 @@ if (activeTab === 'mapPin') {
           </div>
         )}
 
-    {myAcceptedStopCards.map(({ ord, st, isMyTurnForRiderPickup }) => {
+        {myAcceptedStopCards.map(({ ord, st, isMyTurnForRiderPickup }) => {
           const rLat = ord.driverLat || 14.4390;
           const rLng = ord.driverLng || 79.9810;
           return (
@@ -3811,7 +3811,7 @@ if (activeTab === 'mapPin') {
     );
   };
 
-  // =========================================================================
+// =========================================================================
   // 4. FARMER PORTAL
   // =========================================================================
   if (currentUser.role === 'farmer') {
@@ -3871,7 +3871,7 @@ if (activeTab === 'mapPin') {
           </main>
         )}
 
-{activeTab === 'listProduce' && (
+        {activeTab === 'listProduce' && (
           <main className="p-4 space-y-3.5 text-xs">
             <div className="flex items-center space-x-2">
               <button onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white shadow-sm">
@@ -3902,7 +3902,7 @@ if (activeTab === 'mapPin') {
           </main>
         )}
 
-        {activeTab === 'earnings' && (
+{activeTab === 'earnings' && (
           <main className="p-4 text-xs">
             <div className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white rounded-3xl p-5 shadow-md">
               <p className="text-emerald-100 font-bold">Total Farm Earnings</p>
@@ -4007,7 +4007,13 @@ if (activeTab === 'mapPin') {
         date: 'Today, ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
 
-return (
+setOrders((prev) => [newOrd, ...prev]);
+      setDoc(doc(db, 'orders', newOrd.id), newOrd).catch(() => {});
+      notify(`Bulk Order Placed! Live Delivery Tracking unlocks once picked up. OTP: ${otp}`);
+      setActiveTab('orders');
+    };
+
+    return (
       <div style={fontStyle} className="min-h-screen bg-[#F5F7F5] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
         <WelcomeSmileModal />
         {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-extrabold px-4 py-2 rounded-full shadow-lg">{toast}</div>}
@@ -4111,7 +4117,7 @@ return (
           </main>
         )}
 
-        {activeTab === 'orders' && (
+{activeTab === 'orders' && (
           <main className="p-4 space-y-3 text-xs">
             <h2 className="text-base font-extrabold">{currentUser.role.toUpperCase()} Orders & Live Tracking</h2>
             {renderBroadcastOrderAlertsAndPickupTracking()}
@@ -4159,7 +4165,7 @@ return (
           </main>
         )}
 
-  {activeTab === 'profile' && renderSharedProfileTab()}
+        {activeTab === 'profile' && renderSharedProfileTab()}
 
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-6 py-2.5 flex justify-between items-center z-40">
           {[
@@ -4182,7 +4188,7 @@ return (
     );
   }
 
-  // =========================================================================
+// =========================================================================
   // 6. DELIVERY PARTNER PORTAL (ONLY SHOWS ORDERS AFTER SELLER ACCEPTS!)
   // =========================================================================
   if (currentUser.role === 'delivery') {
@@ -4249,7 +4255,7 @@ return (
       notify(`Delivered! ₹${baseFee} Base + ₹${multiBonus} Multi-Stop Bonus (Total ₹${totalEarned}) credited!`);
     };
 
-return (
+    return (
       <div style={fontStyle} className="min-h-screen bg-[#F5F7F5] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
         {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-extrabold px-4 py-2 rounded-full shadow-lg">{toast}</div>}
 
@@ -4306,7 +4312,7 @@ return (
                   ? `${ord.buyerLat},${ord.buyerLng}`
                   : encodeURIComponent(ord.buyerAddress);
 
-                return (
+return (
                   <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2.5">
                     <div className="flex justify-between items-start">
                       <div>
@@ -4368,7 +4374,7 @@ return (
                         );
                       })}
 
-                     <p className="text-[10px] font-extrabold text-[#0F5132] uppercase pt-1">
+                      <p className="text-[10px] font-extrabold text-[#0F5132] uppercase pt-1">
                         2. Customer / Buyer Drop Location:
                       </p>
                       <div className="bg-emerald-50/80 rounded-lg p-2 border border-emerald-200 flex items-center justify-between gap-2">
@@ -4443,7 +4449,7 @@ return (
           </main>
         )}
 
-        {activeTab === 'profile' && renderSharedProfileTab()}
+{activeTab === 'profile' && renderSharedProfileTab()}
 
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-12 py-2.5 flex justify-between items-center z-40">
           <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'home' ? 'text-[#15803D]' : 'text-slate-400'}`}>
@@ -4459,7 +4465,7 @@ return (
     );
   }
 
-// =========================================================================
+  // =========================================================================
   // 7. MASTER ADMIN & SUB-ADMIN HQ
   // =========================================================================
   const handleAdminCatalogPhotoUpload = async (e) => {
@@ -4518,7 +4524,7 @@ return (
     }
   };
 
-  const handleSaveCategory = (e) => {
+const handleSaveCategory = (e) => {
     e.preventDefault();
     if (!newCatEn.trim()) return;
     const finalImg =
@@ -4557,7 +4563,7 @@ return (
     notify('Category Deleted');
   };
 
-const handleSaveCoupon = (e) => {
+  const handleSaveCoupon = (e) => {
     e.preventDefault();
     if (!cpCode.trim() || !cpTitle.trim()) return;
     const couponObj = {
@@ -4619,7 +4625,7 @@ const handleSaveCoupon = (e) => {
     notify(`Sub-Admin Access Granted to ${newSub.name}!`);
   };
 
-  return (
+return (
     <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
       {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-extrabold px-4 py-2 rounded-full shadow-lg">{toast}</div>}
 
@@ -4682,7 +4688,7 @@ const handleSaveCoupon = (e) => {
             </button>
           </div>
 
-{isCurrentUserMasterAdmin && (
+          {isCurrentUserMasterAdmin && (
             <button
               type="button"
               onClick={() => setAdminTab('subadmins')}
@@ -4757,7 +4763,7 @@ const handleSaveCoupon = (e) => {
             </div>
           )}
 
-          {adminTab === 'walletCredit' && (
+{adminTab === 'walletCredit' && (
             <div className="space-y-3 bg-white p-4 rounded-3xl border border-emerald-200 shadow-sm">
               <h3 className="font-extrabold text-sm text-[#15803D]">Credit Cashback / Bonus to Customer Wallet</h3>
               <select
@@ -4775,7 +4781,7 @@ const handleSaveCoupon = (e) => {
                   ))}
               </select>
 
-<input
+              <input
                 type="number"
                 value={walletCreditAmt}
                 onChange={(e) => setWalletCreditAmt(e.target.value)}
@@ -4867,7 +4873,7 @@ const handleSaveCoupon = (e) => {
             </div>
           )}
 
-{adminTab === 'catalogue' && (
+          {adminTab === 'catalogue' && (
             <div className="space-y-3">
               <form onSubmit={handleAddMasterCatalogItem} className="bg-white rounded-3xl p-4 shadow-sm border border-emerald-100 space-y-3">
                 <div className="flex items-center space-x-1.5 font-extrabold text-[#15803D] text-sm">
@@ -4898,7 +4904,7 @@ const handleSaveCoupon = (e) => {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
+   <div className="grid grid-cols-2 gap-2">
                   <select value={catCategory} onChange={(e) => setCatCategory(e.target.value)} className="bg-slate-50 border rounded-xl px-3 py-2.5 font-extrabold">
                     {categoriesList.map((c) => (
                       <option key={c.id} value={c.labelEn}>{c.labelEn}</option>
@@ -4959,7 +4965,7 @@ const handleSaveCoupon = (e) => {
             </div>
           )}
 
-{adminTab === 'categories' && (
+          {adminTab === 'categories' && (
             <div className="space-y-3">
               <form onSubmit={handleSaveCategory} className="bg-white rounded-3xl p-4 shadow-sm border border-emerald-100 space-y-3">
                 <div className="flex items-center justify-between">
@@ -5024,7 +5030,7 @@ const handleSaveCoupon = (e) => {
                   <input type="file" accept="image/*" onChange={handleAdminCategoryPhotoUpload} className="hidden" />
                 </label>
 
-                <input
+<input
                   type="url"
                   value={newCatImgUrl}
                   onChange={(e) => setNewCatImgUrl(e.target.value)}
@@ -5079,7 +5085,7 @@ const handleSaveCoupon = (e) => {
             </div>
           )}
 
-{adminTab === 'coupons' && (
+          {adminTab === 'coupons' && (
             <div className="space-y-3">
               <form onSubmit={handleSaveCoupon} className="bg-white rounded-3xl p-4 shadow-sm border border-amber-200 space-y-3">
                 <div className="flex items-center justify-between">
@@ -5156,7 +5162,7 @@ const handleSaveCoupon = (e) => {
                 </button>
               </form>
 
-              <div className="space-y-2">
+<div className="space-y-2">
                 {couponsList.map((cp) => (
                   <div key={cp.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
                     <div>
@@ -5209,7 +5215,7 @@ const handleSaveCoupon = (e) => {
             </div>
           )}
 
-{adminTab === 'approvals' && (
+          {adminTab === 'approvals' && (
             <div className="space-y-2.5">
               {users
                 .filter((u) => u.role === 'farmer' || u.role === 'wholesale' || u.role === 'retail')
