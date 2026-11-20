@@ -4,25 +4,25 @@ import {
   Phone, MessageSquare, Sprout, Store, Truck, ShieldCheck, ChevronRight,
   ArrowLeft, CheckCircle2, Wallet, Sparkles, Bell, Globe,
   LocateFixed, LogOut, Printer, Warehouse, ChevronDown,
-  Briefcase, Leaf, Shield, Zap, Grid, Check, Tag, Edit3,
+  Briefcase, Grid, Check, Tag, Edit3,
   TrendingUp, Package, HelpCircle, Navigation, Camera, Landmark, Volume2, VolumeX, Trash2, Image,
   Heart, UserPlus
 } from 'lucide-react';
 import { db } from './firebase';
 import { collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 
-// EmailJS Credentials for Direct Free 6-Digit Email OTP & Automatic Delivery Invoice
+// EmailJS Credentials
 const EMAILJS_SERVICE_ID = 'service_auf6gch';
 const EMAILJS_TEMPLATE_ID = 'template_z42k41l';
 const EMAILJS_INVOICE_TEMPLATE_ID = 'template_fhx6p4e';
 const EMAILJS_PUBLIC_KEY = 'Y1UQmUcSoEzEtFR1m';
 
-// MASTER ADMINS (Can grant Sub-Admin access to others inside Admin HQ)
+// MASTER ADMINS
 const MASTER_ADMIN_MOBILES = ['8328261103'];
 const MASTER_ADMIN_EMAILS = ['madhavam.com@gmail.com', 'madhavareddy2516@gmail.com'];
 
-// Role Hero Images
-const FARMER_HERO_IMG = 'https://images.pexels.com/photos/2889440/pexels-photo-2889440.jpeg?auto=compress&cs=tinysrgb&w=500';
+// Role Hero Images (Updated Indian Farmer Photo instead of Tractor)
+const FARMER_HERO_IMG = 'https://images.unsplash.com/photo-1605000797499-95a51c5269ae?auto=format&fit=crop&w=600&q=80';
 const WHOLESALE_HERO_IMG = 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=600&q=80';
 const RETAIL_HERO_IMG = 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80';
 const DELIVERY_HERO_IMG = 'https://images.unsplash.com/photo-1617347454431-f49d7ff5c3b1?auto=format&fit=crop&w=600&q=80';
@@ -180,7 +180,6 @@ const PaymentBadge = ({ type }) => {
   );
 };
 
-// Live Scooter Overlay Map Component
 const LiveScooterMap = ({ lat, lng, title, height = 200, badgeText }) => (
   <div className="relative w-full rounded-3xl overflow-hidden border-2 border-[#15803D] shadow-md" style={{ height }}>
     <iframe
@@ -297,7 +296,7 @@ export default function App() {
     }
   });
 
-// PERSISTENT SESSION: Auto-restore logged-in user & role across app restarts until explicit Logout
+  // PERSISTENT SESSION
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const saved = localStorage.getItem('rythu_active_session_user');
@@ -326,7 +325,7 @@ export default function App() {
     } catch {}
   }, [currentUser]);
 
-  const [lang, setLang] = useState('te');
+const [lang, setLang] = useState('te');
   const [users, setUsers] = useState(() => {
     try {
       const saved = localStorage.getItem('rythu_registered_users');
@@ -336,7 +335,6 @@ export default function App() {
     }
   });
 
-  // Sub-Admins List (Managed by Master Admin, synced via Firestore)
   const [subAdmins, setSubAdmins] = useState(() => {
     try {
       const saved = localStorage.getItem('rythu_sub_admins');
@@ -394,7 +392,7 @@ export default function App() {
     }
   });
 
-const [masterCatalog, setMasterCatalog] = useState(() => {
+  const [masterCatalog, setMasterCatalog] = useState(() => {
     try {
       const saved = localStorage.getItem('rythu_master_catalog');
       return saved ? JSON.parse(saved) : DEFAULT_MASTER_CATALOG;
@@ -447,7 +445,7 @@ const [masterCatalog, setMasterCatalog] = useState(() => {
   const [sendingEmail, setSendingEmail] = useState(false);
   const [authMsg, setAuthMsg] = useState('');
 
-  // Comprehensive Role Registration & Profile Fields
+  // Role Registration & Profile Fields
   const [regProfilePhoto, setRegProfilePhoto] = useState('');
   const [regName, setRegName] = useState('');
   const [regOwnerName, setRegOwnerName] = useState('');
@@ -501,6 +499,7 @@ const [masterCatalog, setMasterCatalog] = useState(() => {
 
   const [toast, setToast] = useState('');
   const [selectedCat, setSelectedCat] = useState('All');
+  const [selectedCatSource, setSelectedCatSource] = useState(null); // 'daily' or 'grid'
   const [search, setSearch] = useState('');
 
   // Location & Map Pin States
@@ -523,7 +522,6 @@ const [masterCatalog, setMasterCatalog] = useState(() => {
   const [promoInput, setPromoInput] = useState('');
   const [appliedCouponObj, setAppliedCouponObj] = useState(null);
   const [payMode, setPayMode] = useState('phonepe');
-  const [utrRefInput, setUtrRefInput] = useState('');
   const [cardNo, setCardNo] = useState('');
   const [cardExp, setCardExp] = useState('');
   const [cardCvv, setCardCvv] = useState('');
@@ -537,12 +535,12 @@ const [masterCatalog, setMasterCatalog] = useState(() => {
   const [scratchCard, setScratchCard] = useState(null);
   const [orders, setOrders] = useState([]);
 
-  // Broadcast Offer Notifications (Admin -> All Registered Users)
+  // Broadcast Offer Notifications
   const [broadcastOffers, setBroadcastOffers] = useState([]);
   const [promoMsgText, setPromoMsgText] = useState('');
   const [promoOfferTag, setPromoOfferTag] = useState('SPECIAL OFFER');
 
-  // Admin Wallet Credit + WhatsApp Alert States
+  // Admin Wallet Credit + WhatsApp Alert
   const [walletUserId, setWalletUserId] = useState('');
   const [walletCreditAmt, setWalletCreditAmt] = useState('50');
   const [walletReason, setWalletReason] = useState('Festive Cashback Gift from Rythu Basket');
@@ -570,7 +568,6 @@ const [masterCatalog, setMasterCatalog] = useState(() => {
   const [catImgPreview, setCatImgPreview] = useState('');
   const [catImgUrl, setCatImgUrl] = useState('');
 
-  // Admin Manage Categories Form States
   const [editingCatId, setEditingCatId] = useState(null);
   const [newCatEn, setNewCatEn] = useState('');
   const [newCatTe, setNewCatTe] = useState('');
@@ -578,7 +575,6 @@ const [masterCatalog, setMasterCatalog] = useState(() => {
   const [newCatImgPreview, setNewCatImgPreview] = useState('');
   const [newCatImgUrl, setNewCatImgUrl] = useState('');
 
-  // Admin Manage Coupons Form States
   const [editingCouponId, setEditingCouponId] = useState(null);
   const [cpCode, setCpCode] = useState('');
   const [cpTitle, setCpTitle] = useState('');
@@ -586,13 +582,11 @@ const [masterCatalog, setMasterCatalog] = useState(() => {
   const [cpMinOrder, setCpMinOrder] = useState('149');
   const [cpBadge, setCpBadge] = useState('OFFER');
 
-  // Sub-Admin Grant Access Form States
   const [subName, setSubName] = useState('');
   const [subMobile, setSubMobile] = useState('');
   const [subEmail, setSubEmail] = useState('');
   const [subPermissions, setSubPermissions] = useState('Catalogue, Categories, Coupons & Approvals');
 
-// Delivery & Admin States
   const [delivFilter, setDelivFilter] = useState('available');
   const [scratchMin] = useState(4);
   const [scratchMax] = useState(25);
@@ -661,7 +655,7 @@ const [masterCatalog, setMasterCatalog] = useState(() => {
     [currentUser]
   );
 
-  useEffect(() => {
+useEffect(() => {
     if (!currentUser || !['farmer', 'wholesale', 'retail'].includes(currentUser.role)) {
       stopAlertRingtone();
       return;
@@ -702,6 +696,11 @@ const [masterCatalog, setMasterCatalog] = useState(() => {
         window.history.pushState({ rythuNav: true }, '');
         return;
       }
+      if (activeTab === 'categories' && selectedCat !== 'All') {
+        setSelectedCat('All');
+        window.history.pushState({ rythuNav: true }, '');
+        return;
+      }
       if (activeTab !== 'home') {
         setActiveTab('home');
         window.history.pushState({ rythuNav: true }, '');
@@ -719,7 +718,7 @@ const [masterCatalog, setMasterCatalog] = useState(() => {
       setSelectedRole(null);
       window.history.pushState({ rythuNav: true }, '');
     }
-  }, [sharedInvoiceData, currentUser, profileSubView, isEditingProfile, activeTab, selectedRole, authScreen]);
+  }, [sharedInvoiceData, currentUser, profileSubView, isEditingProfile, activeTab, selectedCat, selectedRole, authScreen]);
 
   useEffect(() => {
     window.history.pushState({ rythuNav: true }, '');
@@ -779,7 +778,7 @@ const [masterCatalog, setMasterCatalog] = useState(() => {
       () => {}
     );
 
-const unsubCatalog = onSnapshot(
+    const unsubCatalog = onSnapshot(
       collection(db, 'masterCatalog'),
       (snapshot) => {
         if (!snapshot.empty) {
@@ -831,7 +830,7 @@ const unsubCatalog = onSnapshot(
       () => {}
     );
 
-    const unsubUsers = onSnapshot(
+const unsubUsers = onSnapshot(
       collection(db, 'users'),
       (snapshot) => {
         if (!snapshot.empty) {
@@ -869,7 +868,7 @@ const unsubCatalog = onSnapshot(
       () => {}
     );
 
-return () => {
+    return () => {
       unsubOrders();
       unsubProducts();
       unsubCatalog();
@@ -970,7 +969,7 @@ return () => {
       )
       .join('');
 
-const invoiceHtml = `
+    const invoiceHtml = `
       <div style="border:1px solid #cbd5e1;padding:16px;border-radius:10px;background:#ffffff;font-family:Arial,sans-serif;font-size:12px;color:#1e293b;">
         <div style="text-align:center;margin-bottom:12px;">
           <img src="https://rythu-market.vercel.app/icon-512.png" width="56" height="56" style="border-radius:50%;border:2px solid #EAB308;" />
@@ -1017,7 +1016,7 @@ const invoiceHtml = `
       </div>
     `;
 
-    const invoicePayload = encodeURIComponent(
+const invoicePayload = encodeURIComponent(
       JSON.stringify({
         id: ord.id,
         date: invoiceDate,
@@ -1088,7 +1087,7 @@ const invoiceHtml = `
       return;
     }
 
-setAuthMsg('');
+    setAuthMsg('');
     setCurrentUser(existing);
     setActiveTab('home');
     window.history.pushState({ rythuNav: true }, '');
@@ -1156,7 +1155,7 @@ setAuthMsg('');
         ? `${regHouseNo}, ${regStreetArea}, ${regVillage}, ${regDistrict}, ${regState} - ${regPinCode}`.replace(/^,\s*/g, '')
         : `${regAddress || regVillage}, ${regMandal ? regMandal + ', ' : ''}${regDistrict}, ${regState} - ${regPinCode}`;
 
-    const newUser = {
+const newUser = {
       id: 'u_' + Date.now(),
       role: selectedRole,
       profilePhoto: regProfilePhoto || '',
@@ -1198,7 +1197,7 @@ setAuthMsg('');
       referredBy: regReferralCode.trim() || null,
     };
 
-setUsers([newUser, ...users]);
+    setUsers([newUser, ...users]);
     setDoc(doc(db, 'users', newUser.id), newUser).catch(() => {});
 
     setGeneratedEmailOtp('');
@@ -1258,7 +1257,7 @@ setUsers([newUser, ...users]);
     setMapPinFullAddress(`Lat ${lat.toFixed(5)}, Lng ${lng.toFixed(5)}, Nellore, Andhra Pradesh`);
   };
 
-  const handleUseCurrentLocationMap = () => {
+const handleUseCurrentLocationMap = () => {
     setIsLocatingGps(true);
     setIsEditingPinText(false);
     setActiveTab('mapPin');
@@ -1286,7 +1285,7 @@ setUsers([newUser, ...users]);
     );
   };
 
-const handleAdjustPin = async (dLat, dLng) => {
+  const handleAdjustPin = async (dLat, dLng) => {
     const lat = Number((mapPinCoords.lat + dLat).toFixed(5));
     const lng = Number((mapPinCoords.lng + dLng).toFixed(5));
     setMapPinCoords({ lat, lng });
@@ -1384,7 +1383,7 @@ const handleAdjustPin = async (dLat, dLng) => {
       return catOk && searchOk;
     });
 
-return (
+    return (
       <form onSubmit={(e) => handlePublishRoleProduct(e, roleSource)} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-3">
         <div>
           <div className="flex items-center justify-between mb-1.5">
@@ -1429,7 +1428,7 @@ return (
             </select>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-0.5">
+    <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-0.5">
             {filteredSellerCatalog.map((item) => {
               const isSel = selectedCatalogId === item.id;
               return (
@@ -1472,7 +1471,7 @@ return (
           </div>
         </div>
 
-  <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <div>
             <label className="text-[10px] font-bold text-slate-400">Category</label>
             <select value={fCat} onChange={(e) => setFCat(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-extrabold text-slate-800">
@@ -1561,7 +1560,7 @@ return (
           </div>
         </div>
 
-<table className="w-full text-xs border-collapse border border-slate-200">
+        <table className="w-full text-xs border-collapse border border-slate-200">
           <thead>
             <tr className="bg-[#15803D] text-white">
               <th className="p-2 text-left">#</th>
@@ -1607,7 +1606,7 @@ return (
   }
 
   // =========================================================================
-  // 1. HOME / ROLE ENTRY PAGE (ONLY SHOWN WHEN LOGGED OUT)
+  // 1. HOME / ROLE ENTRY PAGE (INDIAN FARMER PHOTO IN HERO BANNER)
   // =========================================================================
   if (!selectedRole) {
     const roleCards = [
@@ -1669,7 +1668,7 @@ return (
               </div>
             </div>
 
-   <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2">
               <button
                 type="button"
                 onClick={() => setLang(lang === 'te' ? 'en' : 'te')}
@@ -1755,7 +1754,7 @@ return (
           })}
         </div>
 
-        <div className="px-3.5 pt-3.5">
+<div className="px-3.5 pt-3.5">
           <div className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white rounded-2xl p-3.5 shadow-md flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="h-11 w-11 rounded-full bg-white/15 border border-white/25 flex items-center justify-center flex-shrink-0">
@@ -1776,7 +1775,7 @@ return (
           </div>
         </div>
 
-<nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0D4A24] text-white px-6 py-2.5 rounded-t-3xl flex justify-center items-center z-40 shadow-2xl">
+        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0D4A24] text-white px-6 py-2.5 rounded-t-3xl flex justify-center items-center z-40 shadow-2xl">
           <button
             type="button"
             onClick={() => setSelectedRole(null)}
@@ -1791,7 +1790,7 @@ return (
   }
 
   // =========================================================================
-  // 2. COMPLETE ROLE-SPECIFIC REGISTRATION & DIRECT LOGIN
+  // 2. ROLE-SPECIFIC REGISTRATION & DIRECT LOGIN
   // =========================================================================
   if (!currentUser) {
     const roleMeta = {
@@ -1864,7 +1863,7 @@ return (
       </div>
     );
 
-return (
+    return (
       <div style={fontStyle} className="min-h-screen bg-[#F4F8F4] max-w-md mx-auto text-slate-800 shadow-2xl pb-12">
         {toast && (
           <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-xl text-center">
@@ -1896,7 +1895,7 @@ return (
               </p>
             </div>
 
-            <form onSubmit={handleDirectLogin} className="p-6 space-y-3.5 text-xs">
+<form onSubmit={handleDirectLogin} className="p-6 space-y-3.5 text-xs">
               <div className="flex items-center border border-slate-200 rounded-2xl px-3.5 py-3.5 bg-slate-50">
                 <User className="h-4 w-4 text-slate-400 mr-2.5 flex-shrink-0" />
                 <input
@@ -1969,7 +1968,7 @@ return (
                 <span className="w-8" />
               </div>
 
-            <div className="mx-3 mt-2 bg-gradient-to-r from-[#0E5A2B] to-[#15803D] text-white rounded-2xl px-4 py-3 flex items-center space-x-3 shadow-md">
+              <div className="mx-3 mt-2 bg-gradient-to-r from-[#0E5A2B] to-[#15803D] text-white rounded-2xl px-4 py-3 flex items-center space-x-3 shadow-md">
                 <div className="h-10 w-10 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
                   <RoleHeaderIcon className="h-5 w-5 text-[#FDE047]" />
                 </div>
@@ -2046,7 +2045,7 @@ return (
                 </>
               )}
 
-              {selectedRole === 'wholesale' && (
+{selectedRole === 'wholesale' && (
                 <>
                   <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Business Name *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
                   <input type="text" required value={regOwnerName} onChange={(e) => setRegOwnerName(e.target.value)} placeholder="Owner Name *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
@@ -2073,7 +2072,7 @@ return (
                 </>
               )}
 
-{selectedRole === 'retail' && (
+              {selectedRole === 'retail' && (
                 <>
                   <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Shop Name *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
                   <input type="text" required value={regOwnerName} onChange={(e) => setRegOwnerName(e.target.value)} placeholder="Owner Name *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
@@ -2170,7 +2169,7 @@ return (
                 </>
               )}
 
-   {selectedRole === 'admin' && (
+              {selectedRole === 'admin' && (
                 <>
                   <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Authorized Admin / Sub-Admin Name *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
                   <input type="tel" maxLength={10} required value={regMobile} onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, ''))} placeholder="Authorized Mobile Number *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
@@ -2234,7 +2233,7 @@ return (
     );
   }
 
-  const WelcomeSmileModal = () =>
+const WelcomeSmileModal = () =>
     showWelcomeSmile ? (
       <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-3xl p-6 text-center max-w-xs w-full space-y-3 shadow-2xl">
@@ -2305,7 +2304,7 @@ return (
           ]
         : r === 'retail'
         ? [
-{ label: 'My Shop', action: () => setIsEditingProfile(true) },
+            { label: 'My Shop', action: () => setIsEditingProfile(true) },
             { label: 'Purchase from Farmers', action: () => setActiveTab('browse') },
             { label: 'Purchase from Wholesalers', action: () => setActiveTab('browse') },
             { label: 'My Products', action: () => setActiveTab('sellStock') },
@@ -2337,7 +2336,7 @@ return (
             { label: 'Help & Support', action: () => setProfileSubView('Help & Support') },
           ];
 
-    return (
+return (
       <div className="p-4 space-y-3.5 text-xs">
         <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
           <div className="flex items-center space-x-3.5 min-w-0">
@@ -2392,7 +2391,7 @@ return (
           </div>
         )}
 
-{isEditingProfile ? (
+        {isEditingProfile ? (
           <form onSubmit={handleSaveEditedProfile} className="bg-white rounded-3xl p-4 shadow-sm border border-emerald-200 space-y-2.5">
             <h3 className="font-extrabold text-sm text-[#15803D]">Edit Complete Profile Details</h3>
             <input type="text" required value={currentUser.name} onChange={(e) => setCurrentUser({ ...currentUser, name: e.target.value })} placeholder="Name / Business / Shop Name *" className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-bold" />
@@ -2560,9 +2559,6 @@ return (
         : 5;
 
     const paymentAppLaunchUrl = buildPaymentLaunchUrl(payMode, merchantUpiId, payableTotal);
-    const genericUpiQr = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(
-      `upi://pay?pa=${encodeURIComponent(merchantUpiId)}&pn=${encodeURIComponent('Rythu Basket Nellore')}&am=${payableTotal}&cu=INR`
-    )}`;
 
     const handleApplyCouponCode = (codeStr) => {
       const clean = codeStr.trim().toUpperCase();
@@ -2580,7 +2576,8 @@ return (
       notify(`Coupon ${found.code} Applied (-₹${found.discount})!`);
     };
 
-const finalizeCustomerOrder = () => {
+  // DIRECT ORDER PLACEMENT & AUTOMATIC JUMP TO LIVE TRACKING
+    const finalizeAndOpenOrderTracking = () => {
       const itemsArr = Object.entries(cart)
         .map(([id, qty]) => {
           const p = products.find((x) => x.id === id);
@@ -2650,10 +2647,10 @@ const finalizeCustomerOrder = () => {
       setOrders((prev) => [newOrd, ...prev]);
       setDoc(doc(db, 'orders', newOrd.id), newOrd).catch(() => {});
       setLastPlacedOrder(newOrd);
+      setTrackingOrder(newOrd);
       setCart({});
-      setUtrRefInput('');
-      setActiveTab('orderPlaced');
-      notify(`Order sent to ${pickupStops.length} seller group(s) with 15s alert!`);
+      setActiveTab('trackOrder');
+      notify(`Payment Success! Order #${newOrd.id} sent to Seller for acceptance.`);
     };
 
     const handlePayAndPlaceOrderTrigger = () => {
@@ -2664,37 +2661,21 @@ const finalizeCustomerOrder = () => {
           setCardError('Please enter valid 16-digit Card Number, Expiry (MM/YY) & CVV.');
           return;
         }
-        finalizeCustomerOrder();
+        finalizeAndOpenOrderTracking();
         return;
       }
       if (payMode === 'cod') {
-        finalizeCustomerOrder();
+        finalizeAndOpenOrderTracking();
         return;
       }
+      // Open UPI App & automatically place order and open live tracking
       window.location.href = paymentAppLaunchUrl;
       setTimeout(() => {
-        setActiveTab('upiProcessing');
-      }, 350);
+        finalizeAndOpenOrderTracking();
+      }, 600);
     };
 
-    const handleSimulateCustomerDelivery = (ord) => {
-      const isLucky = Math.random() > 0.2;
-      const reward = isLucky ? Math.floor(scratchMin + Math.random() * (scratchMax - scratchMin + 1)) : 0;
-      const updatedUser = {
-        ...currentUser,
-        wallet: (currentUser.wallet || 0) + (ord.cashback || 0) + reward,
-      };
-      setCurrentUser(updatedUser);
-      setOrders((prev) => prev.map((o) => (o.id === ord.id ? { ...o, status: 'Delivered' } : o)));
-      updateDoc(doc(db, 'orders', ord.id), { status: 'Delivered' }).catch(() => {});
-      if (trackingOrder && trackingOrder.id === ord.id) {
-        setTrackingOrder({ ...ord, status: 'Delivered' });
-      }
-      sendAutomaticInvoiceEmail(ord);
-      setScratchCard({ orderId: ord.id, reward, scratched: false });
-    };
-
-const renderCustomerProductCard = (p) => {
+    const renderCustomerProductCard = (p) => {
       const q = cart[p.id] || 0;
       const isFarmerItem = (p.postedByRole || 'farmer') === 'farmer';
       const isWished = wishlistIds.includes(p.id);
@@ -2764,6 +2745,44 @@ const renderCustomerProductCard = (p) => {
         </div>
       );
     };
+
+const renderHorizontalSuggestionsBox = () => (
+      <section className="bg-emerald-50/80 border-2 border-[#15803D]/30 rounded-2xl p-3 space-y-2 shadow-sm">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-extrabold text-[#0F5132]">Suggested in {selectedCat}</h3>
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedCat('All');
+              setSelectedCatSource(null);
+            }}
+            className="text-[10px] font-extrabold text-rose-600"
+          >
+            Clear ✕
+          </button>
+        </div>
+        <div className="flex space-x-2.5 overflow-x-auto pb-1">
+          {products
+            .filter((p) => p.cat === selectedCat)
+            .map((item) => (
+              <div key={item.id} className="flex-shrink-0 w-32 bg-white rounded-2xl p-2 border border-emerald-100 shadow-sm space-y-1">
+                <img src={item.img} alt={item.nameEn} className="h-16 w-full rounded-xl object-cover" />
+                <p className="text-[10px] font-extrabold text-slate-900 truncate">{item.nameEn}</p>
+                <div className="flex items-center justify-between pt-0.5">
+                  <span className="text-xs font-extrabold text-[#15803D]">₹{item.retailPrice}</span>
+                  <button
+                    type="button"
+                    onClick={() => setCart({ ...cart, [item.id]: (cart[item.id] || 0) + 1 })}
+                    className="bg-[#15803D] text-white text-[10px] font-extrabold px-2 py-1 rounded-lg"
+                  >
+                    + Add
+                  </button>
+                </div>
+              </div>
+            ))}
+        </div>
+      </section>
+    );
 
     if (activeTab === 'selectLocation') {
       const filteredAddrs = savedAddresses.filter(
@@ -2914,7 +2933,6 @@ if (activeTab === 'mapPin') {
 
     const liveLat = trackingOrder?.driverLat || mapPinCoords.lat;
     const liveLng = trackingOrder?.driverLng || mapPinCoords.lng;
-    // Map shows ONLY while Out for Delivery (hidden after Delivered)
     const isOutForCustomerDrop = trackingOrder?.status === 'Out for Delivery';
 
     return (
@@ -2953,7 +2971,7 @@ if (activeTab === 'mapPin') {
           </div>
         )}
 
-{activeTab === 'home' && (
+   {activeTab === 'home' && (
           <main className="px-4 pt-3.5 space-y-4 text-xs">
             <div className="flex items-center justify-between">
               <button
@@ -3009,65 +3027,48 @@ if (activeTab === 'mapPin') {
               )}
             </div>
 
-            {/* HORIZONTAL SUGGESTIONS CAROUSEL WHEN A CATEGORY IS SELECTED ON HOME PAGE */}
-            {selectedCat !== 'All' && (
-              <section className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-extrabold text-[#0F5132]">Suggested in {selectedCat}</h3>
-                  <button type="button" onClick={() => setSelectedCat('All')} className="text-[10px] font-extrabold text-rose-600">
-                    Clear ✕
-                  </button>
-                </div>
-                <div className="flex space-x-2.5 overflow-x-auto pb-1">
-                  {products
-                    .filter((p) => p.cat === selectedCat)
-                    .map((item) => (
-                      <div key={item.id} className="flex-shrink-0 w-32 bg-white rounded-2xl p-2 border border-emerald-100 shadow-sm space-y-1">
-                        <img src={item.img} alt={item.nameEn} className="h-16 w-full rounded-xl object-cover" />
-                        <p className="text-[10px] font-extrabold text-slate-900 truncate">{item.nameEn}</p>
-                        <div className="flex items-center justify-between pt-0.5">
-                          <span className="text-xs font-extrabold text-[#15803D]">₹{item.retailPrice}</span>
-                          <button
-                            type="button"
-                            onClick={() => setCart({ ...cart, [item.id]: (cart[item.id] || 0) + 1 })}
-                            className="bg-[#15803D] text-white text-[10px] font-extrabold px-2 py-1 rounded-lg"
-                          >
-                            + Add
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </section>
-            )}
-
+            {/* DAILY ESSENTIALS SECTION */}
             <section className="space-y-2">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-extrabold text-slate-900">Daily essentials</h2>
                 <span className="text-[10px] font-bold text-[#15803D]">Morning Fresh</span>
               </div>
               <div className="grid grid-cols-4 gap-2">
-                {dailyEssentialCats.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setSelectedCat(selectedCat === item.labelEn ? 'All' : item.labelEn)}
-                    className={`rounded-2xl p-2 border text-center transition shadow-sm ${
-                      selectedCat === item.labelEn
-                        ? 'bg-emerald-50 border-2 border-[#15803D]'
-                        : 'bg-gradient-to-b from-emerald-50/70 to-white border-emerald-100'
-                    }`}
-                  >
-                    <div className="h-14 w-14 rounded-xl bg-white p-1 mx-auto mb-1.5 shadow-sm overflow-hidden">
-                      <img src={item.img} alt={item.labelEn} className="h-full w-full object-cover rounded-lg" />
-                    </div>
-                    <p className="text-[10px] font-extrabold text-slate-900 line-clamp-2 leading-tight">
-                      {item.labelEn}
-                    </p>
-                  </button>
-                ))}
+                {dailyEssentialCats.map((item) => {
+                  const isSel = selectedCat === item.labelEn && selectedCatSource === 'daily';
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        if (isSel) {
+                          setSelectedCat('All');
+                          setSelectedCatSource(null);
+                        } else {
+                          setSelectedCat(item.labelEn);
+                          setSelectedCatSource('daily');
+                        }
+                      }}
+                      className={`rounded-2xl p-2 border text-center transition shadow-sm ${
+                        isSel
+                          ? 'bg-emerald-50 border-2 border-[#15803D]'
+                          : 'bg-gradient-to-b from-emerald-50/70 to-white border-emerald-100'
+                      }`}
+                    >
+                      <div className="h-14 w-14 rounded-xl bg-white p-1 mx-auto mb-1.5 shadow-sm overflow-hidden">
+                        <img src={item.img} alt={item.labelEn} className="h-full w-full object-cover rounded-lg" />
+                      </div>
+                      <p className="text-[10px] font-extrabold text-slate-900 line-clamp-2 leading-tight">
+                        {item.labelEn}
+                      </p>
+                    </button>
+                  );
+                })}
               </div>
             </section>
+
+     {/* HORIZONTAL SUGGESTIONS DIRECTLY BELOW DAILY ESSENTIALS WHEN SELECTED HERE */}
+            {selectedCat !== 'All' && selectedCatSource === 'daily' && renderHorizontalSuggestionsBox()}
 
             {activeCoupons.length > 0 && (
               <section className="space-y-2">
@@ -3106,21 +3107,38 @@ if (activeTab === 'mapPin') {
               </section>
             )}
 
-<section className="space-y-2">
+            {/* CATEGORIES GRID SECTION */}
+            <section className="space-y-2">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-extrabold text-slate-900">Categories</h2>
-                <button type="button" onClick={() => setActiveTab('categories')} className="text-[11px] font-extrabold text-[#15803D]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedCat('All');
+                    setSelectedCatSource(null);
+                    setActiveTab('categories');
+                  }}
+                  className="text-[11px] font-extrabold text-[#15803D]"
+                >
                   See All ({categoriesList.length}) &gt;
                 </button>
               </div>
               <div className="grid grid-cols-3 gap-2">
                 {categoriesList.map((cat) => {
-                  const isSel = selectedCat === cat.labelEn;
+                  const isSel = selectedCat === cat.labelEn && selectedCatSource === 'grid';
                   return (
                     <button
                       key={cat.id}
                       type="button"
-                      onClick={() => setSelectedCat(isSel ? 'All' : cat.labelEn)}
+                      onClick={() => {
+                        if (isSel) {
+                          setSelectedCat('All');
+                          setSelectedCatSource(null);
+                        } else {
+                          setSelectedCat(cat.labelEn);
+                          setSelectedCatSource('grid');
+                        }
+                      }}
                       className={`rounded-2xl p-2.5 border text-center transition ${
                         isSel ? 'border-2 border-[#15803D] bg-emerald-50 shadow-sm' : 'border-slate-100 bg-white shadow-sm'
                       }`}
@@ -3134,6 +3152,9 @@ if (activeTab === 'mapPin') {
               </div>
             </section>
 
+            {/* HORIZONTAL SUGGESTIONS DIRECTLY BELOW CATEGORIES GRID WHEN SELECTED HERE */}
+            {selectedCat !== 'All' && selectedCatSource === 'grid' && renderHorizontalSuggestionsBox()}
+
             {selectedCat !== 'All' || search.trim() !== '' ? (
               <div className="space-y-2.5 pt-1">
                 <div className="flex items-center justify-between">
@@ -3143,6 +3164,7 @@ if (activeTab === 'mapPin') {
                   <button
                     onClick={() => {
                       setSelectedCat('All');
+                      setSelectedCatSource(null);
                       setSearch('');
                     }}
                     className="text-[11px] font-extrabold text-[#15803D]"
@@ -3167,7 +3189,10 @@ if (activeTab === 'mapPin') {
                       </div>
                       <button
                         type="button"
-                        onClick={() => setSelectedCat(catObj.labelEn)}
+                        onClick={() => {
+                          setSelectedCat(catObj.labelEn);
+                          setActiveTab('categories');
+                        }}
                         className="text-[11px] font-extrabold text-[#15803D] bg-emerald-50 px-2.5 py-1 rounded-full"
                       >
                         See All ({catItems.length})
@@ -3183,55 +3208,83 @@ if (activeTab === 'mapPin') {
           </main>
         )}
 
-{/* CATEGORIES TAB: LEFT VERTICAL CATEGORIES RAIL + RIGHT SIDE RELATED PRODUCTS */}
+{/* CATEGORIES TAB: DEFAULT 3-COLUMN GRID, THEN LEFT VERTICAL RAIL + RIGHT PRODUCTS ON SELECT */}
         {activeTab === 'categories' && (
-          <main className="flex h-[calc(100vh-64px)] bg-white text-xs overflow-hidden">
-            <div className="w-24 bg-slate-50 border-r border-slate-200 overflow-y-auto py-2 space-y-1">
-              {categoriesList.map((cat) => {
-                const activeCatName = selectedCat === 'All' ? categoriesList[0]?.labelEn : selectedCat;
-                const isActive = activeCatName === cat.labelEn;
-                return (
+          selectedCat === 'All' ? (
+            <main className="p-4 space-y-3 text-xs">
+              <div className="flex items-center justify-between">
+                <h2 className="text-base font-extrabold text-slate-900">Categories</h2>
+                <span className="text-xs font-extrabold text-[#15803D]">All ({categoriesList.length})</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2.5">
+                {categoriesList.map((cat) => (
                   <button
                     key={cat.id}
                     type="button"
                     onClick={() => setSelectedCat(cat.labelEn)}
-                    className={`w-full px-1.5 py-2.5 flex flex-col items-center text-center relative transition ${
-                      isActive ? 'bg-white text-[#15803D] font-extrabold' : 'text-slate-600 font-semibold'
-                    }`}
+                    className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 text-center space-y-1.5 hover:border-[#15803D] transition"
                   >
-                    {isActive && <span className="absolute left-0 top-2 bottom-2 w-1 bg-[#15803D] rounded-r" />}
-                    <img src={cat.img} alt={cat.labelEn} className="h-11 w-11 rounded-xl object-cover mb-1 border border-slate-200" />
-                    <span className="text-[9px] leading-tight line-clamp-2">{cat.labelEn}</span>
+                    <img src={cat.img} alt={cat.labelEn} className="h-16 w-16 rounded-2xl object-cover mx-auto" />
+                    <h3 className="text-[10px] font-extrabold text-slate-900 line-clamp-2 leading-tight">{cat.labelEn}</h3>
+                    <p className="text-[9px] font-bold text-[#15803D] truncate">{cat.labelTe}</p>
                   </button>
-                );
-              })}
-            </div>
+                ))}
+              </div>
+            </main>
+          ) : (
+            <main className="flex h-[calc(100vh-64px)] bg-white text-xs overflow-hidden">
+              <div className="w-24 bg-slate-50 border-r border-slate-200 overflow-y-auto py-2 space-y-1">
+                <button
+                  type="button"
+                  onClick={() => setSelectedCat('All')}
+                  className="w-full px-1.5 py-2 text-center text-[10px] font-extrabold text-[#15803D] border-b border-slate-200 mb-1"
+                >
+                  ← All Grid
+                </button>
+                {categoriesList.map((cat) => {
+                  const isActive = selectedCat === cat.labelEn;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setSelectedCat(cat.labelEn)}
+                      className={`w-full px-1.5 py-2.5 flex flex-col items-center text-center relative transition ${
+                        isActive ? 'bg-white text-[#15803D] font-extrabold' : 'text-slate-600 font-semibold'
+                      }`}
+                    >
+                      {isActive && <span className="absolute left-0 top-2 bottom-2 w-1 bg-[#15803D] rounded-r" />}
+                      <img src={cat.img} alt={cat.labelEn} className="h-11 w-11 rounded-xl object-cover mb-1 border border-slate-200" />
+                      <span className="text-[9px] leading-tight line-clamp-2">{cat.labelEn}</span>
+                    </button>
+                  );
+                })}
+              </div>
 
-            <div className="flex-1 overflow-y-auto p-3 space-y-2.5 bg-[#F8FAFC]">
-              {(() => {
-                const currentCat = selectedCat === 'All' ? categoriesList[0]?.labelEn : selectedCat;
-                const catProducts = products.filter((p) => p.cat === currentCat);
-                return (
-                  <>
-                    <div className="flex items-center justify-between border-b pb-1.5">
-                      <h2 className="text-sm font-extrabold text-slate-900">{currentCat}</h2>
-                      <span className="text-[10px] font-bold text-[#15803D]">{catProducts.length} items</span>
-                    </div>
-                    {catProducts.length === 0 ? (
-                      <div className="bg-white rounded-2xl p-6 text-center text-slate-400 font-bold">
-                        No products listed in {currentCat} yet.
+              <div className="flex-1 overflow-y-auto p-3 space-y-2.5 bg-[#F8FAFC]">
+                {(() => {
+                  const catProducts = products.filter((p) => p.cat === selectedCat);
+                  return (
+                    <>
+                      <div className="flex items-center justify-between border-b pb-1.5">
+                        <h2 className="text-sm font-extrabold text-slate-900">{selectedCat}</h2>
+                        <span className="text-[10px] font-bold text-[#15803D]">{catProducts.length} items</span>
                       </div>
-                    ) : (
-                      catProducts.map((p) => renderCustomerProductCard(p))
-                    )}
-                  </>
-                );
-              })()}
-            </div>
-          </main>
+                      {catProducts.length === 0 ? (
+                        <div className="bg-white rounded-2xl p-6 text-center text-slate-400 font-bold">
+                          No products listed in {selectedCat} yet.
+                        </div>
+                      ) : (
+                        catProducts.map((p) => renderCustomerProductCard(p))
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            </main>
+          )
         )}
 
-        {activeTab === 'productDetail' && detailProduct && (
+{activeTab === 'productDetail' && detailProduct && (
           <main className="bg-white min-h-screen pb-24 text-xs">
             <div className="relative h-64 w-full bg-slate-100">
               <img src={detailProduct.img} alt={detailProduct.nameEn} className="h-full w-full object-cover" />
@@ -3265,7 +3318,7 @@ if (activeTab === 'mapPin') {
           </main>
         )}
 
-{activeTab === 'cart' && (
+        {activeTab === 'cart' && (
           <main className="p-4 space-y-3.5 text-xs">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-extrabold text-slate-900">My Cart</h2>
@@ -3312,7 +3365,7 @@ if (activeTab === 'mapPin') {
           </main>
         )}
 
-        {activeTab === 'checkout' && (
+  {activeTab === 'checkout' && (
           <main className="p-4 space-y-3.5 text-xs">
             <div className="flex items-center space-x-3">
               <button onClick={() => setActiveTab('cart')} className="p-2 rounded-full bg-white shadow-sm">
@@ -3348,7 +3401,7 @@ if (activeTab === 'mapPin') {
               </div>
             </div>
 
-<div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
+            <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
               <div className="flex items-center justify-between">
                 <h3 className="font-extrabold text-slate-900">Payment Method</h3>
                 <span className="text-[10px] font-bold text-[#15803D]">{merchantUpiId}</span>
@@ -3390,67 +3443,23 @@ if (activeTab === 'mapPin') {
 
               {payMode === 'card' || payMode === 'cod' ? (
                 <button type="button" onClick={handlePayAndPlaceOrderTrigger} className="w-full mt-2 bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm">
-                  Place Order • ₹{payableTotal}
+                  Pay & Place Order • ₹{payableTotal}
                 </button>
               ) : (
                 <a
                   href={paymentAppLaunchUrl}
-                  onClick={() => setTimeout(() => setActiveTab('upiProcessing'), 400)}
+                  onClick={() => setTimeout(() => finalizeAndOpenOrderTracking(), 600)}
                   className="block w-full mt-2 bg-[#15803D] text-white text-center font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
                 >
-                  Place Order & Pay ₹{payableTotal}
+                  Pay ₹{payableTotal} via {payMode.toUpperCase()} & Track Order ↗
                 </a>
               )}
             </div>
           </main>
         )}
 
-        {activeTab === 'upiProcessing' && (
-          <main className="p-4 space-y-4 text-xs">
-            <div className="bg-white rounded-3xl p-5 shadow-md border border-emerald-200 text-center space-y-3">
-              <h2 className="text-base font-extrabold text-slate-900">Pay ₹{payableTotal} to {merchantUpiId}</h2>
-              <a href={paymentAppLaunchUrl} className="block w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow">
-                Open {payMode.toUpperCase()} App Now ↗
-              </a>
-              <img src={genericUpiQr} alt="UPI QR" className="w-32 h-32 mx-auto rounded-xl border p-1 bg-white" />
-              <input type="text" value={utrRefInput} onChange={(e) => setUtrRefInput(e.target.value)} placeholder="Enter 12-Digit UPI UTR (Optional)" className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 text-center font-bold" />
-              <button type="button" onClick={finalizeCustomerOrder} className="w-full bg-[#EA580C] text-white font-extrabold py-3.5 rounded-2xl shadow-lg text-sm">
-                Payment Completed — Confirm Order ➔
-              </button>
-            </div>
-          </main>
-        )}
-
-        {activeTab === 'orderPlaced' && lastPlacedOrder && (
-          <main className="p-6 text-center space-y-5 flex flex-col items-center justify-center min-h-[75vh]">
-            <div className="h-20 w-20 rounded-full bg-[#15803D] text-white flex items-center justify-center shadow-lg">
-              <Check className="h-10 w-10 stroke-[3]" />
-            </div>
-            <div className="space-y-1">
-              <h2 className="text-xl font-extrabold text-slate-900">Order Placed Successfully!</h2>
-              <p className="text-xs font-extrabold text-[#15803D]">Order ID: {lastPlacedOrder.id}</p>
-              <p className="text-xs text-slate-500 pt-1">
-                Sent to {(lastPlacedOrder.pickupStops || []).length} seller group(s). Live scooter tracking activates once picked up!
-              </p>
-            </div>
-            <div className="w-full space-y-2.5 pt-2">
-              <button
-                onClick={() => {
-                  setTrackingOrder(lastPlacedOrder);
-                  setActiveTab('trackOrder');
-                }}
-                className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
-              >
-                Track Order Status
-              </button>
-              <button onClick={() => setActiveTab('home')} className="w-full border border-slate-300 text-slate-800 font-extrabold py-3.5 rounded-2xl text-sm">
-                Continue Shopping
-              </button>
-            </div>
-          </main>
-        )}
-
-{activeTab === 'trackOrder' && trackingOrder && (
+        {/* CUSTOMER TRACKING SCREEN (NO COMPLETE DELIVERY BUTTON — ONLY DELIVERY PARTNER CAN COMPLETE) */}
+        {activeTab === 'trackOrder' && trackingOrder && (
           <main className="pb-10 text-xs">
             <div className="bg-gradient-to-b from-[#15803D] to-[#22C55E] text-white p-5 rounded-b-[32px] shadow-md space-y-2">
               <div className="flex items-center space-x-3">
@@ -3494,8 +3503,7 @@ if (activeTab === 'mapPin') {
                 </div>
               )}
 
-              {/* LIVE SCOOTER TRACKING ONLY WHILE OUT FOR DELIVERY (HIDDEN AFTER DELIVERED) */}
-              {trackingOrder.status !== 'Delivered' && (
+{trackingOrder.status !== 'Delivered' ? (
                 <>
                   {isOutForCustomerDrop ? (
                     <LiveScooterMap
@@ -3507,57 +3515,55 @@ if (activeTab === 'mapPin') {
                     />
                   ) : (
                     <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-1 text-amber-950">
-                      <p className="font-extrabold">Stage 1: Store Acceptance & Pickup in Progress</p>
+                      <p className="font-extrabold">
+                        {trackingOrder.status === 'Order Placed'
+                          ? 'Stage 1: Waiting for Seller to Accept Order...'
+                          : 'Stage 2: Seller Accepted — Assigning Delivery Partner for Pickup...'}
+                      </p>
                       <p className="text-[11px]">
-                        Once all accepted sellers' items are picked up by the delivery partner, live scooter tracking will appear here!
+                        Once the seller accepts and the delivery partner picks up your order, live scooter tracking will appear here!
                       </p>
                     </div>
                   )}
 
-                  <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="h-11 w-11 rounded-full bg-emerald-100 text-[#15803D] font-extrabold flex items-center justify-center text-xl">
-                        🛵
+                  {trackingOrder.driverName && (
+                    <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="h-11 w-11 rounded-full bg-emerald-100 text-[#15803D] font-extrabold flex items-center justify-center text-xl">
+                          🛵
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-slate-400 font-bold">Delivery Partner</p>
+                          <h4 className="font-extrabold text-slate-900">{trackingOrder.driverName}</h4>
+                          {trackingOrder.driverMobile && (
+                            <p className="text-[10px] text-slate-500">+91 {trackingOrder.driverMobile}</p>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-[10px] text-slate-400 font-bold">Delivery Partner</p>
-                        <h4 className="font-extrabold text-slate-900">
-                          {trackingOrder.driverName || 'Assigning Delivery Partner...'}
-                        </h4>
-                        {trackingOrder.driverMobile && (
-                          <p className="text-[10px] text-slate-500">+91 {trackingOrder.driverMobile}</p>
-                        )}
+                      <div className="flex space-x-2">
+                        <a
+                          href={`tel:${trackingOrder.driverMobile || '8328261103'}`}
+                          className="p-2.5 bg-emerald-50 text-[#15803D] border border-emerald-200 rounded-full flex items-center space-x-1 font-extrabold text-[10px]"
+                        >
+                          <Phone className="h-4 w-4" />
+                          <span>Call</span>
+                        </a>
+                        <a
+                          href={`sms:${trackingOrder.driverMobile || '8328261103'}`}
+                          className="p-2.5 bg-sky-50 text-sky-700 border border-sky-200 rounded-full flex items-center space-x-1 font-extrabold text-[10px]"
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                          <span>Msg</span>
+                        </a>
                       </div>
                     </div>
-                    <div className="flex space-x-2">
-                      <a
-                        href={`tel:${trackingOrder.driverMobile || '8328261103'}`}
-                        className="p-2.5 bg-emerald-50 text-[#15803D] border border-emerald-200 rounded-full flex items-center space-x-1 font-extrabold text-[10px]"
-                      >
-                        <Phone className="h-4 w-4" />
-                        <span>Call</span>
-                      </a>
-                      <a
-                        href={`sms:${trackingOrder.driverMobile || '8328261103'}`}
-                        className="p-2.5 bg-sky-50 text-sky-700 border border-sky-200 rounded-full flex items-center space-x-1 font-extrabold text-[10px]"
-                      >
-                        <MessageSquare className="h-4 w-4" />
-                        <span>Msg</span>
-                      </a>
-                    </div>
-                  </div>
+                  )}
                 </>
-              )}
-
-              {trackingOrder.status !== 'Delivered' ? (
-                <button onClick={() => handleSimulateCustomerDelivery(trackingOrder)} className="w-full bg-[#EA580C] text-white font-extrabold py-3.5 rounded-2xl shadow">
-                  Complete Delivery (Auto Email Invoice PDF)
-                </button>
               ) : (
                 <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-center space-y-1">
                   <p className="font-extrabold text-[#15803D] text-sm">✓ Order Delivered Successfully!</p>
                   <p className="text-[11px] text-slate-600">
-                    Official Tax Invoice has been emailed to <strong>{currentUser.email}</strong>.
+                    Official Tax Invoice has been sent to <strong>{currentUser.email}</strong>.
                   </p>
                 </div>
               )}
@@ -3565,9 +3571,8 @@ if (activeTab === 'mapPin') {
           </main>
         )}
 
-{activeTab === 'orders' && (
+        {activeTab === 'orders' && (
           <main className="p-4 space-y-3.5 text-xs">
-            {/* ADMIN BROADCAST OFFERS & NOTIFICATIONS */}
             {broadcastOffers.length > 0 && (
               <div className="space-y-2">
                 <h3 className="text-xs font-extrabold text-[#15803D] flex items-center space-x-1">
@@ -3612,7 +3617,14 @@ if (activeTab === 'mapPin') {
             <Home className="h-5 w-5 mb-0.5" />
             <span>Home</span>
           </button>
-          <button onClick={() => setActiveTab('categories')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'categories' ? 'text-[#15803D]' : 'text-slate-400'}`}>
+          <button
+            onClick={() => {
+              setSelectedCat('All');
+              setSelectedCatSource(null);
+              setActiveTab('categories');
+            }}
+            className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'categories' ? 'text-[#15803D]' : 'text-slate-400'}`}
+          >
             <Grid className="h-5 w-5 mb-0.5" />
             <span>Categories</span>
           </button>
@@ -3732,7 +3744,7 @@ if (activeTab === 'mapPin') {
                       };
                       setOrders((prev) => prev.map((o) => (o.id === ord.id ? { ...o, ...updateData } : o)));
                       updateDoc(doc(db, 'orders', ord.id), updateData).catch(() => {});
-                      notify(`Accepted your items in #${ord.id}! Added to your Orders & Pickup Tracking.`);
+                      notify(`Accepted #${ord.id}! Order alert sent to Delivery Partners now.`);
                     }}
                     className="bg-[#15803D] text-white font-extrabold py-2.5 rounded-xl shadow-sm"
                   >
@@ -3757,7 +3769,7 @@ if (activeTab === 'mapPin') {
           </div>
         )}
 
-{myAcceptedStopCards.map(({ ord, st, isMyTurnForRiderPickup }) => {
+    {myAcceptedStopCards.map(({ ord, st, isMyTurnForRiderPickup }) => {
           const rLat = ord.driverLat || 14.4390;
           const rLng = ord.driverLng || 79.9810;
           return (
@@ -3967,7 +3979,7 @@ if (activeTab === 'mapPin') {
       ];
       const pickupStops = buildPickupStopsFromItems(itemsArr);
 
-const newOrd = {
+      const newOrd = {
         id: (isRetail ? 'RIT-' : 'WS-') + Math.floor(1000 + Math.random() * 8999),
         buyerId: currentUser.id,
         buyerRole: currentUser.role,
@@ -3995,13 +4007,7 @@ const newOrd = {
         date: 'Today, ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
 
-      setOrders((prev) => [newOrd, ...prev]);
-      setDoc(doc(db, 'orders', newOrd.id), newOrd).catch(() => {});
-      notify(`Bulk Order Placed! Live Delivery Tracking unlocks once picked up. OTP: ${otp}`);
-      setActiveTab('orders');
-    };
-
-    return (
+return (
       <div style={fontStyle} className="min-h-screen bg-[#F5F7F5] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
         <WelcomeSmileModal />
         {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-extrabold px-4 py-2 rounded-full shadow-lg">{toast}</div>}
@@ -4105,7 +4111,7 @@ const newOrd = {
           </main>
         )}
 
-{activeTab === 'orders' && (
+        {activeTab === 'orders' && (
           <main className="p-4 space-y-3 text-xs">
             <h2 className="text-base font-extrabold">{currentUser.role.toUpperCase()} Orders & Live Tracking</h2>
             {renderBroadcastOrderAlertsAndPickupTracking()}
@@ -4153,7 +4159,7 @@ const newOrd = {
           </main>
         )}
 
-        {activeTab === 'profile' && renderSharedProfileTab()}
+  {activeTab === 'profile' && renderSharedProfileTab()}
 
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-6 py-2.5 flex justify-between items-center z-40">
           {[
@@ -4177,10 +4183,18 @@ const newOrd = {
   }
 
   // =========================================================================
-  // 6. DELIVERY PARTNER PORTAL
+  // 6. DELIVERY PARTNER PORTAL (ONLY SHOWS ORDERS AFTER SELLER ACCEPTS!)
   // =========================================================================
   if (currentUser.role === 'delivery') {
-    const availOrders = orders.filter((o) => o.status !== 'Delivered');
+    // STRICT GATE: Delivery Partner sees active orders ONLY after at least 1 seller has Accepted
+    const availOrders = orders.filter((o) => {
+      if (o.status === 'Delivered') return false;
+      const stops = o.pickupStops || [];
+      const hasSellerAcceptance =
+        stops.some((s) => s.stopStatus === 'Accepted') ||
+        ['Order Partially Accepted', 'Order Fully Accepted', 'Partner Assigned', 'Out for Delivery'].includes(o.status);
+      return hasSellerAcceptance;
+    });
     const delivOrders = orders.filter((o) => o.status === 'Delivered');
     const weeklyCompleted = currentUser.weeklyOrders || 0;
 
@@ -4211,7 +4225,7 @@ const newOrd = {
       );
     };
 
-const handleCompleteDelivery = (ord) => {
+    const handleCompleteDelivery = (ord) => {
       const stopsCount = (ord.pickupStops || []).length || 1;
       const baseFee = ord.riderBaseFee || 30;
       const multiBonus = ord.riderMultiStopBonus ?? Math.max(0, stopsCount - 1) * 15;
@@ -4235,7 +4249,7 @@ const handleCompleteDelivery = (ord) => {
       notify(`Delivered! ₹${baseFee} Base + ₹${multiBonus} Multi-Stop Bonus (Total ₹${totalEarned}) credited!`);
     };
 
-    return (
+return (
       <div style={fontStyle} className="min-h-screen bg-[#F5F7F5] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
         {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-extrabold px-4 py-2 rounded-full shadow-lg">{toast}</div>}
 
@@ -4260,7 +4274,7 @@ const handleCompleteDelivery = (ord) => {
 
             <div className="grid grid-cols-3 gap-2 text-center">
               <button onClick={() => setDelivFilter('available')} className={`p-2.5 rounded-2xl border ${delivFilter === 'available' ? 'bg-emerald-50 border-[#15803D]' : 'bg-white'}`}>
-                <p className="text-[10px] text-slate-500 font-bold">Active</p>
+                <p className="text-[10px] text-slate-500 font-bold">Ready for Pickup</p>
                 <p className="text-base font-extrabold text-[#EA580C]">{availOrders.length}</p>
               </button>
               <button onClick={() => setDelivFilter('delivered')} className={`p-2.5 rounded-2xl border ${delivFilter === 'delivered' ? 'bg-emerald-50 border-[#15803D]' : 'bg-white'}`}>
@@ -4274,10 +4288,16 @@ const handleCompleteDelivery = (ord) => {
             </div>
 
             {(delivFilter === 'available' ? availOrders : delivOrders).length === 0 ? (
-              <div className="bg-white rounded-2xl p-6 text-center text-slate-400 font-bold">No orders in this list.</div>
+              <div className="bg-white rounded-2xl p-6 text-center text-slate-400 font-bold">
+                {delivFilter === 'available'
+                  ? 'No seller-accepted orders waiting for pickup right now.'
+                  : 'No completed deliveries yet.'}
+              </div>
             ) : (
               (delivFilter === 'available' ? availOrders : delivOrders).map((ord) => {
-                const stops = ord.pickupStops || buildPickupStopsFromItems(ord.items || []);
+                const stops = (ord.pickupStops || buildPickupStopsFromItems(ord.items || [])).filter(
+                  (s) => s.stopStatus === 'Accepted'
+                );
                 const baseFee = ord.riderBaseFee || 30;
                 const multiBonus = ord.riderMultiStopBonus ?? Math.max(0, stops.length - 1) * 15;
                 const riderPayout = baseFee + multiBonus;
@@ -4307,17 +4327,18 @@ const handleCompleteDelivery = (ord) => {
 
                     <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-2">
                       <p className="text-[10px] font-extrabold text-slate-700 uppercase">
-                        1. Farmer / Shop Pickup Stops ({stops.length}):
+                        1. Accepted Farmer / Shop Pickup Stops ({stops.length}):
                       </p>
                       {stops.map((st, idx) => {
                         const stMap = st.sellerLat && st.sellerLng
                           ? `${st.sellerLat},${st.sellerLng}`
                           : encodeURIComponent(st.sellerName);
+                        const originalIdx = (ord.pickupStops || []).findIndex((x) => x.stopId === st.stopId);
                         return (
                           <div key={st.stopId} className="bg-white rounded-lg p-2 border border-slate-100 flex items-center justify-between gap-2">
                             <div className="min-w-0 flex-1">
                               <p className="font-extrabold text-[11px] text-slate-900 truncate">
-                                Stop {idx + 1}: {st.acceptedByUserName || st.sellerName} ({st.stopStatus})
+                                Stop {idx + 1}: {st.acceptedByUserName || st.sellerName}
                               </p>
                               <p className="text-[10px] text-slate-500 truncate">{st.itemsSummary.join(', ')}</p>
                             </div>
@@ -4334,7 +4355,7 @@ const handleCompleteDelivery = (ord) => {
                               {isAssignedToMe && (
                                 <button
                                   type="button"
-                                  onClick={() => handleMarkOrderPickedUp(ord, idx)}
+                                  onClick={() => handleMarkOrderPickedUp(ord, originalIdx >= 0 ? originalIdx : idx)}
                                   className={`px-2 py-1 rounded-lg font-extrabold text-[10px] ${
                                     st.pickedUp ? 'bg-[#15803D] text-white' : 'bg-amber-200 text-amber-950'
                                   }`}
@@ -4347,7 +4368,7 @@ const handleCompleteDelivery = (ord) => {
                         );
                       })}
 
-<p className="text-[10px] font-extrabold text-[#0F5132] uppercase pt-1">
+                     <p className="text-[10px] font-extrabold text-[#0F5132] uppercase pt-1">
                         2. Customer / Buyer Drop Location:
                       </p>
                       <div className="bg-emerald-50/80 rounded-lg p-2 border border-emerald-200 flex items-center justify-between gap-2">
@@ -4438,7 +4459,7 @@ const handleCompleteDelivery = (ord) => {
     );
   }
 
-  // =========================================================================
+// =========================================================================
   // 7. MASTER ADMIN & SUB-ADMIN HQ
   // =========================================================================
   const handleAdminCatalogPhotoUpload = async (e) => {
@@ -4453,7 +4474,7 @@ const handleCompleteDelivery = (ord) => {
     }
   };
 
-const handleAddMasterCatalogItem = (e) => {
+  const handleAddMasterCatalogItem = (e) => {
     e.preventDefault();
     if (!catNameEn.trim()) return;
     const finalImg =
@@ -4530,13 +4551,13 @@ const handleAddMasterCatalogItem = (e) => {
     notify(editingCatId ? 'Category Updated Across All Pages!' : 'New Category Added!');
   };
 
-const handleDeleteCategory = (catId) => {
+  const handleDeleteCategory = (catId) => {
     setCategoriesList((prev) => prev.filter((c) => c.id !== catId));
     deleteDoc(doc(db, 'categories', catId)).catch(() => {});
     notify('Category Deleted');
   };
 
-  const handleSaveCoupon = (e) => {
+const handleSaveCoupon = (e) => {
     e.preventDefault();
     if (!cpCode.trim() || !cpTitle.trim()) return;
     const couponObj = {
@@ -4661,7 +4682,7 @@ const handleDeleteCategory = (catId) => {
             </button>
           </div>
 
-          {isCurrentUserMasterAdmin && (
+{isCurrentUserMasterAdmin && (
             <button
               type="button"
               onClick={() => setAdminTab('subadmins')}
@@ -4674,7 +4695,6 @@ const handleDeleteCategory = (catId) => {
             </button>
           )}
 
-  {/* A. SEND OFFER NOTIFICATION TO ALL REGISTERED USERS */}
           {adminTab === 'broadcast' && (
             <div className="space-y-3">
               <div className="bg-white p-4 rounded-3xl border border-orange-200 shadow-sm space-y-2.5">
@@ -4737,7 +4757,6 @@ const handleDeleteCategory = (catId) => {
             </div>
           )}
 
-          {/* B. CREDIT CUSTOMER WALLET + WHATSAPP NOTIFICATION */}
           {adminTab === 'walletCredit' && (
             <div className="space-y-3 bg-white p-4 rounded-3xl border border-emerald-200 shadow-sm">
               <h3 className="font-extrabold text-sm text-[#15803D]">Credit Cashback / Bonus to Customer Wallet</h3>
@@ -4756,7 +4775,7 @@ const handleDeleteCategory = (catId) => {
                   ))}
               </select>
 
-              <input
+<input
                 type="number"
                 value={walletCreditAmt}
                 onChange={(e) => setWalletCreditAmt(e.target.value)}
@@ -4797,7 +4816,7 @@ const handleDeleteCategory = (catId) => {
             </div>
           )}
 
-{adminTab === 'subadmins' && isCurrentUserMasterAdmin && (
+          {adminTab === 'subadmins' && isCurrentUserMasterAdmin && (
             <div className="space-y-3">
               <form onSubmit={handleGrantSubAdminAccess} className="bg-white rounded-3xl p-4 shadow-sm border border-amber-300 space-y-2.5">
                 <h3 className="font-extrabold text-sm text-slate-900 flex items-center space-x-1.5">
@@ -4848,7 +4867,7 @@ const handleDeleteCategory = (catId) => {
             </div>
           )}
 
-          {adminTab === 'catalogue' && (
+{adminTab === 'catalogue' && (
             <div className="space-y-3">
               <form onSubmit={handleAddMasterCatalogItem} className="bg-white rounded-3xl p-4 shadow-sm border border-emerald-100 space-y-3">
                 <div className="flex items-center space-x-1.5 font-extrabold text-[#15803D] text-sm">
@@ -4912,7 +4931,7 @@ const handleDeleteCategory = (catId) => {
                   className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-semibold text-[11px]"
                 />
 
-   <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow text-sm">
+                <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow text-sm">
                   + Save to Master Catalogue
                 </button>
               </form>
@@ -4940,7 +4959,7 @@ const handleDeleteCategory = (catId) => {
             </div>
           )}
 
-          {adminTab === 'categories' && (
+{adminTab === 'categories' && (
             <div className="space-y-3">
               <form onSubmit={handleSaveCategory} className="bg-white rounded-3xl p-4 shadow-sm border border-emerald-100 space-y-3">
                 <div className="flex items-center justify-between">
@@ -5005,7 +5024,7 @@ const handleDeleteCategory = (catId) => {
                   <input type="file" accept="image/*" onChange={handleAdminCategoryPhotoUpload} className="hidden" />
                 </label>
 
-   <input
+                <input
                   type="url"
                   value={newCatImgUrl}
                   onChange={(e) => setNewCatImgUrl(e.target.value)}
@@ -5060,7 +5079,7 @@ const handleDeleteCategory = (catId) => {
             </div>
           )}
 
-          {adminTab === 'coupons' && (
+{adminTab === 'coupons' && (
             <div className="space-y-3">
               <form onSubmit={handleSaveCoupon} className="bg-white rounded-3xl p-4 shadow-sm border border-amber-200 space-y-3">
                 <div className="flex items-center justify-between">
@@ -5132,7 +5151,7 @@ const handleDeleteCategory = (catId) => {
                   </div>
                 </div>
 
-     <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow text-sm">
+                <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow text-sm">
                   {editingCouponId ? 'Update Coupon' : '+ Publish Coupon to Customer Page'}
                 </button>
               </form>
@@ -5190,7 +5209,7 @@ const handleDeleteCategory = (catId) => {
             </div>
           )}
 
-          {adminTab === 'approvals' && (
+{adminTab === 'approvals' && (
             <div className="space-y-2.5">
               {users
                 .filter((u) => u.role === 'farmer' || u.role === 'wholesale' || u.role === 'retail')
