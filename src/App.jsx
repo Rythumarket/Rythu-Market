@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { db, requestFcmDeviceToken } from './firebase';
+
 import {
   Search, ShoppingCart, Plus, Home, ClipboardList, User, MapPin,
   Phone, MessageSquare, Sprout, Store, Truck, ShieldCheck, ChevronRight,
