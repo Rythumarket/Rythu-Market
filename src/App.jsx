@@ -263,6 +263,17 @@ const computeOrderAcceptanceStatus = (stops, currentStatus) => {
   return 'Order Fully Accepted';
 };
 
+function getTrafficAndDeliveryEta(distanceKm, status = 'Order Placed') {
+  const hr = new Date().getHours();
+  const isPeakTraffic = (hr >= 8 && hr <= 11) || (hr >= 17 && hr <= 21);
+  const trafficLabel = isPeakTraffic ? 'Moderate-Heavy Traffic' : 'Smooth Traffic';
+  const speedFactorMinPerKm = isPeakTraffic ? 4.2 : 2.6;
+  const prepMinutes = status === 'Order Placed' ? 10 : status === 'Accepted' ? 7 : status === 'Picked' ? 4 : 0;
+  const travelMinutes = Math.max(5, Math.round((distanceKm || 2.8) * speedFactorMinPerKm));
+  if (status === 'Delivered') return { etaMinutes: 0, trafficLabel, distanceKm: distanceKm || 2.8 };
+  return { etaMinutes: prepMinutes + travelMinutes, trafficLabel, distanceKm: distanceKm || 2.8 };
+}
+
 export default function App() {
   useEffect(() => {
     const id = 'rythu-google-fonts';
