@@ -4529,308 +4529,545 @@ return (
 // =========================================================================
   // 6. DELIVERY PARTNER PORTAL (EVERY STAGE PUSH NOTIFICATIONS + LIVE ETA)
   // =========================================================================
-  if (currentUser.role === 'delivery') {
-    const availOrders = orders.filter((o) => {
-      if (o.status === 'Delivered') return false;
-      const stops = o.pickupStops || [];
-      const hasSellerAcceptance =
-        stops.some((s) => s.stopStatus === 'Accepted') ||
-        ['Order Partially Accepted', 'Order Fully Accepted', 'Partner Assigned', 'Out for Delivery'].includes(o.status);
-      return hasSellerAcceptance;
-    });
-    const delivOrders = orders.filter((o) => o.status === 'Delivered');
-    const weeklyCompleted = currentUser.weeklyOrders || 0;
+   if (currentUser.role === 'delivery') {
+    const [deliveryView, setDeliveryView] = React.useState('ready'); // 'ready' | 'completed' | 'weekly' | 'profileMenu'
+    const [selectedProfileSection, setSelectedProfileSection] = React.useState(null);
+    const [withdrawAmt, setWithdrawAmt] = React.useState('');
 
-    const handleMarkOrderPickedUp = (ord, stopIdx) => {
-      const stops = [...(ord.pickupStops || [])];
-      if (stops[stopIdx]) {
-        stops[stopIdx] = { ...stops[stopIdx], pickedUp: true };
-      }
-      const acceptedStops = stops.filter((s) => s.stopStatus === 'Accepted');
-      const allAcceptedPicked =
-        acceptedStops.length > 0
-          ? acceptedStops.every((s) => s.pickedUp)
-          : stops.every((s) => s.pickedUp);
+    // Live Synced Orders from Firestore
+    const readyForPickupOrders = orders.filter((o) => o.status === 'Accepted');
+    const myActiveDeliveries = orders.filter(
+      (o) =>
+        (o.status === 'Picked' || o.status === 'Out for Delivery') &&
+        (!o.deliveryPartnerId || o.deliveryPartnerId === currentUser.id)
+    );
+    const myPickupHistory = orders.filter(
+      (o) =>
+        ['Picked', 'Out for Delivery', 'Delivered'].includes(o.status) &&
+        (!o.deliveryPartnerId || o.deliveryPartnerId === currentUser.id)
+    );
+    const myCompletedDeliveries = orders.filter(
+      (o) =>
+        o.status === 'Delivered' &&
+        (!o.deliveryPartnerId || o.deliveryPartnerId === currentUser.id)
+    );
 
-      const nextStatus = allAcceptedPicked ? 'Out for Delivery' : 'Partner Assigned';
-      const etaInfo = getTrafficAndDeliveryEta(ord.distanceKm || 3.2, nextStatus);
+    // Persistent Earnings Calculation (Survives Page Refresh)
+    const todayStr = new Date().toDateString();
+    const todaysDeliveryEarnings = myCompletedDeliveries
+      .filter((o) => new Date(o.deliveredAt || o.createdAt || Date.now()).toDateString() === todayStr)
+      .reduce((sum, o) => sum + Number(o.riderFee || 45), 0);
 
-      setOrders((prev) =>
-        prev.map((o) => (o.id === ord.id ? { ...o, pickupStops: stops, status: nextStatus } : o))
-      );
-      updateDoc(doc(db, 'orders', ord.id), {
-        pickupStops: stops,
+    const totalDeliveryEarnings = myCompletedDeliveries.reduce(
+      (sum, o) => sum + Number(o.riderFee || 45),
+      0
+    );
+
+    const liveWalletBalance = Math.max(Number(currentUser.wallet || 0), totalDeliveryEarnings);
+    const weeklyCount = myCompletedDeliveries.length;
+    const weeklyTarget = 100;
+
+    // Rider Stage Update + Firestore Save + Customer Lock-Screen Push Notification
+    const handleRiderOrderAction = async (ord, nextStatus) => {
+      const earnedFee = 45; // ₹30 Base + ₹15 Extra Pickup Stop Bonus
+      const etaInfo = getTrafficAndDeliveryEta(ord.distanceKm || 2.8, nextStatus);
+      const nowTime = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+      const updatedHistory = [...(ord.statusHistory || []), { status: nextStatus, time: nowTime }];
+
+      const orderPatch = {
         status: nextStatus,
-      }).catch(() => {});
+        deliveryPartnerId: currentUser.id,
+        deliveryPartnerName: currentUser.name,
+        deliveryPartnerMobile: currentUser.mobile,
+        etaMinutes: etaInfo.etaMinutes,
+        trafficStatus: etaInfo.trafficLabel,
+        statusHistory: updatedHistory,
+        ...(nextStatus === 'Delivered' ? { riderFee: earnedFee, deliveredAt: Date.now() } : {}),
+      };
 
-      // Push Notification for Picked / Out for Delivery Stage
-      dispatchOrderStagePushAlert({
-        ord,
-        tag: allAcceptedPicked ? 'OUT FOR DELIVERY' : 'ORDER PICKED UP',
-        title: allAcceptedPicked
-          ? `Rythu Basket • Order #${ord.id} Out for Delivery! 🚚`
-          : `Rythu Basket • Order #${ord.id} Picked Up! 📦`,
-        body: allAcceptedPicked
-          ? `Rider ${currentUser.name} has picked up all items and is on the way! Live ETA: ~${etaInfo.etaMinutes} mins (${etaInfo.trafficLabel}).`
-          : `Stop ${stopIdx + 1} picked up by ${currentUser.name}. Live ETA: ~${etaInfo.etaMinutes} mins.`,
-      });
+      setOrders((prev) => prev.map((o) => (o.id === ord.id ? { ...o, ...orderPatch } : o)));
+      await updateDoc(doc(db, 'orders', ord.id), orderPatch).catch(() => {});
+
+      if (nextStatus === 'Delivered') {
+        const nextWallet = Number(currentUser.wallet || 0) + earnedFee;
+        setCurrentUser((prev) => ({ ...prev, wallet: nextWallet }));
+        setUsers((prev) => prev.map((u) => (u.id === currentUser.id ? { ...u, wallet: nextWallet } : u)));
+        await updateDoc(doc(db, 'users', currentUser.id), { wallet: nextWallet }).catch(() => {});
+      }
+
+      // Send Push Notification to Customer Lock Screen + In-App Notifications
+      const stageMsgMap = {
+        Picked: `Order ${ord.id} Picked Up by ${currentUser.name}! Live ETA: ~${etaInfo.etaMinutes} mins (${etaInfo.trafficLabel}).`,
+        'Out for Delivery': `Order ${ord.id} is Out for Delivery! Reaching your doorstep in ~${etaInfo.etaMinutes} mins (${etaInfo.trafficLabel}).`,
+        Delivered: `Order ${ord.id} Delivered Fresh! Thank you for ordering from Rythu Basket Nellore.`,
+      };
+      const pushBody = stageMsgMap[nextStatus] || `Order ${ord.id} is ${nextStatus}`;
+
+      const alertObj = {
+        id: 'bo_' + Date.now(),
+        tag: `ORDER ${nextStatus.toUpperCase()}`,
+        targetUserId: ord.customerId,
+        message: pushBody,
+        createdAt: Date.now(),
+        date: new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
+      };
+      setBroadcastOffers((prev) => [alertObj, ...prev]);
+      await setDoc(doc(db, 'broadcastOffers', alertObj.id), alertObj).catch(() => {});
+
+      const custUser = users.find((u) => u.id === ord.customerId);
+      const tokens = [ord.customerFcmToken, custUser?.fcmToken].filter(Boolean);
+      if (tokens.length > 0) {
+        fetch('/api/send-push', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tokens: [...new Set(tokens)],
+            title: `Rythu Basket • Order ${nextStatus}!`,
+            body: pushBody,
+          }),
+        }).catch(() => {});
+      }
 
       notify(
-        allAcceptedPicked
-          ? 'All accepted stops Picked Up! Customer push alert & live tracking enabled.'
-          : `Stop ${stopIdx + 1} Picked Up! Customer notified.`
+        nextStatus === 'Delivered'
+          ? `Order Delivered! +₹${earnedFee} Added to Today's Earnings`
+          : `Order ${ord.id} → ${nextStatus} & Push Sent!`
       );
     };
 
-    const handleCompleteDelivery = (ord) => {
-      const stopsCount = (ord.pickupStops || []).length || 1;
-      const baseFee = ord.riderBaseFee || 30;
-      const multiBonus = ord.riderMultiStopBonus ?? Math.max(0, stopsCount - 1) * 15;
-      const totalEarned = baseFee + multiBonus;
-
-      setProducts((prev) =>
-        prev.map((p) => {
-          const orderedItem = ord.items.find((it) => it.id === p.id);
-          if (!orderedItem) return p;
-          return { ...p, stockKg: Math.max(0, p.stockKg - orderedItem.qty) };
-        })
-      );
-      setOrders((prev) => prev.map((o) => (o.id === ord.id ? { ...o, status: 'Delivered' } : o)));
-      updateDoc(doc(db, 'orders', ord.id), { status: 'Delivered' }).catch(() => {});
-      setCurrentUser({
-        ...currentUser,
-        wallet: (currentUser.wallet || 0) + totalEarned,
-        weeklyOrders: weeklyCompleted + 1,
-      });
-
-      // Push Notification for Delivered Stage
-      dispatchOrderStagePushAlert({
-        ord,
-        tag: 'ORDER DELIVERED',
-        title: `Rythu Basket • Order #${ord.id} Delivered! ✅`,
-        body: `Your order #${ord.id} has been delivered by ${currentUser.name}. Thank you for shopping fresh with Rythu Basket Nellore!`,
-      });
-
-      sendAutomaticInvoiceEmail(ord);
-      notify(`Delivered! ₹${baseFee} Base + ₹${multiBonus} Multi-Stop Bonus (Total ₹${totalEarned}) credited!`);
-    };
-
-    return (
-      <div style={fontStyle} className="min-h-screen bg-[#F5F7F5] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
-        {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-extrabold px-4 py-2 rounded-full shadow-lg">{toast}</div>}
-
-        <header className="bg-white px-4 py-3.5 flex items-center justify-between border-b border-slate-100 sticky top-0 z-30">
-          <div>
-            <span className="text-[10px] font-bold text-slate-400 block">Hello,</span>
-            <h1 className="text-sm font-extrabold text-slate-900">{currentUser.name} 🛵</h1>
+return (
+      <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
+        {toast && (
+          <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-extrabold px-4 py-2 rounded-full shadow-lg">
+            {toast}
           </div>
-          <span className="bg-emerald-50 text-[#15803D] text-xs font-extrabold px-3 py-1 rounded-full">₹{currentUser.wallet || 0}</span>
+        )}
+
+        {/* TOP HEADER */}
+        <header className="bg-white px-4 pt-4 pb-3 flex items-center justify-between border-b border-slate-100">
+          <div>
+            <p className="text-[11px] font-bold text-slate-400">Hello,</p>
+            <h1 className="text-base font-extrabold text-slate-900 flex items-center space-x-1.5">
+              <span>{currentUser.name}</span>
+              <span>🛵</span>
+            </h1>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('profile');
+              setSelectedProfileSection('wallet');
+            }}
+            className="bg-emerald-50 text-[#15803D] border border-emerald-200 px-3 py-1.5 rounded-full text-xs font-extrabold"
+          >
+            ₹{liveWalletBalance}
+          </button>
         </header>
 
-{activeTab === 'home' && (
+        {/* DELIVERIES TAB (NEVER BLANK) */}
+        {activeTab !== 'profile' && (
           <main className="p-4 space-y-3.5 text-xs">
-            <div className="bg-gradient-to-r from-[#0F5132] to-[#16A34A] text-white rounded-3xl p-4 shadow-md flex items-center justify-between">
+            {/* TODAY'S EARNINGS GREEN GRADIENT CARD */}
+            <div className="bg-gradient-to-r from-[#0F5132] to-[#16A34A] text-white p-5 rounded-3xl shadow-md flex items-center justify-between">
               <div>
-                <p className="text-emerald-100 font-bold">Today's Earnings</p>
-                <h2 className="text-2xl font-extrabold mt-0.5">₹{currentUser.wallet || 0}</h2>
-                <p className="text-[10px] text-amber-200 font-bold mt-0.5">₹30 Base + ₹15 Extra Pickup Stop Bonus</p>
+                <p className="text-xs font-bold text-emerald-100">Today's Earnings</p>
+                <p className="text-3xl font-extrabold mt-1">₹{todaysDeliveryEarnings}</p>
+                <p className="text-[10px] font-bold text-emerald-100 mt-1.5">
+                  ₹30 Base + ₹15 Extra Pickup Stop Bonus
+                </p>
               </div>
-              <TrendingUp className="h-10 w-10 text-[#FDE047]" />
+              <TrendingUp className="h-9 w-9 text-[#FDE047]" />
             </div>
 
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <button onClick={() => setDelivFilter('available')} className={`p-2.5 rounded-2xl border ${delivFilter === 'available' ? 'bg-emerald-50 border-[#15803D]' : 'bg-white'}`}>
-                <p className="text-[10px] text-slate-500 font-bold">Ready for Pickup</p>
-                <p className="text-base font-extrabold text-[#EA580C]">{availOrders.length}</p>
+            {/* 3 STAT TABS: READY FOR PICKUP / COMPLETED / WEEKLY */}
+            <div className="grid grid-cols-3 gap-2.5">
+              <button
+                type="button"
+                onClick={() => setDeliveryView('ready')}
+                className={`p-3 rounded-2xl border text-center transition ${
+                  deliveryView === 'ready'
+                    ? 'bg-emerald-50/70 border-[#15803D] shadow-sm'
+                    : 'bg-white border-slate-100'
+                }`}
+              >
+                <p className="text-[10px] font-bold text-slate-500">Ready for Pickup</p>
+                <p className="text-lg font-extrabold text-[#EA580C] mt-0.5">
+                  {readyForPickupOrders.length + myActiveDeliveries.length}
+                </p>
               </button>
-              <button onClick={() => setDelivFilter('delivered')} className={`p-2.5 rounded-2xl border ${delivFilter === 'delivered' ? 'bg-emerald-50 border-[#15803D]' : 'bg-white'}`}>
-                <p className="text-[10px] text-slate-500 font-bold">Completed</p>
-                <p className="text-base font-extrabold text-[#15803D]">{delivOrders.length}</p>
+
+              <button
+                type="button"
+                onClick={() => setDeliveryView('completed')}
+                className={`p-3 rounded-2xl border text-center transition ${
+                  deliveryView === 'completed'
+                    ? 'bg-emerald-50/70 border-[#15803D] shadow-sm'
+                    : 'bg-white border-slate-100'
+                }`}
+              >
+                <p className="text-[10px] font-bold text-slate-500">Completed</p>
+                <p className="text-lg font-extrabold text-[#15803D] mt-0.5">{myCompletedDeliveries.length}</p>
               </button>
-              <div className="p-2.5 rounded-2xl border bg-white">
-                <p className="text-[10px] text-slate-500 font-bold">Weekly</p>
-                <p className="text-base font-extrabold text-sky-600">{weeklyCompleted}/100</p>
-              </div>
+
+              <button
+                type="button"
+                onClick={() => setDeliveryView('weekly')}
+                className={`p-3 rounded-2xl border text-center transition ${
+                  deliveryView === 'weekly'
+                    ? 'bg-emerald-50/70 border-[#15803D] shadow-sm'
+                    : 'bg-white border-slate-100'
+                }`}
+              >
+                <p className="text-[10px] font-bold text-slate-500">Weekly</p>
+                <p className="text-lg font-extrabold text-blue-600 mt-0.5">
+                  {weeklyCount}/{weeklyTarget}
+                </p>
+              </button>
             </div>
 
-            {(delivFilter === 'available' ? availOrders : delivOrders).length === 0 ? (
-              <div className="bg-white rounded-2xl p-6 text-center text-slate-400 font-bold">
-                {delivFilter === 'available'
-                  ? 'No seller-accepted orders waiting for pickup right now.'
-                  : 'No completed deliveries yet.'}
-              </div>
-            ) : (
-              (delivFilter === 'available' ? availOrders : delivOrders).map((ord) => {
-                const stops = (ord.pickupStops || buildPickupStopsFromItems(ord.items || [])).filter(
-                  (s) => s.stopStatus === 'Accepted'
-                );
-                const baseFee = ord.riderBaseFee || 30;
-                const multiBonus = ord.riderMultiStopBonus ?? Math.max(0, stops.length - 1) * 15;
-                const riderPayout = baseFee + multiBonus;
-                const isAssignedToMe = ord.status === 'Partner Assigned' || ord.status === 'Out for Delivery';
-                const dropMapQuery = ord.buyerLat && ord.buyerLng
-                  ? `${ord.buyerLat},${ord.buyerLng}`
-                  : encodeURIComponent(ord.buyerAddress);
-                const etaInfo = getTrafficAndDeliveryEta(ord.distanceKm || 3.2, ord.status);
-
-                return (
-                  <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2.5">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <span className="font-extrabold text-slate-900">#{ord.id} ({ord.buyerRole.toUpperCase()})</span>
-                        <p className="text-[10px] font-bold text-slate-500">{ord.buyerName} • +91 {ord.buyerMobile}</p>
-                        {ord.status !== 'Delivered' && (
-                          <p className="text-[10px] font-extrabold text-[#15803D]">
-                            ETA: ~{etaInfo.etaMinutes} mins • {etaInfo.distanceKm} km ({etaInfo.trafficLabel})
-                          </p>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <span className="bg-emerald-100 text-[#15803D] font-extrabold px-2.5 py-1 rounded-full text-[11px]">
-                          Earn ₹{riderPayout}
-                        </span>
-                        {multiBonus > 0 && (
-                          <p className="text-[9px] font-extrabold text-[#EA580C] mt-0.5">
-                            +₹{multiBonus} Multi-Stop Bonus
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-2">
-                      <p className="text-[10px] font-extrabold text-slate-700 uppercase">
-                        1. Accepted Farmer / Shop Pickup Stops ({stops.length}):
-                      </p>
-                      {stops.map((st, idx) => {
-                        const stMap = st.sellerLat && st.sellerLng
-                          ? `${st.sellerLat},${st.sellerLng}`
-                          : encodeURIComponent(st.sellerName);
-                        const originalIdx = (ord.pickupStops || []).findIndex((x) => x.stopId === st.stopId);
-                        return (
-                          <div key={st.stopId} className="bg-white rounded-lg p-2 border border-slate-100 flex items-center justify-between gap-2">
-                            <div className="min-w-0 flex-1">
-                              <p className="font-extrabold text-[11px] text-slate-900 truncate">
-                                Stop {idx + 1}: {st.acceptedByUserName || st.sellerName}
-                              </p>
-                              <p className="text-[10px] text-slate-500 truncate">{st.itemsSummary.join(', ')}</p>
-                            </div>
-                            <div className="flex items-center space-x-1.5 flex-shrink-0">
-                              <a
-                                href={`https://www.google.com/maps/dir/?api=1&destination=${stMap}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="bg-sky-600 text-white px-2.5 py-1 rounded-lg font-extrabold text-[10px] flex items-center space-x-1"
-                              >
-                                <Navigation className="h-3 w-3" />
-                                <span>Pickup Map</span>
-                              </a>
-                              {isAssignedToMe && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleMarkOrderPickedUp(ord, originalIdx >= 0 ? originalIdx : idx)}
-                                  className={`px-2 py-1 rounded-lg font-extrabold text-[10px] ${
-                                    st.pickedUp ? 'bg-[#15803D] text-white' : 'bg-amber-200 text-amber-950'
-                                  }`}
-                                >
-                                  {st.pickedUp ? '✓ Picked' : 'Mark Picked'}
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-
-<p className="text-[10px] font-extrabold text-[#0F5132] uppercase pt-1">
-                        2. Customer / Buyer Drop Location:
-                      </p>
-                      <div className="bg-emerald-50/80 rounded-lg p-2 border border-emerald-200 flex items-center justify-between gap-2">
-                        <div className="min-w-0 flex-1">
-                          <p className="font-extrabold text-[11px] text-[#0F5132]">{ord.buyerName}</p>
-                          <p className="text-[10px] text-slate-600 truncate">{ord.buyerAddress}</p>
-                        </div>
-                        <a
-                          href={`https://www.google.com/maps/dir/?api=1&destination=${dropMapQuery}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="bg-[#15803D] text-white px-2.5 py-1.5 rounded-lg font-extrabold text-[10px] flex items-center space-x-1 flex-shrink-0"
-                        >
-                          <Navigation className="h-3 w-3" />
-                          <span>Customer Map</span>
-                        </a>
-                      </div>
-                    </div>
-
-                    {isAssignedToMe && (
-                      <p className="text-[10px] font-extrabold text-[#15803D] bg-emerald-50 px-2.5 py-1 rounded-lg">
-                        🛵 Live Scooter GPS Active ({ord.driverCoords})
-                      </p>
-                    )}
-
-                    {ord.status !== 'Delivered' && (
-                      <button
-                        onClick={() => {
-                          if (!isAssignedToMe) {
-                            const initLat = mapPinCoords.lat;
-                            const initLng = mapPinCoords.lng;
-                            setOrders((prev) =>
-                              prev.map((o) =>
-                                o.id === ord.id
-                                  ? { ...o, status: 'Partner Assigned', driverName: currentUser.name, driverMobile: currentUser.mobile, driverLat: initLat, driverLng: initLng, driverCoords: `${initLat}, ${initLng}` }
-                                  : o
-                              )
-                            );
-                            updateDoc(doc(db, 'orders', ord.id), {
-                              status: 'Partner Assigned',
-                              driverName: currentUser.name,
-                              driverMobile: currentUser.mobile,
-                              driverLat: initLat,
-                              driverLng: initLng,
-                              driverCoords: `${initLat}, ${initLng}`,
-                            }).catch(() => {});
-
-                            dispatchOrderStagePushAlert({
-                              ord,
-                              tag: 'RIDER ASSIGNED',
-                              title: `Rythu Basket • Rider Assigned for #${ord.id}! 🛵`,
-                              body: `${currentUser.name} is heading to pick up your fresh order #${ord.id}. Live ETA: ~${etaInfo.etaMinutes} mins (${etaInfo.trafficLabel}).`,
-                            });
-
-                            notify('Accepted! Customer notified & live scooter tracking active.');
-                          } else {
-                            if (ord.b2bOtp) {
-                              const entered = window.prompt(`Enter ${ord.buyerRole.toUpperCase()} Delivery OTP (${ord.b2bOtp}):`);
-                              if (entered !== ord.b2bOtp) {
-                                notify('Invalid B2B OTP!');
-                                return;
-                              }
-                            }
-                            handleCompleteDelivery(ord);
-                          }
-                        }}
-                        className="w-full bg-[#15803D] text-white font-extrabold py-2.5 rounded-xl"
-                      >
-                        {!isAssignedToMe
-                          ? `Accept Route (Earn ₹${riderPayout})`
-                          : ord.b2bOtp
-                          ? 'Verify B2B OTP & Complete'
-                          : `Complete Delivery (Collect ₹${riderPayout})`}
-                      </button>
-                    )}
+  {/* VIEW 1: READY FOR PICKUP & ACTIVE DELIVERIES */}
+            {deliveryView === 'ready' && (
+              <div className="space-y-3">
+                {readyForPickupOrders.length === 0 && myActiveDeliveries.length === 0 ? (
+                  <div className="bg-white rounded-3xl p-8 text-center font-bold text-slate-400 border border-slate-100">
+                    No seller-accepted orders waiting for pickup right now.
                   </div>
-                );
-              })
+                ) : (
+                  [...myActiveDeliveries, ...readyForPickupOrders].map((ord) => {
+                    const etaInfo = getTrafficAndDeliveryEta(ord.distanceKm || 2.8, ord.status);
+                    return (
+                      <div key={ord.id} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-2.5">
+                        <div className="flex justify-between items-center">
+                          <span className="font-mono font-extrabold text-slate-900">{ord.id}</span>
+                          <span className="bg-amber-100 text-amber-900 font-extrabold px-2.5 py-0.5 rounded-full text-[10px]">
+                            {ord.status}
+                          </span>
+                        </div>
+                        <p className="font-bold text-slate-700">Pickup: {ord.sellerName}</p>
+                        <p className="font-bold text-slate-700">Drop: {ord.customerName} • {ord.deliveryAddress}</p>
+                        <div className="bg-emerald-50 p-2.5 rounded-xl flex justify-between font-extrabold text-[#15803D]">
+                          <span>{etaInfo.distanceKm} km ({etaInfo.trafficLabel})</span>
+                          <span>ETA: ~{etaInfo.etaMinutes} mins</span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <a
+                            href={`tel:${ord.customerMobile}`}
+                            className="bg-slate-100 text-slate-800 font-extrabold py-2.5 rounded-xl flex items-center justify-center space-x-1"
+                          >
+                            <Phone className="h-3.5 w-3.5" />
+                            <span>Call Customer</span>
+                          </a>
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ord.deliveryAddress)}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="bg-blue-50 text-blue-700 font-extrabold py-2.5 rounded-xl flex items-center justify-center space-x-1"
+                          >
+                            <Navigation className="h-3.5 w-3.5" />
+                            <span>Google Maps</span>
+                          </a>
+                        </div>
+
+                        {ord.status === 'Accepted' && (
+                          <button
+                            type="button"
+                            onClick={() => handleRiderOrderAction(ord, 'Picked')}
+                            className="w-full bg-[#EA580C] text-white font-extrabold py-3 rounded-2xl shadow"
+                          >
+                            📦 Confirm Pickup & Push Notify
+                          </button>
+                        )}
+                        {ord.status === 'Picked' && (
+                          <button
+                            type="button"
+                            onClick={() => handleRiderOrderAction(ord, 'Out for Delivery')}
+                            className="w-full bg-amber-600 text-white font-extrabold py-3 rounded-2xl shadow"
+                          >
+                            🚚 Out for Delivery & Push Notify
+                          </button>
+                        )}
+                        {ord.status === 'Out for Delivery' && (
+                          <button
+                            type="button"
+                            onClick={() => handleRiderOrderAction(ord, 'Delivered')}
+                            className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow"
+                          >
+                            ✅ Mark Delivered (+₹45 Earning)
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
+
+{/* VIEW 2: COMPLETED DELIVERIES */}
+            {deliveryView === 'completed' && (
+              <div className="space-y-2.5">
+                {myCompletedDeliveries.length === 0 ? (
+                  <div className="bg-white rounded-3xl p-8 text-center font-bold text-slate-400">
+                    No completed deliveries yet.
+                  </div>
+                ) : (
+                  myCompletedDeliveries.map((ord) => (
+                    <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex justify-between items-center">
+                      <div>
+                        <span className="font-mono font-extrabold text-slate-900">{ord.id}</span>
+                        <p className="text-[11px] font-bold text-slate-600">{ord.customerName} • {ord.deliveryAddress}</p>
+                        <p className="text-[10px] text-slate-400">From: {ord.sellerName}</p>
+                      </div>
+                      <span className="bg-emerald-50 text-[#15803D] font-extrabold px-2.5 py-1 rounded-xl">
+                        +₹{ord.riderFee || 45}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {/* VIEW 3: WEEKLY TARGET & INCENTIVES */}
+            {deliveryView === 'weekly' && (
+              <div className="bg-white rounded-3xl p-4 shadow-sm border border-blue-100 space-y-3">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-extrabold text-sm text-slate-900">Weekly Incentive Milestone</h3>
+                  <span className="font-extrabold text-blue-600">{weeklyCount} / {weeklyTarget} Trips</span>
+                </div>
+                <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                  <div
+                    className="bg-blue-600 h-full rounded-full transition-all"
+                    style={{ width: `${Math.min(100, Math.round((weeklyCount / weeklyTarget) * 100))}%` }}
+                  />
+                </div>
+                <p className="text-[11px] font-bold text-slate-600">
+                  Complete 100 deliveries this week to unlock <span className="text-[#15803D] font-extrabold">₹500 Extra Weekly Bonus!</span>
+                </p>
+              </div>
             )}
           </main>
         )}
 
-        {activeTab === 'profile' && renderSharedProfileTab()}
+        {/* PROFILE TAB WITH ALL SYNCED MENU SECTIONS */}
+        {activeTab === 'profile' && (
+          <main className="p-4 space-y-3 text-xs">
+            {/* RIDER DETAILS CARD */}
+            <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-1.5 text-[11px]">
+              <p className="text-slate-400 font-bold">Owner: <span className="text-slate-900 font-extrabold">{currentUser.name}</span></p>
+              <p className="text-slate-400 font-bold">Vehicle: <span className="text-slate-900 font-extrabold">{currentUser.vehicle || 'Two Wheeler (AP26BG1234)'}</span></p>
+              <p className="text-slate-400 font-bold">Emergency Contact: <span className="text-slate-900 font-extrabold">+91 {currentUser.mobile}</span></p>
+              <p className="text-slate-400 font-bold">Location: <span className="text-slate-900 font-extrabold">{currentUser.village}</span></p>
+              <p className="text-slate-400 font-bold">Bank / UPI: <span className="text-slate-900 font-extrabold">{currentUser.bankAccount || '1234567890 (SBIN0001234)'}</span></p>
+            </div>
 
+            {/* SELECTED PROFILE SUB-SCREEN DRAWER */}
+            {selectedProfileSection && (
+              <div className="bg-white rounded-3xl p-4 shadow-sm border border-emerald-200 space-y-2.5">
+                <div className="flex items-center justify-between border-b pb-2">
+                  <h3 className="font-extrabold text-sm text-[#15803D] uppercase">{selectedProfileSection}</h3>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedProfileSection(null)}
+                    className="text-xs font-extrabold text-slate-500 px-2 py-0.5 bg-slate-100 rounded-lg"
+                  >
+                    Close ✕
+                  </button>
+                </div>
+
+                {selectedProfileSection === 'Available Orders' && (
+                  readyForPickupOrders.length === 0 ? (
+                    <p className="text-slate-400 font-bold py-2">No new accepted orders available right now.</p>
+                  ) : (
+                    readyForPickupOrders.map((o) => (
+                      <div key={o.id} className="p-2.5 bg-slate-50 rounded-xl flex justify-between items-center">
+                        <div>
+                          <p className="font-extrabold">{o.id} • {o.sellerName}</p>
+                          <p className="text-[10px] text-slate-500">{o.deliveryAddress}</p>
+                        </div>
+                        <button
+                          onClick={() => handleRiderOrderAction(o, 'Picked')}
+                          className="bg-[#15803D] text-white px-3 py-1.5 rounded-lg font-extrabold text-[10px]"
+                        >
+                          Pick Up
+                        </button>
+                      </div>
+                    ))
+                  )
+                )}
+
+   {selectedProfileSection === 'My Deliveries' && (
+                  myActiveDeliveries.length === 0 ? (
+                    <p className="text-slate-400 font-bold py-2">No active deliveries in transit.</p>
+                  ) : (
+                    myActiveDeliveries.map((o) => (
+                      <div key={o.id} className="p-2.5 bg-amber-50 rounded-xl flex justify-between items-center">
+                        <div>
+                          <p className="font-extrabold">{o.id} ({o.status})</p>
+                          <p className="text-[10px] text-slate-600">{o.customerName} • {o.deliveryAddress}</p>
+                        </div>
+                        <button
+                          onClick={() => handleRiderOrderAction(o, 'Delivered')}
+                          className="bg-[#15803D] text-white px-3 py-1.5 rounded-lg font-extrabold text-[10px]"
+                        >
+                          Deliver
+                        </button>
+                      </div>
+                    ))
+                  )
+                )}
+
+                {selectedProfileSection === 'Pickup History' && (
+                  myPickupHistory.length === 0 ? (
+                    <p className="text-slate-400 font-bold py-2">No pickups recorded yet.</p>
+                  ) : (
+                    myPickupHistory.map((o) => (
+                      <div key={o.id} className="p-2.5 bg-slate-50 rounded-xl flex justify-between">
+                        <span className="font-extrabold">{o.id} • {o.sellerName}</span>
+                        <span className="text-[#15803D] font-extrabold">{o.status}</span>
+                      </div>
+                    ))
+                  )
+                )}
+
+                {selectedProfileSection === 'Delivery History' && (
+                  myCompletedDeliveries.length === 0 ? (
+                    <p className="text-slate-400 font-bold py-2">No completed deliveries yet.</p>
+                  ) : (
+                    myCompletedDeliveries.map((o) => (
+                      <div key={o.id} className="p-2.5 bg-emerald-50/60 rounded-xl flex justify-between">
+                        <span className="font-extrabold">{o.id} • {o.customerName}</span>
+                        <span className="text-[#15803D] font-extrabold">+₹{o.riderFee || 45}</span>
+                      </div>
+                    ))
+                  )
+                )}
+
+                {selectedProfileSection === 'Earnings' && (
+                  <div className="space-y-1.5 font-bold">
+                    <p>Today's Earnings: <span className="text-[#15803D] font-extrabold">₹{todaysDeliveryEarnings}</span></p>
+                    <p>Total Lifetime Earnings: <span className="text-slate-900 font-extrabold">₹{totalDeliveryEarnings}</span></p>
+                    <p className="text-[10px] text-slate-500">Rate Card: ₹30 Base Pay + ₹15 Extra Pickup Stop Bonus per order.</p>
+                  </div>
+                )}
+
+                {selectedProfileSection === 'Incentives (Weekly Target)' && (
+                  <div className="space-y-2">
+                    <p className="font-extrabold">Progress: {weeklyCount} / {weeklyTarget} Deliveries</p>
+                    <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                      <div className="bg-[#15803D] h-full" style={{ width: `${Math.min(100, weeklyCount)}%` }} />
+                    </div>
+                    <p className="text-[10px] text-slate-500 font-bold">Reach 100 deliveries to earn ₹500 Weekly Bonus.</p>
+                  </div>
+                )}
+
+                {selectedProfileSection === 'Wallet' && (
+                  <p className="font-extrabold text-sm text-[#15803D]">Available Rider Wallet: ₹{liveWalletBalance}</p>
+                )}
+
+{selectedProfileSection === 'Bank Withdrawals' && (
+                  <div className="space-y-2">
+                    <input
+                      type="number"
+                      value={withdrawAmt}
+                      onChange={(e) => setWithdrawAmt(e.target.value)}
+                      placeholder={`Enter amount (Max ₹${liveWalletBalance})`}
+                      className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-bold"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const amt = Number(withdrawAmt);
+                        if (amt <= 0 || amt > liveWalletBalance) {
+                          notify('Enter valid withdrawal amount!');
+                          return;
+                        }
+                        const rem = liveWalletBalance - amt;
+                        setCurrentUser((prev) => ({ ...prev, wallet: rem }));
+                        updateDoc(doc(db, 'users', currentUser.id), { wallet: rem }).catch(() => {});
+                        setWithdrawAmt('');
+                        notify(`₹${amt} Withdrawal Request Sent to Bank!`);
+                      }}
+                      className="w-full bg-[#15803D] text-white font-extrabold py-2.5 rounded-xl"
+                    >
+                      Withdraw to Bank Account
+                    </button>
+                  </div>
+                )}
+
+                {selectedProfileSection === 'Customer Ratings' && (
+                  <p className="font-extrabold text-amber-600">⭐ 4.9 / 5.0 Average Rating ({myCompletedDeliveries.length} Rated Trips)</p>
+                )}
+
+                {selectedProfileSection === 'Help & Support' && (
+                  <a href="tel:8328261103" className="block text-center bg-amber-50 text-amber-900 font-extrabold py-2.5 rounded-xl border border-amber-200">
+                    📞 Call Nellore Rider Support: 8328261103
+                  </a>
+                )}
+              </div>
+            )}
+
+            {/* MENU LIST */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 divide-y divide-slate-100 overflow-hidden">
+              {[
+                { label: `Available Orders (${readyForPickupOrders.length})`, key: 'Available Orders' },
+                { label: `My Deliveries (${myActiveDeliveries.length})`, key: 'My Deliveries' },
+                { label: `Pickup History (${myPickupHistory.length})`, key: 'Pickup History' },
+                { label: `Delivery History (${myCompletedDeliveries.length})`, key: 'Delivery History' },
+                { label: `Earnings (₹${totalDeliveryEarnings})`, key: 'Earnings' },
+                { label: `Incentives (Weekly Target ${weeklyCount}/100)`, key: 'Incentives (Weekly Target)' },
+                { label: `Wallet (₹${liveWalletBalance})`, key: 'Wallet' },
+                { label: 'Bank Withdrawals', key: 'Bank Withdrawals' },
+                { label: 'Customer Ratings', key: 'Customer Ratings' },
+                { label: 'Help & Support', key: 'Help & Support' },
+              ].map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => setSelectedProfileSection(item.key)}
+                  className="w-full px-4 py-3.5 flex items-center justify-between text-left font-extrabold text-slate-800 hover:bg-slate-50"
+                >
+                  <span>{item.label}</span>
+                  <span className="text-slate-400">&gt;</span>
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setCurrentUser(null);
+                setActiveTab('home');
+              }}
+              className="w-full bg-[#E11D48] text-white font-extrabold py-3.5 rounded-2xl shadow flex items-center justify-center space-x-2"
+            >
+              <LogOut className="h-4 w-4" />
+              <span>Logout (Switch Role)</span>
+            </button>
+          </main>
+        )}
+
+{/* BOTTOM NAVIGATION */}
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-12 py-2.5 flex justify-between items-center z-40">
-          <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'home' ? 'text-[#15803D]' : 'text-slate-400'}`}>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('home');
+              setDeliveryView('ready');
+            }}
+            className={`flex flex-col items-center text-[10px] font-extrabold ${
+              activeTab !== 'profile' ? 'text-[#15803D]' : 'text-slate-400'
+            }`}
+          >
             <Truck className="h-5 w-5 mb-0.5" />
             <span>Deliveries</span>
           </button>
-          <button onClick={() => setActiveTab('profile')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'profile' ? 'text-[#15803D]' : 'text-slate-400'}`}>
+          <button
+            type="button"
+            onClick={() => setActiveTab('profile')}
+            className={`flex flex-col items-center text-[10px] font-extrabold ${
+              activeTab === 'profile' ? 'text-[#15803D]' : 'text-slate-400'
+            }`}
+          >
             <User className="h-5 w-5 mb-0.5" />
             <span>Profile</span>
           </button>
