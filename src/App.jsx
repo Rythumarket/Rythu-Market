@@ -5,8 +5,8 @@ import {
   Search, ShoppingCart, Plus, Home, ClipboardList, User, MapPin,
   Phone, MessageSquare, Sprout, Store, Truck, ShieldCheck, ChevronRight,
   ArrowLeft, CheckCircle2, Wallet, Sparkles, Bell, Globe,
-  LocateFixed, LogOut, Printer, Warehouse, ChevronDown,
-  Briefcase, Grid, Check, Tag, Edit3,
+  LocateFixed, LogOut, Warehouse, ChevronDown,
+  Briefcase, Grid, Tag, Edit3,
   TrendingUp, Package, HelpCircle, Navigation, Camera, Landmark, Volume2, VolumeX, Trash2, Image,
   Heart, UserPlus, RefreshCw, Clock
 } from 'lucide-react';
@@ -22,7 +22,7 @@ const EMAILJS_PUBLIC_KEY = 'Y1UQmUcSoEzEtFR1m';
 const MASTER_ADMIN_MOBILES = ['8328261103'];
 const MASTER_ADMIN_EMAILS = ['madhavam.com@gmail.com', 'madhavareddy2516@gmail.com'];
 
-// Role Hero Images (Updated Indian Farmer Photo instead of Tractor)
+// Role Hero Images
 const FARMER_HERO_IMG = 'https://images.unsplash.com/photo-1605000797499-95a51c5269ae?auto=format&fit=crop&w=600&q=80';
 const WHOLESALE_HERO_IMG = 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=600&q=80';
 const RETAIL_HERO_IMG = 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80';
@@ -123,6 +123,14 @@ const DEFAULT_MASTER_CATALOG = [
   { id: 'cat_juice', nameEn: 'Fresh Mango Juice & Cold Drink', nameTe: 'మామిడి జ్యూస్ & కూల్ డ్రింక్', cat: 'Cold drinks and Juices', defaultUnit: 'Litres', img: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=400&q=80' },
 ];
 
+const DEFAULT_NELLORE_MANDI_RATES = [
+  { id: 'mr_1', cropEn: 'Tomato (Hybrid)', cropTe: 'టమాటా', minPrice: 18, modalPrice: 24, maxPrice: 28, mandi: 'Nellore APMC Yard' },
+  { id: 'mr_2', cropEn: 'Red Onion', cropTe: 'ఉల్లిపాయలు', minPrice: 24, modalPrice: 30, maxPrice: 34, mandi: 'Nellore APMC Yard' },
+  { id: 'mr_3', cropEn: 'Banganapalli Mango', cropTe: 'మామిడిపండు', minPrice: 75, modalPrice: 88, maxPrice: 98, mandi: 'Nellore APMC Yard' },
+  { id: 'mr_4', cropEn: 'Green Chillies', cropTe: 'పచ్చిమిర్చి', minPrice: 38, modalPrice: 46, maxPrice: 54, mandi: 'Nellore APMC Yard' },
+  { id: 'mr_5', cropEn: 'Sona Masoori Paddy', cropTe: 'సోనా మసూరి ధాన్యం', minPrice: 23, modalPrice: 26, maxPrice: 29, mandi: 'Nellore APMC Yard' },
+];
+
 const AVAILABILITY_SLOTS = [
   'Available Now',
   'After 1 Hour',
@@ -146,13 +154,57 @@ const INITIAL_PRODUCTS = [
   { id: 'p_juice_1', postedByRole: 'retail', farmerId: 'u_ret_1', farmerName: 'Sri Lakshmi Fresh Mart • Magunta Layout, Nellore', sellerLat: 14.4426, sellerLng: 79.9865, distanceKm: 4, nameEn: 'Chilled Mango Pulp Juice & Cola Pack', nameTe: 'మామిడి జ్యూస్ & కూల్ డ్రింక్', cat: 'Cold drinks and Juices', quality: 'Grade A', unit: 'Litres', packLabel: '1 Litre', mrp: 90, retailPrice: 75, farmerDirectPrice: 60, wholesalePrice: 65, minWholesaleQty: 20, stockKg: 300, inStock: true, desc: 'Refreshing chilled fruit juice and carbonated cold drinks.', availableFrom: 'Available Now', img: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=500&q=80' },
 ];
 
-const INITIAL_NELLORE_MANDI_RATES = [
-  { id: 'mr_1', cropEn: 'Fresh Tomato', cropTe: 'టమాటా', minKg: 18, modalKg: 24, maxKg: 28, mandi: 'Nellore APMC Yard' },
-  { id: 'mr_2', cropEn: 'Red Onion', cropTe: 'ఉల్లిపాయలు', minKg: 24, modalKg: 30, maxKg: 34, mandi: 'Nellore APMC Yard' },
-  { id: 'mr_3', cropEn: 'Green Chillies', cropTe: 'పచ్చిమిర్చి', minKg: 38, modalKg: 45, maxKg: 52, mandi: 'Nellore APMC Yard' },
-  { id: 'mr_4', cropEn: 'Banganapalli Mango', cropTe: 'మామిడిపండు', minKg: 75, modalKg: 85, maxKg: 98, mandi: 'Rapur / Nellore APMC' },
-  { id: 'mr_5', cropEn: 'Sona Masuri Paddy', cropTe: 'సోనా మసూరి ధాన్యం', minKg: 23, modalKg: 26, maxKg: 29, mandi: 'Nellore APMC Yard' },
-];
+// Accurate Distance & Traffic-Based Live ETA Helpers
+function calculateDistanceKm(lat1, lon1, lat2, lon2) {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return 2.8;
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.max(0.5, Number((R * c).toFixed(1)));
+}
+
+function getTrafficAndDeliveryEta(distanceKm, status = 'Order Placed') {
+  const hr = new Date().getHours();
+  const isPeakTraffic = (hr >= 8 && hr <= 11) || (hr >= 17 && hr <= 21);
+  const trafficLabel = isPeakTraffic ? 'Moderate-Heavy Traffic' : 'Smooth Traffic';
+  const speedFactorMinPerKm = isPeakTraffic ? 4.2 : 2.6;
+  const prepMinutes =
+    status === 'Order Placed'
+      ? 10
+      : ['Order Partially Accepted', 'Order Fully Accepted'].includes(status)
+      ? 7
+      : status === 'Partner Assigned'
+      ? 5
+      : 0;
+  const travelMinutes = Math.max(4, Math.round((distanceKm || 2.8) * speedFactorMinPerKm));
+  if (status === 'Delivered') {
+    return { etaMinutes: 0, trafficLabel, distanceKm: distanceKm || 2.8 };
+  }
+  return {
+    etaMinutes: prepMinutes + travelMinutes,
+    trafficLabel,
+    distanceKm: distanceKm || 2.8,
+  };
+}
+
+const triggerPushNotificationApi = async ({ tokens, title, body }) => {
+  const valid = (tokens || []).filter(Boolean);
+  if (valid.length === 0) return;
+  try {
+    await fetch('/api/send-push', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tokens: [...new Set(valid)], title, body }),
+    });
+  } catch {}
+};
 
 const compressImageFileToDataUrl = (file) =>
   new Promise((resolve, reject) => {
@@ -189,32 +241,49 @@ const PaymentBadge = ({ type }) => {
   );
 };
 
-const LiveScooterMap = ({ lat, lng, title, height = 200, badgeText }) => (
-  <div className="relative w-full rounded-3xl overflow-hidden border-2 border-[#15803D] shadow-md" style={{ height }}>
-    <iframe
-      title={title}
-      width="100%"
-      height={height}
-      style={{ border: 0 }}
-      src={`https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.008}%2C${lat - 0.008}%2C${lng + 0.008}%2C${lat + 0.008}&layer=mapnik&marker=${lat}%2C${lng}`}
-    />
-    <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-      <div className="relative flex flex-col items-center -mt-6">
-        <span className="bg-[#0F5132] text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full shadow mb-0.5">
-          Rider Live
-        </span>
-        <div className="h-10 w-10 rounded-full bg-white border-2 border-[#15803D] shadow-lg flex items-center justify-center text-xl animate-bounce">
-          🛵
+const LiveScooterMap = ({ lat, lng, title, height = 200, badgeText, routeUrl }) => {
+  const safeLat = Number(lat) || 14.4426;
+  const safeLng = Number(lng) || 79.9865;
+  const delta = 0.0055;
+  return (
+    <div className="relative w-full rounded-3xl overflow-hidden border-2 border-[#15803D] shadow-md" style={{ height }}>
+      <iframe
+        key={`${safeLat.toFixed(4)}_${safeLng.toFixed(4)}`}
+        title={title}
+        width="100%"
+        height={height}
+        style={{ border: 0 }}
+        src={`https://www.openstreetmap.org/export/embed.html?bbox=${safeLng - delta}%2C${safeLat - delta}%2C${safeLng + delta}%2C${safeLat + delta}&layer=mapnik&marker=${safeLat}%2C${safeLng}`}
+      />
+      <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+        <div className="relative flex flex-col items-center -mt-6">
+          <span className="bg-[#0F5132] text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full shadow mb-0.5">
+            Rider Live
+          </span>
+          <div className="h-10 w-10 rounded-full bg-white border-2 border-[#15803D] shadow-lg flex items-center justify-center text-xl animate-bounce">
+            🛵
+          </div>
         </div>
       </div>
+      {badgeText && (
+        <span className="absolute bottom-2 left-2 bg-slate-900/90 text-white text-[10px] font-extrabold px-3 py-1 rounded-full">
+          {badgeText}
+        </span>
+      )}
+      {routeUrl && (
+        <a
+          href={routeUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="absolute top-2 right-2 bg-white/95 text-[#15803D] border border-emerald-200 text-[10px] font-extrabold px-2.5 py-1 rounded-full shadow flex items-center space-x-1"
+        >
+          <Navigation className="h-3 w-3" />
+          <span>Full Route</span>
+        </a>
+      )}
     </div>
-    {badgeText && (
-      <span className="absolute bottom-2 left-2 bg-slate-900/90 text-white text-[10px] font-extrabold px-3 py-1 rounded-full">
-        {badgeText}
-      </span>
-    )}
-  </div>
-);
+  );
+};
 
 const isValidIndianMobile = (num) => /^[6-9]\d{9}$/.test(num);
 const isValidEmail = (em) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em.trim());
@@ -270,39 +339,6 @@ const computeOrderAcceptanceStatus = (stops, currentStatus) => {
   if (acceptedCount < activeStops.length) return 'Order Partially Accepted';
   return 'Order Fully Accepted';
 };
-
-function calculateDistanceKm(lat1, lon1, lat2, lon2) {
-  if (!lat1 || !lon1 || !lat2 || !lon2) return 3.4;
-  const R = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return Math.max(0.8, Number((R * c).toFixed(1)));
-}
-
-function getTrafficAndDeliveryEta(distanceKm, status = 'Order Placed') {
-  const hr = new Date().getHours();
-  const isPeakTraffic = (hr >= 8 && hr <= 11) || (hr >= 17 && hr <= 21);
-  const trafficLabel = isPeakTraffic ? 'Moderate-Heavy Traffic' : 'Smooth Traffic';
-  const speedFactorMinPerKm = isPeakTraffic ? 4.2 : 2.6;
-  const prepMinutes =
-    status === 'Order Placed'
-      ? 10
-      : status === 'Order Partially Accepted' || status === 'Order Fully Accepted' || status === 'Accepted'
-      ? 7
-      : status === 'Partner Assigned' || status === 'Picked'
-      ? 4
-      : 0;
-  const travelMinutes = Math.max(5, Math.round((distanceKm || 3.2) * speedFactorMinPerKm));
-  if (status === 'Delivered') return { etaMinutes: 0, trafficLabel, distanceKm: distanceKm || 3.2 };
-  return { etaMinutes: prepMinutes + travelMinutes, trafficLabel, distanceKm: distanceKm || 3.2 };
-}
 
 export default function App() {
   useEffect(() => {
@@ -367,7 +403,7 @@ export default function App() {
     } catch {}
   }, [currentUser]);
 
-// Save Device FCM Push Token to Firestore when user logs in
+  // Save Device FCM Push Token to Firestore when user logs in
   useEffect(() => {
     if (!currentUser?.id) return;
     requestFcmDeviceToken().then((fcmToken) => {
@@ -418,13 +454,13 @@ export default function App() {
     [subAdmins]
   );
 
-  const isCurrentUserMasterAdmin =
+const isCurrentUserMasterAdmin =
     currentUser?.role === 'admin' &&
     (MASTER_ADMIN_MOBILES.includes(currentUser.mobile) ||
       MASTER_ADMIN_EMAILS.some((e) => e.toLowerCase() === (currentUser.email || '').toLowerCase()));
 
   const [products, setProducts] = useState(INITIAL_PRODUCTS);
-  const [liveMandiRates, setLiveMandiRates] = useState(INITIAL_NELLORE_MANDI_RATES);
+  const [marketRates, setMarketRates] = useState(DEFAULT_NELLORE_MANDI_RATES);
 
   const [categoriesList, setCategoriesList] = useState(() => {
     try {
@@ -446,7 +482,7 @@ export default function App() {
     }
   });
 
-const [masterCatalog, setMasterCatalog] = useState(() => {
+  const [masterCatalog, setMasterCatalog] = useState(() => {
     try {
       const saved = localStorage.getItem('rythu_master_catalog');
       return saved ? JSON.parse(saved) : DEFAULT_MASTER_CATALOG;
@@ -491,7 +527,7 @@ const [masterCatalog, setMasterCatalog] = useState(() => {
     try { localStorage.setItem('rythu_registered_users', JSON.stringify(users)); } catch {}
   }, [users]);
 
-  // Auth States
+// Auth States
   const [authScreen, setAuthScreen] = useState('login');
   const [loginIdentifier, setLoginIdentifier] = useState('');
   const [generatedEmailOtp, setGeneratedEmailOtp] = useState('');
@@ -532,12 +568,12 @@ const [masterCatalog, setMasterCatalog] = useState(() => {
   const [regIfscCode, setRegIfscCode] = useState('');
   const [regUpiId, setRegUpiId] = useState('');
   const [regTermsAccepted, setRegTermsAccepted] = useState(true);
-  const [regReferralCode, setRegReferralCode] = useState('');
+  const [regReferralCode] = useState('');
   const [regOtpSent, setRegOtpSent] = useState(false);
   const [regOtpInput, setRegOtpInput] = useState('');
   const [showWelcomeSmile, setShowWelcomeSmile] = useState(false);
 
-// Profile Edit & Extra Section Drawer
+  // Profile Edit & Extra Section Drawer
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileSubView, setProfileSubView] = useState(null);
   const [wishlistIds, setWishlistIds] = useState(['p1', 'p3']);
@@ -547,7 +583,6 @@ const [masterCatalog, setMasterCatalog] = useState(() => {
   const [activeTab, setActiveTab] = useState('home');
   const [detailProduct, setDetailProduct] = useState(null);
   const [detailQty, setDetailQty] = useState(1);
-  const [lastPlacedOrder, setLastPlacedOrder] = useState(null);
   const [trackingOrder, setTrackingOrder] = useState(null);
   const [deliverySlot] = useState('Today, 6:00 PM – 8:00 PM');
 
@@ -570,7 +605,7 @@ const [masterCatalog, setMasterCatalog] = useState(() => {
   const [isEditingPinText, setIsEditingPinText] = useState(false);
   const [isLocatingGps, setIsLocatingGps] = useState(false);
 
-  // Cart starts empty ({})
+// Cart starts empty ({})
   const [cart, setCart] = useState({});
   const [useWalletBalance] = useState(false);
   const [promoInput, setPromoInput] = useState('');
@@ -594,6 +629,15 @@ const [masterCatalog, setMasterCatalog] = useState(() => {
   const [promoMsgText, setPromoMsgText] = useState('');
   const [promoOfferTag, setPromoOfferTag] = useState('SPECIAL OFFER');
 
+  // Role-Specific GIF Banners
+  const [heroGifBanners, setHeroGifBanners] = useState([]);
+  const [gifBannerTargetRole, setGifBannerTargetRole] = useState('all');
+  const [gifBannerTitle, setGifBannerTitle] = useState('');
+  const [gifBannerSubtitle, setGifBannerSubtitle] = useState('');
+  const [gifBannerTag, setGifBannerTag] = useState('SPECIAL OFFER');
+  const [gifBannerPreview, setGifBannerPreview] = useState('');
+  const [gifBannerUrl, setGifBannerUrl] = useState('');
+
   // Admin Wallet Credit
   const [walletUserId, setWalletUserId] = useState('');
   const [walletCreditAmt, setWalletCreditAmt] = useState('50');
@@ -613,7 +657,7 @@ const [masterCatalog, setMasterCatalog] = useState(() => {
   const [fImg, setFImg] = useState('https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=400&q=80');
   const [fAvailTime, setFAvailTime] = useState('Available Now');
 
-// Admin Management Tabs & Form States
+  // Admin Management Tabs & Form States
   const [adminTab, setAdminTab] = useState('catalogue');
   const [catNameEn, setCatNameEn] = useState('');
   const [catNameTe, setCatNameTe] = useState('');
@@ -642,11 +686,9 @@ const [masterCatalog, setMasterCatalog] = useState(() => {
   const [subPermissions, setSubPermissions] = useState('Catalogue, Categories, Coupons & Approvals');
 
   const [delivFilter, setDelivFilter] = useState('available');
-  const [scratchMin] = useState(4);
-  const [scratchMax] = useState(25);
   const [offersEnabled] = useState(true);
 
-  // 15-Second Ringtone Alert Controller
+// 15-Second Ringtone Alert Controller
   const [isRinging, setIsRinging] = useState(false);
   const lastRungKeyRef = useRef(null);
   const ringTimerRef = useRef(null);
@@ -694,82 +736,6 @@ const [masterCatalog, setMasterCatalog] = useState(() => {
     }, 1000);
   }, [stopAlertRingtone]);
 
-  const notify = useCallback((m) => {
-    setToast(m);
-    setTimeout(() => setToast(''), 3500);
-  }, []);
-
-// Send Lock-Screen Push Notification + In-App Alert for Every Order Stage
-  const dispatchOrderStagePushAlert = useCallback(
-    async ({ ord, tag, title, body }) => {
-      const alertObj = {
-        id: 'bo_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
-        tag,
-        targetUserId: ord.buyerId,
-        message: body,
-        createdAt: Date.now(),
-        date: new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
-      };
-      setBroadcastOffers((prev) => [alertObj, ...prev]);
-      setDoc(doc(db, 'broadcastOffers', alertObj.id), alertObj).catch(() => {});
-
-      const buyerUser = users.find((u) => u.id === ord.buyerId);
-      const tokens = [ord.buyerFcmToken, buyerUser?.fcmToken].filter(Boolean);
-      if (tokens.length > 0) {
-        fetch('/api/send-push', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            tokens: [...new Set(tokens)],
-            title,
-            body,
-          }),
-        }).catch(() => {});
-      }
-    },
-    [users]
-  );
-
-  // Fetch Real-Time Nellore APMC Market Rates from Data.gov.in / Agmarknet API
-  const fetchLiveNelloreMandiRates = useCallback(async () => {
-    try {
-      const res = await fetch(
-        'https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070?api-key=579b464db66ec23bdd000001cdd3946e44ce4aad7209ff7b23ac571b&format=json&filters[state]=Andhra%20Pradesh&filters[district]=Nellore&limit=15'
-      );
-      const data = await res.json();
-      if (data && Array.isArray(data.records) && data.records.length > 0) {
-        const mapped = data.records.slice(0, 10).map((rec, idx) => {
-          const minKg = Math.max(10, Math.round(Number(rec.min_price || 1800) / 100));
-          const modalKg = Math.max(12, Math.round(Number(rec.modal_price || 2400) / 100));
-          const maxKg = Math.max(15, Math.round(Number(rec.max_price || 2800) / 100));
-          const cropName = rec.commodity || 'Crop';
-          return {
-            id: 'agm_' + idx,
-            cropEn: cropName,
-            cropTe: EN_TO_TE[cropName.toLowerCase()] || cropName,
-            minKg,
-            modalKg,
-            maxKg,
-            mandi: `${rec.market || 'Nellore'} APMC (Agmarknet)`,
-            updatedAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
-          };
-        });
-        setLiveMandiRates(mapped);
-        notify('Live Nellore APMC Market Rates Updated!');
-      } else {
-        setLiveMandiRates((prev) =>
-          prev.map((m) => ({
-            ...m,
-            updatedAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
-          }))
-        );
-        notify('Nellore APMC Rates Refreshed!');
-      }
-    } catch {
-      notify('Showing Latest Nellore APMC Mandi Rates');
-    }
-  }, [notify]);
-
   const getPendingStopsForSeller = useCallback(
     (ord) => {
       if (!currentUser || !['farmer', 'wholesale', 'retail'].includes(currentUser.role)) return [];
@@ -803,7 +769,47 @@ useEffect(() => {
     }
   }, [currentUser, orders, getPendingStopsForSeller, play15SecondAlertTone, stopAlertRingtone]);
 
-  // Hardware Back Button Handler
+  const notify = useCallback((m) => {
+    setToast(m);
+    setTimeout(() => setToast(''), 3500);
+  }, []);
+
+  // Real-Time Agmarknet Nellore APMC Mandi Rates Sync
+  const refreshLiveNelloreMandiRates = useCallback(async () => {
+    try {
+      const res = await fetch(
+        'https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070?api-key=579b464db66ec23bdd000001cdd3946e44ce4aad7209ff7b23ac571b&format=json&filters[state]=Andhra%20Pradesh&filters[district]=Nellore&limit=12'
+      );
+      const data = await res.json();
+      if (data?.records?.length) {
+        const mapped = data.records.slice(0, 8).map((rec, idx) => ({
+          id: 'agm_' + idx,
+          cropEn: rec.commodity || 'Crop',
+          cropTe: EN_TO_TE[(rec.commodity || '').toLowerCase()] || rec.commodity || 'పంట',
+          minPrice: Math.max(10, Math.round(Number(rec.min_price || 1800) / 100)),
+          modalPrice: Math.max(12, Math.round(Number(rec.modal_price || 2400) / 100)),
+          maxPrice: Math.max(15, Math.round(Number(rec.max_price || 2800) / 100)),
+          mandi: `${rec.market || 'Nellore'} APMC (Agmarknet)`,
+          updatedAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+        }));
+        setMarketRates(mapped);
+        mapped.forEach((m) => setDoc(doc(db, 'marketRates', m.id), m).catch(() => {}));
+        notify('Synced Live Agmarknet Nellore APMC Mandi Rates!');
+      } else {
+        setMarketRates((prev) =>
+          prev.map((m) => ({
+            ...m,
+            updatedAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+          }))
+        );
+        notify('Nellore APMC Mandi Rates Refreshed!');
+      }
+    } catch {
+      notify('Showing Latest Nellore APMC Mandi Rates');
+    }
+  }, [notify]);
+
+// Hardware Back Button Handler
   const handleHardwareBack = useCallback(() => {
     if (sharedInvoiceData) {
       window.history.replaceState({}, '', '/');
@@ -871,7 +877,7 @@ useEffect(() => {
           notify('Location, Message & Phone permissions enabled!');
         },
         () => notify('Permissions saved!'),
-        { enableHighAccuracy: true, timeout: 8000 }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     }
   };
@@ -936,7 +942,7 @@ useEffect(() => {
       () => {}
     );
 
-const unsubCoupons = onSnapshot(
+    const unsubCoupons = onSnapshot(
       collection(db, 'coupons'),
       (snapshot) => {
         if (!snapshot.empty) {
@@ -955,7 +961,7 @@ const unsubCoupons = onSnapshot(
       () => {}
     );
 
-    const unsubUsers = onSnapshot(
+const unsubUsers = onSnapshot(
       collection(db, 'users'),
       (snapshot) => {
         if (!snapshot.empty) {
@@ -983,6 +989,26 @@ const unsubCoupons = onSnapshot(
       () => {}
     );
 
+    const unsubGifBanners = onSnapshot(
+      collection(db, 'heroGifBanners'),
+      (snapshot) => {
+        const list = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+        list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        setHeroGifBanners(list);
+      },
+      () => {}
+    );
+
+    const unsubMarketRates = onSnapshot(
+      collection(db, 'marketRates'),
+      (snapshot) => {
+        if (!snapshot.empty) {
+          setMarketRates(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })));
+        }
+      },
+      () => {}
+    );
+
     let isFirstBroadcastLoad = true;
     const unsubBroadcasts = onSnapshot(
       collection(db, 'broadcastOffers'),
@@ -1001,15 +1027,12 @@ const unsubCoupons = onSnapshot(
                   body: latest.message,
                   icon: '/icon-512.png',
                   badge: '/icon-192.png',
-                  vibrate: [200, 100, 200],
-                  tag: latest.id,
                 });
               });
             } else {
               new Notification(`Rythu Basket • ${latest.tag}`, {
                 body: latest.message,
                 icon: '/icon-512.png',
-                badge: '/icon-192.png',
               });
             }
           }
@@ -1027,11 +1050,13 @@ const unsubCoupons = onSnapshot(
       unsubCoupons();
       unsubUsers();
       unsubSubAdmins();
+      unsubGifBanners();
+      unsubMarketRates();
       unsubBroadcasts();
     };
   }, [currentUser?.id]);
 
-// Continuous Live GPS Broadcast while Delivery Partner is Active
+// Continuous High-Accuracy Live GPS Broadcast while Delivery Partner is Active
   useEffect(() => {
     if (!currentUser || currentUser.role !== 'delivery' || !navigator.geolocation) return;
     const activeAssigned = orders.filter(
@@ -1045,6 +1070,7 @@ const unsubCoupons = onSnapshot(
       (pos) => {
         const lat = Number(pos.coords.latitude.toFixed(5));
         const lng = Number(pos.coords.longitude.toFixed(5));
+        setMapPinCoords({ lat, lng });
         activeAssigned.forEach((ord) => {
           updateDoc(doc(db, 'orders', ord.id), {
             driverLat: lat,
@@ -1054,7 +1080,7 @@ const unsubCoupons = onSnapshot(
         });
       },
       () => {},
-      { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
     );
     return () => navigator.geolocation.clearWatch(watchId);
   }, [currentUser, orders]);
@@ -1106,7 +1132,7 @@ const unsubCoupons = onSnapshot(
       year: 'numeric',
     });
 
-    const rowsHtml = ord.items
+const rowsHtml = ord.items
       .map(
         (i, idx) => `
         <tr>
@@ -1120,7 +1146,7 @@ const unsubCoupons = onSnapshot(
       )
       .join('');
 
-const invoiceHtml = `
+    const invoiceHtml = `
       <div style="border:1px solid #cbd5e1;padding:16px;border-radius:10px;background:#ffffff;font-family:Arial,sans-serif;font-size:12px;color:#1e293b;">
         <div style="text-align:center;margin-bottom:12px;">
           <img src="https://rythu-market.vercel.app/icon-512.png" width="56" height="56" style="border-radius:50%;border:2px solid #EAB308;" />
@@ -1278,7 +1304,7 @@ const verifyEmailOtpCode = (enteredCode) => {
       return;
     }
 
-    const already = users.find(
+const already = users.find(
       (u) =>
         u.role === selectedRole &&
         (u.mobile === cleanMobile || (u.email || '').toLowerCase() === cleanEmail)
@@ -1293,7 +1319,7 @@ const verifyEmailOtpCode = (enteredCode) => {
     if (ok) setRegOtpSent(true);
   };
 
-const handleCompleteRegistration = (e) => {
+  const handleCompleteRegistration = (e) => {
     e.preventDefault();
     if (!verifyEmailOtpCode(regOtpInput)) return;
 
@@ -1348,7 +1374,7 @@ const handleCompleteRegistration = (e) => {
       referredBy: regReferralCode.trim() || null,
     };
 
-    setUsers([newUser, ...users]);
+setUsers([newUser, ...users]);
     setDoc(doc(db, 'users', newUser.id), newUser).catch(() => {});
 
     setGeneratedEmailOtp('');
@@ -1373,7 +1399,7 @@ const handleCompleteRegistration = (e) => {
     setActiveTab('home');
   };
 
-const handleProfilePhotoPick = async (e) => {
+  const handleProfilePhotoPick = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
@@ -1424,6 +1450,7 @@ const handleProfilePhotoPick = async (e) => {
         setMapPinCoords({ lat, lng });
         await fetchAddressFromCoords(lat, lng);
         setIsLocatingGps(false);
+        notify(`High-Accuracy GPS Locked (±${Math.round(pos.coords.accuracy || 15)}m)!`);
       },
       async () => {
         const lat = 14.4426;
@@ -1432,11 +1459,11 @@ const handleProfilePhotoPick = async (e) => {
         await fetchAddressFromCoords(lat, lng);
         setIsLocatingGps(false);
       },
-      { enableHighAccuracy: true, timeout: 8000 }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   };
 
-  const handleAdjustPin = async (dLat, dLng) => {
+const handleAdjustPin = async (dLat, dLng) => {
     const lat = Number((mapPinCoords.lat + dLat).toFixed(5));
     const lng = Number((mapPinCoords.lng + dLng).toFixed(5));
     setMapPinCoords({ lat, lng });
@@ -1457,6 +1484,13 @@ const handleProfilePhotoPick = async (e) => {
     setSavedAddresses((prev) => [newEntry, ...prev]);
     setActiveAddrId(newId);
     setCurrentUser((prev) => (prev ? { ...prev, address: mapPinTitle, lat: mapPinCoords.lat, lng: mapPinCoords.lng } : prev));
+    if (currentUser?.id) {
+      updateDoc(doc(db, 'users', currentUser.id), {
+        address: mapPinTitle,
+        lat: mapPinCoords.lat,
+        lng: mapPinCoords.lng,
+      }).catch(() => {});
+    }
     setActiveTab('home');
     notify(`Selected Location - ${mapPinTitle}`);
   };
@@ -1472,7 +1506,7 @@ const handleProfilePhotoPick = async (e) => {
     if (TE_TO_EN[val.trim()]) setFNameEn(TE_TO_EN[val.trim()]);
   };
 
-const handleSelectCatalogProduct = (item) => {
+  const handleSelectCatalogProduct = (item) => {
     if (!item) {
       setSelectedCatalogId('custom');
       setFNameEn('');
@@ -1522,6 +1556,43 @@ const handleSelectCatalogProduct = (item) => {
     notify(`Published ${newProd.nameEn} (${fCat} • ${fQuality} • ${fQty} ${fUnit})!`);
   };
 
+// Role-Specific Animated GIF Banner Renderer
+  const renderSharedGifBanner = () => {
+    const activeGifs = heroGifBanners.filter(
+      (g) =>
+        g.active !== false &&
+        (!g.targetRole || g.targetRole === 'all' || g.targetRole === currentUser?.role)
+    );
+    if (activeGifs.length === 0) return null;
+    return (
+      <div className="space-y-2.5">
+        {activeGifs.map((gb) => (
+          <div
+            key={gb.id}
+            className="relative rounded-3xl overflow-hidden shadow-md border border-emerald-200 bg-gradient-to-r from-[#0F5132] to-[#15803D]"
+          >
+            <img
+              src={gb.gifSrc}
+              alt={gb.title || 'Rythu Basket Offer'}
+              className="w-full h-36 object-cover"
+            />
+            {(gb.title || gb.subtitle || gb.tag) && (
+              <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/35 to-transparent p-4 flex flex-col justify-center text-white">
+                {gb.tag && (
+                  <span className="bg-[#FDE047] text-slate-900 text-[9px] font-extrabold px-2.5 py-0.5 rounded-full w-fit uppercase">
+                    {gb.tag}
+                  </span>
+                )}
+                {gb.title && <h3 className="text-base font-extrabold mt-1 leading-tight">{gb.title}</h3>}
+                {gb.subtitle && <p className="text-[11px] text-emerald-200 font-bold mt-0.5">{gb.subtitle}</p>}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   const renderPostProductForm = (roleSource, submitLabel) => {
     const q = sellerCatalogSearch.trim().toLowerCase();
     const filteredSellerCatalog = masterCatalog.filter((c) => {
@@ -1567,7 +1638,7 @@ const handleSelectCatalogProduct = (item) => {
               />
             </div>
 
-            <select
+<select
               value={sellerCatalogFilter}
               onChange={(e) => setSellerCatalogFilter(e.target.value)}
               className="bg-emerald-50/70 border border-emerald-200 rounded-xl px-2.5 py-2 font-extrabold text-[11px] text-[#0F5132]"
@@ -1579,7 +1650,7 @@ const handleSelectCatalogProduct = (item) => {
             </select>
           </div>
 
-   <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-0.5">
+          <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-0.5">
             {filteredSellerCatalog.map((item) => {
               const isSel = selectedCatalogId === item.id;
               return (
@@ -1806,7 +1877,7 @@ const handleSelectCatalogProduct = (item) => {
           </div>
         )}
 
-<div className="bg-gradient-to-b from-[#0E5A2B] via-[#15803D] to-[#4ADE80]/30 text-white rounded-b-[36px] px-4 pt-4 pb-6 shadow-lg relative overflow-hidden">
+        <div className="bg-gradient-to-b from-[#0E5A2B] via-[#15803D] to-[#4ADE80]/30 text-white rounded-b-[36px] px-4 pt-4 pb-6 shadow-lg relative overflow-hidden">
           <div className="flex items-center justify-between relative z-10">
             <div className="flex items-center space-x-2.5">
               <div className="h-12 w-12 rounded-full bg-white p-0.5 border-2 border-[#EAB308] shadow overflow-hidden flex-shrink-0">
@@ -1835,7 +1906,7 @@ const handleSelectCatalogProduct = (item) => {
             </div>
           </div>
 
-          <div className="mt-4 bg-gradient-to-r from-white/95 via-white/90 to-emerald-50/90 rounded-3xl p-3.5 shadow-md flex items-center justify-between relative z-10 text-slate-900">
+<div className="mt-4 bg-gradient-to-r from-white/95 via-white/90 to-emerald-50/90 rounded-3xl p-3.5 shadow-md flex items-center justify-between relative z-10 text-slate-900">
             <div className="space-y-2 max-w-[55%]">
               <p className="text-xs font-extrabold text-[#15803D] leading-snug">
                 మా రైతు ఉత్పత్తులు
@@ -1905,7 +1976,7 @@ const handleSelectCatalogProduct = (item) => {
           })}
         </div>
 
-<div className="px-3.5 pt-3.5">
+        <div className="px-3.5 pt-3.5">
           <div className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white rounded-2xl p-3.5 shadow-md flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="h-11 w-11 rounded-full bg-white/15 border border-white/25 flex items-center justify-center flex-shrink-0">
@@ -1940,7 +2011,7 @@ const handleSelectCatalogProduct = (item) => {
     );
   }
 
-  // =========================================================================
+// =========================================================================
   // 2. ROLE-SPECIFIC REGISTRATION & DIRECT LOGIN
   // =========================================================================
   if (!currentUser) {
@@ -1987,7 +2058,7 @@ const handleSelectCatalogProduct = (item) => {
       </div>
     );
 
-const renderPinGpsWidget = (label) => (
+    const renderPinGpsWidget = (label) => (
       <div className="bg-white border border-emerald-200 rounded-2xl p-3 flex items-center justify-between">
         <div>
           <p className="font-extrabold text-slate-900">{label} *</p>
@@ -1997,13 +2068,17 @@ const renderPinGpsWidget = (label) => (
           type="button"
           onClick={() => {
             if (navigator.geolocation) {
-              navigator.geolocation.getCurrentPosition((pos) => {
-                setMapPinCoords({
-                  lat: Number(pos.coords.latitude.toFixed(5)),
-                  lng: Number(pos.coords.longitude.toFixed(5)),
-                });
-                notify('GPS Location Captured!');
-              });
+              navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                  setMapPinCoords({
+                    lat: Number(pos.coords.latitude.toFixed(5)),
+                    lng: Number(pos.coords.longitude.toFixed(5)),
+                  });
+                  notify('Accurate GPS Location Captured!');
+                },
+                () => notify('Enable GPS permission'),
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+              );
             }
           }}
           className="bg-[#15803D] text-white px-3 py-1.5 rounded-xl font-extrabold text-[11px] flex items-center space-x-1"
@@ -2014,7 +2089,7 @@ const renderPinGpsWidget = (label) => (
       </div>
     );
 
-    return (
+return (
       <div style={fontStyle} className="min-h-screen bg-[#F4F8F4] max-w-md mx-auto text-slate-800 shadow-2xl pb-12">
         {toast && (
           <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-xl text-center">
@@ -2080,7 +2155,7 @@ const renderPinGpsWidget = (label) => (
                 </div>
               )}
 
-              <button
+<button
                 type="submit"
                 className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
               >
@@ -2119,7 +2194,7 @@ const renderPinGpsWidget = (label) => (
                 <span className="w-8" />
               </div>
 
-  <div className="mx-3 mt-2 bg-gradient-to-r from-[#0E5A2B] to-[#15803D] text-white rounded-2xl px-4 py-3 flex items-center space-x-3 shadow-md">
+              <div className="mx-3 mt-2 bg-gradient-to-r from-[#0E5A2B] to-[#15803D] text-white rounded-2xl px-4 py-3 flex items-center space-x-3 shadow-md">
                 <div className="h-10 w-10 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
                   <RoleHeaderIcon className="h-5 w-5 text-[#FDE047]" />
                 </div>
@@ -2196,7 +2271,7 @@ const renderPinGpsWidget = (label) => (
                 </>
               )}
 
-              {selectedRole === 'wholesale' && (
+ {selectedRole === 'wholesale' && (
                 <>
                   <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Business Name *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
                   <input type="text" required value={regOwnerName} onChange={(e) => setRegOwnerName(e.target.value)} placeholder="Owner Name *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
@@ -2223,7 +2298,7 @@ const renderPinGpsWidget = (label) => (
                 </>
               )}
 
-{selectedRole === 'retail' && (
+              {selectedRole === 'retail' && (
                 <>
                   <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Shop Name *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
                   <input type="text" required value={regOwnerName} onChange={(e) => setRegOwnerName(e.target.value)} placeholder="Owner Name *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
@@ -2320,7 +2395,7 @@ const renderPinGpsWidget = (label) => (
                 </>
               )}
 
-{selectedRole === 'admin' && (
+              {selectedRole === 'admin' && (
                 <>
                   <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Authorized Admin / Sub-Admin Name *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
                   <input type="tel" maxLength={10} required value={regMobile} onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, ''))} placeholder="Authorized Mobile Number *" className="w-full bg-white border rounded-xl px-3.5 py-2.5 font-bold" />
@@ -2329,7 +2404,7 @@ const renderPinGpsWidget = (label) => (
                 </>
               )}
 
-              <label className="flex items-center space-x-2 text-[11px] font-bold text-slate-600 pt-1">
+<label className="flex items-center space-x-2 text-[11px] font-bold text-slate-600 pt-1">
                 <input type="checkbox" checked={regTermsAccepted} onChange={(e) => setRegTermsAccepted(e.target.checked)} className="accent-[#15803D] h-4 w-4" />
                 <span>I agree to the <span className="text-[#15803D]">Terms & Conditions</span> and <span className="text-[#15803D]">Privacy Policy</span></span>
               </label>
@@ -2397,11 +2472,25 @@ const renderPinGpsWidget = (label) => (
       </div>
     ) : null;
 
-  // =========================================================================
+// =========================================================================
   // COMPREHENSIVE ROLE-SPECIFIC PROFILE & ADDITIONAL OPTIONS RENDERER
   // =========================================================================
   const renderSharedProfileTab = () => {
     const r = currentUser.role;
+
+    const myRiderOrders = orders.filter(
+      (o) =>
+        o.driverMobile === currentUser.mobile ||
+        (['Partner Assigned', 'Out for Delivery', 'Delivered'].includes(o.status) && !o.driverMobile)
+    );
+    const myRiderPickupHistory = myRiderOrders.filter((o) =>
+      (o.pickupStops || []).some((s) => s.pickedUp) || ['Out for Delivery', 'Delivered'].includes(o.status)
+    );
+    const myRiderDeliveryHistory = myRiderOrders.filter((o) => o.status === 'Delivered');
+    const syncedRiderEarnings = myRiderDeliveryHistory.reduce(
+      (sum, o) => sum + Number(o.totalRiderPayout || o.riderBaseFee || 30),
+      0
+    );
 
     const handleSaveEditedProfile = (e) => {
       e.preventDefault();
@@ -2455,7 +2544,7 @@ const renderPinGpsWidget = (label) => (
           ]
         : r === 'retail'
         ? [
-{ label: 'My Shop', action: () => setIsEditingProfile(true) },
+            { label: 'My Shop', action: () => setIsEditingProfile(true) },
             { label: 'Purchase from Farmers', action: () => setActiveTab('browse') },
             { label: 'Purchase from Wholesalers', action: () => setActiveTab('browse') },
             { label: 'My Products', action: () => setActiveTab('sellStock') },
@@ -2471,13 +2560,13 @@ const renderPinGpsWidget = (label) => (
           ]
         : r === 'delivery'
         ? [
-            { label: 'Available Orders', action: () => setActiveTab('home') },
-            { label: 'My Deliveries', action: () => setActiveTab('home') },
-            { label: 'Pickup History', action: () => setProfileSubView('Pickup History') },
-            { label: 'Delivery History', action: () => setProfileSubView('Delivery History') },
-            { label: `Earnings (₹${currentUser.wallet || 0})`, action: () => setProfileSubView('Earnings') },
-            { label: 'Incentives (Weekly Target)', action: () => setProfileSubView('Incentives') },
-            { label: 'Wallet', action: () => setProfileSubView('Wallet') },
+            { label: 'Available Orders', action: () => { setDelivFilter('available'); setActiveTab('home'); } },
+            { label: `My Deliveries (${myRiderOrders.filter((o) => o.status !== 'Delivered').length})`, action: () => setProfileSubView('My Deliveries') },
+            { label: `Pickup History (${myRiderPickupHistory.length})`, action: () => setProfileSubView('Pickup History') },
+            { label: `Delivery History (${myRiderDeliveryHistory.length})`, action: () => setProfileSubView('Delivery History') },
+            { label: `Earnings (₹${Math.max(Number(currentUser.wallet || 0), syncedRiderEarnings)})`, action: () => setProfileSubView('Earnings') },
+            { label: `Incentives (Weekly Target ${myRiderDeliveryHistory.length}/100)`, action: () => setProfileSubView('Incentives') },
+            { label: `Wallet (₹${Math.max(Number(currentUser.wallet || 0), syncedRiderEarnings)})`, action: () => setProfileSubView('Wallet') },
             { label: 'Bank Withdrawals', action: () => setProfileSubView('Bank Withdrawals') },
             { label: 'Customer Ratings', action: () => setProfileSubView('Customer Ratings') },
             { label: 'Help & Support', action: () => setProfileSubView('Help & Support') },
@@ -2487,7 +2576,7 @@ const renderPinGpsWidget = (label) => (
             { label: 'Help & Support', action: () => setProfileSubView('Help & Support') },
           ];
 
-    return (
+return (
       <div className="p-4 space-y-3.5 text-xs">
         <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
           <div className="flex items-center space-x-3.5 min-w-0">
@@ -2616,7 +2705,7 @@ const renderPinGpsWidget = (label) => (
           </div>
         )}
 
-        {profileSubView && (
+{profileSubView && (
           <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-3.5 space-y-2">
             <div className="flex items-center justify-between">
               <h4 className="font-extrabold text-[#0F5132]">{profileSubView}</h4>
@@ -2631,6 +2720,58 @@ const renderPinGpsWidget = (label) => (
                   </div>
                 ))}
               </div>
+            ) : profileSubView === 'My Deliveries' ? (
+              <div className="space-y-1.5">
+                {myRiderOrders.filter((o) => o.status !== 'Delivered').length === 0 ? (
+                  <p className="text-slate-500 font-bold">No active deliveries in transit.</p>
+                ) : (
+                  myRiderOrders
+                    .filter((o) => o.status !== 'Delivered')
+                    .map((o) => (
+                      <div key={o.id} className="bg-white p-2.5 rounded-xl flex justify-between items-center">
+                        <div>
+                          <p className="font-extrabold">{o.id} • {o.buyerName}</p>
+                          <p className="text-[10px] text-slate-500">{o.buyerAddress}</p>
+                        </div>
+                        <span className="text-[#15803D] font-extrabold">{o.status}</span>
+                      </div>
+                    ))
+                )}
+              </div>
+            ) : profileSubView === 'Pickup History' ? (
+              <div className="space-y-1.5">
+                {myRiderPickupHistory.length === 0 ? (
+                  <p className="text-slate-500 font-bold">No pickups recorded yet.</p>
+                ) : (
+                  myRiderPickupHistory.map((o) => (
+                    <div key={o.id} className="bg-white p-2.5 rounded-xl flex justify-between items-center">
+                      <span className="font-extrabold">{o.id} • {o.buyerName}</span>
+                      <span className="text-[#15803D] font-extrabold">{o.status}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            ) : profileSubView === 'Delivery History' ? (
+              <div className="space-y-1.5">
+                {myRiderDeliveryHistory.length === 0 ? (
+                  <p className="text-slate-500 font-bold">No completed deliveries yet.</p>
+                ) : (
+                  myRiderDeliveryHistory.map((o) => (
+                    <div key={o.id} className="bg-white p-2.5 rounded-xl flex justify-between items-center">
+                      <span className="font-extrabold">{o.id} • {o.buyerName}</span>
+                      <span className="text-[#15803D] font-extrabold">+₹{o.totalRiderPayout || o.riderBaseFee || 30}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            ) : profileSubView === 'Incentives' ? (
+              <div className="space-y-1.5">
+                <p className="font-extrabold text-slate-900">Weekly Milestone: {myRiderDeliveryHistory.length} / 100 Deliveries</p>
+                <div className="w-full bg-white h-2.5 rounded-full overflow-hidden border">
+                  <div className="bg-[#15803D] h-full" style={{ width: `${Math.min(100, myRiderDeliveryHistory.length)}%` }} />
+                </div>
+                <p className="text-[10px] text-slate-600 font-bold">Complete 100 trips this week to unlock ₹500 Extra Weekly Bonus!</p>
+              </div>
             ) : profileSubView === 'Refer & Earn' ? (
               <p className="text-slate-700 font-bold">Share your referral code <span className="bg-white px-2 py-0.5 rounded border font-mono text-[#15803D]">RYTHU{currentUser.mobile?.slice(-4)}</span> with friends in Nellore and earn ₹50 Wallet Cashback!</p>
             ) : profileSubView === 'Help & Support' ? (
@@ -2640,7 +2781,7 @@ const renderPinGpsWidget = (label) => (
               </div>
             ) : (
               <p className="text-slate-700">
-                Active <strong>{profileSubView}</strong> dashboard synced with your Nellore account ({currentUser.name}). Total Wallet: <strong>₹{currentUser.wallet || 0}</strong>.
+                Active <strong>{profileSubView}</strong> dashboard synced with your Nellore account ({currentUser.name}). Total Wallet: <strong>₹{r === 'delivery' ? Math.max(Number(currentUser.wallet || 0), syncedRiderEarnings) : (currentUser.wallet || 0)}</strong>.
               </p>
             )}
           </div>
@@ -2714,7 +2855,7 @@ const renderPinGpsWidget = (label) => (
       (bo) => !bo.targetUserId || bo.targetUserId === currentUser.id
     );
 
-const handleApplyCouponCode = (codeStr) => {
+    const handleApplyCouponCode = (codeStr) => {
       const clean = codeStr.trim().toUpperCase();
       const found = couponsList.find((c) => c.active && c.code.toUpperCase() === clean);
       if (!found) {
@@ -2730,7 +2871,7 @@ const handleApplyCouponCode = (codeStr) => {
       notify(`Coupon ${found.code} Applied (-₹${found.discount})!`);
     };
 
-    const finalizeAndOpenOrderTracking = () => {
+const finalizeAndOpenOrderTracking = () => {
       const itemsArr = Object.entries(cart)
         .map(([id, qty]) => {
           const p = products.find((x) => x.id === id);
@@ -2762,8 +2903,8 @@ const handleApplyCouponCode = (codeStr) => {
       const estDistKm = calculateDistanceKm(
         activeAddr.lat || mapPinCoords.lat,
         activeAddr.lng || mapPinCoords.lng,
-        itemsArr[0]?.sellerLat || 14.4450,
-        itemsArr[0]?.sellerLng || 79.9850
+        itemsArr[0].sellerLat,
+        itemsArr[0].sellerLng
       );
 
       const newOrd = {
@@ -2798,7 +2939,7 @@ const handleApplyCouponCode = (codeStr) => {
         date: 'Today, ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
 
-const updatedUser = {
+      const updatedUser = {
         ...currentUser,
         wallet: (currentUser.wallet || 0) - walletDeduction,
         ordersCompleted: (currentUser.ordersCompleted || 0) + 1,
@@ -2807,14 +2948,13 @@ const updatedUser = {
       setUsers((prev) => prev.map((u) => (u.id === updatedUser.id ? updatedUser : u)));
       setOrders((prev) => [newOrd, ...prev]);
       setDoc(doc(db, 'orders', newOrd.id), newOrd).catch(() => {});
-      setLastPlacedOrder(newOrd);
       setTrackingOrder(newOrd);
       setCart({});
       setActiveTab('trackOrder');
       notify(`Payment Success! Order #${newOrd.id} sent to Seller for acceptance.`);
     };
 
-    const handlePayAndPlaceOrderTrigger = () => {
+const handlePayAndPlaceOrderTrigger = () => {
       setCardError('');
       if (payMode === 'card') {
         const digits = cardNo.replace(/\s+/g, '');
@@ -2835,7 +2975,6 @@ const updatedUser = {
       }, 600);
     };
 
-    // Product Card with Direct - 1 + Stepper Buttons
     const renderCustomerProductCard = (p) => {
       const q = cart[p.id] || 0;
       const isFarmerItem = (p.postedByRole || 'farmer') === 'farmer';
@@ -2890,29 +3029,16 @@ const updatedUser = {
               <span className="text-[10px] font-extrabold text-rose-500 bg-rose-50 px-2.5 py-1.5 rounded-xl">Sold Out</span>
             ) : q === 0 ? (
               <button
-                type="button"
                 onClick={() => setCart({ ...cart, [p.id]: 1 })}
                 className="bg-[#15803D] text-white font-extrabold px-4 py-2 rounded-xl shadow-sm"
               >
                 Add +
               </button>
             ) : (
-              <div className="flex items-center bg-[#15803D] text-white rounded-xl px-2.5 py-1.5 space-x-2.5 font-extrabold shadow-sm">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setCart((c) => {
-                      const n = { ...c };
-                      if (n[p.id] <= 1) delete n[p.id];
-                      else n[p.id]--;
-                      return n;
-                    })
-                  }
-                >
-                  -
-                </button>
+              <div className="flex items-center bg-[#15803D] text-white rounded-xl px-2.5 py-1.5 space-x-2.5 font-extrabold">
+                <button onClick={() => setCart((c) => { const n = { ...c }; if (n[p.id] <= 1) delete n[p.id]; else n[p.id]--; return n; })}>-</button>
                 <span>{q}</span>
-                <button type="button" onClick={() => setCart({ ...cart, [p.id]: q + 1 })}>+</button>
+                <button onClick={() => setCart({ ...cart, [p.id]: q + 1 })}>+</button>
               </div>
             )}
           </div>
@@ -2956,19 +3082,7 @@ const renderHorizontalSuggestionsBox = () => (
                       </button>
                     ) : (
                       <div className="flex items-center bg-[#15803D] text-white rounded-lg px-1.5 py-0.5 space-x-1.5 text-[10px] font-extrabold">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setCart((c) => {
-                              const n = { ...c };
-                              if (n[item.id] <= 1) delete n[item.id];
-                              else n[item.id]--;
-                              return n;
-                            })
-                          }
-                        >
-                          -
-                        </button>
+                        <button type="button" onClick={() => setCart((c) => { const n = { ...c }; if (n[item.id] <= 1) delete n[item.id]; else n[item.id]--; return n; })}>-</button>
                         <span>{itemQty}</span>
                         <button type="button" onClick={() => setCart({ ...cart, [item.id]: itemQty + 1 })}>+</button>
                       </div>
@@ -3009,7 +3123,7 @@ const renderHorizontalSuggestionsBox = () => (
               />
             </div>
 
-<button
+            <button
               type="button"
               onClick={handleUseCurrentLocationMap}
               className="w-full border-2 border-[#15803D] bg-emerald-50 rounded-2xl py-3.5 px-4 flex items-center justify-center space-x-2 text-[#15803D] font-extrabold text-xs shadow-sm"
@@ -3025,7 +3139,7 @@ const renderHorizontalSuggestionsBox = () => (
                   type="button"
                   onClick={() => {
                     setActiveAddrId(addr.id);
-                    setCurrentUser((prev) => ({ ...prev, address: addr.title }));
+                    setCurrentUser((prev) => ({ ...prev, address: addr.title, lat: addr.lat, lng: addr.lng }));
                     setActiveTab('home');
                     notify(`Selected Location - ${addr.title}`);
                   }}
@@ -3048,7 +3162,7 @@ const renderHorizontalSuggestionsBox = () => (
       );
     }
 
-    if (activeTab === 'mapPin') {
+if (activeTab === 'mapPin') {
       return (
         <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto text-slate-800 shadow-2xl pb-10">
           <div className="bg-[#0F5132] px-4 py-4 text-white flex items-center space-x-3 rounded-b-3xl shadow">
@@ -3061,11 +3175,12 @@ const renderHorizontalSuggestionsBox = () => (
           <div className="p-4 space-y-3.5">
             <div className="relative h-72 w-full rounded-3xl overflow-hidden border-2 border-emerald-200 bg-emerald-50 shadow-md">
               <iframe
+                key={`${mapPinCoords.lat}_${mapPinCoords.lng}`}
                 title="Nellore Location Map"
                 width="100%"
                 height="288"
                 style={{ border: 0, display: 'block' }}
-                src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapPinCoords.lng - 0.008}%2C${mapPinCoords.lat - 0.008}%2C${mapPinCoords.lng + 0.008}%2C${mapPinCoords.lat + 0.008}&layer=mapnik&marker=${mapPinCoords.lat}%2C${mapPinCoords.lng}`}
+                src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapPinCoords.lng - 0.0055}%2C${mapPinCoords.lat - 0.0055}%2C${mapPinCoords.lng + 0.0055}%2C${mapPinCoords.lat + 0.0055}&layer=mapnik&marker=${mapPinCoords.lat}%2C${mapPinCoords.lng}`}
               />
               <div className="absolute right-2.5 top-2.5 flex flex-col space-y-1 bg-white/95 p-1.5 rounded-xl shadow border text-[10px] font-extrabold">
                 <button type="button" onClick={() => handleAdjustPin(0.0015, 0)} className="px-2 py-1 bg-slate-100 rounded">↑ N</button>
@@ -3085,7 +3200,7 @@ const renderHorizontalSuggestionsBox = () => (
               </div>
             </div>
 
-<div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+            <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm space-y-3">
               <div className="flex items-start justify-between space-x-2">
                 <div className="flex items-start space-x-2 flex-1">
                   <MapPin className="h-5 w-5 text-[#15803D] flex-shrink-0 mt-0.5" />
@@ -3117,7 +3232,7 @@ const renderHorizontalSuggestionsBox = () => (
       );
     }
 
-    const q = search.toLowerCase();
+const q = search.toLowerCase();
     const searchedProducts = products.filter(
       (p) =>
         p.nameEn.toLowerCase().includes(q) ||
@@ -3128,12 +3243,9 @@ const renderHorizontalSuggestionsBox = () => (
     const dailyEssentialCats = categoriesList.filter((c) => c.isDailyEssential !== false).slice(0, 4);
     const activeCoupons = couponsList.filter((c) => c.active);
 
-    const liveLat = trackingOrder?.driverLat || mapPinCoords.lat;
-    const liveLng = trackingOrder?.driverLng || mapPinCoords.lng;
+    const liveLat = trackingOrder?.driverLat || activeAddr.lat || mapPinCoords.lat;
+    const liveLng = trackingOrder?.driverLng || activeAddr.lng || mapPinCoords.lng;
     const isOutForCustomerDrop = trackingOrder?.status === 'Out for Delivery';
-    const trackingEtaInfo = trackingOrder
-      ? getTrafficAndDeliveryEta(trackingOrder.distanceKm || 3.2, trackingOrder.status)
-      : null;
 
     return (
       <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
@@ -3171,7 +3283,7 @@ const renderHorizontalSuggestionsBox = () => (
           </div>
         )}
 
-{activeTab === 'home' && (
+        {activeTab === 'home' && (
           <main className="px-4 pt-3.5 space-y-4 text-xs">
             <div className="flex items-center justify-between">
               <button
@@ -3194,7 +3306,7 @@ const renderHorizontalSuggestionsBox = () => (
                 </div>
               </button>
 
-              <div className="flex items-center space-x-2">
+<div className="flex items-center space-x-2">
                 <button
                   onClick={() => setActiveTab('profile')}
                   className="bg-emerald-50 text-[#15803D] border border-emerald-200 px-3 py-1.5 rounded-full font-extrabold flex items-center space-x-1"
@@ -3202,7 +3314,7 @@ const renderHorizontalSuggestionsBox = () => (
                   <Wallet className="h-3.5 w-3.5" />
                   <span>₹{currentUser.wallet || 0}</span>
                 </button>
-                {/* BELL ICON OPENS SEPARATE NOTIFICATIONS PAGE ONLY (NO ORDERS) */}
+                {/* BELL ICON OPENS ONLY NOTIFICATIONS SCREEN (NO ORDERS MIXED) */}
                 <button onClick={() => setActiveTab('notifications')} className="h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center relative">
                   <Bell className="h-4 w-4 text-slate-700" />
                   {customerVisibleAlerts.length > 0 && (
@@ -3227,6 +3339,8 @@ const renderHorizontalSuggestionsBox = () => (
                 <button type="button" onClick={() => setSearch('')} className="text-slate-400 font-extrabold ml-1">✕</button>
               )}
             </div>
+
+            {renderSharedGifBanner()}
 
             {/* DAILY ESSENTIALS SECTION */}
             <section className="space-y-2">
@@ -3270,7 +3384,7 @@ const renderHorizontalSuggestionsBox = () => (
 
             {selectedCat !== 'All' && selectedCatSource === 'daily' && renderHorizontalSuggestionsBox()}
 
-{activeCoupons.length > 0 && (
+            {activeCoupons.length > 0 && (
               <section className="space-y-2">
                 <div className="flex items-center justify-between">
                   <h2 className="text-sm font-extrabold text-slate-900 flex items-center space-x-1">
@@ -3307,7 +3421,7 @@ const renderHorizontalSuggestionsBox = () => (
               </section>
             )}
 
-            {/* CATEGORIES GRID SECTION */}
+{/* CATEGORIES GRID SECTION */}
             <section className="space-y-2">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-extrabold text-slate-900">Categories</h2>
@@ -3407,18 +3521,15 @@ const renderHorizontalSuggestionsBox = () => (
           </main>
         )}
 
-{/* SEPARATE NOTIFICATIONS PAGE (ONLY NOTIFICATIONS, NO ORDERS) */}
+{/* SEPARATE NOTIFICATIONS PAGE */}
         {activeTab === 'notifications' && (
           <main className="p-4 space-y-3 text-xs">
             <div className="flex items-center space-x-3">
               <button onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white shadow-sm">
                 <ArrowLeft className="h-4 w-4" />
               </button>
-              <h2 className="text-base font-extrabold text-slate-900">
-                Notifications & Alerts ({customerVisibleAlerts.length})
-              </h2>
+              <h2 className="text-base font-extrabold text-slate-900">Notifications & Alerts ({customerVisibleAlerts.length})</h2>
             </div>
-
             {customerVisibleAlerts.length === 0 ? (
               <div className="bg-white rounded-3xl p-8 text-center font-bold text-slate-400">
                 No notifications yet.
@@ -3487,7 +3598,7 @@ const renderHorizontalSuggestionsBox = () => (
                 })}
               </div>
 
-  <div className="flex-1 overflow-y-auto p-3 space-y-2.5 bg-[#F8FAFC]">
+              <div className="flex-1 overflow-y-auto p-3 space-y-2.5 bg-[#F8FAFC]">
                 {(() => {
                   const catProducts = products.filter((p) => p.cat === selectedCat);
                   return (
@@ -3511,6 +3622,7 @@ const renderHorizontalSuggestionsBox = () => (
           )
         )}
 
+{/* PRODUCT DETAIL WITH + / - STEPPER BUTTONS */}
         {activeTab === 'productDetail' && detailProduct && (
           <main className="bg-white min-h-screen pb-24 text-xs">
             <div className="relative h-64 w-full bg-slate-100">
@@ -3531,15 +3643,50 @@ const renderHorizontalSuggestionsBox = () => (
                 <p className="text-sm font-bold text-[#15803D]">{detailProduct.nameTe} • ₹{detailProduct.retailPrice} / {detailProduct.packLabel}</p>
               </div>
               <p className="text-slate-600">{detailProduct.desc}</p>
+
+              {/* DIRECT - / + QUANTITY SELECTOR */}
+              <div className="flex items-center justify-between bg-emerald-50/70 border border-emerald-200 rounded-2xl p-3">
+                <span className="font-extrabold text-slate-800">Select Quantity ({detailProduct.unit || 'Kg'})</span>
+                <div className="flex items-center bg-[#15803D] text-white rounded-xl px-3 py-1.5 space-x-4 font-extrabold text-sm">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextQ = Math.max(0, detailQty - 1);
+                      setDetailQty(nextQ || 1);
+                      setCart((c) => {
+                        const n = { ...c };
+                        if (nextQ <= 0) delete n[detailProduct.id];
+                        else n[detailProduct.id] = nextQ;
+                        return n;
+                      });
+                    }}
+                  >
+                    -
+                  </button>
+                  <span>{cart[detailProduct.id] || detailQty}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextQ = (cart[detailProduct.id] || detailQty) + 1;
+                      setDetailQty(nextQ);
+                      setCart({ ...cart, [detailProduct.id]: nextQ });
+                    }}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
               <button
+                type="button"
                 onClick={() => {
-                  setCart({ ...cart, [detailProduct.id]: detailQty });
-                  notify('Added to Cart!');
-                  setActiveTab('cart');
+                  const finalQ = cart[detailProduct.id] || detailQty;
+                  setCart({ ...cart, [detailProduct.id]: finalQ });
+                  notify(`Updated ${detailProduct.nameEn} (${finalQ}) in Cart!`);
                 }}
                 className="w-full bg-[#15803D] text-white font-extrabold py-3.5 rounded-2xl shadow-md text-sm"
               >
-                Add to Cart • ₹{detailProduct.retailPrice * detailQty}
+                Save Quantity • ₹{detailProduct.retailPrice * (cart[detailProduct.id] || detailQty)}
               </button>
             </div>
           </main>
@@ -3685,138 +3832,147 @@ const renderHorizontalSuggestionsBox = () => (
           </main>
         )}
 
-{/* CUSTOMER TRACKING SCREEN WITH TRAFFIC & DISTANCE LIVE ETA */}
-        {activeTab === 'trackOrder' && trackingOrder && (
-          <main className="pb-10 text-xs">
-            <div className="bg-gradient-to-b from-[#15803D] to-[#22C55E] text-white p-5 rounded-b-[32px] shadow-md space-y-2">
-              <div className="flex items-center space-x-3">
-                <button onClick={() => setActiveTab('orders')} className="p-2 rounded-full bg-white/15">
-                  <ArrowLeft className="h-4 w-4" />
-                </button>
-                <div>
-                  <h2 className="text-base font-extrabold">{trackingOrder.status}</h2>
-                  <p className="text-[11px] text-emerald-100">Order ID: {trackingOrder.id}</p>
-                </div>
-              </div>
-            </div>
+{/* CUSTOMER LIVE TRACKING SCREEN WITH TRAFFIC ETA & ROUTE MAP */}
+        {activeTab === 'trackOrder' && trackingOrder && (() => {
+          const etaInfo = getTrafficAndDeliveryEta(trackingOrder.distanceKm || 2.8, trackingOrder.status);
+          const stages = ['Order Placed', 'Order Fully Accepted', 'Partner Assigned', 'Out for Delivery', 'Delivered'];
+          const currentIdx = Math.max(0, stages.indexOf(trackingOrder.status));
+          const routeDirectionsUrl = `https://www.google.com/maps/dir/?api=1&origin=${liveLat},${liveLng}&destination=${trackingOrder.buyerLat || activeAddr.lat || mapPinCoords.lat},${trackingOrder.buyerLng || activeAddr.lng || mapPinCoords.lng}&travelmode=driving`;
 
-            <div className="p-4 space-y-3.5">
-              {/* LIVE TRAFFIC & DISTANCE DELIVERY ETA BANNER */}
-              {trackingOrder.status !== 'Delivered' && trackingEtaInfo && (
-                <div className="bg-gradient-to-r from-emerald-50 to-amber-50 border border-emerald-200 rounded-2xl p-3.5 flex items-center justify-between shadow-sm">
-                  <div className="flex items-center space-x-2.5">
-                    <Clock className="h-5 w-5 text-[#15803D]" />
+          return (
+            <main className="pb-10 text-xs">
+              <div className="bg-gradient-to-b from-[#15803D] to-[#22C55E] text-white p-5 rounded-b-[32px] shadow-md space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <button onClick={() => setActiveTab('orders')} className="p-2 rounded-full bg-white/15">
+                      <ArrowLeft className="h-4 w-4" />
+                    </button>
                     <div>
-                      <p className="font-extrabold text-slate-900">
-                        Live Delivery ETA: ~{trackingEtaInfo.etaMinutes} mins
-                      </p>
-                      <p className="text-[10px] font-bold text-slate-600">
-                        Distance: {trackingEtaInfo.distanceKm} km • {trackingEtaInfo.trafficLabel}
-                      </p>
+                      <h2 className="text-base font-extrabold">{trackingOrder.status}</h2>
+                      <p className="text-[11px] text-emerald-100">Order ID: {trackingOrder.id}</p>
                     </div>
                   </div>
-                  <Truck className="h-5 w-5 text-[#EA580C]" />
+                  {trackingOrder.status !== 'Delivered' && (
+                    <span className="bg-[#FDE047] text-slate-900 font-extrabold px-2.5 py-1 rounded-full text-[11px]">
+                      ~{etaInfo.etaMinutes} mins
+                    </span>
+                  )}
                 </div>
-              )}
+              </div>
 
-              {(trackingOrder.pickupStops || []).length > 0 && (
-                <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
-                  <p className="font-extrabold text-slate-900">
-                    Seller Acceptance ({trackingOrder.pickupStops.filter((s) => s.stopStatus === 'Accepted').length}/{trackingOrder.pickupStops.length} Accepted)
-                  </p>
-                  {trackingOrder.pickupStops.map((st, idx) => (
-                    <div key={st.stopId} className="flex items-center justify-between text-[11px] border-t pt-1.5">
-                      <div className="min-w-0 pr-2">
-                        <p className="font-extrabold text-slate-800 truncate">
-                          {idx + 1}. {st.acceptedByUserName || st.sellerName} ({st.sellerRole.toUpperCase()})
+              <div className="p-4 space-y-3.5">
+                {trackingOrder.status !== 'Delivered' && (
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Clock className="h-4 w-4 text-[#15803D]" />
+                      <div>
+                        <p className="font-extrabold text-slate-900">Arriving in ~{etaInfo.etaMinutes} mins</p>
+                        <p className="text-[10px] font-bold text-slate-600">
+                          Distance: {etaInfo.distanceKm} km • {etaInfo.trafficLabel}
                         </p>
-                        <p className="text-[10px] text-slate-500 truncate">{st.itemsSummary.join(', ')}</p>
                       </div>
-                      <span
-                        className={`font-extrabold px-2 py-0.5 rounded-full text-[10px] flex-shrink-0 ${
-                          st.pickedUp
-                            ? 'bg-emerald-100 text-[#15803D]'
-                            : st.stopStatus === 'Accepted'
-                            ? 'bg-sky-100 text-sky-700'
-                            : 'bg-amber-100 text-amber-800'
-                        }`}
-                      >
-                        {st.pickedUp ? '✓ Picked Up' : st.stopStatus}
-                      </span>
+                    </div>
+                    <Truck className="h-5 w-5 text-[#EA580C]" />
+                  </div>
+                )}
+
+                <div className="grid grid-cols-5 gap-1">
+                  {stages.map((st, idx) => (
+                    <div key={st} className="text-center space-y-1">
+                      <div className={`h-2 rounded-full ${idx <= currentIdx ? 'bg-[#15803D]' : 'bg-slate-200'}`} />
+                      <p className={`text-[8px] font-extrabold leading-tight ${idx <= currentIdx ? 'text-[#15803D]' : 'text-slate-400'}`}>
+                        {st === 'Order Fully Accepted' ? 'Accepted' : st === 'Partner Assigned' ? 'Picked' : st}
+                      </p>
                     </div>
                   ))}
                 </div>
-              )}
 
-              {trackingOrder.status !== 'Delivered' ? (
-                <>
-                  {isOutForCustomerDrop ? (
+                {(trackingOrder.pickupStops || []).length > 0 && (
+                  <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2">
+                    <p className="font-extrabold text-slate-900">
+                      Seller Acceptance ({trackingOrder.pickupStops.filter((s) => s.stopStatus === 'Accepted').length}/{trackingOrder.pickupStops.length} Accepted)
+                    </p>
+                    {trackingOrder.pickupStops.map((st, idx) => (
+                      <div key={st.stopId} className="flex items-center justify-between text-[11px] border-t pt-1.5">
+                        <div className="min-w-0 pr-2">
+                          <p className="font-extrabold text-slate-800 truncate">
+                            {idx + 1}. {st.acceptedByUserName || st.sellerName} ({st.sellerRole.toUpperCase()})
+                          </p>
+                          <p className="text-[10px] text-slate-500 truncate">{st.itemsSummary.join(', ')}</p>
+                        </div>
+                        <span
+                          className={`font-extrabold px-2 py-0.5 rounded-full text-[10px] flex-shrink-0 ${
+                            st.pickedUp
+                              ? 'bg-emerald-100 text-[#15803D]'
+                              : st.stopStatus === 'Accepted'
+                              ? 'bg-sky-100 text-sky-700'
+                              : 'bg-amber-100 text-amber-800'
+                          }`}
+                        >
+                          {st.pickedUp ? '✓ Picked Up' : st.stopStatus}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+{trackingOrder.status !== 'Delivered' ? (
+                  <>
                     <LiveScooterMap
                       lat={liveLat}
                       lng={liveLng}
-                      title="Delivery Partner Live Scooter"
+                      title="Live Order Tracking Map"
                       height={208}
-                      badgeText={`🛵 Rider Out for Delivery • ETA ~${trackingEtaInfo?.etaMinutes || 12} mins`}
+                      badgeText={isOutForCustomerDrop ? `🛵 Out for Delivery • ~${etaInfo.etaMinutes} mins` : `📍 ${trackingOrder.status} • ~${etaInfo.etaMinutes} mins`}
+                      routeUrl={routeDirectionsUrl}
                     />
-                  ) : (
-                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-1 text-amber-950">
-                      <p className="font-extrabold">
-                        {trackingOrder.status === 'Order Placed'
-                          ? 'Stage 1: Waiting for Seller to Accept Order...'
-                          : 'Stage 2: Seller Accepted — Assigning Delivery Partner for Pickup...'}
-                      </p>
-                      <p className="text-[11px]">
-                        Once the seller accepts and the delivery partner picks up your order, live scooter tracking will appear here!
-                      </p>
-                    </div>
-                  )}
 
-{trackingOrder.driverName && (
-                    <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="h-11 w-11 rounded-full bg-emerald-100 text-[#15803D] font-extrabold flex items-center justify-center text-xl">
-                          🛵
+                    {trackingOrder.driverName && (
+                      <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="h-11 w-11 rounded-full bg-emerald-100 text-[#15803D] font-extrabold flex items-center justify-center text-xl">
+                            🛵
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-slate-400 font-bold">Delivery Partner</p>
+                            <h4 className="font-extrabold text-slate-900">{trackingOrder.driverName}</h4>
+                            {trackingOrder.driverMobile && (
+                              <p className="text-[10px] text-slate-500">+91 {trackingOrder.driverMobile}</p>
+                            )}
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-[10px] text-slate-400 font-bold">Delivery Partner</p>
-                          <h4 className="font-extrabold text-slate-900">{trackingOrder.driverName}</h4>
-                          {trackingOrder.driverMobile && (
-                            <p className="text-[10px] text-slate-500">+91 {trackingOrder.driverMobile}</p>
-                          )}
+                        <div className="flex space-x-2">
+                          <a
+                            href={`tel:${trackingOrder.driverMobile || '8328261103'}`}
+                            className="p-2.5 bg-emerald-50 text-[#15803D] border border-emerald-200 rounded-full flex items-center space-x-1 font-extrabold text-[10px]"
+                          >
+                            <Phone className="h-4 w-4" />
+                            <span>Call</span>
+                          </a>
+                          <a
+                            href={`sms:${trackingOrder.driverMobile || '8328261103'}`}
+                            className="p-2.5 bg-sky-50 text-sky-700 border border-sky-200 rounded-full flex items-center space-x-1 font-extrabold text-[10px]"
+                          >
+                            <MessageSquare className="h-4 w-4" />
+                            <span>Msg</span>
+                          </a>
                         </div>
                       </div>
-                      <div className="flex space-x-2">
-                        <a
-                          href={`tel:${trackingOrder.driverMobile || '8328261103'}`}
-                          className="p-2.5 bg-emerald-50 text-[#15803D] border border-emerald-200 rounded-full flex items-center space-x-1 font-extrabold text-[10px]"
-                        >
-                          <Phone className="h-4 w-4" />
-                          <span>Call</span>
-                        </a>
-                        <a
-                          href={`sms:${trackingOrder.driverMobile || '8328261103'}`}
-                          className="p-2.5 bg-sky-50 text-sky-700 border border-sky-200 rounded-full flex items-center space-x-1 font-extrabold text-[10px]"
-                        >
-                          <MessageSquare className="h-4 w-4" />
-                          <span>Msg</span>
-                        </a>
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-center space-y-1">
-                  <p className="font-extrabold text-[#15803D] text-sm">✓ Order Delivered Successfully!</p>
-                  <p className="text-[11px] text-slate-600">
-                    Official Tax Invoice has been sent to <strong>{currentUser.email}</strong>.
-                  </p>
-                </div>
-              )}
-            </div>
-          </main>
-        )}
+                    )}
+                  </>
+                ) : (
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-center space-y-1">
+                    <p className="font-extrabold text-[#15803D] text-sm">✓ Order Delivered Successfully!</p>
+                    <p className="text-[11px] text-slate-600">
+                      Official Tax Invoice has been sent to <strong>{currentUser.email}</strong>.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </main>
+          );
+        })()}
 
-        {/* MY ORDERS TAB (ONLY ORDERS + LIVE ETA, NOTIFICATIONS MOVED TO BELL ICON) */}
         {activeTab === 'orders' && (
           <main className="p-4 space-y-3.5 text-xs">
             <h2 className="text-base font-extrabold text-slate-900">My Orders</h2>
@@ -3826,7 +3982,7 @@ const renderHorizontalSuggestionsBox = () => (
               orders
                 .filter((o) => o.buyerRole === 'customer')
                 .map((ord) => {
-                  const etaInfo = getTrafficAndDeliveryEta(ord.distanceKm || 3.2, ord.status);
+                  const etaInfo = getTrafficAndDeliveryEta(ord.distanceKm || 2.8, ord.status);
                   return (
                     <div key={ord.id} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-2">
                       <div className="flex justify-between font-extrabold">
@@ -3834,12 +3990,12 @@ const renderHorizontalSuggestionsBox = () => (
                         <span>₹{ord.total}</span>
                       </div>
                       {ord.status !== 'Delivered' && (
-                        <p className="text-[10px] font-extrabold text-[#15803D] bg-emerald-50 px-2.5 py-1 rounded-lg">
+                        <p className="text-[10px] font-bold text-[#15803D]">
                           🚚 ETA: ~{etaInfo.etaMinutes} mins • {etaInfo.distanceKm} km ({etaInfo.trafficLabel})
                         </p>
                       )}
                       <button onClick={() => { setTrackingOrder(ord); setActiveTab('trackOrder'); }} className="text-[#15803D] font-extrabold">
-                        {ord.status === 'Delivered' ? 'View Order Summary >' : 'Track Order >'}
+                        {ord.status === 'Delivered' ? 'View Order Summary >' : 'Live Track Order >'}
                       </button>
                     </div>
                   );
@@ -3889,11 +4045,10 @@ const renderHorizontalSuggestionsBox = () => (
   }
 
 // =========================================================================
-  // INDEPENDENT MULTI-VENDOR ORDER ALERTS & SEQUENTIAL PICKUP TRACKING
-  // (WITH ADMIN APPROVAL LOCK + LOCK SCREEN PUSH NOTIFICATIONS AT EVERY STAGE)
+  // INDEPENDENT MULTI-VENDOR ORDER ALERTS & LIVE TRACKING (FARMER / WHOLESALE / RETAIL)
   // =========================================================================
   const renderBroadcastOrderAlertsAndPickupTracking = () => {
-    const isSellerApproved = Boolean(currentUser.approved);
+    const isSellerApproved = Boolean(currentUser?.approved);
     const incomingAlertCards = [];
     orders.forEach((ord) => {
       const pendingStops = getPendingStopsForSeller(ord);
@@ -3921,9 +4076,9 @@ const renderHorizontalSuggestionsBox = () => (
       <div className="space-y-3">
         {!isSellerApproved && (
           <div className="bg-rose-50 border-2 border-rose-300 text-rose-900 rounded-2xl p-3.5 text-xs font-extrabold space-y-1">
-            <p>🔒 Pending Master Admin Approval</p>
+            <p>⚠️ Pending Master Admin Approval</p>
             <p className="text-[11px] font-semibold">
-              Admin మీ షాప్ / రైతు అకౌంట్‌ను Approve చేసిన తర్వాతే మీరు ఆర్డర్స్ Accept చేయగలరు.
+              Master Admin మీ షాప్/రైతు అకౌంట్‌ను Approve చేసిన తర్వాతే మీరు కొత్త ఆర్డర్స్ Accept చేయగలరు.
             </p>
           </div>
         )}
@@ -3956,8 +4111,8 @@ const renderHorizontalSuggestionsBox = () => (
               )}
             </div>
 
-{incomingAlertCards.map(({ ord, st }) => {
-              const etaInfo = getTrafficAndDeliveryEta(ord.distanceKm || 3.2, 'Accepted');
+            {incomingAlertCards.map(({ ord, st }) => {
+              const etaInfo = getTrafficAndDeliveryEta(ord.distanceKm || 2.8, ord.status);
               return (
                 <div key={`${ord.id}_${st.stopId}`} className="bg-amber-50 border-2 border-amber-400 rounded-2xl p-3.5 shadow-md space-y-2">
                   <div className="flex justify-between font-extrabold text-slate-900">
@@ -3967,8 +4122,8 @@ const renderHorizontalSuggestionsBox = () => (
                   <p className="text-[11px] font-bold text-slate-800">
                     Your Items ({currentUser.role.toUpperCase()}): {st.itemsSummary.join(', ')}
                   </p>
-                  <p className="text-[10px] text-slate-500">
-                    Customer Drop: {ord.buyerAddress} • Est. Delivery: ~{etaInfo.etaMinutes} mins ({etaInfo.trafficLabel})
+                  <p className="text-[10px] text-slate-600 font-bold">
+                    Drop: {ord.buyerAddress} • Distance: {etaInfo.distanceKm} km (~{etaInfo.etaMinutes} mins, {etaInfo.trafficLabel})
                   </p>
                   <div className="grid grid-cols-2 gap-2 pt-1">
                     <button
@@ -3976,7 +4131,7 @@ const renderHorizontalSuggestionsBox = () => (
                       disabled={!isSellerApproved}
                       onClick={() => {
                         if (!isSellerApproved) {
-                          notify('Account Pending Admin Approval! Cannot accept orders yet.');
+                          notify('Account Pending Master Admin Approval!');
                           return;
                         }
                         stopAlertRingtone();
@@ -3996,6 +4151,7 @@ const renderHorizontalSuggestionsBox = () => (
                             : itemStop
                         );
                         const nextOrderStatus = computeOrderAcceptanceStatus(allStops, ord.status);
+                        const acceptEta = getTrafficAndDeliveryEta(ord.distanceKm || 2.8, nextOrderStatus);
                         const updateData = {
                           status: nextOrderStatus,
                           pickupStops: allStops,
@@ -4003,21 +4159,31 @@ const renderHorizontalSuggestionsBox = () => (
                         setOrders((prev) => prev.map((o) => (o.id === ord.id ? { ...o, ...updateData } : o)));
                         updateDoc(doc(db, 'orders', ord.id), updateData).catch(() => {});
 
-                        // Send Lock-Screen Push Notification to Customer on Acceptance
-                        dispatchOrderStagePushAlert({
-                          ord,
+// Send Push Notification to Customer Lock Screen + In-App Alert
+                        const pushMsg = `Order #${ord.id} Accepted by ${currentUser.name}! Live ETA: ~${acceptEta.etaMinutes} mins (${acceptEta.trafficLabel}).`;
+                        const alertObj = {
+                          id: 'bo_' + Date.now(),
                           tag: 'ORDER ACCEPTED',
-                          title: `Rythu Basket • Order #${ord.id} Accepted!`,
-                          body: `Your order #${ord.id} has been accepted by ${currentUser.name}. Live ETA: ~${etaInfo.etaMinutes} mins (${etaInfo.trafficLabel}).`,
+                          targetUserId: ord.buyerId,
+                          message: pushMsg,
+                          createdAt: Date.now(),
+                          date: new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
+                        };
+                        setDoc(doc(db, 'broadcastOffers', alertObj.id), alertObj).catch(() => {});
+                        const buyerObj = users.find((u) => u.id === ord.buyerId);
+                        triggerPushNotificationApi({
+                          tokens: [ord.buyerFcmToken, buyerObj?.fcmToken],
+                          title: `Rythu Basket • Order Accepted!`,
+                          body: pushMsg,
                         });
 
-                        notify(`Accepted #${ord.id}! Customer notified & Delivery Partners alerted.`);
+                        notify(`Accepted #${ord.id}! Customer Push Alert & Rider Dispatch Sent.`);
                       }}
                       className={`font-extrabold py-2.5 rounded-xl shadow-sm ${
-                        isSellerApproved ? 'bg-[#15803D] text-white' : 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                        isSellerApproved ? 'bg-[#15803D] text-white' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                       }`}
                     >
-                      {isSellerApproved ? '✓ Accept Order' : '🔒 Pending Approval'}
+                      {isSellerApproved ? '✓ Accept Order' : '🔒 Admin Approval Req'}
                     </button>
                     <button
                       type="button"
@@ -4039,41 +4205,44 @@ const renderHorizontalSuggestionsBox = () => (
           </div>
         )}
 
-{myAcceptedStopCards.map(({ ord, st, isMyTurnForRiderPickup }) => {
+        {myAcceptedStopCards.map(({ ord, st, isMyTurnForRiderPickup }) => {
           const rLat = ord.driverLat || 14.4390;
           const rLng = ord.driverLng || 79.9810;
-          const etaInfo = getTrafficAndDeliveryEta(ord.distanceKm || 3.2, ord.status);
+          const etaInfo = getTrafficAndDeliveryEta(ord.distanceKm || 2.8, ord.status);
+          const sellerToCustomerRoute = `https://www.google.com/maps/dir/?api=1&origin=${st.sellerLat || mapPinCoords.lat},${st.sellerLng || mapPinCoords.lng}&destination=${ord.buyerLat || 14.4345},${ord.buyerLng || 79.9781}&travelmode=driving`;
+
           return (
             <div key={`${ord.id}_${st.stopId}_accepted`} className="bg-white border-2 border-[#15803D] rounded-2xl p-3.5 shadow-sm space-y-2">
               <div className="flex justify-between items-center">
                 <span className="font-extrabold text-slate-900">Order #{ord.id} • {ord.buyerName}</span>
                 <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${st.pickedUp ? 'bg-emerald-100 text-[#15803D]' : 'bg-amber-100 text-amber-900'}`}>
-                  {st.pickedUp ? '✓ Picked Up by Rider' : isMyTurnForRiderPickup ? '🛵 Rider En Route to You' : 'Queued Next Pickup'}
+                  {ord.status === 'Delivered' ? '✓ Delivered' : st.pickedUp ? '✓ Picked Up by Rider' : isMyTurnForRiderPickup ? '🛵 Rider En Route to You' : 'Accepted • Ready for Pickup'}
                 </span>
               </div>
-              <p className="text-[11px] font-bold text-[#15803D]">Items: {st.itemsSummary.join(', ')} • Live ETA: ~{etaInfo.etaMinutes} mins</p>
+              <p className="text-[11px] font-bold text-[#15803D]">Items: {st.itemsSummary.join(', ')}</p>
+              <div className="bg-slate-50 rounded-xl p-2 flex justify-between text-[10px] font-bold text-slate-600">
+                <span>Distance: {etaInfo.distanceKm} km ({etaInfo.trafficLabel})</span>
+                <span className="text-[#15803D] font-extrabold">
+                  {ord.status === 'Delivered' ? 'Completed' : `ETA: ~${etaInfo.etaMinutes} mins`}
+                </span>
+              </div>
 
-              {!st.pickedUp && isMyTurnForRiderPickup && (
+              {ord.status !== 'Delivered' && (
                 <div className="space-y-1.5 pt-1">
                   <p className="text-[11px] font-extrabold text-[#15803D]">
                     {ord.driverName
-                      ? `🛵 Live Rider Pickup Tracking: ${ord.driverName} (+91 ${ord.driverMobile}) • GPS: ${rLat}, ${rLng}`
+                      ? `🛵 Live Rider Tracking: ${ord.driverName} (+91 ${ord.driverMobile}) • GPS: ${rLat}, ${rLng}`
                       : 'Waiting for Delivery Partner to accept pickup route...'}
                   </p>
                   <LiveScooterMap
                     lat={rLat}
                     lng={rLng}
-                    title={`Pickup Map ${ord.id}_${st.stopId}`}
-                    height={148}
-                    badgeText={`🛵 Rider arriving for pickup • ${rLat}, ${rLng}`}
+                    title={`Live Tracking ${ord.id}_${st.stopId}`}
+                    height={156}
+                    badgeText={`🛵 ${ord.status} • ~${etaInfo.etaMinutes} mins (${rLat}, ${rLng})`}
+                    routeUrl={sellerToCustomerRoute}
                   />
                 </div>
-              )}
-
-              {!st.pickedUp && !isMyTurnForRiderPickup && (
-                <p className="text-[10px] text-slate-500">
-                  Rider is picking up the previous accepted stop first — live scooter tracking will automatically switch to you right after!
-                </p>
               )}
             </div>
           );
@@ -4082,7 +4251,7 @@ const renderHorizontalSuggestionsBox = () => (
     );
   };
 
-  // =========================================================================
+// =========================================================================
   // 4. FARMER PORTAL
   // =========================================================================
   if (currentUser.role === 'farmer') {
@@ -4090,8 +4259,8 @@ const renderHorizontalSuggestionsBox = () => (
     const farmerTodaysEarnings = orders
       .filter((o) => o.status === 'Delivered' && new Date(o.createdAt || Date.now()).toDateString() === todayStr)
       .reduce((sum, o) => {
-        const myStop = (o.pickupStops || []).find((s) => s.acceptedByUserId === currentUser.id);
-        return sum + (myStop ? Number(myStop.stopSubtotal || 0) : 0);
+        const myStops = (o.pickupStops || []).filter((s) => s.acceptedByUserId === currentUser.id);
+        return sum + myStops.reduce((s2, st) => s2 + Number(st.stopSubtotal || 0), 0);
       }, 0);
 
     return (
@@ -4109,15 +4278,17 @@ const renderHorizontalSuggestionsBox = () => (
 
         {activeTab === 'home' && (
           <main className="p-4 space-y-4 text-xs">
-            {/* TODAY'S EARNINGS BANNER FOR FARMER */}
-            <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-emerald-200 flex items-center justify-between">
-              <div>
-                <p className="text-[10px] font-bold text-slate-400">Today's Farm Earnings</p>
+            {renderSharedGifBanner()}
+
+            {/* TODAY'S EARNINGS CARD FOR FARMER */}
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-emerald-200">
+                <p className="text-[10px] font-bold text-slate-400">Today's Earnings</p>
                 <p className="text-xl font-extrabold text-[#15803D]">₹{farmerTodaysEarnings}</p>
               </div>
-              <div className="text-right">
-                <p className="text-[10px] font-bold text-slate-400">Wallet Balance</p>
-                <p className="text-sm font-extrabold text-slate-900">₹{currentUser.wallet || 0}</p>
+              <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100">
+                <p className="text-[10px] font-bold text-slate-400">Farmer Wallet</p>
+                <p className="text-xl font-extrabold text-slate-900">₹{currentUser.wallet || 0}</p>
               </div>
             </div>
 
@@ -4139,7 +4310,7 @@ const renderHorizontalSuggestionsBox = () => (
               <img src={FARMER_HERO_IMG} alt="Farmer" className="h-24 w-24 rounded-2xl object-cover object-top shadow" />
             </div>
 
-<div className="grid grid-cols-3 gap-2.5 text-center">
+            <div className="grid grid-cols-3 gap-2.5 text-center">
               {[
                 { id: 'listProduce', label: 'My Produce', icon: Sprout, bg: 'bg-emerald-50 text-[#15803D]' },
                 { id: 'marketRates', label: 'Market Rates', icon: TrendingUp, bg: 'bg-sky-50 text-sky-700' },
@@ -4150,14 +4321,7 @@ const renderHorizontalSuggestionsBox = () => (
               ].map((tile) => {
                 const Icon = tile.icon;
                 return (
-                  <button
-                    key={tile.id}
-                    onClick={() => {
-                      if (tile.id === 'marketRates') fetchLiveNelloreMandiRates();
-                      setActiveTab(tile.id);
-                    }}
-                    className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex flex-col items-center space-y-1.5"
-                  >
+                  <button key={tile.id} onClick={() => setActiveTab(tile.id)} className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex flex-col items-center space-y-1.5">
                     <div className={`h-11 w-11 rounded-2xl ${tile.bg} flex items-center justify-center`}>
                       <Icon className="h-5 w-5" />
                     </div>
@@ -4169,7 +4333,7 @@ const renderHorizontalSuggestionsBox = () => (
           </main>
         )}
 
-        {activeTab === 'listProduce' && (
+{activeTab === 'listProduce' && (
           <main className="p-4 space-y-3.5 text-xs">
             <div className="flex items-center space-x-2">
               <button onClick={() => setActiveTab('home')} className="p-2 rounded-full bg-white shadow-sm">
@@ -4183,36 +4347,37 @@ const renderHorizontalSuggestionsBox = () => (
 
         {activeTab === 'orders' && (
           <main className="p-4 space-y-3 text-xs">
-            <h2 className="text-base font-extrabold">My Farmer Orders & Pickup Tracking</h2>
+            <h2 className="text-base font-extrabold">My Farmer Orders & Live Tracking</h2>
             {renderBroadcastOrderAlertsAndPickupTracking()}
           </main>
         )}
 
-        {/* REAL-TIME NELLORE APMC / AGMARKNET MARKET RATES */}
+        {/* FARMERS TODAY'S LIVE APMC / AGMARKNET MARKET RATES */}
         {activeTab === 'marketRates' && (
           <main className="p-4 space-y-3 text-xs">
-            <div className="flex items-center justify-between bg-white p-3.5 rounded-2xl shadow-sm border border-emerald-100">
+            <div className="bg-white rounded-3xl p-4 shadow-sm border border-sky-200 flex items-center justify-between">
               <div>
                 <h2 className="text-base font-extrabold text-slate-900">Today's Live Mandi Rates</h2>
-                <p className="text-[10px] font-bold text-[#15803D]">Source: Data.gov.in / Agmarknet APMC Nellore</p>
+                <p className="text-[10px] font-bold text-slate-500">Source: Data.gov.in / Agmarknet APMC Nellore</p>
               </div>
               <button
                 type="button"
-                onClick={fetchLiveNelloreMandiRates}
-                className="bg-emerald-50 text-[#15803D] p-2 rounded-xl border border-emerald-200"
+                onClick={refreshLiveNelloreMandiRates}
+                className="bg-sky-50 text-sky-700 border border-sky-200 p-2 rounded-xl"
               >
                 <RefreshCw className="h-4 w-4" />
               </button>
             </div>
-            {liveMandiRates.map((mr) => (
+
+            {marketRates.map((mr) => (
               <div key={mr.id} className="bg-white rounded-2xl p-3.5 shadow-sm flex items-center justify-between">
                 <div>
-                  <span className="font-extrabold text-slate-900">{mr.cropEn} ({mr.cropTe})</span>
+                  <span className="font-extrabold text-slate-900">{mr.cropEn} • {mr.cropTe}</span>
                   <p className="text-[10px] text-slate-400 font-bold">{mr.mandi} {mr.updatedAt ? `• ${mr.updatedAt}` : ''}</p>
                 </div>
                 <div className="text-right">
-                  <span className="font-extrabold text-sm text-[#15803D]">₹{mr.modalKg}/Kg</span>
-                  <p className="text-[10px] font-bold text-slate-500">Min ₹{mr.minKg} • Max ₹{mr.maxKg}</p>
+                  <span className="font-extrabold text-[#15803D] text-sm">₹{mr.modalPrice}/Kg</span>
+                  <p className="text-[10px] text-slate-500 font-bold">Min ₹{mr.minPrice} • Max ₹{mr.maxPrice}</p>
                 </div>
               </div>
             ))}
@@ -4221,12 +4386,10 @@ const renderHorizontalSuggestionsBox = () => (
 
         {activeTab === 'earnings' && (
           <main className="p-4 space-y-3 text-xs">
-            <div className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white rounded-3xl p-5 shadow-md space-y-2">
+            <div className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white rounded-3xl p-5 shadow-md">
               <p className="text-emerald-100 font-bold">Today's Farm Earnings</p>
-              <h3 className="text-3xl font-extrabold">₹{farmerTodaysEarnings}</h3>
-              <p className="text-xs text-amber-200 font-bold pt-1 border-t border-white/15">
-                Total Wallet Balance: ₹{currentUser.wallet || 0}
-              </p>
+              <h3 className="text-3xl font-extrabold mt-1">₹{farmerTodaysEarnings}</h3>
+              <p className="text-xs text-emerald-100 mt-2">Wallet Balance: ₹{currentUser.wallet || 0}</p>
             </div>
           </main>
         )}
@@ -4263,26 +4426,25 @@ const renderHorizontalSuggestionsBox = () => (
     );
   }
 
-// =========================================================================
+  // =========================================================================
   // 5. WHOLESALE & RETAIL STORE PORTALS
   // =========================================================================
   if (currentUser.role === 'wholesale' || currentUser.role === 'retail') {
     const isRetail = currentUser.role === 'retail';
-    const todayStr = new Date().toDateString();
-
-    const sellerTodaysEarnings = orders
-      .filter((o) => o.status === 'Delivered' && new Date(o.createdAt || Date.now()).toDateString() === todayStr)
-      .reduce((sum, o) => {
-        const myStop = (o.pickupStops || []).find((s) => s.acceptedByUserId === currentUser.id);
-        return sum + (myStop ? Number(myStop.stopSubtotal || 0) : 0);
-      }, 0);
 
     const visibleB2BProducts = products.filter((p) => {
       const src = p.postedByRole || 'farmer';
       return isRetail ? src === 'farmer' || src === 'wholesale' : src === 'farmer';
     });
 
-    const myPlacedBulkOrders = orders.filter((o) => o.buyerId === currentUser.id);
+const myPlacedBulkOrders = orders.filter((o) => o.buyerId === currentUser.id);
+    const todayStr = new Date().toDateString();
+    const sellerTodaysSales = orders
+      .filter((o) => o.status === 'Delivered' && new Date(o.createdAt || Date.now()).toDateString() === todayStr)
+      .reduce((sum, o) => {
+        const myStops = (o.pickupStops || []).filter((s) => s.acceptedByUserId === currentUser.id);
+        return sum + myStops.reduce((s2, st) => s2 + Number(st.stopSubtotal || 0), 0);
+      }, 0);
 
     const handlePlaceB2BOrder = (prod) => {
       const qty = prod.minWholesaleQty;
@@ -4318,7 +4480,7 @@ const renderHorizontalSuggestionsBox = () => (
         buyerAddress: currentUser.address,
         buyerLat: currentUser.lat || mapPinCoords.lat,
         buyerLng: currentUser.lng || mapPinCoords.lng,
-        distanceKm: prod.distanceKm || 4.5,
+        distanceKm: prod.distanceKm || 3.5,
         items: itemsArr,
         pickupStops,
         riderBaseFee: 30,
@@ -4363,16 +4525,15 @@ return (
 
         {activeTab === 'home' && (
           <main className="p-4 space-y-4 text-xs">
+            {renderSharedGifBanner()}
             {renderBroadcastOrderAlertsAndPickupTracking()}
 
-            {/* TODAY'S EARNINGS CARD FOR WHOLESALE & RETAIL */}
             <div className="bg-gradient-to-r from-[#0F5132] to-[#16A34A] text-white rounded-3xl p-4 shadow-md flex items-center justify-between">
               <div>
-                <p className="text-emerald-100 font-bold">Today's {isRetail ? 'Retail' : 'Wholesale'} Earnings</p>
+                <p className="text-emerald-100 font-bold">Today's Earnings</p>
                 <h2 className="text-2xl font-extrabold mt-0.5">
-                  ₹{sellerTodaysEarnings} <span className="text-xs text-[#FDE047]">Live</span>
+                  ₹{sellerTodaysSales} <span className="text-xs text-[#FDE047]">Live</span>
                 </h2>
-                <p className="text-[10px] text-emerald-100 mt-0.5">Wallet Balance: ₹{currentUser.wallet || 0}</p>
               </div>
               <TrendingUp className="h-10 w-10 text-[#FDE047] opacity-90" />
             </div>
@@ -4458,7 +4619,8 @@ return (
               const isPickedUp = ord.status === 'Out for Delivery';
               const rLat = ord.driverLat || 14.4390;
               const rLng = ord.driverLng || 79.9810;
-              const etaInfo = getTrafficAndDeliveryEta(ord.distanceKm || 4.5, ord.status);
+              const etaInfo = getTrafficAndDeliveryEta(ord.distanceKm || 3.5, ord.status);
+              const routeUrl = `https://www.google.com/maps/dir/?api=1&origin=${rLat},${rLng}&destination=${ord.buyerLat || mapPinCoords.lat},${ord.buyerLng || mapPinCoords.lng}&travelmode=driving`;
               return (
                 <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-200 space-y-2">
                   <div className="flex justify-between font-extrabold">
@@ -4466,34 +4628,28 @@ return (
                     <span className="text-[#15803D]">₹{ord.total}</span>
                   </div>
                   <p className="text-slate-600">{ord.items.map((i) => `${i.qty} ${i.unit || 'Kg'} ${i.name}`).join(', ')}</p>
-                  {ord.status !== 'Delivered' && (
-                    <p className="text-[10px] font-extrabold text-[#15803D] bg-emerald-50 px-2.5 py-1 rounded-lg">
-                      🚚 Live ETA: ~{etaInfo.etaMinutes} mins • {etaInfo.distanceKm} km ({etaInfo.trafficLabel})
-                    </p>
-                  )}
                   {ord.b2bOtp && ord.status !== 'Delivered' && (
                     <div className="bg-amber-50 border border-amber-200 p-2 rounded-xl font-extrabold text-amber-950">
                       Delivery Verification OTP: {ord.b2bOtp}
                     </div>
                   )}
 
-                  {isPickedUp ? (
+                  {ord.status !== 'Delivered' ? (
                     <div className="space-y-1.5 pt-1">
                       <p className="text-[11px] font-extrabold text-[#15803D]">
-                        🛵 Rider {ord.driverName} Picked Up Order — Live Delivery GPS: {rLat}, {rLng}
+                        {isPickedUp
+                          ? `🛵 Rider ${ord.driverName} Out for Delivery • ETA: ~${etaInfo.etaMinutes} mins (${etaInfo.trafficLabel})`
+                          : `Live Status: ${ord.status} • ETA: ~${etaInfo.etaMinutes} mins (${etaInfo.distanceKm} km)`}
                       </p>
                       <LiveScooterMap
                         lat={rLat}
                         lng={rLng}
-                        title={`Bulk Drop Map ${ord.id}`}
-                        height={148}
-                        badgeText={`🛵 Live Delivery GPS: ${rLat}, ${rLng}`}
+                        title={`Bulk Live Map ${ord.id}`}
+                        height={156}
+                        badgeText={`🛵 ${ord.status} • ~${etaInfo.etaMinutes} mins`}
+                        routeUrl={routeUrl}
                       />
                     </div>
-                  ) : ord.status !== 'Delivered' ? (
-                    <p className="text-[10px] font-bold text-slate-500">
-                      Waiting for seller acceptance & rider pickup...
-                    </p>
                   ) : (
                     <p className="text-[11px] font-extrabold text-[#15803D]">✓ Delivered & Invoice Sent to Email</p>
                   )}
@@ -4527,536 +4683,353 @@ return (
   }
 
 // =========================================================================
-  // 6. DELIVERY PARTNER PORTAL (EVERY STAGE PUSH NOTIFICATIONS + LIVE ETA)
+  // 6. DELIVERY PARTNER PORTAL (SYNCED EARNINGS, HISTORY, LIVE MAP & PUSH)
   // =========================================================================
-   if (currentUser.role === 'delivery') {
-    const [deliveryView, setDeliveryView] = React.useState('ready'); // 'ready' | 'completed' | 'weekly' | 'profileMenu'
-    const [selectedProfileSection, setSelectedProfileSection] = React.useState(null);
-    const [withdrawAmt, setWithdrawAmt] = React.useState('');
+  if (currentUser.role === 'delivery') {
+    const availOrders = orders.filter((o) => {
+      if (o.status === 'Delivered') return false;
+      const stops = o.pickupStops || [];
+      const hasSellerAcceptance =
+        stops.some((s) => s.stopStatus === 'Accepted') ||
+        ['Order Partially Accepted', 'Order Fully Accepted', 'Partner Assigned', 'Out for Delivery'].includes(o.status);
+      return hasSellerAcceptance;
+    });
+    const delivOrders = orders.filter((o) => o.status === 'Delivered');
 
-    // Live Synced Orders from Firestore
-    const readyForPickupOrders = orders.filter((o) => o.status === 'Accepted');
-    const myActiveDeliveries = orders.filter(
-      (o) =>
-        (o.status === 'Picked' || o.status === 'Out for Delivery') &&
-        (!o.deliveryPartnerId || o.deliveryPartnerId === currentUser.id)
-    );
-    const myPickupHistory = orders.filter(
-      (o) =>
-        ['Picked', 'Out for Delivery', 'Delivered'].includes(o.status) &&
-        (!o.deliveryPartnerId || o.deliveryPartnerId === currentUser.id)
-    );
-    const myCompletedDeliveries = orders.filter(
-      (o) =>
-        o.status === 'Delivered' &&
-        (!o.deliveryPartnerId || o.deliveryPartnerId === currentUser.id)
-    );
-
-    // Persistent Earnings Calculation (Survives Page Refresh)
+    // Persistent Earnings Synced Directly from Firestore Delivered Orders
     const todayStr = new Date().toDateString();
-    const todaysDeliveryEarnings = myCompletedDeliveries
+    const riderTodaysEarnings = delivOrders
       .filter((o) => new Date(o.deliveredAt || o.createdAt || Date.now()).toDateString() === todayStr)
-      .reduce((sum, o) => sum + Number(o.riderFee || 45), 0);
+      .reduce((sum, o) => sum + Number(o.totalRiderPayout || o.riderBaseFee || 30), 0);
 
-    const totalDeliveryEarnings = myCompletedDeliveries.reduce(
-      (sum, o) => sum + Number(o.riderFee || 45),
+    const riderTotalEarnings = delivOrders.reduce(
+      (sum, o) => sum + Number(o.totalRiderPayout || o.riderBaseFee || 30),
       0
     );
+    const liveRiderWallet = Math.max(Number(currentUser.wallet || 0), riderTotalEarnings);
+    const weeklyCompleted = delivOrders.length;
 
-    const liveWalletBalance = Math.max(Number(currentUser.wallet || 0), totalDeliveryEarnings);
-    const weeklyCount = myCompletedDeliveries.length;
-    const weeklyTarget = 100;
-
-    // Rider Stage Update + Firestore Save + Customer Lock-Screen Push Notification
-    const handleRiderOrderAction = async (ord, nextStatus) => {
-      const earnedFee = 45; // ₹30 Base + ₹15 Extra Pickup Stop Bonus
-      const etaInfo = getTrafficAndDeliveryEta(ord.distanceKm || 2.8, nextStatus);
-      const nowTime = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-      const updatedHistory = [...(ord.statusHistory || []), { status: nextStatus, time: nowTime }];
-
-      const orderPatch = {
-        status: nextStatus,
-        deliveryPartnerId: currentUser.id,
-        deliveryPartnerName: currentUser.name,
-        deliveryPartnerMobile: currentUser.mobile,
-        etaMinutes: etaInfo.etaMinutes,
-        trafficStatus: etaInfo.trafficLabel,
-        statusHistory: updatedHistory,
-        ...(nextStatus === 'Delivered' ? { riderFee: earnedFee, deliveredAt: Date.now() } : {}),
-      };
-
-      setOrders((prev) => prev.map((o) => (o.id === ord.id ? { ...o, ...orderPatch } : o)));
-      await updateDoc(doc(db, 'orders', ord.id), orderPatch).catch(() => {});
-
-      if (nextStatus === 'Delivered') {
-        const nextWallet = Number(currentUser.wallet || 0) + earnedFee;
-        setCurrentUser((prev) => ({ ...prev, wallet: nextWallet }));
-        setUsers((prev) => prev.map((u) => (u.id === currentUser.id ? { ...u, wallet: nextWallet } : u)));
-        await updateDoc(doc(db, 'users', currentUser.id), { wallet: nextWallet }).catch(() => {});
-      }
-
-      // Send Push Notification to Customer Lock Screen + In-App Notifications
-      const stageMsgMap = {
-        Picked: `Order ${ord.id} Picked Up by ${currentUser.name}! Live ETA: ~${etaInfo.etaMinutes} mins (${etaInfo.trafficLabel}).`,
-        'Out for Delivery': `Order ${ord.id} is Out for Delivery! Reaching your doorstep in ~${etaInfo.etaMinutes} mins (${etaInfo.trafficLabel}).`,
-        Delivered: `Order ${ord.id} Delivered Fresh! Thank you for ordering from Rythu Basket Nellore.`,
-      };
-      const pushBody = stageMsgMap[nextStatus] || `Order ${ord.id} is ${nextStatus}`;
-
+    const sendStagePushToBuyer = (ord, stageTitle, stageBody) => {
       const alertObj = {
         id: 'bo_' + Date.now(),
-        tag: `ORDER ${nextStatus.toUpperCase()}`,
-        targetUserId: ord.customerId,
-        message: pushBody,
+        tag: stageTitle.toUpperCase(),
+        targetUserId: ord.buyerId,
+        message: stageBody,
         createdAt: Date.now(),
         date: new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
       };
-      setBroadcastOffers((prev) => [alertObj, ...prev]);
-      await setDoc(doc(db, 'broadcastOffers', alertObj.id), alertObj).catch(() => {});
+      setDoc(doc(db, 'broadcastOffers', alertObj.id), alertObj).catch(() => {});
+      const buyerObj = users.find((u) => u.id === ord.buyerId);
+      triggerPushNotificationApi({
+        tokens: [ord.buyerFcmToken, buyerObj?.fcmToken],
+        title: `Rythu Basket • ${stageTitle}`,
+        body: stageBody,
+      });
+    };
 
-      const custUser = users.find((u) => u.id === ord.customerId);
-      const tokens = [ord.customerFcmToken, custUser?.fcmToken].filter(Boolean);
-      if (tokens.length > 0) {
-        fetch('/api/send-push', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            tokens: [...new Set(tokens)],
-            title: `Rythu Basket • Order ${nextStatus}!`,
-            body: pushBody,
-          }),
-        }).catch(() => {});
+    const handleMarkOrderPickedUp = (ord, stopIdx) => {
+      const stops = [...(ord.pickupStops || [])];
+      if (stops[stopIdx]) {
+        stops[stopIdx] = { ...stops[stopIdx], pickedUp: true };
       }
+      const acceptedStops = stops.filter((s) => s.stopStatus === 'Accepted');
+      const allAcceptedPicked =
+        acceptedStops.length > 0
+          ? acceptedStops.every((s) => s.pickedUp)
+          : stops.every((s) => s.pickedUp);
 
-      notify(
-        nextStatus === 'Delivered'
-          ? `Order Delivered! +₹${earnedFee} Added to Today's Earnings`
-          : `Order ${ord.id} → ${nextStatus} & Push Sent!`
+      const nextStatus = allAcceptedPicked ? 'Out for Delivery' : 'Partner Assigned';
+      const etaInfo = getTrafficAndDeliveryEta(ord.distanceKm || 2.8, nextStatus);
+
+      setOrders((prev) =>
+        prev.map((o) => (o.id === ord.id ? { ...o, pickupStops: stops, status: nextStatus } : o))
+      );
+      updateDoc(doc(db, 'orders', ord.id), {
+        pickupStops: stops,
+        status: nextStatus,
+      }).catch(() => {});
+
+      sendStagePushToBuyer(
+        ord,
+        allAcceptedPicked ? 'Order Out for Delivery!' : 'Order Picked Up!',
+        allAcceptedPicked
+          ? `Order #${ord.id} is Out for Delivery with ${currentUser.name}! Arriving in ~${etaInfo.etaMinutes} mins (${etaInfo.trafficLabel}).`
+          : `Order #${ord.id} Picked Up from stop ${stopIdx + 1}! Live ETA: ~${etaInfo.etaMinutes} mins.`
+      );
+
+notify(
+        allAcceptedPicked
+          ? 'All accepted stops Picked Up! Customer Out for Delivery Push Sent.'
+          : `Stop ${stopIdx + 1} Picked Up! Push Notification Sent.`
       );
     };
 
-return (
-      <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
-        {toast && (
-          <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-extrabold px-4 py-2 rounded-full shadow-lg">
-            {toast}
-          </div>
-        )}
+    const handleCompleteDelivery = (ord) => {
+      const stopsCount = (ord.pickupStops || []).length || 1;
+      const baseFee = ord.riderBaseFee || 30;
+      const multiBonus = ord.riderMultiStopBonus ?? Math.max(0, stopsCount - 1) * 15;
+      const totalEarned = baseFee + multiBonus;
 
-        {/* TOP HEADER */}
-        <header className="bg-white px-4 pt-4 pb-3 flex items-center justify-between border-b border-slate-100">
+      setProducts((prev) =>
+        prev.map((p) => {
+          const orderedItem = ord.items.find((it) => it.id === p.id);
+          if (!orderedItem) return p;
+          return { ...p, stockKg: Math.max(0, p.stockKg - orderedItem.qty) };
+        })
+      );
+      const deliveredPatch = {
+        status: 'Delivered',
+        deliveredAt: Date.now(),
+        totalRiderPayout: totalEarned,
+        driverName: currentUser.name,
+        driverMobile: currentUser.mobile,
+      };
+      setOrders((prev) => prev.map((o) => (o.id === ord.id ? { ...o, ...deliveredPatch } : o)));
+      updateDoc(doc(db, 'orders', ord.id), deliveredPatch).catch(() => {});
+
+      const nextWallet = Number(currentUser.wallet || 0) + totalEarned;
+      setCurrentUser({
+        ...currentUser,
+        wallet: nextWallet,
+        weeklyOrders: weeklyCompleted + 1,
+      });
+      updateDoc(doc(db, 'users', currentUser.id), { wallet: nextWallet }).catch(() => {});
+
+      sendStagePushToBuyer(
+        ord,
+        'Order Delivered!',
+        `Order #${ord.id} Delivered Fresh to your doorstep! Official invoice sent to ${ord.buyerEmail || 'your email'}.`
+      );
+
+      sendAutomaticInvoiceEmail(ord);
+      notify(`Delivered! ₹${baseFee} Base + ₹${multiBonus} Multi-Stop Bonus (Total ₹${totalEarned}) credited!`);
+    };
+
+    return (
+      <div style={fontStyle} className="min-h-screen bg-[#F5F7F5] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
+        {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-extrabold px-4 py-2 rounded-full shadow-lg">{toast}</div>}
+
+        <header className="bg-white px-4 py-3.5 flex items-center justify-between border-b border-slate-100 sticky top-0 z-30">
           <div>
-            <p className="text-[11px] font-bold text-slate-400">Hello,</p>
-            <h1 className="text-base font-extrabold text-slate-900 flex items-center space-x-1.5">
-              <span>{currentUser.name}</span>
-              <span>🛵</span>
-            </h1>
+            <span className="text-[10px] font-bold text-slate-400 block">Hello,</span>
+            <h1 className="text-sm font-extrabold text-slate-900">{currentUser.name} 🛵</h1>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab('profile');
-              setSelectedProfileSection('wallet');
-            }}
-            className="bg-emerald-50 text-[#15803D] border border-emerald-200 px-3 py-1.5 rounded-full text-xs font-extrabold"
-          >
-            ₹{liveWalletBalance}
-          </button>
+          <span className="bg-emerald-50 text-[#15803D] text-xs font-extrabold px-3 py-1 rounded-full">₹{liveRiderWallet}</span>
         </header>
 
-        {/* DELIVERIES TAB (NEVER BLANK) */}
         {activeTab !== 'profile' && (
           <main className="p-4 space-y-3.5 text-xs">
-            {/* TODAY'S EARNINGS GREEN GRADIENT CARD */}
-            <div className="bg-gradient-to-r from-[#0F5132] to-[#16A34A] text-white p-5 rounded-3xl shadow-md flex items-center justify-between">
+            {renderSharedGifBanner()}
+
+            <div className="bg-gradient-to-r from-[#0F5132] to-[#16A34A] text-white rounded-3xl p-4 shadow-md flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-emerald-100">Today's Earnings</p>
-                <p className="text-3xl font-extrabold mt-1">₹{todaysDeliveryEarnings}</p>
-                <p className="text-[10px] font-bold text-emerald-100 mt-1.5">
-                  ₹30 Base + ₹15 Extra Pickup Stop Bonus
-                </p>
+                <p className="text-emerald-100 font-bold">Today's Earnings</p>
+                <h2 className="text-2xl font-extrabold mt-0.5">₹{riderTodaysEarnings}</h2>
+                <p className="text-[10px] text-amber-200 font-bold mt-0.5">₹30 Base + ₹15 Extra Pickup Stop Bonus</p>
               </div>
-              <TrendingUp className="h-9 w-9 text-[#FDE047]" />
+              <TrendingUp className="h-10 w-10 text-[#FDE047]" />
             </div>
 
-            {/* 3 STAT TABS: READY FOR PICKUP / COMPLETED / WEEKLY */}
-            <div className="grid grid-cols-3 gap-2.5">
-              <button
-                type="button"
-                onClick={() => setDeliveryView('ready')}
-                className={`p-3 rounded-2xl border text-center transition ${
-                  deliveryView === 'ready'
-                    ? 'bg-emerald-50/70 border-[#15803D] shadow-sm'
-                    : 'bg-white border-slate-100'
-                }`}
-              >
-                <p className="text-[10px] font-bold text-slate-500">Ready for Pickup</p>
-                <p className="text-lg font-extrabold text-[#EA580C] mt-0.5">
-                  {readyForPickupOrders.length + myActiveDeliveries.length}
-                </p>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <button onClick={() => setDelivFilter('available')} className={`p-2.5 rounded-2xl border ${delivFilter === 'available' ? 'bg-emerald-50 border-[#15803D]' : 'bg-white'}`}>
+                <p className="text-[10px] text-slate-500 font-bold">Ready for Pickup</p>
+                <p className="text-base font-extrabold text-[#EA580C]">{availOrders.length}</p>
               </button>
-
-              <button
-                type="button"
-                onClick={() => setDeliveryView('completed')}
-                className={`p-3 rounded-2xl border text-center transition ${
-                  deliveryView === 'completed'
-                    ? 'bg-emerald-50/70 border-[#15803D] shadow-sm'
-                    : 'bg-white border-slate-100'
-                }`}
-              >
-                <p className="text-[10px] font-bold text-slate-500">Completed</p>
-                <p className="text-lg font-extrabold text-[#15803D] mt-0.5">{myCompletedDeliveries.length}</p>
+              <button onClick={() => setDelivFilter('delivered')} className={`p-2.5 rounded-2xl border ${delivFilter === 'delivered' ? 'bg-emerald-50 border-[#15803D]' : 'bg-white'}`}>
+                <p className="text-[10px] text-slate-500 font-bold">Completed</p>
+                <p className="text-base font-extrabold text-[#15803D]">{delivOrders.length}</p>
               </button>
-
-              <button
-                type="button"
-                onClick={() => setDeliveryView('weekly')}
-                className={`p-3 rounded-2xl border text-center transition ${
-                  deliveryView === 'weekly'
-                    ? 'bg-emerald-50/70 border-[#15803D] shadow-sm'
-                    : 'bg-white border-slate-100'
-                }`}
-              >
-                <p className="text-[10px] font-bold text-slate-500">Weekly</p>
-                <p className="text-lg font-extrabold text-blue-600 mt-0.5">
-                  {weeklyCount}/{weeklyTarget}
-                </p>
-              </button>
+              <div className="p-2.5 rounded-2xl border bg-white">
+                <p className="text-[10px] text-slate-500 font-bold">Weekly</p>
+                <p className="text-base font-extrabold text-sky-600">{weeklyCompleted}/100</p>
+              </div>
             </div>
 
-  {/* VIEW 1: READY FOR PICKUP & ACTIVE DELIVERIES */}
-            {deliveryView === 'ready' && (
-              <div className="space-y-3">
-                {readyForPickupOrders.length === 0 && myActiveDeliveries.length === 0 ? (
-                  <div className="bg-white rounded-3xl p-8 text-center font-bold text-slate-400 border border-slate-100">
-                    No seller-accepted orders waiting for pickup right now.
-                  </div>
-                ) : (
-                  [...myActiveDeliveries, ...readyForPickupOrders].map((ord) => {
-                    const etaInfo = getTrafficAndDeliveryEta(ord.distanceKm || 2.8, ord.status);
-                    return (
-                      <div key={ord.id} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-2.5">
-                        <div className="flex justify-between items-center">
-                          <span className="font-mono font-extrabold text-slate-900">{ord.id}</span>
-                          <span className="bg-amber-100 text-amber-900 font-extrabold px-2.5 py-0.5 rounded-full text-[10px]">
-                            {ord.status}
-                          </span>
-                        </div>
-                        <p className="font-bold text-slate-700">Pickup: {ord.sellerName}</p>
-                        <p className="font-bold text-slate-700">Drop: {ord.customerName} • {ord.deliveryAddress}</p>
-                        <div className="bg-emerald-50 p-2.5 rounded-xl flex justify-between font-extrabold text-[#15803D]">
-                          <span>{etaInfo.distanceKm} km ({etaInfo.trafficLabel})</span>
+{(delivFilter === 'available' ? availOrders : delivOrders).length === 0 ? (
+              <div className="bg-white rounded-2xl p-6 text-center text-slate-400 font-bold">
+                {delivFilter === 'available'
+                  ? 'No seller-accepted orders waiting for pickup right now.'
+                  : 'No completed deliveries yet.'}
+              </div>
+            ) : (
+              (delivFilter === 'available' ? availOrders : delivOrders).map((ord) => {
+                const stops = (ord.pickupStops || buildPickupStopsFromItems(ord.items || [])).filter(
+                  (s) => s.stopStatus === 'Accepted'
+                );
+                const baseFee = ord.riderBaseFee || 30;
+                const multiBonus = ord.riderMultiStopBonus ?? Math.max(0, stops.length - 1) * 15;
+                const riderPayout = baseFee + multiBonus;
+                const isAssignedToMe = ord.status === 'Partner Assigned' || ord.status === 'Out for Delivery';
+                const etaInfo = getTrafficAndDeliveryEta(ord.distanceKm || 2.8, ord.status);
+                const curLat = ord.driverLat || mapPinCoords.lat;
+                const curLng = ord.driverLng || mapPinCoords.lng;
+                const destLat = ord.buyerLat || 14.4345;
+                const destLng = ord.buyerLng || 79.9781;
+                const fullTurnByTurnUrl = `https://www.google.com/maps/dir/?api=1&origin=${curLat},${curLng}&destination=${destLat},${destLng}&travelmode=driving`;
+
+                return (
+                  <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2.5">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="font-extrabold text-slate-900">#{ord.id} ({ord.buyerRole.toUpperCase()})</span>
+                        <p className="text-[10px] font-bold text-slate-500">{ord.buyerName} • +91 {ord.buyerMobile}</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="bg-emerald-100 text-[#15803D] font-extrabold px-2.5 py-1 rounded-full text-[11px]">
+                          Earn ₹{riderPayout}
+                        </span>
+                        {multiBonus > 0 && (
+                          <p className="text-[9px] font-extrabold text-[#EA580C] mt-0.5">
+                            +₹{multiBonus} Multi-Stop Bonus
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {ord.status !== 'Delivered' && (
+                      <>
+                        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2 flex justify-between items-center text-[10px] font-extrabold text-[#15803D]">
+                          <span>Distance: {etaInfo.distanceKm} km ({etaInfo.trafficLabel})</span>
                           <span>ETA: ~{etaInfo.etaMinutes} mins</span>
                         </div>
+                        <LiveScooterMap
+                          lat={curLat}
+                          lng={curLng}
+                          title={`Rider Route ${ord.id}`}
+                          height={150}
+                          badgeText={`🛵 Live GPS: ${curLat}, ${curLng}`}
+                          routeUrl={fullTurnByTurnUrl}
+                        />
+                      </>
+                    )}
 
-                        <div className="grid grid-cols-2 gap-2">
-                          <a
-                            href={`tel:${ord.customerMobile}`}
-                            className="bg-slate-100 text-slate-800 font-extrabold py-2.5 rounded-xl flex items-center justify-center space-x-1"
-                          >
-                            <Phone className="h-3.5 w-3.5" />
-                            <span>Call Customer</span>
-                          </a>
-                          <a
-                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ord.deliveryAddress)}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="bg-blue-50 text-blue-700 font-extrabold py-2.5 rounded-xl flex items-center justify-center space-x-1"
-                          >
-                            <Navigation className="h-3.5 w-3.5" />
-                            <span>Google Maps</span>
-                          </a>
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-2">
+                      <p className="text-[10px] font-extrabold text-slate-700 uppercase">
+                        1. Accepted Farmer / Shop Pickup Stops ({stops.length}):
+                      </p>
+                      {stops.map((st, idx) => {
+                        const stDest = st.sellerLat && st.sellerLng
+                          ? `${st.sellerLat},${st.sellerLng}`
+                          : encodeURIComponent(st.sellerName);
+                        const originalIdx = (ord.pickupStops || []).findIndex((x) => x.stopId === st.stopId);
+                        return (
+                          <div key={st.stopId} className="bg-white rounded-lg p-2 border border-slate-100 flex items-center justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <p className="font-extrabold text-[11px] text-slate-900 truncate">
+                                Stop {idx + 1}: {st.acceptedByUserName || st.sellerName}
+                              </p>
+                              <p className="text-[10px] text-slate-500 truncate">{st.itemsSummary.join(', ')}</p>
+                            </div>
+                            <div className="flex items-center space-x-1.5 flex-shrink-0">
+                              <a
+                                href={`https://www.google.com/maps/dir/?api=1&origin=${curLat},${curLng}&destination=${stDest}&travelmode=driving`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="bg-sky-600 text-white px-2.5 py-1 rounded-lg font-extrabold text-[10px] flex items-center space-x-1"
+                              >
+                                <Navigation className="h-3 w-3" />
+                                <span>Pickup Map</span>
+                              </a>
+                              {isAssignedToMe && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleMarkOrderPickedUp(ord, originalIdx >= 0 ? originalIdx : idx)}
+                                  className={`px-2 py-1 rounded-lg font-extrabold text-[10px] ${
+                                    st.pickedUp ? 'bg-[#15803D] text-white' : 'bg-amber-200 text-amber-950'
+                                  }`}
+                                >
+                                  {st.pickedUp ? '✓ Picked' : 'Mark Picked'}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+
+<p className="text-[10px] font-extrabold text-[#0F5132] uppercase pt-1">
+                        2. Customer / Buyer Drop Location:
+                      </p>
+                      <div className="bg-emerald-50/80 rounded-lg p-2 border border-emerald-200 flex items-center justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-extrabold text-[11px] text-[#0F5132]">{ord.buyerName}</p>
+                          <p className="text-[10px] text-slate-600 truncate">{ord.buyerAddress}</p>
                         </div>
-
-                        {ord.status === 'Accepted' && (
-                          <button
-                            type="button"
-                            onClick={() => handleRiderOrderAction(ord, 'Picked')}
-                            className="w-full bg-[#EA580C] text-white font-extrabold py-3 rounded-2xl shadow"
-                          >
-                            📦 Confirm Pickup & Push Notify
-                          </button>
-                        )}
-                        {ord.status === 'Picked' && (
-                          <button
-                            type="button"
-                            onClick={() => handleRiderOrderAction(ord, 'Out for Delivery')}
-                            className="w-full bg-amber-600 text-white font-extrabold py-3 rounded-2xl shadow"
-                          >
-                            🚚 Out for Delivery & Push Notify
-                          </button>
-                        )}
-                        {ord.status === 'Out for Delivery' && (
-                          <button
-                            type="button"
-                            onClick={() => handleRiderOrderAction(ord, 'Delivered')}
-                            className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow"
-                          >
-                            ✅ Mark Delivered (+₹45 Earning)
-                          </button>
-                        )}
+                        <a
+                          href={fullTurnByTurnUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="bg-[#15803D] text-white px-2.5 py-1.5 rounded-lg font-extrabold text-[10px] flex items-center space-x-1 flex-shrink-0"
+                        >
+                          <Navigation className="h-3 w-3" />
+                          <span>Customer Map</span>
+                        </a>
                       </div>
-                    );
-                  })
-                )}
-              </div>
-            )}
-
-{/* VIEW 2: COMPLETED DELIVERIES */}
-            {deliveryView === 'completed' && (
-              <div className="space-y-2.5">
-                {myCompletedDeliveries.length === 0 ? (
-                  <div className="bg-white rounded-3xl p-8 text-center font-bold text-slate-400">
-                    No completed deliveries yet.
-                  </div>
-                ) : (
-                  myCompletedDeliveries.map((ord) => (
-                    <div key={ord.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex justify-between items-center">
-                      <div>
-                        <span className="font-mono font-extrabold text-slate-900">{ord.id}</span>
-                        <p className="text-[11px] font-bold text-slate-600">{ord.customerName} • {ord.deliveryAddress}</p>
-                        <p className="text-[10px] text-slate-400">From: {ord.sellerName}</p>
-                      </div>
-                      <span className="bg-emerald-50 text-[#15803D] font-extrabold px-2.5 py-1 rounded-xl">
-                        +₹{ord.riderFee || 45}
-                      </span>
                     </div>
-                  ))
-                )}
-              </div>
-            )}
 
-            {/* VIEW 3: WEEKLY TARGET & INCENTIVES */}
-            {deliveryView === 'weekly' && (
-              <div className="bg-white rounded-3xl p-4 shadow-sm border border-blue-100 space-y-3">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-extrabold text-sm text-slate-900">Weekly Incentive Milestone</h3>
-                  <span className="font-extrabold text-blue-600">{weeklyCount} / {weeklyTarget} Trips</span>
-                </div>
-                <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
-                  <div
-                    className="bg-blue-600 h-full rounded-full transition-all"
-                    style={{ width: `${Math.min(100, Math.round((weeklyCount / weeklyTarget) * 100))}%` }}
-                  />
-                </div>
-                <p className="text-[11px] font-bold text-slate-600">
-                  Complete 100 deliveries this week to unlock <span className="text-[#15803D] font-extrabold">₹500 Extra Weekly Bonus!</span>
-                </p>
-              </div>
+                    {ord.status !== 'Delivered' && (
+                      <button
+                        onClick={() => {
+                          if (!isAssignedToMe) {
+                            const initLat = mapPinCoords.lat;
+                            const initLng = mapPinCoords.lng;
+                            setOrders((prev) =>
+                              prev.map((o) =>
+                                o.id === ord.id
+                                  ? { ...o, status: 'Partner Assigned', driverName: currentUser.name, driverMobile: currentUser.mobile, driverLat: initLat, driverLng: initLng, driverCoords: `${initLat}, ${initLng}` }
+                                  : o
+                              )
+                            );
+                            updateDoc(doc(db, 'orders', ord.id), {
+                              status: 'Partner Assigned',
+                              driverName: currentUser.name,
+                              driverMobile: currentUser.mobile,
+                              driverLat: initLat,
+                              driverLng: initLng,
+                              driverCoords: `${initLat}, ${initLng}`,
+                            }).catch(() => {});
+                            sendStagePushToBuyer(
+                              ord,
+                              'Delivery Partner Assigned!',
+                              `${currentUser.name} is on the way to pick up your Order #${ord.id}.`
+                            );
+                            notify('Accepted! Live scooter pickup tracking & Customer Push sent.');
+                          } else {
+                            if (ord.b2bOtp) {
+                              const entered = window.prompt(`Enter ${ord.buyerRole.toUpperCase()} Delivery OTP (${ord.b2bOtp}):`);
+                              if (entered !== ord.b2bOtp) {
+                                notify('Invalid B2B OTP!');
+                                return;
+                              }
+                            }
+                            handleCompleteDelivery(ord);
+                          }
+                        }}
+                        className="w-full bg-[#15803D] text-white font-extrabold py-2.5 rounded-xl"
+                      >
+                        {!isAssignedToMe
+                          ? `Accept Route (Earn ₹${riderPayout})`
+                          : ord.b2bOtp
+                          ? 'Verify B2B OTP & Complete'
+                          : `Complete Delivery (Collect ₹${riderPayout})`}
+                      </button>
+                    )}
+                  </div>
+                );
+              })
             )}
           </main>
         )}
 
-        {/* PROFILE TAB WITH ALL SYNCED MENU SECTIONS */}
-        {activeTab === 'profile' && (
-          <main className="p-4 space-y-3 text-xs">
-            {/* RIDER DETAILS CARD */}
-            <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-1.5 text-[11px]">
-              <p className="text-slate-400 font-bold">Owner: <span className="text-slate-900 font-extrabold">{currentUser.name}</span></p>
-              <p className="text-slate-400 font-bold">Vehicle: <span className="text-slate-900 font-extrabold">{currentUser.vehicle || 'Two Wheeler (AP26BG1234)'}</span></p>
-              <p className="text-slate-400 font-bold">Emergency Contact: <span className="text-slate-900 font-extrabold">+91 {currentUser.mobile}</span></p>
-              <p className="text-slate-400 font-bold">Location: <span className="text-slate-900 font-extrabold">{currentUser.village}</span></p>
-              <p className="text-slate-400 font-bold">Bank / UPI: <span className="text-slate-900 font-extrabold">{currentUser.bankAccount || '1234567890 (SBIN0001234)'}</span></p>
-            </div>
+        {activeTab === 'profile' && renderSharedProfileTab()}
 
-            {/* SELECTED PROFILE SUB-SCREEN DRAWER */}
-            {selectedProfileSection && (
-              <div className="bg-white rounded-3xl p-4 shadow-sm border border-emerald-200 space-y-2.5">
-                <div className="flex items-center justify-between border-b pb-2">
-                  <h3 className="font-extrabold text-sm text-[#15803D] uppercase">{selectedProfileSection}</h3>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedProfileSection(null)}
-                    className="text-xs font-extrabold text-slate-500 px-2 py-0.5 bg-slate-100 rounded-lg"
-                  >
-                    Close ✕
-                  </button>
-                </div>
-
-                {selectedProfileSection === 'Available Orders' && (
-                  readyForPickupOrders.length === 0 ? (
-                    <p className="text-slate-400 font-bold py-2">No new accepted orders available right now.</p>
-                  ) : (
-                    readyForPickupOrders.map((o) => (
-                      <div key={o.id} className="p-2.5 bg-slate-50 rounded-xl flex justify-between items-center">
-                        <div>
-                          <p className="font-extrabold">{o.id} • {o.sellerName}</p>
-                          <p className="text-[10px] text-slate-500">{o.deliveryAddress}</p>
-                        </div>
-                        <button
-                          onClick={() => handleRiderOrderAction(o, 'Picked')}
-                          className="bg-[#15803D] text-white px-3 py-1.5 rounded-lg font-extrabold text-[10px]"
-                        >
-                          Pick Up
-                        </button>
-                      </div>
-                    ))
-                  )
-                )}
-
-   {selectedProfileSection === 'My Deliveries' && (
-                  myActiveDeliveries.length === 0 ? (
-                    <p className="text-slate-400 font-bold py-2">No active deliveries in transit.</p>
-                  ) : (
-                    myActiveDeliveries.map((o) => (
-                      <div key={o.id} className="p-2.5 bg-amber-50 rounded-xl flex justify-between items-center">
-                        <div>
-                          <p className="font-extrabold">{o.id} ({o.status})</p>
-                          <p className="text-[10px] text-slate-600">{o.customerName} • {o.deliveryAddress}</p>
-                        </div>
-                        <button
-                          onClick={() => handleRiderOrderAction(o, 'Delivered')}
-                          className="bg-[#15803D] text-white px-3 py-1.5 rounded-lg font-extrabold text-[10px]"
-                        >
-                          Deliver
-                        </button>
-                      </div>
-                    ))
-                  )
-                )}
-
-                {selectedProfileSection === 'Pickup History' && (
-                  myPickupHistory.length === 0 ? (
-                    <p className="text-slate-400 font-bold py-2">No pickups recorded yet.</p>
-                  ) : (
-                    myPickupHistory.map((o) => (
-                      <div key={o.id} className="p-2.5 bg-slate-50 rounded-xl flex justify-between">
-                        <span className="font-extrabold">{o.id} • {o.sellerName}</span>
-                        <span className="text-[#15803D] font-extrabold">{o.status}</span>
-                      </div>
-                    ))
-                  )
-                )}
-
-                {selectedProfileSection === 'Delivery History' && (
-                  myCompletedDeliveries.length === 0 ? (
-                    <p className="text-slate-400 font-bold py-2">No completed deliveries yet.</p>
-                  ) : (
-                    myCompletedDeliveries.map((o) => (
-                      <div key={o.id} className="p-2.5 bg-emerald-50/60 rounded-xl flex justify-between">
-                        <span className="font-extrabold">{o.id} • {o.customerName}</span>
-                        <span className="text-[#15803D] font-extrabold">+₹{o.riderFee || 45}</span>
-                      </div>
-                    ))
-                  )
-                )}
-
-                {selectedProfileSection === 'Earnings' && (
-                  <div className="space-y-1.5 font-bold">
-                    <p>Today's Earnings: <span className="text-[#15803D] font-extrabold">₹{todaysDeliveryEarnings}</span></p>
-                    <p>Total Lifetime Earnings: <span className="text-slate-900 font-extrabold">₹{totalDeliveryEarnings}</span></p>
-                    <p className="text-[10px] text-slate-500">Rate Card: ₹30 Base Pay + ₹15 Extra Pickup Stop Bonus per order.</p>
-                  </div>
-                )}
-
-                {selectedProfileSection === 'Incentives (Weekly Target)' && (
-                  <div className="space-y-2">
-                    <p className="font-extrabold">Progress: {weeklyCount} / {weeklyTarget} Deliveries</p>
-                    <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                      <div className="bg-[#15803D] h-full" style={{ width: `${Math.min(100, weeklyCount)}%` }} />
-                    </div>
-                    <p className="text-[10px] text-slate-500 font-bold">Reach 100 deliveries to earn ₹500 Weekly Bonus.</p>
-                  </div>
-                )}
-
-                {selectedProfileSection === 'Wallet' && (
-                  <p className="font-extrabold text-sm text-[#15803D]">Available Rider Wallet: ₹{liveWalletBalance}</p>
-                )}
-
-{selectedProfileSection === 'Bank Withdrawals' && (
-                  <div className="space-y-2">
-                    <input
-                      type="number"
-                      value={withdrawAmt}
-                      onChange={(e) => setWithdrawAmt(e.target.value)}
-                      placeholder={`Enter amount (Max ₹${liveWalletBalance})`}
-                      className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-bold"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const amt = Number(withdrawAmt);
-                        if (amt <= 0 || amt > liveWalletBalance) {
-                          notify('Enter valid withdrawal amount!');
-                          return;
-                        }
-                        const rem = liveWalletBalance - amt;
-                        setCurrentUser((prev) => ({ ...prev, wallet: rem }));
-                        updateDoc(doc(db, 'users', currentUser.id), { wallet: rem }).catch(() => {});
-                        setWithdrawAmt('');
-                        notify(`₹${amt} Withdrawal Request Sent to Bank!`);
-                      }}
-                      className="w-full bg-[#15803D] text-white font-extrabold py-2.5 rounded-xl"
-                    >
-                      Withdraw to Bank Account
-                    </button>
-                  </div>
-                )}
-
-                {selectedProfileSection === 'Customer Ratings' && (
-                  <p className="font-extrabold text-amber-600">⭐ 4.9 / 5.0 Average Rating ({myCompletedDeliveries.length} Rated Trips)</p>
-                )}
-
-                {selectedProfileSection === 'Help & Support' && (
-                  <a href="tel:8328261103" className="block text-center bg-amber-50 text-amber-900 font-extrabold py-2.5 rounded-xl border border-amber-200">
-                    📞 Call Nellore Rider Support: 8328261103
-                  </a>
-                )}
-              </div>
-            )}
-
-            {/* MENU LIST */}
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 divide-y divide-slate-100 overflow-hidden">
-              {[
-                { label: `Available Orders (${readyForPickupOrders.length})`, key: 'Available Orders' },
-                { label: `My Deliveries (${myActiveDeliveries.length})`, key: 'My Deliveries' },
-                { label: `Pickup History (${myPickupHistory.length})`, key: 'Pickup History' },
-                { label: `Delivery History (${myCompletedDeliveries.length})`, key: 'Delivery History' },
-                { label: `Earnings (₹${totalDeliveryEarnings})`, key: 'Earnings' },
-                { label: `Incentives (Weekly Target ${weeklyCount}/100)`, key: 'Incentives (Weekly Target)' },
-                { label: `Wallet (₹${liveWalletBalance})`, key: 'Wallet' },
-                { label: 'Bank Withdrawals', key: 'Bank Withdrawals' },
-                { label: 'Customer Ratings', key: 'Customer Ratings' },
-                { label: 'Help & Support', key: 'Help & Support' },
-              ].map((item) => (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => setSelectedProfileSection(item.key)}
-                  className="w-full px-4 py-3.5 flex items-center justify-between text-left font-extrabold text-slate-800 hover:bg-slate-50"
-                >
-                  <span>{item.label}</span>
-                  <span className="text-slate-400">&gt;</span>
-                </button>
-              ))}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                setCurrentUser(null);
-                setActiveTab('home');
-              }}
-              className="w-full bg-[#E11D48] text-white font-extrabold py-3.5 rounded-2xl shadow flex items-center justify-center space-x-2"
-            >
-              <LogOut className="h-4 w-4" />
-              <span>Logout (Switch Role)</span>
-            </button>
-          </main>
-        )}
-
-{/* BOTTOM NAVIGATION */}
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-12 py-2.5 flex justify-between items-center z-40">
           <button
             type="button"
             onClick={() => {
               setActiveTab('home');
-              setDeliveryView('ready');
+              setDelivFilter('available');
             }}
-            className={`flex flex-col items-center text-[10px] font-extrabold ${
-              activeTab !== 'profile' ? 'text-[#15803D]' : 'text-slate-400'
-            }`}
+            className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab !== 'profile' ? 'text-[#15803D]' : 'text-slate-400'}`}
           >
             <Truck className="h-5 w-5 mb-0.5" />
             <span>Deliveries</span>
@@ -5064,9 +5037,7 @@ return (
           <button
             type="button"
             onClick={() => setActiveTab('profile')}
-            className={`flex flex-col items-center text-[10px] font-extrabold ${
-              activeTab === 'profile' ? 'text-[#15803D]' : 'text-slate-400'
-            }`}
+            className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'profile' ? 'text-[#15803D]' : 'text-slate-400'}`}
           >
             <User className="h-5 w-5 mb-0.5" />
             <span>Profile</span>
@@ -5076,8 +5047,8 @@ return (
     );
   }
 
-// =========================================================================
-  // 7. MASTER ADMIN & SUB-ADMIN HQ (WITH DELETE APPROVED SHOPS + PUSH NOTIFICATIONS)
+ // =========================================================================
+  // 7. MASTER ADMIN & SUB-ADMIN HQ (COMPLETE CODE)
   // =========================================================================
   const handleAdminCatalogPhotoUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -5188,7 +5159,7 @@ const handleSaveCategory = (e) => {
       active: true,
     };
 
-    const nextCoupons = editingCouponId
+const nextCoupons = editingCouponId
       ? couponsList.map((c) => (c.id === editingCouponId ? couponObj : c))
       : [couponObj, ...couponsList];
 
@@ -5211,7 +5182,7 @@ const handleSaveCategory = (e) => {
     notify('Coupon Removed');
   };
 
-const handleGrantSubAdminAccess = (e) => {
+  const handleGrantSubAdminAccess = (e) => {
     e.preventDefault();
     const cleanM = subMobile.replace(/\D/g, '');
     const cleanE = subEmail.trim().toLowerCase();
@@ -5238,7 +5209,12 @@ const handleGrantSubAdminAccess = (e) => {
 
   return (
     <div style={fontStyle} className="min-h-screen bg-[#F8FAFC] max-w-md mx-auto relative pb-24 text-slate-800 shadow-2xl">
-      {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-extrabold px-4 py-2 rounded-full shadow-lg">{toast}</div>}
+      {toast && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0F5132] text-white text-xs font-extrabold px-4 py-2 rounded-full shadow-lg">
+          {toast}
+        </div>
+      )}
+
       <header className="bg-gradient-to-r from-[#0F5132] to-[#15803D] text-white p-4 rounded-b-[28px] flex justify-between items-center shadow-md">
         <div>
           <span className="text-[10px] bg-white/15 px-2 py-0.5 rounded font-extrabold uppercase">
@@ -5253,6 +5229,7 @@ const handleGrantSubAdminAccess = (e) => {
 
       {activeTab === 'home' && (
         <main className="p-4 space-y-3 text-xs">
+          {/* ADMIN NAVIGATION TABS */}
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
@@ -5280,7 +5257,7 @@ const handleGrantSubAdminAccess = (e) => {
               onClick={() => setAdminTab('approvals')}
               className={`py-2.5 rounded-xl font-extrabold border ${adminTab === 'approvals' ? 'bg-[#15803D] text-white border-[#15803D]' : 'bg-white text-slate-700'}`}
             >
-              Approvals ({users.filter((u) => u.role !== 'customer' && u.role !== 'admin').length})
+              Approvals & Shops ({users.filter((u) => u.role !== 'customer' && u.role !== 'admin').length})
             </button>
             <button
               type="button"
@@ -5295,6 +5272,13 @@ const handleGrantSubAdminAccess = (e) => {
               className={`py-2.5 rounded-xl font-extrabold border ${adminTab === 'walletCredit' ? 'bg-[#0F5132] text-white border-[#0F5132]' : 'bg-emerald-50 text-emerald-950 border-emerald-200'}`}
             >
               Credit Customer Wallet
+            </button>
+            <button
+              type="button"
+              onClick={() => setAdminTab('gifBanners')}
+              className={`col-span-2 py-2.5 rounded-xl font-extrabold border ${adminTab === 'gifBanners' ? 'bg-purple-700 text-white border-purple-700' : 'bg-purple-50 text-purple-900 border-purple-200'}`}
+            >
+              🎬 Role-Specific GIF Banners ({heroGifBanners.length})
             </button>
           </div>
 
@@ -5311,7 +5295,169 @@ const handleGrantSubAdminAccess = (e) => {
             </button>
           )}
 
-{/* A. SEND OFFER NOTIFICATION TO ALL REGISTERED USERS */}
+{/* 1. ROLE-SPECIFIC GIF BANNERS */}
+          {adminTab === 'gifBanners' && (
+            <div className="space-y-3">
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const finalGif = gifBannerPreview || gifBannerUrl.trim();
+                  if (!finalGif) {
+                    notify('Please upload a .gif file or paste a GIF link!');
+                    return;
+                  }
+                  const newBanner = {
+                    id: 'gif_' + Date.now(),
+                    targetRole: gifBannerTargetRole,
+                    tag: gifBannerTag.trim() || 'SPECIAL OFFER',
+                    title: gifBannerTitle.trim(),
+                    subtitle: gifBannerSubtitle.trim(),
+                    gifSrc: finalGif,
+                    active: true,
+                    createdAt: Date.now(),
+                  };
+                  setHeroGifBanners((prev) => [newBanner, ...prev]);
+                  await setDoc(doc(db, 'heroGifBanners', newBanner.id), newBanner).catch(() => {});
+                  setGifBannerTitle('');
+                  setGifBannerSubtitle('');
+                  setGifBannerPreview('');
+                  setGifBannerUrl('');
+                  notify(`GIF Banner Published for ${gifBannerTargetRole.toUpperCase()}!`);
+                }}
+                className="bg-white p-4 rounded-3xl border border-purple-200 shadow-sm space-y-2.5"
+              >
+                <h3 className="font-extrabold text-sm text-purple-800">Upload Role-Specific Animated GIF Banner</h3>
+
+                <div>
+                  <label className="text-[10px] font-extrabold text-slate-500 uppercase block mb-1">
+                    Select Target Role (ఎవరికి కనిపించాలి?)
+                  </label>
+                  <select
+                    value={gifBannerTargetRole}
+                    onChange={(e) => setGifBannerTargetRole(e.target.value)}
+                    className="w-full bg-purple-50 border border-purple-200 rounded-xl px-3 py-2.5 font-extrabold text-purple-900"
+                  >
+                    <option value="all">🌐 All Roles (అందరికీ)</option>
+                    <option value="customer">🛒 Customers Only (కస్టమర్లకు మాత్రమే)</option>
+                    <option value="farmer">🌾 Farmers Only (రైతులకు మాత్రమే)</option>
+                    <option value="wholesale">🏭 Wholesalers Only (హోల్‌సేల్ షాపులకు)</option>
+                    <option value="retail">🏪 Retail Shops Only (రిటైల్ షాపులకు)</option>
+                    <option value="delivery">🛵 Delivery Partners Only (డెలివరీ పార్టనర్లకు)</option>
+                  </select>
+                </div>
+
+                <label className="block border-2 border-dashed border-purple-300 bg-purple-50/50 rounded-2xl p-3 text-center cursor-pointer">
+                  {gifBannerPreview ? (
+                    <img src={gifBannerPreview} alt="GIF Preview" className="h-28 w-full rounded-xl object-cover mx-auto mb-1" />
+                  ) : (
+                    <Camera className="h-6 w-6 text-purple-700 mx-auto mb-1" />
+                  )}
+                  <span className="font-extrabold text-purple-800 block">
+                    {gifBannerPreview ? 'Change Uploaded GIF' : 'Tap to Upload .GIF File (Under 900KB)'}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/gif,image/webp"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      if (file.size > 900 * 1024) {
+                        notify('GIF size > 900KB! Use a smaller GIF or paste GIF URL below.');
+                        return;
+                      }
+                      const reader = new FileReader();
+                      reader.onload = (ev) => setGifBannerPreview(ev.target.result);
+                      reader.readAsDataURL(file);
+                    }}
+                    className="hidden"
+                  />
+                </label>
+
+<input
+                  type="url"
+                  value={gifBannerUrl}
+                  onChange={(e) => setGifBannerUrl(e.target.value)}
+                  placeholder="Or paste GIF URL (https://media.giphy.com/...)"
+                  className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-semibold text-[11px]"
+                />
+
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    value={gifBannerTag}
+                    onChange={(e) => setGifBannerTag(e.target.value.toUpperCase())}
+                    placeholder="Badge Tag (Optional)"
+                    className="bg-slate-50 border rounded-xl px-3 py-2 font-extrabold"
+                  />
+                  <input
+                    type="text"
+                    value={gifBannerTitle}
+                    onChange={(e) => setGifBannerTitle(e.target.value)}
+                    placeholder="Banner Title (Optional)"
+                    className="bg-slate-50 border rounded-xl px-3 py-2 font-bold"
+                  />
+                </div>
+
+                <input
+                  type="text"
+                  value={gifBannerSubtitle}
+                  onChange={(e) => setGifBannerSubtitle(e.target.value)}
+                  placeholder="Subtitle / Offer Text (Optional)"
+                  className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-bold"
+                />
+
+                <button type="submit" className="w-full bg-purple-700 text-white font-extrabold py-3 rounded-2xl shadow text-sm">
+                  🎬 Publish GIF Banner to {gifBannerTargetRole.toUpperCase()}
+                </button>
+              </form>
+
+              {heroGifBanners.map((gb) => (
+                <div key={gb.id} className="bg-white p-3 rounded-2xl border flex items-center justify-between gap-2">
+                  <div className="flex items-center space-x-3 min-w-0">
+                    <img src={gb.gifSrc} alt={gb.title} className="h-14 w-20 rounded-xl object-cover flex-shrink-0" />
+                    <div className="min-w-0">
+                      <div className="flex items-center space-x-1">
+                        <span className="text-[9px] font-extrabold bg-slate-900 text-[#FDE047] px-2 py-0.5 rounded uppercase">
+                          Role: {gb.targetRole || 'all'}
+                        </span>
+                        <span className="text-[9px] font-extrabold bg-purple-100 text-purple-900 px-2 py-0.5 rounded">{gb.tag}</span>
+                      </div>
+                      <p className="font-extrabold text-slate-900 truncate mt-0.5">{gb.title || 'Animated GIF Banner'}</p>
+                      <p className="text-[10px] text-slate-500 truncate">{gb.subtitle}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-1 flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const nextActive = gb.active === false;
+                        setHeroGifBanners((prev) => prev.map((x) => (x.id === gb.id ? { ...x, active: nextActive } : x)));
+                        updateDoc(doc(db, 'heroGifBanners', gb.id), { active: nextActive }).catch(() => {});
+                      }}
+                      className={`px-2 py-1 rounded-lg font-extrabold text-[10px] ${
+                        gb.active !== false ? 'bg-emerald-100 text-[#15803D]' : 'bg-slate-200 text-slate-600'
+                      }`}
+                    >
+                      {gb.active !== false ? 'ON' : 'OFF'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setHeroGifBanners((prev) => prev.filter((x) => x.id !== gb.id));
+                        deleteDoc(doc(db, 'heroGifBanners', gb.id)).catch(() => {});
+                        notify('GIF Banner Deleted');
+                      }}
+                      className="p-2 text-rose-600 bg-rose-50 rounded-xl"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+{/* 2. SEND OFFER NOTIFICATION TO ALL REGISTERED USERS (LOCK SCREEN PUSH + IN-APP) */}
           {adminTab === 'broadcast' && (
             <div className="space-y-3">
               <div className="bg-white p-4 rounded-3xl border border-orange-200 shadow-sm space-y-2.5">
@@ -5388,7 +5534,7 @@ const handleGrantSubAdminAccess = (e) => {
             </div>
           )}
 
-{/* B. CREDIT CUSTOMER WALLET + DIRECT IN-APP & PUSH NOTIFICATION */}
+{/* 3. CREDIT CUSTOMER WALLET + LOCK SCREEN PUSH NOTIFICATION */}
           {adminTab === 'walletCredit' && (
             <div className="space-y-3 bg-white p-4 rounded-3xl border border-emerald-200 shadow-sm">
               <h3 className="font-extrabold text-sm text-[#15803D]">Credit Cashback / Bonus to Customer Wallet</h3>
@@ -5474,7 +5620,8 @@ const handleGrantSubAdminAccess = (e) => {
             </div>
           )}
 
-{adminTab === 'subadmins' && isCurrentUserMasterAdmin && (
+{/* 4. SUB-ADMINS */}
+          {adminTab === 'subadmins' && isCurrentUserMasterAdmin && (
             <div className="space-y-3">
               <form onSubmit={handleGrantSubAdminAccess} className="bg-white rounded-3xl p-4 shadow-sm border border-amber-300 space-y-2.5">
                 <h3 className="font-extrabold text-sm text-slate-900 flex items-center space-x-1.5">
@@ -5525,7 +5672,8 @@ const handleGrantSubAdminAccess = (e) => {
             </div>
           )}
 
-{adminTab === 'catalogue' && (
+          {/* 5. MASTER CATALOGUE */}
+          {adminTab === 'catalogue' && (
             <div className="space-y-3">
               <form onSubmit={handleAddMasterCatalogItem} className="bg-white rounded-3xl p-4 shadow-sm border border-emerald-100 space-y-3">
                 <div className="flex items-center space-x-1.5 font-extrabold text-[#15803D] text-sm">
@@ -5556,7 +5704,7 @@ const handleGrantSubAdminAccess = (e) => {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
+<div className="grid grid-cols-2 gap-2">
                   <select value={catCategory} onChange={(e) => setCatCategory(e.target.value)} className="bg-slate-50 border rounded-xl px-3 py-2.5 font-extrabold">
                     {categoriesList.map((c) => (
                       <option key={c.id} value={c.labelEn}>{c.labelEn}</option>
@@ -5589,7 +5737,7 @@ const handleGrantSubAdminAccess = (e) => {
                   className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-semibold text-[11px]"
                 />
 
-<button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow text-sm">
+                <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow text-sm">
                   + Save to Master Catalogue
                 </button>
               </form>
@@ -5617,6 +5765,7 @@ const handleGrantSubAdminAccess = (e) => {
             </div>
           )}
 
+{/* 6. CATEGORIES */}
           {adminTab === 'categories' && (
             <div className="space-y-3">
               <form onSubmit={handleSaveCategory} className="bg-white rounded-3xl p-4 shadow-sm border border-emerald-100 space-y-3">
@@ -5660,7 +5809,7 @@ const handleGrantSubAdminAccess = (e) => {
                   />
                 </div>
 
-<label className="flex items-center justify-between bg-slate-50 border rounded-xl px-3 py-2.5 font-bold">
+                <label className="flex items-center justify-between bg-slate-50 border rounded-xl px-3 py-2.5 font-bold">
                   <span>Show in Customer "Daily essentials"</span>
                   <input
                     type="checkbox"
@@ -5682,7 +5831,7 @@ const handleGrantSubAdminAccess = (e) => {
                   <input type="file" accept="image/*" onChange={handleAdminCategoryPhotoUpload} className="hidden" />
                 </label>
 
-  <input
+                <input
                   type="url"
                   value={newCatImgUrl}
                   onChange={(e) => setNewCatImgUrl(e.target.value)}
@@ -5690,7 +5839,7 @@ const handleGrantSubAdminAccess = (e) => {
                   className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-semibold text-[11px]"
                 />
 
-                <button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow text-sm">
+<button type="submit" className="w-full bg-[#15803D] text-white font-extrabold py-3 rounded-2xl shadow text-sm">
                   {editingCatId ? 'Update Category Everywhere' : '+ Add Category'}
                 </button>
               </form>
@@ -5737,7 +5886,8 @@ const handleGrantSubAdminAccess = (e) => {
             </div>
           )}
 
-{adminTab === 'coupons' && (
+{/* 7. COUPONS */}
+          {adminTab === 'coupons' && (
             <div className="space-y-3">
               <form onSubmit={handleSaveCoupon} className="bg-white rounded-3xl p-4 shadow-sm border border-amber-200 space-y-3">
                 <div className="flex items-center justify-between">
@@ -5786,7 +5936,7 @@ const handleGrantSubAdminAccess = (e) => {
                   className="w-full bg-slate-50 border rounded-xl px-3 py-2.5 font-bold"
                 />
 
-<div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="text-[10px] font-bold text-slate-400">Discount Amount (₹)</label>
                     <input
@@ -5814,7 +5964,7 @@ const handleGrantSubAdminAccess = (e) => {
                 </button>
               </form>
 
-              <div className="space-y-2">
+ <div className="space-y-2">
                 {couponsList.map((cp) => (
                   <div key={cp.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
                     <div>
@@ -5867,41 +6017,77 @@ const handleGrantSubAdminAccess = (e) => {
             </div>
           )}
 
-{adminTab === 'approvals' && (
+{/* 8. APPROVALS & DELETE SHOPS / FARMERS / DELIVERY PARTNERS */}
+          {adminTab === 'approvals' && (
             <div className="space-y-2.5">
               {users
-                .filter((u) => u.role === 'farmer' || u.role === 'wholesale' || u.role === 'retail')
+                .filter((u) => u.role === 'farmer' || u.role === 'wholesale' || u.role === 'retail' || u.role === 'delivery')
                 .map((u) => (
-                  <div key={u.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between">
-                    <div>
+                  <div key={u.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between gap-2">
+                    <div className="min-w-0">
                       <span className="text-[10px] font-extrabold uppercase bg-emerald-50 text-[#15803D] px-2 py-0.5 rounded">{u.role}</span>
-                      <h4 className="font-extrabold text-sm mt-1">{u.name}</h4>
-                      <p className="text-slate-500">{u.email} • +91 {u.mobile}</p>
+                      <h4 className="font-extrabold text-sm mt-1 truncate">{u.name}</h4>
+                      <p className="text-slate-500 truncate">{u.email} • +91 {u.mobile}</p>
+                      <p className="text-[10px] text-slate-400">{u.village}</p>
                     </div>
-                    <button
-                      onClick={() => {
-                        setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, approved: !x.approved } : x)));
-                        updateDoc(doc(db, 'users', u.id), { approved: !u.approved }).catch(() => {});
-                        notify('Approval Status Updated!');
-                      }}
-                      className={`px-3.5 py-2 rounded-xl font-extrabold ${u.approved ? 'bg-emerald-50 text-[#15803D]' : 'bg-[#15803D] text-white'}`}
-                    >
-                      {u.approved ? 'Approved' : 'Approve'}
-                    </button>
+                    <div className="flex items-center space-x-1.5 flex-shrink-0">
+                      <button
+                        onClick={() => {
+                          const nextApproved = !u.approved;
+                          setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, approved: nextApproved } : x)));
+                          updateDoc(doc(db, 'users', u.id), { approved: nextApproved }).catch(() => {});
+                          if (nextApproved && u.fcmToken) {
+                            fetch('/api/send-push', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                tokens: [u.fcmToken],
+                                title: 'Rythu Basket • Account Approved! 🎉',
+                                body: `Namaste ${u.name}! Your ${u.role} account is approved. You can now accept orders!`,
+                              }),
+                            }).catch(() => {});
+                          }
+                          notify(nextApproved ? `${u.name} Approved!` : `${u.name} Approval Revoked`);
+                        }}
+                        className={`px-3.5 py-2 rounded-xl font-extrabold ${u.approved ? 'bg-emerald-50 text-[#15803D]' : 'bg-[#15803D] text-white'}`}
+                      >
+                        {u.approved ? 'Approved' : 'Approve'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUsers((prev) => prev.filter((x) => x.id !== u.id));
+                          deleteDoc(doc(db, 'users', u.id)).catch(() => {});
+                          setProducts((prev) => prev.filter((p) => p.sellerId !== u.id));
+                          notify(`Deleted ${u.name} (${u.role})`);
+                        }}
+                        className="p-2 text-rose-600 bg-rose-50 rounded-xl"
+                        title="Delete Shop / Farmer"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                 ))}
             </div>
           )}
         </main>
       )}
+
       {activeTab === 'profile' && renderSharedProfileTab()}
 
       <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t px-12 py-2.5 flex justify-between items-center z-40">
-        <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'home' ? 'text-[#15803D]' : 'text-slate-400'}`}>
+        <button
+          onClick={() => setActiveTab('home')}
+          className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'home' ? 'text-[#15803D]' : 'text-slate-400'}`}
+        >
           <ShieldCheck className="h-5 w-5 mb-0.5" />
           <span>Admin HQ</span>
         </button>
-        <button onClick={() => setActiveTab('profile')} className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'profile' ? 'text-[#15803D]' : 'text-slate-400'}`}>
+        <button
+          onClick={() => setActiveTab('profile')}
+          className={`flex flex-col items-center text-[10px] font-extrabold ${activeTab === 'profile' ? 'text-[#15803D]' : 'text-slate-400'}`}
+        >
           <User className="h-5 w-5 mb-0.5" />
           <span>Profile</span>
         </button>
