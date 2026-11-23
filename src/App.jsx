@@ -465,6 +465,7 @@ export default function App() {
 // Role-Specific GIF Banners
   const [heroGifBanners, setHeroGifBanners] = useState([]);
   const [gifBannerTargetRole, setGifBannerTargetRole] = useState('all');
+const [editingBannerId, setEditingBannerId] = useState(null);
   const [gifBannerTitle, setGifBannerTitle] = useState('');
   const [gifBannerSubtitle, setGifBannerSubtitle] = useState('');
   const [gifBannerTag, setGifBannerTag] = useState('SPECIAL OFFER');
