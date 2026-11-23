@@ -1985,6 +1985,41 @@ return (
           </div>
         </div>
 
+{/* DYNAMIC ADMIN-CONTROLLED LANDING POSTER (BELOW CONTACT SUPPORT) */}
+{(() => {
+  const activeLandingPosters = heroGifBanners.filter(
+    (g) => g.active !== false && (g.targetRole === 'landing' || g.targetRole === 'all')
+  );
+  if (activeLandingPosters.length === 0) return null;
+  return (
+    <div className="mt-3 space-y-2.5">
+      {activeLandingPosters.map((poster) => (
+        <div
+          key={poster.id}
+          className="relative rounded-3xl overflow-hidden shadow-md border border-emerald-200 bg-white"
+        >
+          <img
+            src={poster.gifSrc}
+            alt={poster.title || 'Rythu Basket Poster'}
+            className="w-full h-36 object-cover"
+          />
+          {(poster.title || poster.subtitle || poster.tag) && (
+            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent p-4 flex flex-col justify-end text-white">
+              {poster.tag && (
+                <span className="bg-[#FDE047] text-slate-900 text-[9px] font-extrabold px-2.5 py-0.5 rounded-full w-fit uppercase">
+                  {poster.tag}
+                </span>
+              )}
+              {poster.title && <h4 className="text-sm font-extrabold mt-1 leading-tight">{poster.title}</h4>}
+              {poster.subtitle && <p className="text-[11px] text-emerald-200 font-bold mt-0.5">{poster.subtitle}</p>}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+})()}
+
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0D4A24] text-white px-6 py-2.5 rounded-t-3xl flex justify-center items-center z-40 shadow-2xl">
           <button
             type="button"
@@ -5296,7 +5331,7 @@ Credit Customer Wallet
             </button>
           )}
 
-          {/* 1. ROLE-SPECIFIC GIF BANNERS */}
+           {/* 1. ROLE-SPECIFIC & LANDING POSTERS / GIF BANNERS (UPLOAD, EDIT, ON/OFF, DELETE) */}
           {adminTab === 'gifBanners' && (
             <div className="space-y-3">
               <form
@@ -5304,11 +5339,12 @@ Credit Customer Wallet
                   e.preventDefault();
                   const finalGif = gifBannerPreview || gifBannerUrl.trim();
                   if (!finalGif) {
-                    notify('Please upload a .gif file or paste a GIF link!');
+                    notify('Please upload an image/GIF or paste a URL!');
                     return;
                   }
-                  const newBanner = {
-                    id: 'gif_' + Date.now(),
+                  const bannerId = editingBannerId || 'gif_' + Date.now();
+                  const bannerData = {
+                    id: bannerId,
                     targetRole: gifBannerTargetRole,
                     tag: gifBannerTag.trim() || 'SPECIAL OFFER',
                     title: gifBannerTitle.trim(),
@@ -5317,28 +5353,55 @@ Credit Customer Wallet
                     active: true,
                     createdAt: Date.now(),
                   };
-                  setHeroGifBanners((prev) => [newBanner, ...prev]);
-                  await setDoc(doc(db, 'heroGifBanners', newBanner.id), newBanner).catch(() => {});
+
+                  if (editingBannerId) {
+                    setHeroGifBanners((prev) => prev.map((b) => (b.id === editingBannerId ? bannerData : b)));
+                  } else {
+                    setHeroGifBanners((prev) => [bannerData, ...prev]);
+                  }
+
+                  await setDoc(doc(db, 'heroGifBanners', bannerId), bannerData).catch(() => {});
+                  setEditingBannerId(null);
                   setGifBannerTitle('');
                   setGifBannerSubtitle('');
                   setGifBannerPreview('');
                   setGifBannerUrl('');
-                  notify(`GIF Banner Published for ${gifBannerTargetRole.toUpperCase()}!`);
+                  notify(editingBannerId ? 'Poster / Banner Updated!' : 'Poster / Banner Published Live!');
                 }}
                 className="bg-white p-4 rounded-3xl border border-purple-200 shadow-sm space-y-2.5"
               >
-                <h3 className="font-extrabold text-sm text-purple-800">Upload Role-Specific Animated GIF Banner</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-extrabold text-sm text-purple-800">
+                    {editingBannerId ? 'Edit Poster / GIF Banner' : 'Upload Poster / Animated GIF Banner'}
+                  </h3>
+                  {editingBannerId && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingBannerId(null);
+                        setGifBannerTitle('');
+                        setGifBannerSubtitle('');
+                        setGifBannerPreview('');
+                        setGifBannerUrl('');
+                      }}
+                      className="text-rose-600 font-extrabold text-[11px]"
+                    >
+                      Cancel Edit
+                    </button>
+                  )}
+                </div>
 
                 <div>
                   <label className="text-[10px] font-extrabold text-slate-500 uppercase block mb-1">
-                    Select Target Role (ఎవరికి కనిపించాలి?)
+                    Where to Display? (ఎక్కడ కనిపించాలి?)
                   </label>
                   <select
                     value={gifBannerTargetRole}
                     onChange={(e) => setGifBannerTargetRole(e.target.value)}
                     className="w-full bg-purple-50 border border-purple-200 rounded-xl px-3 py-2.5 font-extrabold text-purple-900"
                   >
-                    <option value="all">🌐 All Roles (అందరికీ)</option>
+                    <option value="landing">🏠 Landing Home Page (Contact Support కింద)</option>
+                    <option value="all">🌐 All Pages & All Roles (అన్ని పేజీలలో)</option>
                     <option value="customer">🛒 Customers Only (కస్టమర్లకు మాత్రమే)</option>
                     <option value="farmer">🌾 Farmers Only (రైతులకు మాత్రమే)</option>
                     <option value="wholesale">🏭 Wholesalers Only (హోల్‌సేల్ షాపులకు)</option>
@@ -5347,28 +5410,37 @@ Credit Customer Wallet
                   </select>
                 </div>
 
-<label className="block border-2 border-dashed border-purple-300 bg-purple-50/50 rounded-2xl p-3 text-center cursor-pointer">
-                  {gifBannerPreview ? (
-                    <img src={gifBannerPreview} alt="GIF Preview" className="h-28 w-full rounded-xl object-cover mx-auto mb-1" />
+    <label className="block border-2 border-dashed border-purple-300 bg-purple-50/50 rounded-2xl p-3 text-center cursor-pointer">
+                  {(gifBannerPreview || gifBannerUrl) ? (
+                    <img
+                      src={gifBannerPreview || gifBannerUrl}
+                      alt="Poster Preview"
+                      className="h-28 w-full rounded-xl object-cover mx-auto mb-1"
+                    />
                   ) : (
                     <Camera className="h-6 w-6 text-purple-700 mx-auto mb-1" />
                   )}
                   <span className="font-extrabold text-purple-800 block">
-                    {gifBannerPreview ? 'Change Uploaded GIF' : 'Tap to Upload .GIF File (Under 900KB)'}
+                    {(gifBannerPreview || gifBannerUrl) ? 'Tap to Change Poster / GIF' : 'Tap to Upload Poster (.JPG / .PNG / .GIF)'}
                   </span>
                   <input
                     type="file"
-                    accept="image/gif,image/webp"
-                    onChange={(e) => {
+                    accept="image/*"
+                    onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
-                      if (file.size > 900 * 1024) {
-                        notify('GIF size > 900KB! Use a smaller GIF or paste GIF URL below.');
-                        return;
+                      if (file.type === 'image/gif') {
+                        if (file.size > 900 * 1024) {
+                          notify('GIF > 900KB! Use smaller GIF or paste URL.');
+                          return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = (ev) => setGifBannerPreview(ev.target.result);
+                        reader.readAsDataURL(file);
+                      } else {
+                        const compressed = await compressImageFileToDataUrl(file);
+                        setGifBannerPreview(compressed);
                       }
-                      const reader = new FileReader();
-                      reader.onload = (ev) => setGifBannerPreview(ev.target.result);
-                      reader.readAsDataURL(file);
                     }}
                     className="hidden"
                   />
@@ -5378,7 +5450,7 @@ Credit Customer Wallet
                   type="url"
                   value={gifBannerUrl}
                   onChange={(e) => setGifBannerUrl(e.target.value)}
-                  placeholder="Or paste GIF URL (https://media.giphy.com/...)"
+                  placeholder="Or paste Image / GIF URL (Optional)"
                   className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-semibold text-[11px]"
                 />
 
@@ -5394,39 +5466,41 @@ Credit Customer Wallet
                     type="text"
                     value={gifBannerTitle}
                     onChange={(e) => setGifBannerTitle(e.target.value)}
-                    placeholder="Banner Title (Optional)"
+                    placeholder="Poster Title (Optional)"
                     className="bg-slate-50 border rounded-xl px-3 py-2 font-bold"
                   />
                 </div>
 
-                <input
+  <input
                   type="text"
                   value={gifBannerSubtitle}
                   onChange={(e) => setGifBannerSubtitle(e.target.value)}
-                  placeholder="Subtitle / Offer Text (Optional)"
+                  placeholder="Subtitle / Offer Details (Optional)"
                   className="w-full bg-slate-50 border rounded-xl px-3 py-2 font-bold"
                 />
 
                 <button type="submit" className="w-full bg-purple-700 text-white font-extrabold py-3 rounded-2xl shadow text-sm">
-                  🎬 Publish GIF Banner to {gifBannerTargetRole.toUpperCase()}
+                  {editingBannerId ? '💾 Update Poster / Banner' : '🎬 Publish Poster / Banner Live'}
                 </button>
               </form>
 
-{heroGifBanners.map((gb) => (
+              {/* LIST OF ALL UPLOADED POSTERS WITH EDIT, ON/OFF & DELETE */}
+              {heroGifBanners.map((gb) => (
                 <div key={gb.id} className="bg-white p-3 rounded-2xl border flex items-center justify-between gap-2">
                   <div className="flex items-center space-x-3 min-w-0">
                     <img src={gb.gifSrc} alt={gb.title} className="h-14 w-20 rounded-xl object-cover flex-shrink-0" />
                     <div className="min-w-0">
                       <div className="flex items-center space-x-1">
                         <span className="text-[9px] font-extrabold bg-slate-900 text-[#FDE047] px-2 py-0.5 rounded uppercase">
-                          Role: {gb.targetRole || 'all'}
+                          {gb.targetRole === 'landing' ? 'Landing Home' : gb.targetRole || 'all'}
                         </span>
                         <span className="text-[9px] font-extrabold bg-purple-100 text-purple-900 px-2 py-0.5 rounded">{gb.tag}</span>
                       </div>
-                      <p className="font-extrabold text-slate-900 truncate mt-0.5">{gb.title || 'Animated GIF Banner'}</p>
+                      <p className="font-extrabold text-slate-900 truncate mt-0.5">{gb.title || 'Promo Poster'}</p>
                       <p className="text-[10px] text-slate-500 truncate">{gb.subtitle}</p>
                     </div>
                   </div>
+
                   <div className="flex items-center space-x-1 flex-shrink-0">
                     <button
                       type="button"
@@ -5441,14 +5515,33 @@ Credit Customer Wallet
                     >
                       {gb.active !== false ? 'ON' : 'OFF'}
                     </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingBannerId(gb.id);
+                        setGifBannerTargetRole(gb.targetRole || 'landing');
+                        setGifBannerTag(gb.tag || 'SPECIAL OFFER');
+                        setGifBannerTitle(gb.title || '');
+                        setGifBannerSubtitle(gb.subtitle || '');
+                        setGifBannerUrl(gb.gifSrc || '');
+                        setGifBannerPreview('');
+                      }}
+                      className="p-2 text-[#15803D] bg-emerald-50 rounded-xl"
+                      title="Edit / Change Poster"
+                    >
+                      <Edit3 className="h-4 w-4" />
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => {
                         setHeroGifBanners((prev) => prev.filter((x) => x.id !== gb.id));
                         deleteDoc(doc(db, 'heroGifBanners', gb.id)).catch(() => {});
-                        notify('GIF Banner Deleted');
+                        notify('Poster / Banner Deleted');
                       }}
                       className="p-2 text-rose-600 bg-rose-50 rounded-xl"
+                      title="Delete Poster"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
